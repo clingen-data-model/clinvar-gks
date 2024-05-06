@@ -1,0 +1,11 @@
+config {
+    type: "table"
+}
+
+SELECT
+  fruit,
+  SUM(count) AS count
+FROM
+  ${ref("quickstart-source")}
+GROUP BY
+  1
