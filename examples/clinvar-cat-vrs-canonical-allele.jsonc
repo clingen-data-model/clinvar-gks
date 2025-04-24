@@ -1,0 +1,189 @@
+{
+  "id": "clinvar:662001",
+  "type": "CategoricalVariant",
+  "name": "NM_004958.4(MTOR):c.5992_5993del (p.Met1998fs)",
+  "constraints": [
+    {
+      "type": "DefiningAlleleConstraint",
+      "allele": {
+        "id": "ga4gh:VA.PN-6_l2_yI1UPBRCtFnWkR52iZXKVJ8b",
+        "type": "Allele",
+        "name": "NC_000001.11:g.11128044_11128045del",
+        "extensions": [
+          {
+            "name": "clinvar vcf",
+            "value": "1-11128043-CAT-C"
+          },
+          {
+            "name": "clinvar variation type",
+            "value": "Deletion"
+          },
+          {
+            "name": "clinvar variation subtype",
+            "value": "SimpleAllele"
+          },
+          {
+            "name": "clinvar cytogenetic location",
+            "value": "1p36.22"
+          },
+          {
+            "name" : "assembly",
+            "value" : "GRCh38"
+          }
+        ],
+        "digest": "PN-6_l2_yI1UPBRCtFnWkR52iZXKVJ8b",
+        "location": {
+          "id": "ga4gh:SL.5-SKfXZ941W7JbZW3UmQKtijyUfd6d7z",
+          "type": "SequenceLocation",
+          "digest": "5-SKfXZ941W7JbZW3UmQKtijyUfd6d7z",
+          "sequenceReference": {
+            "type": "SequenceReference",
+            "name": "NC_000001.11",
+            "refgetAccession": "SQ.Ya6Rs7DHhDeg7YaOSg1EoNi3U_nQ9SvO",
+            "residueAlphabet": "na",
+            "molecularType": "genomic"
+          },
+          "start": 11128043,
+          "end": 11128045,
+          "sequence": "AT"
+        },
+        "state": {
+          "type": "ReferenceLengthExpression",
+          "length": 0,
+          "sequence": "",
+          "repeatSubunitLength": 2
+        }
+      },
+      "relations": [
+        {
+          "primaryCoding": {
+            "code": "liftover_to",
+            "system": "ga4gh-gks-term:allele-relation"
+          }
+        },
+        {
+          "primaryCoding": {
+            "code": "transcribed_to",
+            "system": "http://www.sequenceontology.org",
+            "iris": [
+              "http://www.sequenceontology.org/browser/current_release/term/transcribed_to"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "mappings": [
+    {
+      "coding": {
+        "system": "https://www.ncbi.nlm.nih.gov/clinvar",
+        "code": "662001",
+        "iris": [
+          "https://identifiers.org/clinvar:662001",
+          "https://www.ncbi.nlm.nih.gov/clinvar/variation/662001"
+        ]
+      },
+      "relation": "exactMatch"
+    },
+    {
+      "coding": {
+        "system": "https://reg.clinicalgenome.org",
+        "code": "CA915941124",
+        "iris": [
+          "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_canonicalid?canonicalid=CA915941124"
+        ]
+      },
+      "relation": "relatedMatch"
+    },
+    {
+      "coding": {
+        "system": "https://varsome.com",
+        "code": "hg38/rs1570942058",
+        "iris": [
+          "https://varsome.com/variant/hg38/rs1570942058"
+        ]
+      },
+      "relation": "relatedMatch"
+    },
+    {
+      "coding": {
+        "system": "https://www.ncbi.nlm.nih.gov/snp",
+        "code": "rs1570942058",
+        "iris": [
+          "https://identifiers.org/dbsnp:rs1570942058",
+          "https://www.ncbi.nlm.nih.gov/snp/rs1570942058"
+        ]
+      },
+      "relation": "relatedMatch"
+    }
+  ],
+  "members": [
+    {
+      "id": "#/constraints/0/allele"
+    }
+  ],  
+  "extensions": [
+    {
+      "name": "cytogenetic location",
+      "value": "1p36.22"
+    },
+    {
+      "name": "clinvar variation type",
+      "value": "Deletion"
+    },
+    {
+      "name": "hgvs list",
+      "value": [
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.g",
+            "value": "NC_000001.11:g.11128044_11128045del"
+          },
+          "nucleotideType": "genomic"
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.c",
+            "value": "NM_004958.4:c.5992_5993del"
+          },
+          "nucleotideType": "coding",
+          "maneSelect": true,
+          "proteinExpression": {
+            "syntax": "hgvs.p",
+            "value": "NP_004949.3:p.Met1998fs"
+          },
+          "molecularConsequence": {
+            "name": "frameshift_variant",
+            "system": "http://www.sequenceontology.org/browser/",
+            "systemVersion": "release_2.5.3",
+            "code": "SO:0001589",
+            "iris": [
+              "http://www.sequenceontology.org/browser/release_2.5.3/term/SO:0001589"
+            ]
+          }
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.g",
+            "value": "NG_033239.1:g.139507_139508del"
+          },
+          "nucleotideType": "genomic"
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.g",
+            "value": "LRG_734:g.139507_139508del"
+          },
+          "nucleotideType": "genomic"
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.c",
+            "value": "LRG_734t1:c.5992_5993del"
+          },
+          "nucleotideType": "coding"
+        }
+      ]
+    }
+  ],
+}
