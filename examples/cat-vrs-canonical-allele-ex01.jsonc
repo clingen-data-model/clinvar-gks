@@ -9,28 +9,6 @@
         "id": "ga4gh:VA.PN-6_l2_yI1UPBRCtFnWkR52iZXKVJ8b",
         "type": "Allele",
         "name": "NC_000001.11:g.11128044_11128045del",
-        "extensions": [
-          {
-            "name": "clinvar vcf",
-            "value": "1-11128043-CAT-C"
-          },
-          {
-            "name": "clinvar variation type",
-            "value": "Deletion"
-          },
-          {
-            "name": "clinvar variation subtype",
-            "value": "SimpleAllele"
-          },
-          {
-            "name": "clinvar cytogenetic location",
-            "value": "1p36.22"
-          },
-          {
-            "name" : "assembly",
-            "value" : "GRCh38"
-          }
-        ],
         "digest": "PN-6_l2_yI1UPBRCtFnWkR52iZXKVJ8b",
         "location": {
           "id": "ga4gh:SL.5-SKfXZ941W7JbZW3UmQKtijyUfd6d7z",
@@ -52,7 +30,21 @@
           "length": 0,
           "sequence": "",
           "repeatSubunitLength": 2
-        }
+        },
+        "expressions": [
+          {
+            "syntax": "hgvs.g",
+            "value": "NC_000001.11:g.11128044_11128045del"
+          },
+          {
+            "syntax": "spdi",
+            "value": "NC_000001.11:11128043:AT:ATAT"
+          },
+          {
+            "syntax": "gnomad",
+            "value": "1-11128043-CAT-C"
+          }
+        ]
       },
       "relations": [
         {
@@ -124,23 +116,28 @@
   ],  
   "extensions": [
     {
-      "name": "cytogenetic location",
-      "value": "1p36.22"
+      "name": "categorical variation type",
+      "value": "CanonicalAllele"
     },
     {
       "name": "clinvar variation type",
       "value": "Deletion"
     },
     {
+      "name": "clinvar variation subtype",
+      "value": "SimpleAllele"
+    },
+    {
+      "name": "clinvar cytogenetic location",
+      "value": "1p36.22"
+    },
+    {
+      "name" : "clinvar assembly",
+      "value" : "GRCh38"
+    },
+    {
       "name": "hgvs list",
       "value": [
-        {
-          "nucleotideExpression": {
-            "syntax": "hgvs.g",
-            "value": "NC_000001.11:g.11128044_11128045del"
-          },
-          "nucleotideType": "genomic"
-        },
         {
           "nucleotideExpression": {
             "syntax": "hgvs.c",
@@ -165,6 +162,20 @@
         {
           "nucleotideExpression": {
             "syntax": "hgvs.g",
+            "value": "NC_000001.11:g.11128044_11128045del"
+          },
+          "nucleotideType": "genomic, top-level"
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.g",
+            "value": "NC_000001.10:g.11188101_11188102del"
+          },
+          "nucleotideType": "genomic, top-level"
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.g",
             "value": "NG_033239.1:g.139507_139508del"
           },
           "nucleotideType": "genomic"
@@ -185,5 +196,5 @@
         }
       ]
     }
-  ],
+  ]
 }
