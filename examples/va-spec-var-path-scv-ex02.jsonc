@@ -1,0 +1,145 @@
+{
+  "id": "SCV001245167.2",
+  "type": "Statement",
+  "proposition": {
+    "type": "VariantPathogenicityProposition",
+    "subjectVariant": {
+      "$ref": "./cat-vrs-canonical-allele-ex02.jsonc"
+    },
+    "predicate": "isCausalFor",
+    "objectCondition": {
+      "id": "clinvar.trait:9544",
+      "conceptType": "Disease",
+      "name": "Nonsyndromic genetic hearing loss",
+      "primaryCoding": {
+        "code": "C5680182",
+        "system": "https://www.ncbi.nlm.nih.gov/medgen/",
+        "iris": [
+          "https://www.ncbi.nlm.nih.gov/medgen/C5680182/"
+        ]
+      }
+    },
+    "modeOfInheritanceQualifier": {
+      "name": "autosomal dominant inheritance"
+    }
+  },
+  "direction": "supports",
+  "strength": {
+    "primaryCoding": {
+      "code": "definitive",
+      "system": "ACMG Guidelines, 2015"
+    }
+  },
+  "classification": {
+    "primaryCoding": {
+      "code": "pathogenic",
+      "system": "ACMG Guidelines, 2015"
+    }
+  },
+  "description": "The c.803_805CCT[1] (aka c.806_808del) variant is predicted to cause a change in the length of the protein due to an in-frame deletion of 1 amino acid (p.Ser269del). It is absent from gnomAD v2.1.1 (PM2_Supporting). The variant has been reported in at least 5 probands with autosomal dominant hearing loss (PS4_Supporting; PMID: 23399560, 23443030, 34316018, LMM unpublished data SCV000967428.1). The variant has been observed to segregate with hearing loss in 12 affected individuals from 1 family (PP1_Strong; PMID: 23443030). This variant causes a change in the length of the protein due to an in-frame deletion between the S5 membrane-spanning domain and the pore region, which is important for protein function (PM4, PMID: 23717403). Patch-clamp studies in HEK293T cells revealed significantly reduced whole-cell potassium currents, and KCNQ openers did not rescue KCNQ4 mutant channels (PMID: 34316018, PS3_Moderate). In summary, this variant meets criteria to be classified as pathogenic for autosomal dominant nonsyndromic hearing loss. ACMG/AMP Criteria applied as specified by the ClinGen Hearing Loss VCEP: PP1_Strong, PM4, PS3_Moderate, PM2_Supporting, PS4_Supporting. (VCEP specifications version 2; 06.27.2023).",
+  "reportedIn": [
+    {
+      "type": "Document",
+      "documentType": "publication",
+      "pmid": "34316018"
+    }
+  ],
+  "contributions": [
+    {
+      "type": "Contribution",
+      "contributor": {
+        "id": "clinvar.submitter:506744",
+        "type": "Agent",
+        "name": "ClinGen Hearing Loss Variant Curation Expert Panel"
+      },
+      "date": "2023-10-07",
+      "activityType": "submitter role",
+      "extensions": [
+        {
+          "name": "clinvar activity label",
+          "value": "last updated"
+        }
+      ]
+    },
+    {
+      "type": "Contribution",
+      "contributor": {
+        "id": "clinvar.submitter:506744",
+        "type": "Agent",
+        "name": "ClinGen Hearing Loss Variant Curation Expert Panel"
+      },
+      "date": "2020-05-04",
+      "activityType": "creator role",
+      "extensions": [
+        {
+          "name": "clinvar activity label",
+          "value": "first in clinvar"
+        }
+      ]
+    },
+    {
+      "type": "Contribution",
+      "contributor": {
+        "id": "clinvar.submitter:506744",
+        "type": "Agent",
+        "name": "ClinGen Hearing Loss Variant Curation Expert Panel"
+      },
+      "date": "2023-06-27",
+      "activityType": "evaluator role",
+      "extensions": [
+        {
+          "name": "clinvar activity label",
+          "value": "last evaluated"
+        }
+      ]
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvar method category",
+      "value": "curation"
+    },
+    {
+      "name": "clinvar review status",
+      "value": "reviewed by expert panel"
+    },
+    {
+      "name": "clinvar submitted classification",
+      "value": "Pathogenic"
+    },
+    {
+      "name": "clinvar allele origin",
+      "value": ["germline"]     
+    },
+    {
+      "name": "clinvar affected status",
+      "value": ["unknown"]
+    },
+    {
+      "name": "clinvar submission contributes to aggregate classification",
+      "value": true
+    },
+    {
+      "name": "clinvar fda recognized database",
+      "value": true
+    },
+    {
+      "name": "clinvar other databases",
+      "value": [
+        "https://erepo.clinicalgenome.org/evrepo/ui/interpretation/fb0e0e45-d5c2-4b0f-8f5f-3d89cb430f20"
+      ]
+    }
+  ],
+  "specifiedBy": {
+    "type": "Method",
+    "methodType": "Variant Interpretation Guideline",
+    "reportedIn": {
+      "type": "Document",
+      "documentType": "publication",
+      "urls": [
+        "https://submit.ncbi.nlm.nih.gov/api/2.0/files/xvlcwqxy/clingen_hl_acmg_specifications_cdh23_coch_gjb2_kcnq4_myo6_myo7a_slc26a4_tecta_ush2a_v2.pdf/?format=attachment"
+      ],
+      "title": "Clingen Hl Acmg Specifications Cdh23 Coch Gjb2 Kcnq4 Myo6 Myo7a Slc26a4 Tecta Ush2a V2"
+    }
+  }
+}

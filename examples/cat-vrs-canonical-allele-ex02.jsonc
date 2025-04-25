@@ -108,7 +108,7 @@
   ],
   "members": [
     {
-      "id": "#/constraints/0/allele"
+      "$ref": "#/constraints/0/allele"
     }
   ],  
   "extensions": [
