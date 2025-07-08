@@ -1,0 +1,146 @@
+{
+  "SCV004697533": {
+    "geneContextQualifier": {
+      "conceptType": "gene",
+      "extensions": [
+        {
+          "name": "submitted gene symbols",
+          "value": [
+            "WT1"
+          ]
+        }
+      ],
+      "mappings": [
+        {
+          "coding": {
+            "code": "12796",
+            "iris": [
+              "https://identifiers.org/hgnc:12796",
+              "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/12796"
+            ],
+            "system": "https://www.genenames.org"
+          },
+          "relation": "exactMatch"
+        }
+      ],
+      "name": "WT1",
+      "primaryCoding": {
+        "code": "7490",
+        "iris": [
+          "https://identifiers.org/ncbigene:7490",
+          "https://www.ncbi.nlm.nih.gov/gene/7490"
+        ],
+        "name": "WT1",
+        "system": "https://www.ncbi.nlm.nih.gov/gene/"
+      },
+      "scv_id": "SCV004697533"
+    },
+    "id": "SCV004697533",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "clinvar trait id",
+          "value": "15736"
+        },
+        {
+          "name": "clinvar trait type",
+          "value": "Disease"
+        },
+        {
+          "name": "aliases",
+          "value": "Acute myeloid leukemia, adult, AML adult, Acute myelogenous leukemia, Acute non-lymphocytic leukemia, Acute granulocytic leukemia, Leukemia, acute myeloid, somatic, Leukemia, acute myelogenous, somatic"
+        },
+        {
+          "name": "submitted xrefs",
+          "value": [
+            {
+              "code": "D015470",
+              "system": "MeSH"
+            }
+          ]
+        },
+        {
+          "name": "submitted trait assignment",
+          "value": "scv trait: mesh id 'd015470'"
+        },
+        {
+          "name": "clinvar trait assignment",
+          "value": "rcv-tm medgen id"
+        },
+        {
+          "name": "clinvar trait mapping type:ref(val)",
+          "value": "xref:mesh(d015470)"
+        },
+        {
+          "name": "clinvar trait set type",
+          "value": "Disease"
+        },
+        {
+          "name": "clinvar trait set id",
+          "value": "6288"
+        }
+      ],
+      "id": "SCV004697533.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "519",
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_519",
+              "http://www.orpha.net/ORDO/Orphanet_519"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "D015470",
+            "iris": [
+              "https://identifiers.org/mesh:D015470",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D015470"
+            ],
+            "system": "MeSH"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0018874",
+            "iris": [
+              "https://identifiers.org/mondo:0018874",
+              "http://purl.obolibrary.org/obo/MONDO_0018874"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0004808",
+            "iris": [
+              "https://identifiers.org/HP:0004808",
+              "https://hpo.jax.org/browse/term/HP:0004808"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Acute myeloid leukemia",
+      "primaryCoding": {
+        "code": "C0023467",
+        "iris": [
+          "https://identifiers.org/medgen:C0023467",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0023467"
+        ],
+        "name": "Acute myeloid leukemia",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "associatedWithWorseOutcomeFor",
+    "subjectVariation": "3024186",
+    "type": "VariantPrognosticProposition"
+  }
+}

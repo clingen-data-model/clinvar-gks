@@ -1,0 +1,208 @@
+{
+  "SCV000244399.2": {
+    "classification": {
+      "name": "not provided"
+    },
+    "contributions": [
+      {
+        "activityType": {
+          "name": "submitted"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "504863"
+            }
+          ],
+          "id": "clinvar.submitter:504863",
+          "name": "Evidence-based Network for the Interpretation of Germline Mutant Alleles (ENIGMA)",
+          "type": "Agent"
+        },
+        "date": "2020-02-20",
+        "type": "Contribution"
+      },
+      {
+        "activityType": {
+          "name": "created"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "504863"
+            }
+          ],
+          "id": "clinvar.submitter:504863",
+          "name": "Evidence-based Network for the Interpretation of Germline Mutant Alleles (ENIGMA)",
+          "type": "Agent"
+        },
+        "date": "2015-09-29",
+        "type": "Contribution"
+      },
+      {
+        "activityType": {
+          "name": "evaluated"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "504863"
+            }
+          ],
+          "id": "clinvar.submitter:504863",
+          "name": "Evidence-based Network for the Interpretation of Germline Mutant Alleles (ENIGMA)",
+          "type": "Agent"
+        },
+        "date": "2019-03-25",
+        "type": "Contribution"
+      }
+    ],
+    "description": "To our knowledge this variant has not been seen alone. Clinical evidence in Goldgar et al 2004 (PMID: 15290653) is not applicable unless this variant is observed in cis with c.5363G>A (Variation ID 55551). We recommend that if c.5359T>A is detected in an individual, presence of c.5363G>A should be assessed. Functional assay data analysis of the c.5359T>A variant suggests that it doesn't alter protein function alone, but that it does alter function when in combination with BRCA1 c.5363G>A (PMID: 30765603; 30209399). For more information see the haplotype entry BRCA1 c.[5359T>A;5363G>A] (Variant ID 624568).",
+    "direction": "none",
+    "extensions": [
+      {
+        "name": "submitted allele origin",
+        "value": "germline"
+      },
+      {
+        "name": "clinvar review status",
+        "value": "reviewed by expert panel"
+      },
+      {
+        "name": "submitted local key",
+        "value": "NM_007294.3:c.5359T>A|OMIM:604370"
+      }
+    ],
+    "id": "SCV000244399.2",
+    "proposition": {
+      "geneContextQualifier": {
+        "conceptType": "gene",
+        "extensions": [
+          {
+            "name": "submitted gene symbols",
+            "value": [
+              "BRCA1"
+            ]
+          }
+        ],
+        "mappings": [
+          {
+            "coding": {
+              "code": "1100",
+              "iris": [
+                "https://identifiers.org/hgnc:1100",
+                "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/1100"
+              ],
+              "system": "https://www.genenames.org"
+            },
+            "relation": "exactMatch"
+          }
+        ],
+        "name": "BRCA1",
+        "primaryCoding": {
+          "code": "672",
+          "iris": [
+            "https://identifiers.org/ncbigene:672",
+            "https://www.ncbi.nlm.nih.gov/gene/672"
+          ],
+          "name": "BRCA1",
+          "system": "https://www.ncbi.nlm.nih.gov/gene/"
+        },
+        "scv_id": "SCV000244399"
+      },
+      "id": "SCV000244399",
+      "objectCondition": {
+        "conceptType": "Disease",
+        "extensions": [
+          {
+            "name": "clinvar trait id",
+            "value": "4711"
+          },
+          {
+            "name": "clinvar trait type",
+            "value": "Disease"
+          },
+          {
+            "name": "aliases",
+            "value": "Breast cancer, familial 1, OVARIAN CANCER, SUSCEPTIBILITY TO"
+          },
+          {
+            "name": "submitted xrefs",
+            "value": [
+              {
+                "code": "604370",
+                "system": "OMIM"
+              }
+            ]
+          },
+          {
+            "name": "submitted trait assignment",
+            "value": "scv trait: omim id '604370'"
+          },
+          {
+            "name": "clinvar trait assignment",
+            "value": "rcv-tm medgen id"
+          },
+          {
+            "name": "clinvar trait mapping type:ref(val)",
+            "value": "xref:omim(604370)"
+          },
+          {
+            "name": "clinvar trait set type",
+            "value": "Disease"
+          },
+          {
+            "name": "clinvar trait set id",
+            "value": "1917"
+          }
+        ],
+        "id": "SCV000244399.0",
+        "mappings": [
+          {
+            "coding": {
+              "code": "145",
+              "iris": [
+                "https://identifiers.org/orphanet.ordo:Orphanet_145",
+                "http://www.orpha.net/ORDO/Orphanet_145"
+              ],
+              "system": "Orphanet"
+            },
+            "relation": "relatedMatch"
+          },
+          {
+            "coding": {
+              "code": "MONDO:0011450",
+              "iris": [
+                "https://identifiers.org/mondo:0011450",
+                "http://purl.obolibrary.org/obo/MONDO_0011450"
+              ],
+              "system": "MONDO"
+            },
+            "relation": "relatedMatch"
+          }
+        ],
+        "name": "Breast-ovarian cancer, familial, susceptibility to, 1",
+        "primaryCoding": {
+          "code": "C2676676",
+          "iris": [
+            "https://identifiers.org/medgen:C2676676",
+            "https://www.ncbi.nlm.nih.gov/medgen/C2676676"
+          ],
+          "name": "Breast-ovarian cancer, familial, susceptibility to, 1",
+          "system": "MedGen"
+        }
+      },
+      "predicate": "isClinVarSpecializedAssociationFor",
+      "subjectVariation": "55548",
+      "type": "ClinVarOtherProposition"
+    },
+    "scv_id": "SCV000244399",
+    "scv_ver": 2,
+    "strength": {
+      "name": "not specified"
+    },
+    "type": "Statement"
+  }
+}

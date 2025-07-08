@@ -1,0 +1,357 @@
+# This is the scaffolding that I need for aggregation in Clinvar
+
+# every statment includes variant.... no aggregation across variants at this time.
+
+# https://www.ncbi.nlm.nih.gov/clinvar/variation/10/?oq=10&m=NM_000410.4(HFE):c.187C%3EG%20(p.His63Asp)
+
+# 1. Statement VCV000000010.124
+id: VCV000000010.124-GermlineClassification
+proposition:
+  subjectVariant: clinvar:10
+  predicate: hasAggregateClassification
+  aggregateQualifier:
+    - name: ClassificationCategory
+      value: GermlineClassification
+direction: ?? always "supports" ??
+strength: ?? always blank or definitive ??  # if this is really 'confidence' and we are showing a result of a calculation then shouldn't it always be definitive?
+classification:  #conflicting classifications of pathogenicity (1-star); other (1-star)
+  name: Conflicting classifications of pathogenicity; other
+isSpecifiedBy: # we probably should annotate clinvar's methods at the various aggregation points since it deviates based on level and statement type
+  name:
+extensions:
+  - name: clinvarAggregateReviewStatus # this is the max review status from the evidence lines.
+    value: criteria provided, conflicting classifications
+evidenceLines:   
+  # 1.1 Contributing GermlineClassification-VariantPathogenicity-CriteriaProvidedSingle Agg EvidenceLine
+  - directionOfEvidenceProvided: supports       # !! This is one part of key to Contributing or Not Contributing (always Supports)
+    strengthOfEvidenceProvided: contributing    # !! This is the other part of key to Contributing or Not Contributing
+    evidenceItems:
+      # 1.1.1 VCV000000010.124-GermlineClassification-VariantPathogenicity-CriteriaProvidedSingle Agg
+      - id: VCV000000010.124-GermlineClassification-VariantPathogenicity-CriteriaProvidedSingleSubmitter
+        proposition:
+          subjectVariant: clinvar:10
+          predicate: hasAggregateClassification
+          aggregateQualifier: 
+            - name: ClinvarClassificationCategory
+              value: GermlineClassification
+            - name: PropositionType
+              value: VariantPathogenicity
+            - name: ClinvarReviewStatus
+              value: CriteriaProvidedSingleSubmitter
+        direction: supports
+        strength: ??
+        classification: # conflicting classifications of pathogenicity (1-star CriteriaProvidedConflictingClassifications). 
+          # note; 1-start can also mean criteria provided, single submitter but clinvar seems to use the conflicting version over the other when there are multiple.
+          name: Conflicting classifications of pathogenicity
+        extensions:
+          - name: clinvarAggregateReviewStatus
+            value: criteria provided, conflicting classifications
+          - name: clinvarAggregateStarRating  # ?? do we need this ??
+            value: 1-star
+        evidenceLines:  
+          # at this point in the hierarchy we SHOULD aggregate by conditions to properly call out contributing conditions vs non-contributing
+
+          # 1.1.1.1 GC-VP-CPSS-HemochromatosisType1 
+          - directionOfEvidenceLine: supports
+            strengthOfEvidenceLine: contributing
+            evidenceItems:
+              # 1.1.1.1.1 GC-VP-CPSS-Cond1 Agg Stmt
+              - id: VCV000000010.124-GC-VP-CPSS-HemochromatosisType1
+                proposition:
+                  subjectVariant: clinvar:10
+                  predicate: hasAggregateClassification
+                  aggregateQualifier: 
+                    - name: ClinvarClassificationCategory
+                      value: GermlineClassification
+                    - name: PropositionType
+                      value: VariantPathogenicity
+                    - name: ClinvarReviewStatus
+                      value: CriteriaProvidedSingleSubmitter
+                    - name: Condition
+                      value: Hemochromatosis type 1
+                direction: supports
+                classification: # conflicting "Pathogenic/Likely Pathogenic(27);Uncertain Significance(1)"
+                  name: Conflicting classifications of pathogenicity
+                extensions:
+                  - name: clinvarAggregateReviewStatus
+                    value: criteria provided, conflicting classifications
+                  - name: clinvarAggregateStarRating  # ?? do we need this ??
+                    value: 1-star 
+                evidenceLines:  # 28 1-star path SCVs (clinvar says 30?) for clinvar:10 variant
+
+                  # 1.1.1.1.1.1 GC-VP-CPSS-HemochromatosisType1 SCVs
+                  - directionOfEvidenceLine: supports
+                    strengthOfEvidenceLine: contributing
+                    evidenceItems:
+                      # 1.1.1.1.1.1.1 GC-VP-CPSS-HemochromatosisType1-Path SCV000693430.2
+                      - id: SCV000693430.2
+
+                      # 1.1.1.1.1.1.2 GC-VP-CPSS-HemochromatosisType1-Path SCV001251532.1
+                      - id: SCV001251532.1
+
+                      # 1.1.1.1.1.1.3 GC-VP-CPSS-HemochromatosisType1-Path SCV001368348.2
+                      - id: SCV001368348.2
+
+                      # 1.1.1.1.1.1.4 GC-VP-CPSS-HemochromatosisType1-Path SCV001519563.1
+                      - id: SCV001519563.1
+
+                      # 1.1.1.1.1.1.5 GC-VP-CPSS-HemochromatosisType1-Path SCV002038504.1
+                      - id: SCV002038504.1
+
+                      # 1.1.1.1.1.1.6 GC-VP-CPSS-HemochromatosisType1-Path SCV002499222.1
+                      - id: SCV002499222.1
+
+                      # 1.1.1.1.1.1.7 GC-VP-CPSS-HemochromatosisType1-Path SCV002769510.1
+                      - id: SCV002769510.1
+
+                      # 1.1.1.1.1.1.8 GC-VP-CPSS-HemochromatosisType1-Path SCV000461883.3
+                      - id: SCV000461883.3
+
+                      # 1.1.1.1.1.1.9 GC-VP-CPSS-HemochromatosisType1-Path SCV004045959.1
+                      - id: SCV004045959.1
+
+                      # 1.1.1.1.1.1.10 GC-VP-CPSS-HemochromatosisType1-Path SCV004046529.2
+                      - id: SCV004046529.2
+
+                      # 1.1.1.1.1.1.11 GC-VP-CPSS-HemochromatosisType1-Path SCV004801387.1
+                      - id: SCV004801387.1
+
+                      # 1.1.1.1.1.1.12 GC-VP-CPSS-HemochromatosisType1-Path SCV005417670.1
+                      - id: SCV005417670.1
+
+                      # 1.1.1.1.1.1.13 GC-VP-CPSS-HemochromatosisType1-Path SCV005669467.1
+                      - id: SCV005669467.1
+
+                      # 1.1.1.1.1.1.14 GC-VP-CPSS-HemochromatosisType1-Path SCV000223933.2
+                      - id: SCV000223933.2
+
+                      # 1.1.1.1.1.1.15 GC-VP-CPSS-HemochromatosisType1-Path SCV001137061.1
+                      - id: SCV001137061.1
+
+                      # 1.1.1.1.1.1.16 GC-VP-CPSS-HemochromatosisType1-Path SCV001194094.2
+                      - id: SCV001194094.2
+
+                      # 1.1.1.1.1.1.17 GC-VP-CPSS-HemochromatosisType1-Path SCV002028310.1
+                      - id: SCV002028310.1
+
+                      # 1.1.1.1.1.1.18 GC-VP-CPSS-HemochromatosisType1-Path SCV002576301.1
+                      - id: SCV002576301.1
+
+                      # 1.1.1.1.1.1.19 GC-VP-CPSS-HemochromatosisType1-Path SCV004183355.1
+                      - id: SCV004183355.1
+
+                      # 1.1.1.1.1.1.20 GC-VP-CPSS-HemochromatosisType1-Path SCV001523197.4
+                      - id: SCV001523197.4
+
+                      # 1.1.1.1.1.1.21 GC-VP-CPSS-HemochromatosisType1-Path SCV004803201.1
+                      - id: SCV004803201.1
+
+                      # 1.1.1.1.1.1.22 GC-VP-CPSS-HemochromatosisType1-LikPath SCV004806939.1
+                      - id: SCV004806939.1
+
+                      # 1.1.1.1.1.1.23 GC-VP-CPSS-HemochromatosisType1-Path SCV004847117.1
+                      - id: SCV004847117.1
+
+                      # 1.1.1.1.1.1.24 GC-VP-CPSS-HemochromatosisType1-Path SCV005061024.1
+                      - id: SCV005061024.1
+
+                      # 1.1.1.1.1.1.25 GC-VP-CPSS-HemochromatosisType1-VUS SCV002583554.2
+                      - id: SCV002583554.2
+
+
+
+
+
+            
+              # 1.1.1.2.1 GC-VP-CPSS-Cond2 Submission (SCVx)
+              - id:
+
+
+              # 1.1.1.2.1 GC-VP-CPSS-Cond2 Submission (SCVx)
+              - id:
+
+          # 1.1.1.2 GC-VP-CPSS-Cond2 
+          - directionOfEvidenceLine: supports
+            strengthOfEvidenceLine: contributing
+            evidenceItems:
+              # 1.1.1.2.1 GC-VP-CPSS-Cond2 Submission (SCVx)
+              - id:
+              # 1.1.1.2.1 GC-VP-CPSS-Cond2 Submission (SCVx)
+              - id:
+
+          # 1.1.1.1 Contributing GermlineClassification-VariantPathogenicity-CriteriaProvidedSingleSubmitter SCVs EvidenceLine
+          - directionOfEvidenceLine: supports       # !! This is one part of key to Contributing or Not Contributing (always Supports)
+            strengthOfEvidenceLine: contributing    # !! This is the other part of key to Contributing or Not Contributing
+            evidenceItems:
+              # 1.1.1.1.1 SCV000206973.2-GermlineClassification-VariantPathogenicity-CriteriaProvidedSingleSubmitter-Path-Hereditary hemochromatosis
+              - id: SCV000206973.2
+                # clinvar:10 is causal for Hereditary hemochromatosis
+                proposition:
+                  subjectVariant: clinvar:10
+                  predicate: isCausalFor
+                  objectCondition: Hereditary hemochromatosis
+                classification:  # pathogenic
+                  name: Pathogenic
+                extensions:   # 1-star
+                  - name: clinvarAggregateReviewStatus
+                    value: criteria provided, single submitter 
+              # 1.1.1.1.2 SCV000693430.2-GermlineClassification-VariantPathogenicity-CriteriaProvidedSingleSubmitter-Path-Hemochromatosis type 1
+              - id: SCV000693430.2
+                # clinvar:10 is causal for Hemochromatosis type 1
+                proposition: 
+                  subjectVariant: clinvar:10
+                  predicate: isCausalFor
+                  objectCondition: Hemochromatosis type 1
+                classification:  # pathogenic
+                  name: pathogenic
+              # 1.1.1.1.3 thru 1.1.1.1.36 33 GermlineClassification-VariantPathogenicity-CriteriaProvidedSingleSubmitter-??? SCVS...
+              - id: #many more 
+                proposition:
+                  subjectVariant: clinvar:10
+              # 1.1.1.1.37 SCV002583554.2-GermlineClassification-VariantPathogenicity-CriteriaProvidedSingleSubmitter-VUS-Hemochromatosis type 1                
+              - id: SCV002583554.2
+                # clinvar:10 is causal for Hemochromatosis type 1
+                proposition: ...
+                classification: # uncertain significance
+                  name: uncertain significance
+          # 1.1.1.2 Non-Contributing GermlineClassification-VariantPathogenicity-CriteriaProvidedSingleSubmitter SCVs EvidenceLine
+          - directionOfEvidenceLine: supports       # !! This is one part of key to Contributing or Not Contributing (always Supports)
+            strengthOfEvidenceLine: non-contributing    # !! This is the other part of key to Contributing or Not Contributing
+            evidenceItems:
+              # 1.1.1.2.1 SCV000206973.2-GermlineClassification-VariantPathogenicity-CriteriaProvidedSingleSubmitter-VUS-NotSpecified
+              - id: SCV000198337.5
+                # clinvar:10 is causal for not specified
+                proposition:
+                  subjectVariant: clinvar:10
+                  predicate: isCausalFor
+                  objectCondition: Not Specified
+                classification:  # vus
+                  name: Uncertain Significance
+                direction: neutral
+                extensions:   # 1-star
+                  - name: clinvarAggregateReviewStatus
+                    value: criteria provided, single submitter 
+                  - name: flagged submission
+                    value: true
+              # 1.1.1.2.2 SCV001438937.1-GermlineClassification-VariantPathogenicity-CriteriaProvidedSingleSubmitter-Benign-NotSpecified
+              - id: SCV001438937.1
+                # clinvar:10 is causal for not specified
+                proposition:
+                  subjectVariant: clinvar:10
+                  predicate: isCausalFor
+                  objectCondition: Not Specified
+                direction: disputes
+                strength: definitive
+                classification:  # benign
+                  name: Pathogenic
+                extensions:   # 1-star
+                  - name: clinvarAggregateReviewStatus
+                    value: criteria provided, single submitter 
+                  - name: flagged submission
+                    value: true                    
+      
+  # 1.2 Contributing GermlineClassification-ClinvarGermlineOther-CriteriaProvidedSingleSubmitter Agg EvidencLine
+  - directionOfEvidenceLine: supports       # !! This is one part of key to Contributing or Not Contributing (always Supports)
+    strengthOfEvidenceLine: contributing    # !! This is the other part of key to Contributing or Not Contributing
+    evidenceItems:
+      - # 1.2.1 VCV000000010.124-GermlineClassification-ClinvarGermlineOther-CriteriaProvidedSingleSubmitter SCVs
+        id: VCV000000010.124-GermlineClassification-ClinvarGermlineOther-CriteriaProvidedSingleSubmitter
+        proposition:
+          subjectVariant: clinvar:10
+          predicate: hasAggregateClassification
+          aggregateQualifier: 
+            - name: ClinvarClassificationCategory
+              value: GermlineClassification
+            - name: PropositionType
+              value: ClinvarGermlineOther
+        classification: # other (1-star CriteriaProvidedSingleSubmitter)
+          name: other 
+        extensions:
+          - name: clinvarAggregateReviewStatus
+            value: criteria provided, ssingle submission
+          - name: clinvarAggregateStarRating  # ?? do we need this ??
+            value: 1-star
+        evidenceLines:  
+          # 1.2.1.1 Contributing EvidenceLine (ClinvarGermlineOther-CriteriaProvidedSingleSubmitter SCVs)
+          - directionOfEvidenceLine: supports       # !! This is one part of key to Contributing or Not Contributing (always Supports)
+            strengthOfEvidenceLine: contributing    # !! This is the other part of key to Contributing or Not Contributing
+            evidenceItems:
+              # 1.1.1.1.1 SCV000206973.2-GermlineClassification-ClinvarGermlineOther-CriteriaProvidedSingleSubmitter-other
+              - id: SCV000206973.2
+                # clinvar:10 is causal for condition 'not provided'
+                proposition:
+                  subjectVariant: clinvar:10
+                  predicate: isCausalFor
+                  objectCondition: not provided
+                classification:  # other
+                  name: other
+                extensions:   # 1-star - this is NOT a conflicting 1-star- it IS a criteria provided, single submitter
+
+  # 1.3 Non-Contributing VCV EvidenceLine (GermlineClassification-VariantPathogenicity-NoCriteriaProvidedSingleSubmitter Aggregation)
+  - directionOfEvidenceLine: supports
+      strengthOfEvidenceLine: non-contributing
+      evidenceItems:
+      - # 1.3.1 VCV000000010.124-GermlineClassification-VariantPathogenicity-NoCriteriaProvidedSingleSubmitter SCVs
+        id: VCV000000010.124-GermlineClassification-VariantPathogenicity-NoCriteriaProvidedSingleSubmitter Agg
+        proposition:
+          subjectVariant: clinvar:10
+          predicate: hasAggregateClassification
+          aggregateQualifier: 
+            - name: ClinvarClassificationCategory
+              value: GermlineClassification
+            - name: PropositionType
+              value: VariantPathogenicity
+            - name: ClinvarReviewStatus
+              value: NoCriteriaProvidedSingleSubmitter
+        classification: # no criteria, multiple submitters (0-star). -- check to see if this agg revstat exists.
+          name: Pathogenic
+        extensions:
+          - name: clinvarAggregateReviewStatus
+            value: no criteria provided, multiple submissions
+          - name: clinvarAggregateStarRating  # ?? do we need this ??
+            value: 0-star      # same for single or multiple when 0-star submissions are made and agree or conflict
+        evidenceLines:  
+          # 1.3.1.1 Contributing EvidenceLine (VariantPathogenicity-NoCriteriaProvidedSingleSubmitter SCVs)
+          - directionOfEvidenceLine: supports       # !! This is one part of key to Contributing or Not Contributing (always Supports)
+            strengthOfEvidenceLine: contributing    # !! This is the other part of key to Contributing or Not Contributing
+            evidenceItems:
+              # 1.3.1.1.1 SCV001552099.1-GermlineClassification-VariantPathogenicity-NoCriteriaProvidedSingleSubmitter-Path-Hereditary hemochromatosis
+              - id: SCV001552099.1
+                # clinvar:10 is causal for not provided
+                proposition:
+                  subjectVariant: clinvar:10
+                  predicate: isCausalFor
+                  objectCondition: not provided
+                classification:  # pathogenic
+                  name: Pathogenic
+                extensions:   # 0-star
+                  - name: clinvarAggregateReviewStatus
+                    value: no criteria provided, single submitter 
+              # 1.3.1.1.2 SCV001968924.1-GermlineClassification-VariantPathogenicity-NoCriteriaProvidedSingleSubmitter-Path-Hemochromatosis type 1
+              - id: SCV001968924.1
+                # clinvar:10 is causal for not provided
+                proposition:
+                  subjectVariant: clinvar:10
+                  predicate: isCausalFor
+                  objectCondition: not provided
+                classification:  # pathogenic
+                  name: Pathogenic
+                extensions:   # 0-star
+                  - name: clinvarAggregateReviewStatus
+                    value: no criteria provided, single submitter 
+        
+        SCV004024108.1 - path Hemochromatosis type 1
+        SCV001740600.3 - path not provided
+        SCV001927447.1 - path not provided
+        SCV002036308.1 - path not provided
+        SCV004041642.1 - path Hemochromatosis type 1
+
+
+
+        SCV001142520.1 - risk factor.   Cystic fibrosis
+
+        SCV000020169.9 - not provided RECLASSIFIED - HFE POLYMORPHISM
+        SCV000607203.6 - not provided Bronze diabetes
+        SCV000245789.3 - not provided Hemochromatosis type 1
+        SCV001749317.2 - not provided Hereditary hemochromatosis
+        
