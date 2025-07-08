@@ -1,0 +1,299 @@
+{
+  "SCV002031277.1": {
+    "classification": {
+      "name": "drug response",
+      "primaryCoding": {
+        "code": "drug response",
+        "system": "Pharmacogenomics knowledge for personalized medicine"
+      }
+    },
+    "contributions": [
+      {
+        "activityType": {
+          "name": "submitted"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "500295"
+            }
+          ],
+          "id": "clinvar.submitter:500295",
+          "name": "PharmGKB",
+          "type": "Agent"
+        },
+        "date": "2021-12-12",
+        "type": "Contribution"
+      },
+      {
+        "activityType": {
+          "name": "created"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "500295"
+            }
+          ],
+          "id": "clinvar.submitter:500295",
+          "name": "PharmGKB",
+          "type": "Agent"
+        },
+        "date": "2021-12-12",
+        "type": "Contribution"
+      },
+      {
+        "activityType": {
+          "name": "evaluated"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "500295"
+            }
+          ],
+          "id": "clinvar.submitter:500295",
+          "name": "PharmGKB",
+          "type": "Agent"
+        },
+        "date": "2021-03-24",
+        "type": "Contribution"
+      }
+    ],
+    "description": "PharmGKB Level of Evidence 1A: Level 1A clinical annotations describe variant-drug combinations that have variant-specific prescribing guidance available in a current clinical guideline annotation or an FDA-approved drug label annotation. Annotations of drug labels or clinical guidelines must give prescribing guidance for specific variants (e.g. CYP2C9*3, HLA-B*57:01) or provide mapping from defined allele functions to diplotypes and phenotypes to be used as supporting evidence for a level 1A clinical annotation. Level 1A clinical annotations must also be supported by at least one publication in addition to a clinical guideline or drug label with variant-specific prescribing guidance.",
+    "direction": "supports",
+    "extensions": [
+      {
+        "name": "submitted allele origin",
+        "value": "germline"
+      },
+      {
+        "name": "clinvar review status",
+        "value": "reviewed by expert panel"
+      },
+      {
+        "name": "submitted local key",
+        "value": "1451429831|capecitabine response - Toxicity"
+      }
+    ],
+    "id": "SCV002031277.1",
+    "proposition": {
+      "geneContextQualifier": {
+        "conceptType": "gene",
+        "extensions": [
+          {
+            "name": "submitted gene symbols",
+            "value": [
+              "DPYD"
+            ]
+          }
+        ],
+        "mappings": [
+          {
+            "coding": {
+              "code": "3012",
+              "iris": [
+                "https://identifiers.org/hgnc:3012",
+                "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/3012"
+              ],
+              "system": "https://www.genenames.org"
+            },
+            "relation": "exactMatch"
+          }
+        ],
+        "name": "DPYD",
+        "primaryCoding": {
+          "code": "1806",
+          "iris": [
+            "https://identifiers.org/ncbigene:1806",
+            "https://www.ncbi.nlm.nih.gov/gene/1806"
+          ],
+          "name": "DPYD",
+          "system": "https://www.ncbi.nlm.nih.gov/gene/"
+        },
+        "scv_id": "SCV002031277"
+      },
+      "id": "SCV002031277",
+      "objectCondition": {
+        "conceptType": "DrugResponse",
+        "extensions": [
+          {
+            "name": "clinvar trait id",
+            "value": "60995"
+          },
+          {
+            "name": "clinvar trait type",
+            "value": "DrugResponse"
+          },
+          {
+            "name": "submitted trait assignment",
+            "value": "scv trait: preferred name 'capecitabine response - toxicity'"
+          },
+          {
+            "name": "clinvar trait assignment",
+            "value": "tm reftype preferred name"
+          },
+          {
+            "name": "clinvar trait mapping type:ref(val)",
+            "value": "name:preferred(capecitabine response - toxicity)"
+          },
+          {
+            "name": "clinvar trait set type",
+            "value": "DrugResponse"
+          },
+          {
+            "name": "clinvar trait set id",
+            "value": "71271"
+          }
+        ],
+        "id": "SCV002031277.0",
+        "name": "capecitabine response - Toxicity"
+      },
+      "predicate": "isClinVarSpecializedAssociationFor",
+      "subjectVariation": "100116",
+      "type": "ClinVarOtherProposition"
+    },
+    "reportedIn": [
+      {
+        "pmid": "19104657",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/19104657"
+        ]
+      },
+      {
+        "pmid": "19530960",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/19530960"
+        ]
+      },
+      {
+        "pmid": "20819423",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/20819423"
+        ]
+      },
+      {
+        "pmid": "21498394",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/21498394"
+        ]
+      },
+      {
+        "pmid": "22490566",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/22490566"
+        ]
+      },
+      {
+        "pmid": "23736036",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/23736036"
+        ]
+      },
+      {
+        "pmid": "24590654",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/24590654"
+        ]
+      },
+      {
+        "pmid": "24647007",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/24647007"
+        ]
+      },
+      {
+        "pmid": "24923815",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/24923815"
+        ]
+      },
+      {
+        "pmid": "25677447",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/25677447"
+        ]
+      },
+      {
+        "pmid": "25782327",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/25782327"
+        ]
+      },
+      {
+        "pmid": "26099996",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/26099996"
+        ]
+      },
+      {
+        "pmid": "28481884",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/28481884"
+        ]
+      },
+      {
+        "pmid": "29065426",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/29065426"
+        ]
+      },
+      {
+        "pmid": "29239269",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/29239269"
+        ]
+      },
+      {
+        "pmid": "30114658",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/30114658"
+        ]
+      },
+      {
+        "pmid": "30723313",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/30723313"
+        ]
+      }
+    ],
+    "scv_id": "SCV002031277",
+    "scv_ver": 1,
+    "specifiedBy": {
+      "methodType": "curation",
+      "name": "Pharmacogenomics knowledge for personalized medicine",
+      "reportedIn": {
+        "pmid": "22992668",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/22992668"
+        ]
+      },
+      "type": "Method"
+    },
+    "strength": {
+      "name": "not specified"
+    },
+    "type": "Statement"
+  }
+}

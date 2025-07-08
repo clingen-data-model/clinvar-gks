@@ -1,0 +1,239 @@
+{
+  "SCV000187679.1": {
+    "classification": {
+      "name": "Uncertain significance"
+    },
+    "contributions": [
+      {
+        "activityType": {
+          "name": "submitted"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "505267"
+            }
+          ],
+          "id": "clinvar.submitter:505267",
+          "name": "Department of Pharmacy and Biotechnology, University of Bologna",
+          "type": "Agent"
+        },
+        "date": "2014-11-13",
+        "type": "Contribution"
+      },
+      {
+        "activityType": {
+          "name": "created"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "505267"
+            }
+          ],
+          "id": "clinvar.submitter:505267",
+          "name": "Department of Pharmacy and Biotechnology, University of Bologna",
+          "type": "Agent"
+        },
+        "date": "2014-11-13",
+        "type": "Contribution"
+      },
+      {
+        "activityType": {
+          "name": "evaluated"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "505267"
+            }
+          ],
+          "id": "clinvar.submitter:505267",
+          "name": "Department of Pharmacy and Biotechnology, University of Bologna",
+          "type": "Agent"
+        },
+        "type": "Contribution"
+      }
+    ],
+    "direction": "none",
+    "extensions": [
+      {
+        "name": "submitted allele origin",
+        "value": "germline"
+      },
+      {
+        "name": "clinvar review status",
+        "value": "flagged submission"
+      },
+      {
+        "name": "submitted local key",
+        "value": "rs1801131"
+      }
+    ],
+    "id": "SCV000187679.1",
+    "proposition": {
+      "geneContextQualifier": {
+        "conceptType": "gene",
+        "mappings": [
+          {
+            "coding": {
+              "code": "7436",
+              "iris": [
+                "https://identifiers.org/hgnc:7436",
+                "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/7436"
+              ],
+              "system": "https://www.genenames.org"
+            },
+            "relation": "exactMatch"
+          }
+        ],
+        "name": "MTHFR",
+        "primaryCoding": {
+          "code": "4524",
+          "iris": [
+            "https://identifiers.org/ncbigene:4524",
+            "https://www.ncbi.nlm.nih.gov/gene/4524"
+          ],
+          "name": "MTHFR",
+          "system": "https://www.ncbi.nlm.nih.gov/gene/"
+        },
+        "scv_id": "SCV000187679"
+      },
+      "id": "SCV000187679",
+      "objectCondition": {
+        "conceptType": "Disease",
+        "extensions": [
+          {
+            "name": "clinvar trait id",
+            "value": "2160"
+          },
+          {
+            "name": "clinvar trait type",
+            "value": "Disease"
+          },
+          {
+            "name": "aliases",
+            "value": "Gastrointestinal stroma tumor, Gastrointestinal Stromal Sarcoma, Gastrointestinal stromal tumor, somatic"
+          },
+          {
+            "name": "submitted xrefs",
+            "value": [
+              {
+                "code": "606764",
+                "system": "OMIM"
+              }
+            ]
+          },
+          {
+            "name": "submitted trait assignment",
+            "value": ""
+          },
+          {
+            "name": "clinvar trait assignment",
+            "value": "single remaining trait"
+          },
+          {
+            "name": "clinvar trait set type",
+            "value": "Disease"
+          },
+          {
+            "name": "clinvar trait set id",
+            "value": "6607"
+          }
+        ],
+        "id": "SCV000187679.0",
+        "mappings": [
+          {
+            "coding": {
+              "code": "44890",
+              "iris": [
+                "https://identifiers.org/orphanet.ordo:Orphanet_44890",
+                "http://www.orpha.net/ORDO/Orphanet_44890"
+              ],
+              "system": "Orphanet"
+            },
+            "relation": "relatedMatch"
+          },
+          {
+            "coding": {
+              "code": "D046152",
+              "iris": [
+                "https://identifiers.org/mesh:D046152",
+                "https://www.ncbi.nlm.nih.gov/mesh/?term=D046152"
+              ],
+              "system": "MeSH"
+            },
+            "relation": "relatedMatch"
+          },
+          {
+            "coding": {
+              "code": "MONDO:0011719",
+              "iris": [
+                "https://identifiers.org/mondo:0011719",
+                "http://purl.obolibrary.org/obo/MONDO_0011719"
+              ],
+              "system": "MONDO"
+            },
+            "relation": "relatedMatch"
+          },
+          {
+            "coding": {
+              "code": "HP:0100723",
+              "iris": [
+                "https://identifiers.org/HP:0100723",
+                "https://hpo.jax.org/browse/term/HP:0100723"
+              ],
+              "system": "Human Phenotype Ontology"
+            },
+            "relation": "relatedMatch"
+          }
+        ],
+        "name": "Gastrointestinal Stromal Tumors",
+        "primaryCoding": {
+          "code": "C0238198",
+          "iris": [
+            "https://identifiers.org/medgen:C0238198",
+            "https://www.ncbi.nlm.nih.gov/medgen/C0238198"
+          ],
+          "name": "Gastrointestinal stromal tumor",
+          "system": "MedGen"
+        }
+      },
+      "predicate": "isCausalFor",
+      "subjectVariation": "3521",
+      "type": "VariantPathogenicityProposition"
+    },
+    "reportedIn": [
+      {
+        "pmid": "25227144",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/25227144"
+        ]
+      },
+      {
+        "pmid": "25227144",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/25227144"
+        ]
+      },
+      {
+        "pmid": "25227144",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/25227144"
+        ]
+      }
+    ],
+    "scv_id": "SCV000187679",
+    "scv_ver": 1,
+    "strength": {
+      "name": "inconclusive"
+    },
+    "type": "Statement"
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "SCV000598947.1": {
+    "classification": {
+      "name": "Likely pathogenic"
+    },
+    "contributions": [
+      {
+        "activityType": {
+          "name": "submitted"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "505998"
+            }
+          ],
+          "id": "clinvar.submitter:505998",
+          "name": "NIHR Bioresource Rare Diseases, University of Cambridge",
+          "type": "Agent"
+        },
+        "date": "2017-09-08",
+        "type": "Contribution"
+      },
+      {
+        "activityType": {
+          "name": "created"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "505998"
+            }
+          ],
+          "id": "clinvar.submitter:505998",
+          "name": "NIHR Bioresource Rare Diseases, University of Cambridge",
+          "type": "Agent"
+        },
+        "date": "2017-09-08",
+        "type": "Contribution"
+      },
+      {
+        "activityType": {
+          "name": "evaluated"
+        },
+        "contributor": {
+          "extensions": [
+            {
+              "name": "clinvar submitter id",
+              "value": "505998"
+            }
+          ],
+          "id": "clinvar.submitter:505998",
+          "name": "NIHR Bioresource Rare Diseases, University of Cambridge",
+          "type": "Agent"
+        },
+        "date": "2015-01-01",
+        "type": "Contribution"
+      }
+    ],
+    "direction": "supports",
+    "extensions": [
+      {
+        "name": "submitted allele origin",
+        "value": "unknown"
+      },
+      {
+        "name": "clinvar review status",
+        "value": "no assertion criteria provided"
+      },
+      {
+        "name": "submitted local key",
+        "value": "c.2023G>A_C535804"
+      }
+    ],
+    "id": "SCV000598947.1",
+    "proposition": {
+      "geneContextQualifier": {
+        "conceptType": "gene",
+        "extensions": [
+          {
+            "name": "submitted gene symbols",
+            "value": [
+              "ABCA4"
+            ]
+          }
+        ],
+        "mappings": [
+          {
+            "coding": {
+              "code": "34",
+              "iris": [
+                "https://identifiers.org/hgnc:34",
+                "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/34"
+              ],
+              "system": "https://www.genenames.org"
+            },
+            "relation": "exactMatch"
+          }
+        ],
+        "name": "ABCA4",
+        "primaryCoding": {
+          "code": "24",
+          "iris": [
+            "https://identifiers.org/ncbigene:24",
+            "https://www.ncbi.nlm.nih.gov/gene/24"
+          ],
+          "name": "ABCA4",
+          "system": "https://www.ncbi.nlm.nih.gov/gene/"
+        },
+        "scv_id": "SCV000598947"
+      },
+      "id": "SCV000598947",
+      "objectCondition": {
+        "conceptType": "Disease",
+        "extensions": [
+          {
+            "name": "clinvar trait id",
+            "value": "3842"
+          },
+          {
+            "name": "clinvar trait type",
+            "value": "Disease"
+          },
+          {
+            "name": "aliases",
+            "value": "Stargardt macular dystrophy, Juvenile onset macular degeneration, Stargardt disease 1, MACULAR DYSTROPHY WITH FLECKS, TYPE 1, STGD"
+          },
+          {
+            "name": "submitted xrefs",
+            "value": [
+              {
+                "code": "C535804",
+                "system": "MeSH"
+              }
+            ]
+          },
+          {
+            "name": "submitted trait assignment",
+            "value": ""
+          },
+          {
+            "name": "clinvar trait assignment",
+            "value": "single remaining trait"
+          },
+          {
+            "name": "clinvar trait set type",
+            "value": "Disease"
+          },
+          {
+            "name": "clinvar trait set id",
+            "value": "1448"
+          }
+        ],
+        "id": "SCV000598947.0",
+        "mappings": [
+          {
+            "coding": {
+              "code": "364055",
+              "iris": [
+                "https://identifiers.org/orphanet.ordo:Orphanet_364055",
+                "http://www.orpha.net/ORDO/Orphanet_364055"
+              ],
+              "system": "Orphanet"
+            },
+            "relation": "relatedMatch"
+          },
+          {
+            "coding": {
+              "code": "827",
+              "iris": [
+                "https://identifiers.org/orphanet.ordo:Orphanet_827",
+                "http://www.orpha.net/ORDO/Orphanet_827"
+              ],
+              "system": "Orphanet"
+            },
+            "relation": "relatedMatch"
+          },
+          {
+            "coding": {
+              "code": "D000080362",
+              "iris": [
+                "https://identifiers.org/mesh:D000080362",
+                "https://www.ncbi.nlm.nih.gov/mesh/?term=D000080362"
+              ],
+              "system": "MeSH"
+            },
+            "relation": "relatedMatch"
+          },
+          {
+            "coding": {
+              "code": "MONDO:0009549",
+              "iris": [
+                "https://identifiers.org/mondo:0009549",
+                "http://purl.obolibrary.org/obo/MONDO_0009549"
+              ],
+              "system": "MONDO"
+            },
+            "relation": "relatedMatch"
+          }
+        ],
+        "name": "Severe early-childhood-onset retinal dystrophy",
+        "primaryCoding": {
+          "code": "C1855465",
+          "iris": [
+            "https://identifiers.org/medgen:C1855465",
+            "https://www.ncbi.nlm.nih.gov/medgen/C1855465"
+          ],
+          "name": "Severe early-childhood-onset retinal dystrophy",
+          "system": "MedGen"
+        }
+      },
+      "predicate": "isCausalFor",
+      "subjectVariation": "288341",
+      "type": "VariantPathogenicityProposition"
+    },
+    "reportedIn": [
+      {
+        "pmid": "28041643",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/28041643"
+        ]
+      },
+      {
+        "pmid": "23499370",
+        "type": "Document",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/23499370"
+        ]
+      }
+    ],
+    "scv_id": "SCV000598947",
+    "scv_ver": 1,
+    "strength": {
+      "name": "likely"
+    },
+    "type": "Statement"
+  }
+}

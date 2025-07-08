@@ -1,0 +1,219 @@
+{
+  "2689137": {
+    "constraints": [
+      {
+        "allele": "#/clinvar:2689137/members/0/",
+        "relations": [
+          {
+            "primaryCoding": {
+              "code": "liftover_to",
+              "system": "ga4gh-gks-term:allele-relation"
+            }
+          },
+          {
+            "primaryCoding": {
+              "code": "transcribed_to",
+              "iris": [
+                "http://www.sequenceontology.org/browser/current_release/term/transcribed_to"
+              ],
+              "system": "http://www.sequenceontology.org"
+            }
+          }
+        ],
+        "type": "DefiningAlleleConstraint"
+      }
+    ],
+    "extensions": [
+      {
+        "name": "clinvar gene list",
+        "value": [
+          {
+            "entrez_gene_id": "2741",
+            "hgnc_id": "HGNC:4326",
+            "iris": [
+              "https://identifiers.org/hgnc:4326",
+              "https://identifiers.org/ncbigene:2741",
+              "https://www.ncbi.nlm.nih.gov/gene/2741"
+            ],
+            "relationship_type": "within single gene",
+            "source": "submitted",
+            "symbol": "GLRA1"
+          }
+        ]
+      },
+      {
+        "name": "clinvar cytogenetic location",
+        "value": "5q33.1"
+      },
+      {
+        "name": "clinvar variation type",
+        "value": "single nucleotide variant"
+      },
+      {
+        "name": "clinvar subclass type",
+        "value": "SimpleAllele"
+      },
+      {
+        "name": "categorical variation type",
+        "value": "CanonicalAllele"
+      },
+      {
+        "name": "defining vrs variation type",
+        "value": "Allele"
+      },
+      {
+        "name": "clinvar hgvs list",
+        "value": [
+          {
+            "maneSelect": true,
+            "molecularConsequence": [
+              {
+                "code": "SO:0001627",
+                "iris": [
+                  "https://identifiers.org/SO:0001627"
+                ],
+                "name": "intron_variant",
+                "system": "http://www.sequenceontology.org/"
+              }
+            ],
+            "nucleotideExpression": {
+              "syntax": "hgvs.c",
+              "value": "NM_000171.4:c.185-3C>T"
+            },
+            "nucleotideType": "coding"
+          },
+          {
+            "molecularConsequence": [
+              {
+                "code": "SO:0001627",
+                "iris": [
+                  "https://identifiers.org/SO:0001627"
+                ],
+                "name": "intron_variant",
+                "system": "http://www.sequenceontology.org/"
+              }
+            ],
+            "nucleotideExpression": {
+              "syntax": "hgvs.c",
+              "value": "NM_001146040.2:c.185-3C>T"
+            },
+            "nucleotideType": "coding"
+          },
+          {
+            "nucleotideExpression": {
+              "syntax": "hgvs.g",
+              "value": "NC_000005.10:g.151886791G>A"
+            },
+            "nucleotideType": "genomic, top-level"
+          },
+          {
+            "nucleotideExpression": {
+              "syntax": "hgvs.g",
+              "value": "NC_000005.9:g.151266352G>A"
+            },
+            "nucleotideType": "genomic, top-level"
+          },
+          {
+            "molecularConsequence": [
+              {
+                "code": "SO:0001627",
+                "iris": [
+                  "https://identifiers.org/SO:0001627"
+                ],
+                "name": "intron_variant",
+                "system": "http://www.sequenceontology.org/"
+              }
+            ],
+            "nucleotideExpression": {
+              "syntax": "hgvs.c",
+              "value": "NM_001292000.2:c.-65-3C>T"
+            },
+            "nucleotideType": "coding"
+          },
+          {
+            "nucleotideExpression": {
+              "syntax": "hgvs.g",
+              "value": "NG_011764.1:g.43046C>T"
+            },
+            "nucleotideType": "genomic"
+          }
+        ]
+      }
+    ],
+    "id": "clinvar:2689137",
+    "mappings": [
+      {
+        "coding": {
+          "code": "2689137",
+          "iris": [
+            "https://identifiers.org/clinvar:2689137"
+          ],
+          "system": "ClinVar"
+        },
+        "relation": "exactMatch"
+      },
+      {
+        "coding": {
+          "code": "CA1591593708",
+          "iris": [
+            "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid=CA1591593708"
+          ],
+          "system": "ClinGen"
+        },
+        "relation": "closeMatch"
+      }
+    ],
+    "members": [
+      {
+        "digest": "UWm0Zaeu0ci9Rb8THTDCHo1m35JLe1Un",
+        "expressions": [
+          {
+            "syntax": "spdi",
+            "value": "NC_000005.10:151886790:G:A"
+          },
+          {
+            "syntax": "hgvs.g",
+            "value": "NC_000005.10:g.151886791G>A"
+          },
+          {
+            "syntax": "gnomad",
+            "value": "5-151886791-G-A"
+          }
+        ],
+        "id": "ga4gh:VA.UWm0Zaeu0ci9Rb8THTDCHo1m35JLe1Un",
+        "location": {
+          "sl": {
+            "digest": "AM3NhDPjui62yUox0YetYsgXi4cQHBtG",
+            "end": 151886791,
+            "id": "ga4gh:SL.AM3NhDPjui62yUox0YetYsgXi4cQHBtG",
+            "sequenceReference": {
+              "sq": {
+                "extensions": [
+                  {
+                    "name": "assembly",
+                    "value": "GRCh38"
+                  }
+                ],
+                "moleculeType": "genomic",
+                "name": "NC_000005.10",
+                "refgetAccession": "SQ.aUiQCzCPZ2d0csHbMSbh2NzInhonSXwI",
+                "residueAlphabet": "na",
+                "type": "SequenceReference"
+              }
+            },
+            "start": 151886790,
+            "type": "SequenceLocation"
+          }
+        },
+        "name": "NC_000005.10:g.151886791G>A",
+        "state": {
+          "sequence": "A",
+          "type": "LiteralSequenceExpression"
+        },
+        "type": "Allele"
+      }
+    ],
+    "name": "NM_000171.4(GLRA1):c.185-3C>T",
+    "type": "CategoricalVariant"
+  }
+}

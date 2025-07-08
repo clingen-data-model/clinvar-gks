@@ -22,8 +22,7 @@
             "molecularType": "genomic"
           },
           "start": 11128043,
-          "end": 11128045,
-          "sequence": "AT"
+          "end": 11128045
         },
         "state": {
           "type": "ReferenceLengthExpression",
