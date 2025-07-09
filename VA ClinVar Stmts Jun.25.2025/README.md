@@ -61,12 +61,12 @@ Comprehensive documentation covering:
 
 **#GC-0 Germline Classification Scenarios**
 Six detailed use cases demonstrating:
-- **[GC-01](scv/clinvar%20scv%20examples.md#use-case-gc-01-single-not-provided-scv)**: Single Not Provided SCV (baseline)
-- **[GC-02](scv/clinvar%20scv%20examples.md#use-case-gc-02-conflicting-0-star-vp-scvs)**: Conflicting 0-star VP SCVs (discordance detection)
-- **[GC-03](scv/clinvar%20scv%20examples.md#use-case-gc-03-conflicting-1-star-vp-scvs)**: Conflicting 1-star VP SCVs (higher-quality discordance)
-- **[GC-04](scv/clinvar%20scv%20examples.md#use-case-gc-04-concordant-1-star-vp-scvs-with-oth-1-star-scv)**: Concordant 1-star VP SCVs with OTH (2★ exception rule)
-- **[GC-05](scv/clinvar%20scv%20examples.md#use-case-gc-05-expert-panel-np-3-star-scv)**: Expert panel NP 3-star SCV (expert panel authority)
-- **[GC-06](scv/clinvar%20scv%20examples.md#use-case-gc-06-expert-panel-vp-3-star-scv-update--dr-3-star-scv)**: Expert panel VP & DR 3-star SCVs (multiple expert classifications)
+- **[GC-01](scv/clinvar%20scv%20examples.md#use-case-gc-01-v1-single-not-provided-scv)**: V1 Single Not Provided SCV (baseline)
+- **[GC-02](scv/clinvar%20scv%20examples.md#use-case-gc-02-v1-conflicting-0-star-vp-scvs--0-star-rf-scv)**: V1 Conflicting 0-star VP SCVs & 0-star RF SCV (discordance detection)
+- **[GC-03](scv/clinvar%20scv%20examples.md#use-case-gc-03-v1-conflicting-1-star-vp-scvs)**: V1 Conflicting 1-star VP SCVs (higher-quality discordance)
+- **[GC-04](scv/clinvar%20scv%20examples.md#use-case-gc-04-v1-flagged-submission-and-concordant-1-star-vp-scvs)**: V1 Flagged Submission and Concordant 1-star VP SCVs (flagged exclusion & concordance)
+- **[GC-05](scv/clinvar%20scv%20examples.md#use-case-gc-05-v2-expert-panel-np-3-star-scv)**: V2 Expert panel NP 3-star SCV (expert panel authority)
+- **[GC-06](scv/clinvar%20scv%20examples.md#use-case-gc-06-v2-expert-panel-vp-3-star-scv-update--dr-3-star-scv)**: V2 Expert panel VP & DR 3-star SCVs (multiple expert classifications)
 
 **#SC-0 Somatic Clinical Impact Scenarios**
 **TODO: Documentation to be added**
