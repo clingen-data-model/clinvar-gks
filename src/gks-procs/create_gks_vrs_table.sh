@@ -5,15 +5,8 @@ PROJECT_ID='clingen-dev'
 
 # Array of release dates to process
 RELEASE_DATES=(
-  '2025-04-13'
-  '2025-04-20'
-  '2025-04-29'
-  '2025-05-04'
-  '2025-05-20 '
-  '2025-05-25'
-  '2025-06-01'
-  '2025-06-08'
-  '2025-06-14'
+  '2025-07-20'
+  '2025-07-29'
   # Add more dates as needed
 )
 
@@ -21,7 +14,7 @@ RELEASE_DATES=(
 TABLE_ID='gks_vrs'
 
 # Set the BigQuery schema
-SCHEMA_FILE_PATH='vrs_output_2_0.schema.json'
+SCHEMA_FILE_PATH='vrs_output_2_0_1.schema.json'
 
 # Function to generate dataset ID from date
 generate_dataset_id() {
@@ -34,7 +27,7 @@ load_vrs_data() {
   local release_date=$1
   local dataset_id
   dataset_id=$(generate_dataset_id "$release_date")
-  local gcs_json_path="gs://clinvar-gks/${release_date}/dev/processed-vi.json.gz"
+  local gcs_json_path="gs://clinvar-gks/${release_date}/dev/vi-normalized-no-liftover-fix.jsonl.gz"
   
   echo "Processing release date: $release_date"
   echo "Dataset: $dataset_id"

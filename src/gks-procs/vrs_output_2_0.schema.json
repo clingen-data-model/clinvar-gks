@@ -1,0 +1,229 @@
+[
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "variation_id",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "name",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "assembly_version",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "accession",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "vrs_class",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "absolute_copies",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "REPEATED",
+        "name": "range_copies",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "fmt",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "source",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "issue",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "copy_change_type",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "precedence",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "variation_type",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "subclass_type",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "cytogenetic",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "chr",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "variant_length",
+        "type": "INTEGER"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "system",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "code",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "relation",
+            "type": "STRING"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "mappings",
+        "type": "RECORD"
+      }
+    ],
+    "mode": "NULLABLE",
+    "name": "in",
+    "type": "RECORD"
+  },
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "id",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "type",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "digest",
+        "type": "STRING"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "id",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "type",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "digest",
+            "type": "STRING"
+          },
+          {
+            "fields": [
+              {
+                "mode": "NULLABLE",
+                "name": "type",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "refgetAccession",
+                "type": "STRING"
+              }
+            ],
+            "mode": "NULLABLE",
+            "name": "sequenceReference",
+            "type": "RECORD"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "start",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "end",
+            "type": "STRING"
+          }
+        ],
+        "mode": "NULLABLE",
+        "name": "location",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "type",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "sequence",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "length",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "repeatSubunitLength",
+            "type": "INTEGER"
+          }
+        ],
+        "mode": "NULLABLE",
+        "name": "state",
+        "type": "RECORD"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "copyChange",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "copies",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "REPEATED",
+        "name": "errors",
+        "type": "STRING"
+      }
+    ],
+    "mode": "NULLABLE",
+    "name": "out",
+    "type": "RECORD"
+  }
+]
