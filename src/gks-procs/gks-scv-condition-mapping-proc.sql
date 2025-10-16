@@ -47,12 +47,12 @@ BEGIN
           rmt.ts.trait as rcv_traits,
           [
             STRUCT(
-              'clinvar trait set type' as name, 
+              'clinvarTraitSetType' as name, 
               rmt.ts.type as value_string,
               [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
             ),
             STRUCT(
-              'clinvar trait set id' as name, 
+              'clinvarTraitSetId' as name, 
               rmt.trait_set_id as value_string,
               [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
             )
@@ -121,7 +121,7 @@ BEGIN
     """, rec.schema_name);
 
     EXECUTE IMMEDIATE FORMAT("""
-      CREATE TEMP TABLE _SESSION.temp_normalized_traits
+      CREATE OR REPLACE TABLE `%s.gks_normalized_traits`
       AS
         -- build a list of unique normalized trait id records reducing any
         -- duplicate trait id records to use the one with more lookup values
@@ -171,7 +171,7 @@ BEGIN
         JOIN dupe_trait_recs dtr
         ON
           dtr.trait_id = tr.trait_id
-    """);
+    """, rec.schema_name);
 
     EXECUTE IMMEDIATE FORMAT("""
       CREATE TEMP TABLE _SESSION.temp_scv_trait_name_xrefs
@@ -986,7 +986,7 @@ BEGIN
           JOIN _SESSION.temp_all_rcv_traits art
           ON 
             art.trait_set_id = ust.trait_set_id
-          JOIN _SESSION.temp_normalized_traits nt
+          JOIN `%s.gks_normalized_traits` nt
           ON
             nt.trait_id = art.trait_id
           WHERE
@@ -1007,7 +1007,7 @@ BEGIN
           JOIN _SESSION.temp_all_rcv_traits art
           ON 
             art.trait_set_id = ust.trait_set_id
-          JOIN _SESSION.temp_normalized_traits nt
+          JOIN `%s.gks_normalized_traits` nt
           ON
             nt.trait_id = art.trait_id
           CROSS JOIN UNNEST(nt.omim_ids) as omim_id
@@ -1029,7 +1029,7 @@ BEGIN
           JOIN _SESSION.temp_all_rcv_traits art
           ON 
             art.trait_set_id = ust.trait_set_id
-          JOIN _SESSION.temp_normalized_traits nt
+          JOIN `%s.gks_normalized_traits` nt
           ON
             nt.trait_id = art.trait_id
           CROSS JOIN UNNEST(nt.hp_ids) as hp_id
@@ -1051,7 +1051,7 @@ BEGIN
           JOIN _SESSION.temp_all_rcv_traits art
           ON 
             art.trait_set_id = ust.trait_set_id
-          JOIN _SESSION.temp_normalized_traits nt
+          JOIN `%s.gks_normalized_traits` nt
           ON
             nt.trait_id = art.trait_id
           CROSS JOIN UNNEST(nt.mondo_ids) as mondo_id
@@ -1073,7 +1073,7 @@ BEGIN
           JOIN _SESSION.temp_all_rcv_traits art
           ON 
             art.trait_set_id = ust.trait_set_id
-          JOIN _SESSION.temp_normalized_traits nt
+          JOIN `%s.gks_normalized_traits` nt
           ON
             nt.trait_id = art.trait_id
           CROSS JOIN UNNEST(nt.orphanet_ids) as orphanet_id
@@ -1095,7 +1095,7 @@ BEGIN
           JOIN _SESSION.temp_all_rcv_traits art
           ON 
             art.trait_set_id = ust.trait_set_id
-          JOIN _SESSION.temp_normalized_traits nt
+          JOIN `%s.gks_normalized_traits` nt
           ON
             nt.trait_id = art.trait_id
           CROSS JOIN UNNEST(nt.mesh_ids) as mesh_id
@@ -1128,6 +1128,12 @@ BEGIN
           assign_type
         from rcv_trait_direct_assignment rtda
     """, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
     rec.schema_name, 
     rec.schema_name
     );
@@ -1175,7 +1181,7 @@ BEGIN
             CAST(null as STRING) as trait_relationship_type,
             nt.medgen_id as trait_medgen_id,
             'rcv-scv rogue trait omim_id' as assign_type
-          FROM _SESSION.temp_normalized_traits nt
+          FROM `%s.gks_normalized_traits` nt
           CROSS JOIN UNNEST(nt.omim_ids) as omim_id
           JOIN unassigned_scv_traits ust
           ON
@@ -1193,7 +1199,7 @@ BEGIN
             CAST(null as STRING) as trait_relationship_type,
             nt.medgen_id as trait_medgen_id,
             'rcv-scv rogue trait hp_id' as assign_type
-          from _SESSION.temp_normalized_traits nt
+          from `%s.gks_normalized_traits` nt
           CROSS JOIN UNNEST(nt.hp_ids) as hp_id
           JOIN unassigned_scv_traits ust
           ON
@@ -1229,7 +1235,7 @@ BEGIN
             CAST(null as STRING) as trait_relationship_type,
             nt.medgen_id as trait_medgen_id,
             'rcv-scv rogue trait orphanet_id' as assign_type
-          FROM _SESSION.temp_normalized_traits nt
+          FROM `%s.gks_normalized_traits` nt
           CROSS JOIN UNNEST(nt.orphanet_ids) as orphanet_id
           JOIN unassigned_scv_traits ust
           ON
@@ -1265,7 +1271,7 @@ BEGIN
             CAST(null as STRING) as trait_relationship_type,
             nt.medgen_id as trait_medgen_id,
             'rcv-scv rogue trait mondo_id' as assign_type
-          from _SESSION.temp_normalized_traits nt
+          from `%s.gks_normalized_traits` nt
           CROSS JOIN UNNEST(nt.mondo_ids) as mondo_id
           JOIN unassigned_scv_traits ust
           ON
@@ -1301,7 +1307,7 @@ BEGIN
             CAST(null as STRING) as trait_relationship_type,
             nt.medgen_id as trait_medgen_id,
             'rcv-scv rogue trait mesh_id' as assign_type
-          from _SESSION.temp_normalized_traits nt
+          from `%s.gks_normalized_traits` nt
           CROSS JOIN UNNEST(nt.mesh_ids) as mesh_id
           JOIN unassigned_scv_traits ust
           ON
@@ -1338,7 +1344,7 @@ BEGIN
             CAST(null as STRING) as trait_relationship_type,
             nt.medgen_id as trait_medgen_id,
             'rcv-scv rogue trait name' as assign_type
-          FROM _SESSION.temp_normalized_traits nt
+          FROM `%s.gks_normalized_traits` nt
           JOIN unassigned_scv_traits ust
           ON
             LOWER(nt.trait_name) = LOWER(ust.cat_name)
@@ -1376,7 +1382,7 @@ BEGIN
             CAST(null as STRING) as trait_relationship_type,
             nt.medgen_id as trait_medgen_id,
             'rcv-scv rogue alternate trait name' as assign_type
-          FROM _SESSION.temp_normalized_traits nt
+          FROM `%s.gks_normalized_traits` nt
           CROSS JOIN UNNEST(nt.alternate_names) alt_name
           JOIN unassigned_scv_traits ust
           ON
@@ -1415,7 +1421,7 @@ BEGIN
             CAST(null as STRING) as trait_relationship_type,
             nt.medgen_id as trait_medgen_id,
             'rcv-scv rogue trait name' as assign_type
-          FROM _SESSION.temp_normalized_traits nt
+          FROM `%s.gks_normalized_traits` nt
           JOIN unassigned_scv_traits ust
           ON
             nt.medgen_id = ust.medgen_id
@@ -1466,6 +1472,14 @@ BEGIN
           assign_type
         FROM rcv_rogue_assignment_final rraf
     """, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
+    rec.schema_name, 
     rec.schema_name, 
     rec.schema_name
     );
@@ -1538,7 +1552,6 @@ BEGIN
     DROP TABLE _SESSION.temp_normalized_trait_mappings;
     DROP TABLE _SESSION.temp_rcv_mapping_traits;
     DROP TABLE _SESSION.temp_all_rcv_traits;
-    DROP TABLE _SESSION.temp_normalized_traits;
     DROP TABLE _SESSION.temp_scv_trait_name_xrefs;
     DROP TABLE _SESSION.temp_rcv_trait_assignment_stage1;
     DROP TABLE _SESSION.temp_rcv_trait_assignment_stage2;

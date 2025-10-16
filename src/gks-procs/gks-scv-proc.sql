@@ -8,41 +8,15 @@ BEGIN
         SELECT 
           scv.id,
           scv.version,
-          CASE scv.statement_type
-            WHEN 'GermlineClassification' THEN
-              CASE cct.original_proposition_type
-              WHEN 'path' THEN
-                STRUCT('VariantPathogenicityProposition' as type, 'isCausalFor' as pred)
-              WHEN 'aff' THEN
-                STRUCT('ClinVarAffectsProposition' as type, 'hasAffectFor' as pred)
-              WHEN 'rf' THEN
-                STRUCT('ClinVarRiskFactorProposition' as type, 'isRiskFactorFor' as pred)
-              WHEN 'np' THEN
-                STRUCT('ClinVarNotProvidedProposition' as type, 'hasNoProvidedClassificationFor' as pred)
-              WHEN 'oth' THEN
-                STRUCT('ClinVarOtherProposition' as type, 'isClinVarOtherAssociationFor' as pred)
-              WHEN 'protect' THEN
-                STRUCT('ClinVarProtectiveProposition' as type, 'isProtectiveFor' as pred)
-              WHEN 'dr' THEN
-                STRUCT('ClinVarDrugResponseProposition' as type, 'hasDrugResponseFor' as pred)
-              WHEN 'cs' THEN
-                STRUCT('ClinVarConfersSensitivityProposition' as type, 'confersSensitivityFor' as pred)
-              WHEN 'assoc' THEN
-                STRUCT('ClinVarAssociationProposition' as type, 'isAssociationWith' as pred)
-              ELSE
-                STRUCT('ClinVarUndefinedProposition' as type, 'isClinVarUndefinedAssociationFor' as pred)
-              END 
-              -- IF(
-              --   cct.original_proposition_type = 'path',
-              --   STRUCT('VariantPathogenicityProposition' as type, 'isCausalFor' as pred),
-              --   STRUCT('ClinVarOtherProposition' as type, 'isClinVarSpecializedAssociationFor' as pred)
-              -- ) 
-            WHEN 'OncogenicityClassification' THEN 
-              STRUCT('VariantOncogenicityProposition' as type, 'isOncogenicFor' as pred)
-            WHEN 'SomaticClinicalImpact' THEN
-              CASE scv.clinical_impact_assertion_type
-              WHEN 'prognostic' THEN 
-                CASE scv.clinical_impact_clinical_significance
+          IF(
+            cct.final_proposition_type IS NOT NULL,
+            STRUCT(cct.final_proposition_type as type, cct.final_predicate as pred),
+            STRUCT('ClinvarUndefinedProposition' as type, 'isClinvarUndefinedAssociationFor' as pred)
+          ) as proposition,
+
+          CASE scv.clinical_impact_assertion_type
+            WHEN 'prognostic' THEN 
+              CASE scv.clinical_impact_clinical_significance
                 WHEN 'better outcome' THEN
                   STRUCT('VariantPrognosticProposition' as type, 'associatedWithBetterOutcomeFor' as pred)
                 WHEN 'poor outcome' THEN
@@ -50,9 +24,9 @@ BEGIN
                 ELSE
                   -- should never occur
                   STRUCT('VariantPrognosticProposition' as type, 'associatedWithUndefinedOutcomeFor' as pred)
-                END
-              WHEN 'diagnostic' THEN 
-                CASE scv.clinical_impact_clinical_significance
+              END
+            WHEN 'diagnostic' THEN 
+              CASE scv.clinical_impact_clinical_significance
                 WHEN 'supports diagnosis' THEN
                   STRUCT('VariantDiagnosticProposition' as type, 'isDiagnosticInclusionCriterionFor' as pred)
                 WHEN 'excludes diagnosis' THEN
@@ -60,9 +34,9 @@ BEGIN
                 ELSE
                   -- should never occur
                   STRUCT('VariantDiagnosticProposition' as type, 'isDiagnosticUndefinedCriterionFor' as pred)
-                END              
-              WHEN 'therapeutic' THEN 
-                CASE scv.clinical_impact_clinical_significance
+              END              
+            WHEN 'therapeutic' THEN 
+              CASE scv.clinical_impact_clinical_significance
                 WHEN 'sensitivity/response' THEN
                   STRUCT('VariantTherapeuticResponseProposition' as type, 'predictsSensitivityTo' as pred)
                 WHEN 'resistance' THEN
@@ -73,10 +47,9 @@ BEGIN
                 ELSE
                   -- should never occur
                   STRUCT('VariantTherapeuticResponseProposition' as type, 'predictsUndefinedResponseTo' as pred)
-                END            
-              ELSE STRUCT('ClinVarSomaticClinicalImpactProposition' as type, 'isClinicallySignificantFor' as pred)
-              END
-          END as proposition,
+              END            
+          END as evidence_line_target_proposition,
+          
           scv.date_created,
           scv.date_last_updated,
           scv.local_key,
@@ -89,6 +62,7 @@ BEGIN
           cct.classification_code,
           cct.strength_label as strength_name,
           cct.strength_code,
+          cct.code_system as classif_and_strength_code_system,
           scv.method_type,
           scv.origin,
           scv.classif_type,
@@ -105,20 +79,22 @@ BEGIN
             ';'
           ) as drugTherapy,
           `clinvar_ingest.parseAttributeSet`(ca.content) as attribs,
-          ARRAY_CONCAT(
-            `clinvar_ingest.parseCitations`(JSON_EXTRACT(ca.content,'$')),
-            `clinvar_ingest.parseCitations`(JSON_EXTRACT(ca.content,'$.Classification'))
+          (
+            SELECT ARRAY_AGG(s)
+            FROM (
+              SELECT DISTINCT s
+              FROM UNNEST(
+                ARRAY_CONCAT(
+                  `clinvar_ingest.parseCitations`(JSON_EXTRACT(ca.content,'$')),
+                  `clinvar_ingest.parseCitations`(JSON_EXTRACT(ca.content,'$.Classification'))
+                )
+              ) AS s
+            ) 
           ) as scvCitations,
           STRUCT (
             FORMAT('clinvar.submitter:%%s',scv.submitter_id) as id,
             'Agent' as type,
             scv.submitter_name as name,
-            [
-              STRUCT(
-                'clinvar submitter id' as name,
-                scv.submitter_id as value
-              )
-            ] as extensions
           ) as submitter
 
         FROM `%s.clinical_assertion` ca

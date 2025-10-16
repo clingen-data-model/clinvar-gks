@@ -390,7 +390,7 @@ BEGIN
       cat_ext_item AS (
         SELECT
           ctx.variation_id,
-          'categorical variation type' as name,
+          'categoricalVariationType' as name,
           ctx.catvar_type as value_string,
           CAST(null as BOOLEAN) as value_boolean,
           null as value_coding,
@@ -400,7 +400,7 @@ BEGIN
         union all
         SELECT
           ctx.variation_id,
-          'defining vrs variation type' as name,
+          'definingVrsVariationType' as name,
           ctx.vrs_class as value_string,
           CAST(null as BOOLEAN) as value_boolean,
           null as value_coding,
@@ -410,7 +410,7 @@ BEGIN
         union all
         select
           variation_id,
-          'clinvar variation type' as name,
+          'clinvarVariationType' as name,
           vi.variation_type as value_string,
           CAST(null as BOOLEAN) as value_boolean,
           null as value_coding,
@@ -422,7 +422,7 @@ BEGIN
         union all
         select
           variation_id,
-          'clinvar subclass type' as name,
+          'clinvarSubclassType' as name,
           vi.subclass_type as value_string,
           CAST(null as BOOLEAN) as value_boolean,
           null as value_coding,
@@ -434,7 +434,7 @@ BEGIN
         union all
         select
           variation_id,
-          'clinvar cytogenetic location' as name,
+          'clinvarCytogeneticLocation' as name,
           vi.cytogenetic as value_string,
           CAST(null as BOOLEAN) as value_boolean,
           null as value_coding,
@@ -446,7 +446,7 @@ BEGIN
         UNION ALL
         select
           ctx.variation_id,
-          'vrs pre-processing issue' as name,
+          'vrsPreProcessingIssue' as name,
           ctx.vrs_issue as value_string,
           CAST(null as BOOLEAN) as value_boolean,
           null as value_coding,
@@ -458,7 +458,7 @@ BEGIN
         UNION ALL
         select
           vrs.in.variation_id,
-          'vrs processing exception' as name,
+          'vrsProcessingException' as name,
           vrs.out.errors as value_string,
           CAST(null as BOOLEAN) as value_boolean,
           null as value_coding,
@@ -470,7 +470,7 @@ BEGIN
         UNION ALL
         select
           vhl.variation_id,
-          'clinvar hgvs list' as name,
+          'clinvarHgvsList' as name,
           CAST(null as STRING) as value_string,
           CAST(null as BOOLEAN) as value_boolean,
           null as value_coding,
@@ -480,7 +480,7 @@ BEGIN
         UNION ALL
         select
           vgl.variation_id,
-          'clinvar gene list' as name,
+          'clinvarGeneList' as name,
           CAST(null as STRING) as value_string,
           CAST(null as BOOLEAN) as value_boolean,
           null as value_coding,
@@ -536,7 +536,7 @@ BEGIN
             WHEN 'pharmgkb clinical annotation' THEN [FORMAT('https://www.pharmgkb.org/clinicalAnnotation/%%s', x.id)]
             WHEN 'omim' THEN [FORMAT('http://www.omim.org/entry/%%s', REPLACE(x.id, '.','#'))]
             WHEN 'uniprotkb' THEN [FORMAT('https://www.uniprot.org/uniprot/%%s', x.id)]
-            WHEN 'genetic testing registry (gtr)' THEN [FORMAT('https://www.ncbi.nlm.nih.gov/tests/%%s', x.id)]
+            WHEN 'genetic testing registry (gtr)' THEN [FORMAT('https://www.ncbi.nlm.nih.gov/gtr/tests/%%s', x.id)]
             ELSE [] -- others exist which haven't been reconciled (e.g. VARSOME, BIC, Leiden, LOVD, etc..)
             END as iris
           ) as coding,
@@ -587,7 +587,7 @@ BEGIN
         SELECT
           ctx.variation_id,
           'DefiningAlleleConstraint' as type,
-          FORMAT('#/%%s/members/0/', ctx.variation_id) as allele,
+          '2/members/0/' as allele,
           null as location,
           null as matchCharacteristic,
           [ STRUCT(
@@ -615,7 +615,7 @@ BEGIN
           ctx.variation_id,
           'DefiningLocationConstraint' as type,
           null as allele,
-          FORMAT('#/%%s/members/0/location/', ctx.variation_id) as location,
+          '2/members/0/location/' as location,
           STRUCT(
             STRUCT(
               'is_within' as code,
@@ -724,7 +724,7 @@ BEGIN
       )
       select 
         x.id, 
-        `clinvar_ingest.normalizeAndKeyById`(x.json_data) as rec 
+        `clinvar_ingest.normalizeAndKeyById`(x.json_data, true) as rec 
       from x
     """, 
     rec.schema_name, 

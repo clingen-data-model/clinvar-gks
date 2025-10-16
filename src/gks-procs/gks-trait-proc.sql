@@ -97,12 +97,12 @@ BEGIN
           ARRAY_CONCAT(
             [
               STRUCT( 
-                'clinvar trait id' as name,
+                'clinvarTraitId' as name,
                 t.id as value_string,
                 [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
               ),
               STRUCT( 
-                'clinvar trait type' as name,
+                'clinvarTraitType' as name,
                 t.type as value_string,
                 [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
               )
