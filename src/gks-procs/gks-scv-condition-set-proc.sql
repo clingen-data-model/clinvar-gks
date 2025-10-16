@@ -23,7 +23,7 @@ BEGIN
                   IF(
                     ARRAY_LENGTH(scm.submitted_xrefs) > 0, 
                     [STRUCT(
-                      'submitted xrefs' as name, 
+                      'submittedScvXrefs' as name, 
                       CAST(null as string) as value_string,
                       scm.submitted_xrefs as value_array_codings
                     )], 
@@ -33,7 +33,7 @@ BEGIN
                 IF(
                   scm.cat_tm_match IS NOT NULL, 
                   [STRUCT(
-                    'submitted trait assignment' as name, 
+                    'submittedScvTraitAssignment' as name, 
                     scm.cat_tm_match as value_string,
                     [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
                   )],
@@ -43,7 +43,7 @@ BEGIN
               IF(
                 scm.assign_type IS NOT NULL, 
                 [STRUCT(
-                  'clinvar trait assignment' as name, 
+                  'clinvarScvTraitAssignment' as name, 
                   scm.assign_type as value_string,
                   [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
                 )],
@@ -53,7 +53,7 @@ BEGIN
             IF(
               scm.mapping_type IS NOT NULL, 
               [STRUCT(
-                'clinvar trait mapping type:ref(val)' as name, 
+                'clinvarScvTraitMappingType:ref(val)' as name, 
                 FORMAT('%%s:%%s(%%s)', scm.mapping_type, scm.mapping_ref, scm.mapping_value) as value_string,
                 [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
               )],
@@ -114,7 +114,7 @@ BEGIN
                 AND 
                 gsts.cats_type IS DISTINCT FROM gsts.trait_set_type, 
                 [STRUCT(
-                  'submitted trait set type' as name, 
+                  'submittedScvTraitSetType' as name, 
                   gsts.cats_type as value_string,
                   [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
                 )],
@@ -137,7 +137,7 @@ BEGIN
                 AND 
                 gsts.cats_type IS DISTINCT FROM gsts.trait_set_type, 
                 [STRUCT(
-                  'submitted trait set type' as name, 
+                  'submittedScvTraitSetType' as name, 
                   gsts.cats_type as value_string,
                   [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
                 )],

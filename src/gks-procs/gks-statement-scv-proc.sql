@@ -1,9 +1,10 @@
-CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_statement_scv_proc`(on_date DATE) BEGIN FOR rec IN (
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_statement_scv_proc`(on_date DATE) 
+BEGIN FOR rec IN (
     select s.schema_name
     FROM clinvar_ingest.schema_on(on_date) as s
   ) DO EXECUTE IMMEDIATE FORMAT(
     """
-      CREATE OR REPLACE TABLE `%s.gks_pre_statement_scv`
+      CREATE OR REPLACE TABLE `%s.gks_statement_scv_pre`
       as
       WITH scv_citation AS (
         SELECT
@@ -61,8 +62,7 @@ CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_statement_scv_proc`(on_date DATE
           cid.source is null 
           AND 
           c.url is not null
-      )
-      ,
+      ),
       scv_citations as (
         SELECT
           id,
@@ -78,25 +78,19 @@ CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_statement_scv_proc`(on_date DATE
               'Contribution' as type,
               scv.submitter as contributor,
               scv.date_last_updated as date,
-              STRUCT(
-                'submitted' as name
-              ) as activityType
+              'submitted' as activityType
             ),
             STRUCT(
               'Contribution' as type,
               scv.submitter as contributor,
               scv.date_created as date,
-              STRUCT(
-                'created' as name
-              ) as activityType
+              'created' as activityType
             ),
             STRUCT(
               'Contribution' as type,
               scv.submitter as contributor,
               scv.last_evaluated as date,
-              STRUCT(
-                'evaluated' as name
-              ) as activityType
+              'evaluated' as activityType
             )
           ] as contributions
         FROM `%s.gks_scv` scv
@@ -160,25 +154,25 @@ CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_statement_scv_proc`(on_date DATE
             ARRAY_CONCAT(
               ARRAY_CONCAT(
                 [
-                  STRUCT('clinvar scv id' as name, scv.id as value_string),
-                  STRUCT('clinvar scv version' as name, CAST(scv.version AS STRING) as value_string)
+                  STRUCT('clinvarScvId' as name, scv.id as value_string),
+                  STRUCT('clinvarScvVersion' as name, CAST(scv.version AS STRING) as value_string)
                 ],
                 IF(
                   scv.review_status IS NULL,
                   [],
-                  [STRUCT('clinvar review status' as name, scv.review_status as value_string)]
+                  [STRUCT('clinvarScvReviewStatus' as name, scv.review_status as value_string)]
                 )
               ),
               IF(
                 scv.submitted_classification IS NOT DISTINCT FROM scv.classification_name,
                 [],
-                [STRUCT('submitted classification' as name, scv.submitted_classification as value_string)]
+                [STRUCT('submittedScvClassification' as name, scv.submitted_classification as value_string)]
               )  
             ),
             IF(
               scv.local_key IS NULL,
               [],
-              [STRUCT('submitted local key' as name, scv.local_key as value_string)]
+              [STRUCT('submittedScvLocalKey' as name, scv.local_key as value_string)]
             )
           ) extensions
         FROM `%s.gks_scv` scv
@@ -189,29 +183,54 @@ CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_statement_scv_proc`(on_date DATE
         'Statement' as type,
         sp as proposition,
         STRUCT(
-          scv.classification_name as name,
-          IF(sm.specifiedBy.name is not null,
-            STRUCT(
-              IFNULL(scv.submitted_classification,scv.classification_name) as code,
-              sm.specifiedBy.name as system
-            ),
+          scv.submitted_classification as name,
+          IF(
+            scv.classification_code IS NOT NULL,
+            STRUCT(scv.classification_code as code, scv.classif_and_strength_code_system as system),
             null
           ) as primaryCoding
-          
         ) as classification,
-        STRUCT(
-          scv.strength_name as name
+         STRUCT(
+          scv.strength_name as name,
+          IF(
+            scv.strength_code IS NOT NULL,
+            STRUCT(scv.strength_code as code, scv.classif_and_strength_code_system as system),
+            null
+          ) as primaryCoding
         ) as strength,
         scv.direction,
         scv.classification_comment as description,
         contrib.contributions,
         sm.specifiedBy,
         scit.reportedIn,
-        sext.extensions
+        sext.extensions,
+        IF (
+          stp.id is not null,
+          [
+            STRUCT(
+              FORMAT('%%s.%%i', scv.id, scv.version) as id,
+              'EvidenceLine' as type,
+              stp as proposition,
+              'supports' as directionOfEvidenceProvided,
+              CASE scv.classification_code
+                WHEN 'tier 1' THEN
+                  STRUCT('Level A/B' as name)
+                WHEN 'tier 2' THEN
+                  STRUCT('Level C/D' as name)
+                ELSE
+                  STRUCT(scv.classification_code as name)
+              END as evidenceOutcome
+            )
+          ],
+          []
+        ) as hasEvidenceLine
       FROM `%s.gks_scv` scv
       JOIN `%s.gks_scv_proposition` sp
       ON
         sp.id = scv.id
+      LEFT JOIN `%s.gks_scv_target_proposition` stp
+      ON
+        stp.id = scv.id
       LEFT JOIN scv_method sm
       ON
         sm.id = scv.id
@@ -224,7 +243,8 @@ CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_statement_scv_proc`(on_date DATE
       LEFT JOIN scv_citations scit
       ON
         scit.id = scv.id
-    -- """,
+    """,
+    rec.schema_name,
     rec.schema_name,
     rec.schema_name,
     rec.schema_name,
@@ -234,26 +254,69 @@ CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_statement_scv_proc`(on_date DATE
     rec.schema_name,
     rec.schema_name
   );
-EXECUTE IMMEDIATE FORMAT(
-  """
-      CREATE OR REPLACE TABLE `%s.gks_statement_scv`
-      AS
-      WITH x as (
-        SELECT 
-          tv.id,
-          JSON_STRIP_NULLS(
-            TO_JSON(tv),
-          remove_empty => TRUE
-          ) AS json_data
-        FROM `%s.gks_pre_statement_scv` tv
-      )
-      select 
-        x.id, 
-        `clinvar_ingest.normalizeAndKeyById`(x.json_data) as rec 
-      from x
-    """,
+
+  EXECUTE IMMEDIATE FORMAT("""
+    CREATE OR REPLACE TABLE `%s.gks_statement_scv_by_ref`
+    AS
+    WITH json_draft AS (
+      SELECT 
+        tv.id,
+        JSON_STRIP_NULLS(
+          TO_JSON(tv),
+        remove_empty => TRUE
+        ) AS rec
+      FROM `%s.gks_statement_scv_pre` AS tv
+    )
+    select 
+      json_draft.id, 
+      `clinvar_ingest.normalizeAndKeyById`(json_draft.rec, true) as rec 
+    from json_draft  
+  """,
   rec.schema_name,
   rec.schema_name
-);
-END FOR;
+  );
+
+  EXECUTE IMMEDIATE FORMAT("""
+    CREATE OR REPLACE TABLE `%s.gks_statement_scv_inline`
+    AS
+    -- this will create the inlined subjectVariation.
+    WITH inline_proposition AS (
+      SELECT 
+        scv.proposition.* EXCEPT (subjectVariation),
+        var AS subjectVariation
+      FROM `%s.gks_statement_scv_pre` AS scv 
+      JOIN `clingen-dev.%s.gks_catvar_pre` AS var
+      ON 
+        scv.proposition.subjectVariation = var.id
+    ),
+    inline_scv AS (
+      SELECT
+        scv.* EXCEPT (proposition),
+        inline_proposition AS proposition
+      FROM inline_proposition
+      JOIN `clingen-dev.%s.gks_statement_scv_pre` AS scv
+      ON
+        SPLIT(scv.id,'.')[SAFE_OFFSET(0)] = inline_proposition.id
+    ),
+    json_draft AS (
+      SELECT 
+        tv.id,
+        JSON_STRIP_NULLS(
+          TO_JSON(tv),
+        remove_empty => TRUE
+        ) AS rec
+      FROM inline_scv tv
+    )
+    select 
+      json_draft.id, 
+      `clinvar_ingest.normalizeAndKeyById`(json_draft.rec, true) as rec 
+    from json_draft
+  """,
+  rec.schema_name,
+  rec.schema_name,
+  rec.schema_name,
+  rec.schema_name
+  );
+
+  END FOR;
 END;
