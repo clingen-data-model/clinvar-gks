@@ -1,0 +1,1008 @@
+{
+  "classification": {
+    "name": "Tier IV",
+    "primaryCoding": {
+      "code": "tier 4",
+      "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017"
+    }
+  },
+  "contributions": [
+    {
+      "activityType": "submitted",
+      "contributor": {
+        "id": "clinvar.submitter:509361",
+        "name": "Molecular Biology (Zoology) Lab, University of Education, Lahore",
+        "type": "Agent"
+      },
+      "date": "2024-06-17",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "created",
+      "contributor": {
+        "id": "clinvar.submitter:509361",
+        "name": "Molecular Biology (Zoology) Lab, University of Education, Lahore",
+        "type": "Agent"
+      },
+      "date": "2024-06-17",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "evaluated",
+      "contributor": {
+        "id": "clinvar.submitter:509361",
+        "name": "Molecular Biology (Zoology) Lab, University of Education, Lahore",
+        "type": "Agent"
+      },
+      "type": "Contribution"
+    }
+  ],
+  "description": "Classified as Benign/likely benign based on the presence of de novo mutation in a patient with clinical features consistent with CML. Functional studies (Soverini et al., 2015, PMID: 26297264) demonstrated that mutation in the Tp53 gene relates to the loss of function of the protein. Classification follows ACMG/AMP guidelines, meeting criteria PS2 (de novo occurrence), PS3 (functional evidence), and PM2 (absence in controls).",
+  "direction": "disputes",
+  "extensions": [
+    {
+      "name": "clinvarScvId",
+      "value": "SCV005061369"
+    },
+    {
+      "name": "clinvarScvVersion",
+      "value": "1"
+    },
+    {
+      "name": "clinvarScvReviewStatus",
+      "value": "no assertion criteria provided"
+    },
+    {
+      "name": "submittedScvLocalKey",
+      "value": "NM_000546.6:c.802delA|MONDO:11996|ClinicalImpactClassification"
+    }
+  ],
+  "id": "SCV005061369.1",
+  "proposition": {
+    "geneContextQualifier": {
+      "conceptType": "gene",
+      "mappings": [
+        {
+          "coding": {
+            "code": "11998",
+            "iris": [
+              "https://identifiers.org/hgnc:11998",
+              "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/11998"
+            ],
+            "system": "https://www.genenames.org"
+          },
+          "relation": "exactMatch"
+        }
+      ],
+      "name": "TP53",
+      "primaryCoding": {
+        "code": "7157",
+        "iris": [
+          "https://identifiers.org/ncbigene:7157",
+          "https://www.ncbi.nlm.nih.gov/gene/7157"
+        ],
+        "name": "TP53",
+        "system": "https://www.ncbi.nlm.nih.gov/gene/"
+      }
+    },
+    "id": "SCV005061369",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "clinvarTraitId",
+          "value": "2683"
+        },
+        {
+          "name": "clinvarTraitType",
+          "value": "Disease"
+        },
+        {
+          "name": "aliases",
+          "value": "Chronic myelogenous leukemia"
+        },
+        {
+          "name": "submittedScvXrefs",
+          "value": [
+            {
+              "code": "MONDO:0011996",
+              "system": "MONDO"
+            }
+          ]
+        },
+        {
+          "name": "submittedScvTraitAssignment",
+          "value": "scv trait: mondo id 'mondo:0011996'"
+        },
+        {
+          "name": "clinvarScvTraitAssignment",
+          "value": "rcv-tm medgen id"
+        },
+        {
+          "name": "clinvarScvTraitMappingType:ref(val)",
+          "value": "xref:mondo(mondo:0011996)"
+        },
+        {
+          "name": "clinvarTraitSetType",
+          "value": "Disease"
+        },
+        {
+          "name": "clinvarTraitSetId",
+          "value": "6635"
+        }
+      ],
+      "id": "SCV005061369.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "521",
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_521",
+              "http://www.orpha.net/ORDO/Orphanet_521"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "D015464",
+            "iris": [
+              "https://identifiers.org/mesh:D015464",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D015464"
+            ],
+            "system": "MeSH"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0011996",
+            "iris": [
+              "https://identifiers.org/mondo:0011996",
+              "http://purl.obolibrary.org/obo/MONDO_0011996"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0005506",
+            "iris": [
+              "https://identifiers.org/HP:0005506",
+              "https://hpo.jax.org/browse/term/HP:0005506"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Chronic myelogenous leukemia, BCR-ABL1 positive",
+      "primaryCoding": {
+        "code": "C0279543",
+        "iris": [
+          "https://identifiers.org/medgen:C0279543",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0279543"
+        ],
+        "name": "Chronic myelogenous leukemia, BCR-ABL1 positive",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isClinicallySignificantFor",
+    "subjectVariation": {
+      "constraints": [
+        {
+          "allele": "2/members/0/",
+          "relations": [
+            {
+              "primaryCoding": {
+                "code": "liftover_to",
+                "system": "ga4gh-gks-term:allele-relation"
+              }
+            },
+            {
+              "primaryCoding": {
+                "code": "transcribed_to",
+                "iris": [
+                  "http://www.sequenceontology.org/browser/current_release/term/transcribed_to"
+                ],
+                "system": "http://www.sequenceontology.org"
+              }
+            }
+          ],
+          "type": "DefiningAlleleConstraint"
+        }
+      ],
+      "extensions": [
+        {
+          "name": "clinvarGeneList",
+          "value": [
+            {
+              "entrez_gene_id": "7157",
+              "hgnc_id": "HGNC:11998",
+              "iris": [
+                "https://identifiers.org/hgnc:11998",
+                "https://identifiers.org/ncbigene:7157",
+                "https://www.ncbi.nlm.nih.gov/gene/7157"
+              ],
+              "relationship_type": "within single gene",
+              "source": "submitted",
+              "symbol": "TP53"
+            }
+          ]
+        },
+        {
+          "name": "definingVrsVariationType",
+          "value": "Allele"
+        },
+        {
+          "name": "clinvarSubclassType",
+          "value": "SimpleAllele"
+        },
+        {
+          "name": "categoricalVariationType",
+          "value": "CanonicalAllele"
+        },
+        {
+          "name": "clinvarCytogeneticLocation",
+          "value": "17p13.1"
+        },
+        {
+          "name": "clinvarVariationType",
+          "value": "Deletion"
+        },
+        {
+          "name": "clinvarHgvsList",
+          "value": [
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001126117.2:c.407del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001119589.1:p.Asn136fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407263.1:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394192.1:p.Asn229fs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "LRG_321:g.18734del"
+              },
+              "nucleotideType": "genomic"
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_321t5:c.406del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_321p5:p.Asn136Thrfs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_321t2:c.802del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_321:p.Asn268Thrfs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_321t1:c.802del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_321p1:p.Asn268Thrfs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000017.11:g.7673818del"
+              },
+              "nucleotideType": "genomic, top-level"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001126118.2:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001119590.1:p.Asn229fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407262.1:c.803del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394191.1:p.Asn268fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407265.1:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394194.1:p.Asn229fs"
+              }
+            },
+            {
+              "maneSelect": true,
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_000546.6:c.802delA"
+              },
+              "nucleotideType": "coding"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001276695.3:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001263624.1:p.Asn229fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407264.1:c.803del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394193.1:p.Asn268fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407268.1:c.803del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394197.1:p.Asn268fs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_321t4:c.802del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_321p4:p.Asn268Thrfs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001276761.3:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001263690.1:p.Asn229fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001126113.3:c.803del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001119585.1:p.Asn268fs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_321t8:c.685del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_321p8:p.Asn229Thrfs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001619",
+                  "iris": [
+                    "https://identifiers.org/SO:0001619"
+                  ],
+                  "name": "non_coding_transcript_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.n",
+                "value": "NR_176326.1:n.832del"
+              },
+              "nucleotideType": "non-coding"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001276760.3:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001263689.1:p.Asn229fs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_321t3:c.802del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_321p3:p.Asn268Thrfs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_321t7:c.406del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_321p7:p.Asn136Thrfs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NG_017013.2:g.18734del"
+              },
+              "nucleotideType": "genomic"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001126112.3:c.803del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001119584.1:p.Asn268fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407270.1:c.803del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394199.1:p.Asn268fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001126116.2:c.407del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001119588.1:p.Asn136fs"
+              }
+            },
+            {
+              "maneSelect": true,
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_000546.6:c.803del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_000537.3:p.Asn268fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001276696.3:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001263625.1:p.Asn229fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001276697.3:c.326del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001263626.1:p.Asn109fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407267.1:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394196.1:p.Asn229fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407271.1:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394200.1:p.Asn229fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001276698.3:c.326del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001263627.1:p.Asn109fs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_321t6:c.406del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_321p6:p.Asn136Thrfs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407266.1:c.803del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394195.1:p.Asn268fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001407269.1:c.686del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001394198.1:p.Asn229fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001126114.3:c.803del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001119586.1:p.Asn268fs"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000017.10:g.7577136del"
+              },
+              "nucleotideType": "genomic, top-level"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001276699.3:c.326del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001263628.1:p.Asn109fs"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001589",
+                  "iris": [
+                    "https://identifiers.org/SO:0001589"
+                  ],
+                  "name": "frameshift_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001126115.2:c.407del"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001119587.1:p.Asn136fs"
+              }
+            }
+          ]
+        }
+      ],
+      "id": "clinvar:3242232",
+      "mappings": [
+        {
+          "coding": {
+            "code": "3242232",
+            "iris": [
+              "https://identifiers.org/clinvar:3242232"
+            ],
+            "system": "ClinVar"
+          },
+          "relation": "exactMatch"
+        }
+      ],
+      "members": [
+        {
+          "digest": "e3zLbDFYwz4NIrhDt61cHcWhY_MVud37",
+          "expressions": [
+            {
+              "syntax": "spdi",
+              "value": "NC_000017.11:7673816:TT:T"
+            },
+            {
+              "syntax": "hgvs.g",
+              "value": "NC_000017.11:g.7673818del"
+            },
+            {
+              "syntax": "gnomad",
+              "value": "17-7673816-GT-G"
+            }
+          ],
+          "id": "ga4gh:VA.e3zLbDFYwz4NIrhDt61cHcWhY_MVud37",
+          "location": {
+            "digest": "r8IFMbJAK4JN59PkGw2Z7FL-G3tsZcl6",
+            "end": 7673818,
+            "id": "ga4gh:SL.r8IFMbJAK4JN59PkGw2Z7FL-G3tsZcl6",
+            "sequenceReference": {
+              "extensions": [
+                {
+                  "name": "assembly",
+                  "value": "GRCh38"
+                }
+              ],
+              "moleculeType": "genomic",
+              "name": "NC_000017.11",
+              "refgetAccession": "SQ.dLZ15tNO1Ur0IcGjwc3Sdi_0A6Yf4zm7",
+              "residueAlphabet": "na",
+              "type": "SequenceReference"
+            },
+            "start": 7673816,
+            "type": "SequenceLocation"
+          },
+          "name": "NC_000017.11:g.7673818del",
+          "state": {
+            "length": 1,
+            "repeatSubunitLength": 1,
+            "sequence": "T",
+            "type": "ReferenceLengthExpression"
+          },
+          "type": "Allele"
+        }
+      ],
+      "name": "NM_000546.6(TP53):c.803del (p.Asn268fs)",
+      "type": "CategoricalVariant"
+    },
+    "type": "VariantClinicalSignificanceProposition"
+  },
+  "strength": {
+    "name": "Definitive/Likely"
+  },
+  "type": "Statement"
+}
