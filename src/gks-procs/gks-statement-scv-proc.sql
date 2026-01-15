@@ -223,7 +223,7 @@ BEGIN FOR rec IN (
             )
           ],
           []
-        ) as hasEvidenceLine
+        ) as hasEvidenceLines
       FROM `%s.gks_scv` scv
       JOIN `%s.gks_scv_proposition` sp
       ON
