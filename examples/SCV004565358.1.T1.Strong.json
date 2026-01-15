@@ -1,0 +1,761 @@
+{
+  "classification": {
+    "name": "Tier I",
+    "primaryCoding": {
+      "code": "tier 1",
+      "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017"
+    }
+  },
+  "contributions": [
+    {
+      "activityType": "submitted",
+      "contributor": {
+        "id": "clinvar.submitter:506594",
+        "name": "CIViC knowledgebase, Washington University School of Medicine",
+        "type": "Agent"
+      },
+      "date": "2024-02-20",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "created",
+      "contributor": {
+        "id": "clinvar.submitter:506594",
+        "name": "CIViC knowledgebase, Washington University School of Medicine",
+        "type": "Agent"
+      },
+      "date": "2024-02-20",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "evaluated",
+      "contributor": {
+        "id": "clinvar.submitter:506594",
+        "name": "CIViC knowledgebase, Washington University School of Medicine",
+        "type": "Agent"
+      },
+      "date": "2018-02-23",
+      "type": "Contribution"
+    }
+  ],
+  "description": "L858R is among the most common sensitizing EGFR mutations in NSCLC, and is assessed via DNA mutational analysis including Sanger sequencing and next generation sequencing methods. Tyrosine kinase inhibitor erlotinib is associated with improved progression free survival over chemotherapy in EGFR L858R patients (civic.EID:885).",
+  "direction": "supports",
+  "extensions": [
+    {
+      "name": "clinvarScvId",
+      "value": "SCV004565358"
+    },
+    {
+      "name": "clinvarScvVersion",
+      "value": "1"
+    },
+    {
+      "name": "clinvarScvReviewStatus",
+      "value": "criteria provided, single submitter"
+    },
+    {
+      "name": "submittedScvLocalKey",
+      "value": "civic.AID:5"
+    }
+  ],
+  "hasEvidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceOutcome": {
+        "name": "Level A/B"
+      },
+      "id": "SCV004565358.1",
+      "proposition": {
+        "conditionQualifier": {
+          "conceptType": "Disease",
+          "extensions": [
+            {
+              "name": "clinvarTraitId",
+              "value": "7728"
+            },
+            {
+              "name": "clinvarTraitType",
+              "value": "Disease"
+            },
+            {
+              "name": "aliases",
+              "value": "Non-small cell lung cancer"
+            },
+            {
+              "name": "submittedScvTraitAssignment",
+              "value": "scv trait: preferred name 'non-small cell lung carcinoma'"
+            },
+            {
+              "name": "clinvarScvTraitAssignment",
+              "value": "rcv-tm medgen id"
+            },
+            {
+              "name": "clinvarScvTraitMappingType:ref(val)",
+              "value": "name:preferred(non-small cell lung carcinoma)"
+            },
+            {
+              "name": "clinvarTraitSetType",
+              "value": "Disease"
+            },
+            {
+              "name": "clinvarTraitSetId",
+              "value": "4069"
+            }
+          ],
+          "id": "SCV004565358.0",
+          "mappings": [
+            {
+              "coding": {
+                "code": "D002289",
+                "iris": [
+                  "https://identifiers.org/mesh:D002289",
+                  "https://www.ncbi.nlm.nih.gov/mesh/?term=D002289"
+                ],
+                "system": "MeSH"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0005233",
+                "iris": [
+                  "https://identifiers.org/mondo:0005233",
+                  "http://purl.obolibrary.org/obo/MONDO_0005233"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0030358",
+                "iris": [
+                  "https://identifiers.org/HP:0030358",
+                  "https://hpo.jax.org/browse/term/HP:0030358"
+                ],
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Non-small cell lung carcinoma",
+          "primaryCoding": {
+            "code": "C0007131",
+            "iris": [
+              "https://identifiers.org/medgen:C0007131",
+              "https://www.ncbi.nlm.nih.gov/medgen/C0007131"
+            ],
+            "name": "Non-small cell lung carcinoma",
+            "system": "MedGen"
+          }
+        },
+        "geneContextQualifier": {
+          "conceptType": "gene",
+          "extensions": [
+            {
+              "name": "submittedGeneSymbols",
+              "value": [
+                "EGFR"
+              ]
+            }
+          ],
+          "mappings": [
+            {
+              "coding": {
+                "code": "3236",
+                "iris": [
+                  "https://identifiers.org/hgnc:3236",
+                  "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/3236"
+                ],
+                "system": "https://www.genenames.org"
+              },
+              "relation": "exactMatch"
+            }
+          ],
+          "name": "EGFR",
+          "primaryCoding": {
+            "code": "1956",
+            "iris": [
+              "https://identifiers.org/ncbigene:1956",
+              "https://www.ncbi.nlm.nih.gov/gene/1956"
+            ],
+            "name": "EGFR",
+            "system": "https://www.ncbi.nlm.nih.gov/gene/"
+          }
+        },
+        "id": "SCV004565358",
+        "objectTherapy": {
+          "conceptType": "Drug",
+          "name": "Erlotinib"
+        },
+        "predicate": "predictsSensitivityTo",
+        "subjectVariation": "4/proposition/subjectVariation",
+        "type": "VariantTherapeuticResponseProposition"
+      },
+      "type": "EvidenceLine"
+    }
+  ],
+  "id": "SCV004565358.1",
+  "proposition": {
+    "geneContextQualifier": {
+      "conceptType": "gene",
+      "extensions": [
+        {
+          "name": "submittedGeneSymbols",
+          "value": [
+            "EGFR"
+          ]
+        }
+      ],
+      "mappings": [
+        {
+          "coding": {
+            "code": "3236",
+            "iris": [
+              "https://identifiers.org/hgnc:3236",
+              "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/3236"
+            ],
+            "system": "https://www.genenames.org"
+          },
+          "relation": "exactMatch"
+        }
+      ],
+      "name": "EGFR",
+      "primaryCoding": {
+        "code": "1956",
+        "iris": [
+          "https://identifiers.org/ncbigene:1956",
+          "https://www.ncbi.nlm.nih.gov/gene/1956"
+        ],
+        "name": "EGFR",
+        "system": "https://www.ncbi.nlm.nih.gov/gene/"
+      }
+    },
+    "id": "SCV004565358",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "clinvarTraitId",
+          "value": "7728"
+        },
+        {
+          "name": "clinvarTraitType",
+          "value": "Disease"
+        },
+        {
+          "name": "aliases",
+          "value": "Non-small cell lung cancer"
+        },
+        {
+          "name": "submittedScvTraitAssignment",
+          "value": "scv trait: preferred name 'non-small cell lung carcinoma'"
+        },
+        {
+          "name": "clinvarScvTraitAssignment",
+          "value": "rcv-tm medgen id"
+        },
+        {
+          "name": "clinvarScvTraitMappingType:ref(val)",
+          "value": "name:preferred(non-small cell lung carcinoma)"
+        },
+        {
+          "name": "clinvarTraitSetType",
+          "value": "Disease"
+        },
+        {
+          "name": "clinvarTraitSetId",
+          "value": "4069"
+        }
+      ],
+      "id": "SCV004565358.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "D002289",
+            "iris": [
+              "https://identifiers.org/mesh:D002289",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D002289"
+            ],
+            "system": "MeSH"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0005233",
+            "iris": [
+              "https://identifiers.org/mondo:0005233",
+              "http://purl.obolibrary.org/obo/MONDO_0005233"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0030358",
+            "iris": [
+              "https://identifiers.org/HP:0030358",
+              "https://hpo.jax.org/browse/term/HP:0030358"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Non-small cell lung carcinoma",
+      "primaryCoding": {
+        "code": "C0007131",
+        "iris": [
+          "https://identifiers.org/medgen:C0007131",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0007131"
+        ],
+        "name": "Non-small cell lung carcinoma",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isClinicallySignificantFor",
+    "subjectVariation": {
+      "constraints": [
+        {
+          "allele": "2/members/0/",
+          "relations": [
+            {
+              "primaryCoding": {
+                "code": "liftover_to",
+                "system": "ga4gh-gks-term:allele-relation"
+              }
+            },
+            {
+              "primaryCoding": {
+                "code": "transcribed_to",
+                "iris": [
+                  "http://www.sequenceontology.org/browser/current_release/term/transcribed_to"
+                ],
+                "system": "http://www.sequenceontology.org"
+              }
+            }
+          ],
+          "type": "DefiningAlleleConstraint"
+        }
+      ],
+      "extensions": [
+        {
+          "name": "clinvarGeneList",
+          "value": [
+            {
+              "entrez_gene_id": "1956",
+              "hgnc_id": "HGNC:3236",
+              "iris": [
+                "https://identifiers.org/hgnc:3236",
+                "https://identifiers.org/ncbigene:1956",
+                "https://www.ncbi.nlm.nih.gov/gene/1956"
+              ],
+              "relationship_type": "within single gene",
+              "source": "submitted",
+              "symbol": "EGFR"
+            }
+          ]
+        },
+        {
+          "name": "definingVrsVariationType",
+          "value": "Allele"
+        },
+        {
+          "name": "categoricalVariationType",
+          "value": "CanonicalAllele"
+        },
+        {
+          "name": "clinvarVariationType",
+          "value": "single nucleotide variant"
+        },
+        {
+          "name": "clinvarSubclassType",
+          "value": "SimpleAllele"
+        },
+        {
+          "name": "clinvarCytogeneticLocation",
+          "value": "7p11.2"
+        },
+        {
+          "name": "clinvarHgvsList",
+          "value": [
+            {
+              "maneSelect": true,
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_005228.5:c.2573T>G"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_005219.2:p.Leu858Arg"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001346899.2:c.2438T>G"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001333828.1:p.Leu813Arg"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NG_007726.3:g.177791T>G"
+              },
+              "nucleotideType": "genomic"
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000007.14:g.55191822T>G"
+              },
+              "nucleotideType": "genomic, top-level"
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000007.13:g.55259515T>G"
+              },
+              "nucleotideType": "genomic, top-level"
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "LRG_304:g.177791T>G"
+              },
+              "nucleotideType": "genomic"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001346897.2:c.2438T>G"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001333826.1:p.Leu813Arg"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001346898.2:c.2573T>G"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001333827.1:p.Leu858Arg"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001346900.2:c.2414T>G"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001333829.1:p.Leu805Arg"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_304t1:c.2573T>G"
+              },
+              "nucleotideType": "coding"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001346941.2:c.1772T>G"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001333870.1:p.Leu591Arg"
+              }
+            }
+          ]
+        }
+      ],
+      "id": "clinvar:16609",
+      "mappings": [
+        {
+          "coding": {
+            "code": "981475838",
+            "iris": [
+              "https://www.pharmgkb.org/clinicalAnnotation/981475838"
+            ],
+            "system": "PharmGKB Clinical Annotation"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "16609",
+            "iris": [
+              "https://identifiers.org/clinvar:16609"
+            ],
+            "system": "ClinVar"
+          },
+          "relation": "exactMatch"
+        },
+        {
+          "coding": {
+            "code": "121434568",
+            "iris": [
+              "https://identifiers.org/dbsnp:rs121434568"
+            ],
+            "system": "dbSNP"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "131550.0002",
+            "iris": [
+              "http://www.omim.org/entry/131550#0002"
+            ],
+            "system": "OMIM"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "981475880",
+            "iris": [
+              "https://www.pharmgkb.org/clinicalAnnotation/981475880"
+            ],
+            "system": "PharmGKB Clinical Annotation"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "CA126713",
+            "iris": [
+              "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid=CA126713"
+            ],
+            "system": "ClinGen"
+          },
+          "relation": "closeMatch"
+        },
+        {
+          "coding": {
+            "code": "981420042",
+            "iris": [
+              "https://www.pharmgkb.org/clinicalAnnotation/981420042"
+            ],
+            "system": "PharmGKB Clinical Annotation"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "P00533#VAR_019298",
+            "iris": [
+              "https://www.uniprot.org/uniprot/P00533#VAR_019298"
+            ],
+            "system": "UniProtKB"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "members": [
+        {
+          "digest": "pM_eD8ha-bnAu6wJOoQTtHYIvEShSN51",
+          "expressions": [
+            {
+              "syntax": "spdi",
+              "value": "NC_000007.14:55191821:T:G"
+            },
+            {
+              "syntax": "hgvs.g",
+              "value": "NC_000007.14:g.55191822T>G"
+            },
+            {
+              "syntax": "gnomad",
+              "value": "7-55191822-T-G"
+            }
+          ],
+          "id": "ga4gh:VA.pM_eD8ha-bnAu6wJOoQTtHYIvEShSN51",
+          "location": {
+            "digest": "7g6PIIHJ_QkKe_dRvkuCe8UtZCmPxo5B",
+            "end": 55191822,
+            "id": "ga4gh:SL.7g6PIIHJ_QkKe_dRvkuCe8UtZCmPxo5B",
+            "sequenceReference": {
+              "extensions": [
+                {
+                  "name": "assembly",
+                  "value": "GRCh38"
+                }
+              ],
+              "moleculeType": "genomic",
+              "name": "NC_000007.14",
+              "refgetAccession": "SQ.F-LrLMe1SRpfUZHkQmvkVKFEGaoDeHul",
+              "residueAlphabet": "na",
+              "type": "SequenceReference"
+            },
+            "start": 55191821,
+            "type": "SequenceLocation"
+          },
+          "name": "NC_000007.14:g.55191822T>G",
+          "state": {
+            "sequence": "G",
+            "type": "LiteralSequenceExpression"
+          },
+          "type": "Allele"
+        }
+      ],
+      "name": "NM_005228.5(EGFR):c.2573T>G (p.Leu858Arg)",
+      "type": "CategoricalVariant"
+    },
+    "type": "VariantClinicalSignificanceProposition"
+  },
+  "reportedIn": [
+    {
+      "pmid": "24736073",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/24736073"
+      ]
+    },
+    {
+      "pmid": "22285168",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/22285168"
+      ]
+    },
+    {
+      "pmid": "27032107",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/27032107"
+      ]
+    },
+    {
+      "pmid": "19147750",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/19147750"
+      ]
+    },
+    {
+      "pmid": "17877814",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/17877814"
+      ]
+    },
+    {
+      "pmid": "21132006",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/21132006"
+      ]
+    },
+    {
+      "pmid": "27102076",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/27102076"
+      ]
+    },
+    {
+      "pmid": "24868098",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/24868098"
+      ]
+    }
+  ],
+  "specifiedBy": {
+    "methodType": "curation",
+    "name": "AMP/ASCO/CAP Guidelines, 2017",
+    "reportedIn": {
+      "pmid": "27993330",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/27993330"
+      ]
+    },
+    "type": "Method"
+  },
+  "strength": {
+    "name": "Strong",
+    "primaryCoding": {
+      "code": "strong",
+      "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017"
+    }
+  },
+  "type": "Statement"
+}
