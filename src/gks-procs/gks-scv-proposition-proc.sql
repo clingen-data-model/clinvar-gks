@@ -240,7 +240,7 @@ BEGIN
         SELECT 
           scv.id,
           scv.evidence_line_target_proposition.type as type,
-          FORMAT('clinvar:%%s', scv.variation_id) as subjectVariation,  
+          '4/proposition/subjectVariation' as subjectVariation,  
           scv.evidence_line_target_proposition.pred as predicate,
           IF(
             scv.clinical_impact_assertion_type IS DISTINCT FROM 'therapeutic',

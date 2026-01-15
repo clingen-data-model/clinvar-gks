@@ -7,10 +7,21 @@
 # 4. Exports final tables to GCS, composes them using a robust multi-level
 #    strategy, and copies them to a public bucket.
 #
-# The script iterates over a list of release dates, performing all four
-# steps for each date sequentially. It includes robust error handling to
-# ensure a step is only attempted if the previous one succeeded.
+# USAGE:
+#   ./run_pipeline.sh [start_step]
+#
+# ARGUMENTS:
+#   start_step    (Optional) The step number (1-4) to start execution from.
+#                 Defaults to 1 if not provided.
+#                 - 1: Cloud Run Job
+#                 - 2: BigQuery Load
+#                 - 3: BigQuery Procedures
+#                 - 4: Export & Publish
+#
+# The script iterates over a list of release dates, performing all designated
+# steps for each date sequentially.
 
+# --- SCRIPT SETUP ---
 # Exit immediately if a command exits with a non-zero status.
 set -o errexit
 # Treat unset variables as an error.
@@ -62,7 +73,24 @@ EXPORT_OUTPUT_NAMES=(
 
 # Array of release dates to process (format: YYYY-MM-DD)
 RELEASE_DATES=(
-  '2025-10-13'
+  # '2025-09-15'
+  # '2025-09-23'
+  # '2025-09-28'
+  # '2025-10-06'
+  # '2025-10-13'
+  # '2025-10-19'
+  # '2025-10-27'
+  # '2025-11-03'
+  # '2025-11-09'
+  # '2025-11-16'
+  # '2025-11-23'
+  # '2025-12-01'
+  # '2025-12-08'
+  # '2025-12-15'
+  # '2025-12-20'
+  '2025-12-27'
+  '2026-01-04'
+  # '2026-01-13'
   # Add more dates as needed
 )
 # --- END OF CONFIGURATION ---
@@ -91,8 +119,8 @@ load_vrs_data() {
   echo "  - BigQuery Table: $PROJECT_ID:$dataset_id.$TABLE_ID"
   echo "  - GCS Source: $gcs_json_path"
   
-  if ! gsutil -q stat "$gcs_json_path"; then
-    echo "❌ ERROR: GCS file not found after job completion: $gcs_json_path"; return 1;
+  if ! gcloud storage ls "$gcs_json_path" &>/dev/null; then
+    echo "❌ ERROR: GCS file not found. Ensure Step 1 completed successfully: $gcs_json_path"; return 1;
   fi
   
   if bq --project_id="$PROJECT_ID" load --source_format=NEWLINE_DELIMITED_JSON --schema="$SCHEMA_FILE_PATH" --max_bad_records=2 --ignore_unknown_values --replace "$dataset_id.$TABLE_ID" "$gcs_json_path"; then
@@ -131,14 +159,12 @@ export_and_publish_tables() {
         local output_name="${EXPORT_OUTPUT_NAMES[$i]}"
 
         local gcs_root_path="gs://${BUCKET_NAME}/${export_root_path}"
-        # Use a distinct temp path for shards to avoid conflicts
         local gcs_temp_path="${gcs_root_path}/${output_name}-temp-shards"
         local shard_export_uri="${gcs_temp_path}/shard-*.${type}.gz"
         local composed_file_uri="${gcs_root_path}/${output_name}.${type}.gz"
         local public_filename="clinvar_gks_${output_name}${date_suffix}${public_file_version}.${type}.gz"
         local public_file_uri="gs://${PUBLIC_BUCKET_NAME}/${public_filename}"
 
-        # Define SELECT fields based on the table name
         local select_fields
         if [[ "${table}" == "gks_catvar" ]]; then
             select_fields='rec.aliases, rec.constraints, rec.description, rec.extensions, rec.id, rec.mappings, rec.members, rec.name, rec.type'
@@ -154,15 +180,15 @@ export_and_publish_tables() {
         finalize_status "1. Export completed."
 
         # 2. Robust Two-Level Hierarchical Compose
-        read -r -d '' -a source_shards < <(gsutil -m ls "${shard_export_uri}" 2>/dev/null && printf '\0' || true)
+        read -r -d '' -a source_shards < <(gcloud storage ls "${shard_export_uri}" 2>/dev/null && printf '\0' || true)
 
         if [ ${#source_shards[@]} -eq 0 ]; then
             print_status "2. No shards found to compose..."
-            echo -n | gzip | gsutil cp - "${composed_file_uri}" &> /dev/null
+            echo -n | gzip | gcloud storage cp - "${composed_file_uri}" &> /dev/null
             finalize_status "2. Composition complete (empty file created)."
         elif [ ${#source_shards[@]} -le 32 ]; then # Simple case
             print_status "2. Composing final set of ${#source_shards[@]} shards..."
-            gsutil compose "${source_shards[@]}" "${composed_file_uri}" &> /dev/null
+            gcloud storage objects compose "${source_shards[@]}" "${composed_file_uri}" &> /dev/null
             finalize_status "2. Composition complete."
         else # Multi-level case for > 32 shards
             composed_batches=()
@@ -172,25 +198,25 @@ export_and_publish_tables() {
             batch_to_compose=( "${source_shards[@]:j:32}" )
             temp_batch_uri="${gcs_temp_path}/composed-batch_${batch_counter}.gz"
             rewrite_status "2. Composing batch ${batch_counter} of ${total_batches}..."
-            gsutil compose "${batch_to_compose[@]}" "${temp_batch_uri}" &> /dev/null
+            gcloud storage objects compose "${batch_to_compose[@]}" "${temp_batch_uri}" &> /dev/null
             composed_batches+=( "${temp_batch_uri}" )
             ((batch_counter++))
             done
             rewrite_status "2. Composing final file from ${#composed_batches[@]} batches..."
-            gsutil compose "${composed_batches[@]}" "${composed_file_uri}" &> /dev/null
-            gsutil -m rm "${composed_batches[@]}" &> /dev/null
+            gcloud storage objects compose "${composed_batches[@]}" "${composed_file_uri}" &> /dev/null
+            gcloud storage rm "${composed_batches[@]}" &> /dev/null
             finalize_status "2. Composition complete."
         fi
 
         # 3. Cleanup
         print_status "3. Cleaning up temporary shards..."
-        gsutil -m rm -r "${gcs_temp_path}" &>/dev/null || true
+        gcloud storage rm -r "${gcs_temp_path}" &>/dev/null || true
         finalize_status "3. Cleanup complete."
 
         # 4. Validation
         print_status "4. Validating record counts..."
         local bq_count; bq_count=$(bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false --format=csv "SELECT COUNT(*) FROM \`${PROJECT_ID}.${dataset_id}.${table}\`" | tail -n 1)
-        local gcs_count; gcs_count=$(gsutil cat "${composed_file_uri}" | gunzip -c | wc -l)
+        local gcs_count; gcs_count=$(gcloud storage cat "${composed_file_uri}" | gunzip -c | wc -l)
         bq_count=$(echo "$bq_count" | tr -d '[:space:]'); gcs_count=$(echo "$gcs_count" | tr -d '[:space:]')
 
         if [[ "${bq_count}" -eq "${gcs_count}" ]]; then
@@ -203,7 +229,7 @@ export_and_publish_tables() {
         # 5. Public Copy
         if [[ -n "${PUBLIC_BUCKET_NAME}" ]]; then
             print_status "5. Copying to public bucket..."
-            gsutil cp "${composed_file_uri}" "${public_file_uri}" &> /dev/null
+            gcloud storage cp "${composed_file_uri}" "${public_file_uri}" &> /dev/null
             finalize_status "5. ✅ Public copy complete."
             echo "   - Copied to: ${public_file_uri}"
         else
@@ -216,8 +242,19 @@ export_and_publish_tables() {
 
 
 # --- MAIN EXECUTION ---
+
+# Set start step from command-line argument, default to 1
+START_STEP=${1:-1}
+
+# Validate the start step input
+if ! [[ "$START_STEP" =~ ^[1-4]$ ]]; then
+    echo "❌ Error: Invalid start step '$START_STEP'. Please provide a number between 1 and 4."
+    exit 1
+fi
+
 echo "Starting ClinVar 4-Step Pipeline..."
 echo "Project: $PROJECT_ID / Dates to process: ${#RELEASE_DATES[@]}"
+echo ">>> Starting from Step ${START_STEP} <<<"
 echo "=================================================="
 
 success_count=0; failure_count=0; failed_dates_details=()
@@ -226,34 +263,42 @@ for date in "${RELEASE_DATES[@]}"; do
   echo; echo "--- Processing release date: $date ---"
   
   # --- STEP 1: Execute Cloud Run Job ---
-  echo "[1/4] Executing Cloud Run job..."
-  INPUT_FILE="gs://${BUCKET_NAME}/${date}/dev/vi-normalized-no-liftover.jsonl.gz"
-  OUTPUT_FILE="gs://${BUCKET_NAME}/${date}/dev/vi-final.jsonl.gz"
-  if ! gcloud run jobs execute "$GCLOUD_JOB_NAME" --args "$INPUT_FILE" --args "$OUTPUT_FILE" --wait --region "$GCLOUD_JOB_REGION"; then
-    echo "❌ [FAIL] Cloud Run job failed."; ((failure_count++)); failed_dates_details+=("$date (Cloud Run Job)"); continue;
+  if (( START_STEP <= 1 )); then
+    echo "[1/4] Executing Cloud Run job..."
+    INPUT_FILE="gs://${BUCKET_NAME}/${date}/dev/vi-normalized-no-liftover.jsonl.gz"
+    OUTPUT_FILE="gs://${BUCKET_NAME}/${date}/dev/vi-final.jsonl.gz"
+    if ! gcloud run jobs execute "$GCLOUD_JOB_NAME" --args "$INPUT_FILE" --args "$OUTPUT_FILE" --wait --region "$GCLOUD_JOB_REGION"; then
+      echo "❌ [FAIL] Cloud Run job failed."; ((failure_count++)); failed_dates_details+=("$date (Cloud Run Job)"); continue;
+    fi
+    echo "✅ Cloud Run job completed."
   fi
-  echo "✅ Cloud Run job completed."
 
   # --- STEP 2: Load Data into BigQuery ---
-  echo "[2/4] Loading data into BigQuery..."
-  if ! load_vrs_data "$date"; then
-    echo "❌ [FAIL] BigQuery data load failed."; ((failure_count++)); failed_dates_details+=("$date (BigQuery Load)"); continue;
+  if (( START_STEP <= 2 )); then
+    echo "[2/4] Loading data into BigQuery..."
+    if ! load_vrs_data "$date"; then
+      echo "❌ [FAIL] BigQuery data load failed."; ((failure_count++)); failed_dates_details+=("$date (BigQuery Load)"); continue;
+    fi
+    echo "✅ BigQuery data load completed."
   fi
-  echo "✅ BigQuery data load completed."
 
   # --- STEP 3: Execute BigQuery Stored Procedures ---
-  echo "[3/4] Executing downstream BigQuery procedures..."
-  if ! execute_bq_procedures "$date"; then
-    echo "❌ [FAIL] BigQuery procedure execution failed."; ((failure_count++)); failed_dates_details+=("$date (BigQuery Procedures)"); continue;
+  if (( START_STEP <= 3 )); then
+    echo "[3/4] Executing downstream BigQuery procedures..."
+    if ! execute_bq_procedures "$date"; then
+      echo "❌ [FAIL] BigQuery procedure execution failed."; ((failure_count++)); failed_dates_details+=("$date (BigQuery Procedures)"); continue;
+    fi
+    echo "✅ BigQuery procedures completed."
   fi
-  echo "✅ BigQuery procedures completed."
   
   # --- STEP 4: Export and Publish Tables ---
-  echo "[4/4] Exporting and publishing result tables..."
-  if ! export_and_publish_tables "$date"; then
-    echo "❌ [FAIL] Export and publish step failed."; ((failure_count++)); failed_dates_details+=("$date (Export/Publish)"); continue;
+  if (( START_STEP <= 4 )); then
+    echo "[4/4] Exporting and publishing result tables..."
+    if ! export_and_publish_tables "$date"; then
+      echo "❌ [FAIL] Export and publish step failed."; ((failure_count++)); failed_dates_details+=("$date (Export/Publish)"); continue;
+    fi
+    echo "✅ Export and publish step completed."
   fi
-  echo "✅ Export and publish step completed."
 
   echo "--- ✅ All steps completed successfully for date: $date ---"
   ((success_count++))

@@ -94,7 +94,7 @@ BEGIN
           STRUCT (
             FORMAT('clinvar.submitter:%%s',scv.submitter_id) as id,
             'Agent' as type,
-            scv.submitter_name as name,
+            scv.submitter_name as name
           ) as submitter
 
         FROM `%s.clinical_assertion` ca
