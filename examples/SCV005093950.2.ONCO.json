@@ -1,0 +1,1046 @@
+{
+  "classification": {
+    "name": "Oncogenic",
+    "primaryCoding": {
+      "code": "oncogenic",
+      "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022"
+    }
+  },
+  "contributions": [
+    {
+      "activityType": "submitted",
+      "contributor": {
+        "id": "clinvar.submitter:505691",
+        "name": "Center for Genomic Medicine, Rigshospitalet, Copenhagen University Hospital",
+        "type": "Agent"
+      },
+      "date": "2025-03-11",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "created",
+      "contributor": {
+        "id": "clinvar.submitter:505691",
+        "name": "Center for Genomic Medicine, Rigshospitalet, Copenhagen University Hospital",
+        "type": "Agent"
+      },
+      "date": "2024-08-11",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "evaluated",
+      "contributor": {
+        "id": "clinvar.submitter:505691",
+        "name": "Center for Genomic Medicine, Rigshospitalet, Copenhagen University Hospital",
+        "type": "Agent"
+      },
+      "date": "2025-03-04",
+      "type": "Contribution"
+    }
+  ],
+  "direction": "supports",
+  "extensions": [
+    {
+      "name": "clinvarScvId",
+      "value": "SCV005093950"
+    },
+    {
+      "name": "clinvarScvVersion",
+      "value": "2"
+    },
+    {
+      "name": "clinvarScvReviewStatus",
+      "value": "criteria provided, single submitter"
+    },
+    {
+      "name": "submittedScvLocalKey",
+      "value": "NM_004448.4:c.2329G>T|MedGen:C0027651|OncogenicityClassification"
+    }
+  ],
+  "id": "SCV005093950.2",
+  "proposition": {
+    "geneContextQualifier": {
+      "conceptType": "gene",
+      "extensions": [
+        {
+          "name": "submittedGeneSymbols",
+          "value": [
+            "ERBB2"
+          ]
+        }
+      ],
+      "mappings": [
+        {
+          "coding": {
+            "code": "3430",
+            "iris": [
+              "https://identifiers.org/hgnc:3430",
+              "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/3430"
+            ],
+            "system": "https://www.genenames.org"
+          },
+          "relation": "exactMatch"
+        }
+      ],
+      "name": "ERBB2",
+      "primaryCoding": {
+        "code": "2064",
+        "iris": [
+          "https://identifiers.org/ncbigene:2064",
+          "https://www.ncbi.nlm.nih.gov/gene/2064"
+        ],
+        "name": "ERBB2",
+        "system": "https://www.ncbi.nlm.nih.gov/gene/"
+      }
+    },
+    "id": "SCV005093950",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "clinvarTraitId",
+          "value": "32759"
+        },
+        {
+          "name": "clinvarTraitType",
+          "value": "Disease"
+        },
+        {
+          "name": "aliases",
+          "value": "Neoplasms, Neoplasm (disease), tumor"
+        },
+        {
+          "name": "submittedScvXrefs",
+          "value": [
+            {
+              "code": "C0027651",
+              "system": "MedGen"
+            }
+          ]
+        },
+        {
+          "name": "submittedScvTraitAssignment",
+          "value": "scv trait: medgen id 'c0027651'"
+        },
+        {
+          "name": "clinvarScvTraitAssignment",
+          "value": "rcv-tm medgen id"
+        },
+        {
+          "name": "clinvarScvTraitMappingType:ref(val)",
+          "value": "xref:medgen(c0027651)"
+        },
+        {
+          "name": "clinvarTraitSetType",
+          "value": "Disease"
+        },
+        {
+          "name": "clinvarTraitSetId",
+          "value": "28284"
+        }
+      ],
+      "id": "SCV005093950.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "D009369",
+            "iris": [
+              "https://identifiers.org/mesh:D009369",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D009369"
+            ],
+            "system": "MeSH"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0005070",
+            "iris": [
+              "https://identifiers.org/mondo:0005070",
+              "http://purl.obolibrary.org/obo/MONDO_0005070"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0002664",
+            "iris": [
+              "https://identifiers.org/HP:0002664",
+              "https://hpo.jax.org/browse/term/HP:0002664"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Neoplasm",
+      "primaryCoding": {
+        "code": "C0027651",
+        "iris": [
+          "https://identifiers.org/medgen:C0027651",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0027651"
+        ],
+        "name": "Neoplasm",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isOncogenicFor",
+    "subjectVariation": {
+      "constraints": [
+        {
+          "allele": "2/members/0/",
+          "relations": [
+            {
+              "primaryCoding": {
+                "code": "liftover_to",
+                "system": "ga4gh-gks-term:allele-relation"
+              }
+            },
+            {
+              "primaryCoding": {
+                "code": "transcribed_to",
+                "iris": [
+                  "http://www.sequenceontology.org/browser/current_release/term/transcribed_to"
+                ],
+                "system": "http://www.sequenceontology.org"
+              }
+            }
+          ],
+          "type": "DefiningAlleleConstraint"
+        }
+      ],
+      "extensions": [
+        {
+          "name": "clinvarGeneList",
+          "value": [
+            {
+              "entrez_gene_id": "2064",
+              "hgnc_id": "HGNC:3430",
+              "iris": [
+                "https://identifiers.org/hgnc:3430",
+                "https://identifiers.org/ncbigene:2064",
+                "https://www.ncbi.nlm.nih.gov/gene/2064"
+              ],
+              "relationship_type": "within single gene",
+              "source": "submitted",
+              "symbol": "ERBB2"
+            }
+          ]
+        },
+        {
+          "name": "categoricalVariationType",
+          "value": "CanonicalAllele"
+        },
+        {
+          "name": "definingVrsVariationType",
+          "value": "Allele"
+        },
+        {
+          "name": "clinvarSubclassType",
+          "value": "SimpleAllele"
+        },
+        {
+          "name": "clinvarVariationType",
+          "value": "single nucleotide variant"
+        },
+        {
+          "name": "clinvarCytogeneticLocation",
+          "value": "17q12"
+        },
+        {
+          "name": "clinvarHgvsList",
+          "value": [
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382794.1:c.2287G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369723.1:p.Val763Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001005862.3:c.2239G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001005862.1:p.Val747Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382784.1:c.2446G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369713.1:p.Val816Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382793.1:c.2287G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369722.1:p.Val763Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382792.1:c.2293G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369721.1:p.Val765Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001619",
+                  "iris": [
+                    "https://identifiers.org/SO:0001619"
+                  ],
+                  "name": "non_coding_transcript_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.n",
+                "value": "NR_110535.2:n.2567G>T"
+              },
+              "nucleotideType": "non-coding"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382801.1:c.2281G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369730.1:p.Val761Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382797.1:c.2230G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369726.1:p.Val744Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382798.1:c.2329G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369727.1:p.Val777Leu"
+              }
+            },
+            {
+              "maneSelect": true,
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_004448.4:c.2329G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_004439.2:p.Val777Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382802.1:c.2071G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369731.1:p.Val691Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382789.1:c.2350G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369718.1:p.Val784Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382785.1:c.2431G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369714.1:p.Val811Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001289937.2:c.2329G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001276866.1:p.Val777Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382806.1:c.1291G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369735.1:p.Val431Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001627",
+                  "iris": [
+                    "https://identifiers.org/SO:0001627"
+                  ],
+                  "name": "intron_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382805.1:c.2208+1087G>T"
+              },
+              "nucleotideType": "coding"
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "LRG_724:g.41608G>T"
+              },
+              "nucleotideType": "genomic"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382790.1:c.2326G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369719.1:p.Val776Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382791.1:c.2320G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369720.1:p.Val774Leu"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000017.10:g.37881000G>T"
+              },
+              "nucleotideType": "genomic, top-level"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382787.1:c.2404G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369716.1:p.Val802Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382786.1:c.2410G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369715.1:p.Val804Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382804.1:c.1501G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369733.1:p.Val501Leu"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NG_007503.1:g.41608G>T"
+              },
+              "nucleotideType": "genomic"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001289936.2:c.2284G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001276865.1:p.Val762Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382788.1:c.2359G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369717.1:p.Val787Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382796.1:c.2329G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369725.1:p.Val777Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382799.1:c.2149G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369728.1:p.Val717Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382783.1:c.2239G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369712.1:p.Val747Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382782.1:c.2239G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369711.1:p.Val747Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382803.1:c.2287G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369732.1:p.Val763Leu"
+              }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001627",
+                  "iris": [
+                    "https://identifiers.org/SO:0001627"
+                  ],
+                  "name": "intron_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382800.1:c.2308-302G>T"
+              },
+              "nucleotideType": "coding"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001382795.1:c.2281G>T"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001369724.1:p.Val761Leu"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000017.11:g.39724747G>T"
+              },
+              "nucleotideType": "genomic, top-level"
+            }
+          ]
+        }
+      ],
+      "id": "clinvar:44991",
+      "mappings": [
+        {
+          "coding": {
+            "code": "44991",
+            "iris": [
+              "https://identifiers.org/clinvar:44991"
+            ],
+            "system": "ClinVar"
+          },
+          "relation": "exactMatch"
+        },
+        {
+          "coding": {
+            "code": "121913471",
+            "iris": [
+              "https://identifiers.org/dbsnp:rs121913471"
+            ],
+            "system": "dbSNP"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "CA135387",
+            "iris": [
+              "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid=CA135387"
+            ],
+            "system": "ClinGen"
+          },
+          "relation": "closeMatch"
+        }
+      ],
+      "members": [
+        {
+          "digest": "NSu37RTJalr9pzHbxPBHAf-jPHjClxGE",
+          "expressions": [
+            {
+              "syntax": "spdi",
+              "value": "NC_000017.11:39724746:G:T"
+            },
+            {
+              "syntax": "hgvs.g",
+              "value": "NC_000017.11:g.39724747G>T"
+            },
+            {
+              "syntax": "gnomad",
+              "value": "17-39724747-G-T"
+            }
+          ],
+          "id": "ga4gh:VA.NSu37RTJalr9pzHbxPBHAf-jPHjClxGE",
+          "location": {
+            "digest": "em9DGAISfObCbEs3Z4cp0i2V_tm96Bk6",
+            "end": 39724747,
+            "id": "ga4gh:SL.em9DGAISfObCbEs3Z4cp0i2V_tm96Bk6",
+            "sequenceReference": {
+              "extensions": [
+                {
+                  "name": "assembly",
+                  "value": "GRCh38"
+                }
+              ],
+              "moleculeType": "genomic",
+              "name": "NC_000017.11",
+              "refgetAccession": "SQ.dLZ15tNO1Ur0IcGjwc3Sdi_0A6Yf4zm7",
+              "residueAlphabet": "na",
+              "type": "SequenceReference"
+            },
+            "start": 39724746,
+            "type": "SequenceLocation"
+          },
+          "name": "NC_000017.11:g.39724747G>T",
+          "state": {
+            "sequence": "T",
+            "type": "LiteralSequenceExpression"
+          },
+          "type": "Allele"
+        }
+      ],
+      "name": "NM_004448.4(ERBB2):c.2329G>T (p.Val777Leu)",
+      "type": "CategoricalVariant"
+    },
+    "type": "VariantOncogenicityProposition"
+  },
+  "reportedIn": [
+    {
+      "pmid": "29967253",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/29967253"
+      ]
+    },
+    {
+      "pmid": "31588020",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/31588020"
+      ]
+    },
+    {
+      "pmid": "35503682",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/35503682"
+      ]
+    },
+    {
+      "pmid": "23220880",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/23220880"
+      ]
+    },
+    {
+      "pmid": "30531871",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/30531871"
+      ]
+    }
+  ],
+  "specifiedBy": {
+    "methodType": "clinical testing",
+    "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+    "reportedIn": {
+      "pmid": "35101336",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/35101336"
+      ]
+    },
+    "type": "Method"
+  },
+  "strength": {
+    "name": "Definitive",
+    "primaryCoding": {
+      "code": "definitive",
+      "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022"
+    }
+  },
+  "type": "Statement"
+}
