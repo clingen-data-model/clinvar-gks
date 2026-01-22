@@ -88,9 +88,10 @@ RELEASE_DATES=(
   # '2025-12-08'
   # '2025-12-15'
   # '2025-12-20'
-  '2025-12-27'
-  '2026-01-04'
+  # '2025-12-27'
+  # '2026-01-04'
   # '2026-01-13'
+  '2026-01-20'
   # Add more dates as needed
 )
 # --- END OF CONFIGURATION ---
@@ -136,7 +137,7 @@ execute_bq_procedures() {
 
   for proc in "${BIGQUERY_PROCEDURES[@]}"; do
     echo "  - Calling procedure: $proc..."
-    if ! bq --project_id="$PROJECT_ID" query --use_legacy_sql=false "CALL \`${proc}\`('$release_date')"; then
+    if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false "CALL \`${proc}\`('$release_date')" > /dev/null; then
       echo "❌ Procedure call FAILED for: $proc"; return 1;
     fi
     echo "    ✅ Success."
