@@ -1,5 +1,7 @@
 # clinvar-gks
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18343663.svg)](https://doi.org/10.5281/zenodo.18343663)
+
 ClinVar GKS is a data transformation project being resourced by the ClinGen driver project.  This project and team aims to stand up and maintain a running pipeline process which will convert all clinvar release data to its GA4GH GKS standard equivalent. It is being developed with the intent to run automatically to create sibling release datasets whenever ClinVar publishes a new release on the ClinVar ftp site (typically once a week).  It also intends to support inclusion of 100% of the data records and elements that are provided in the ClinVar released datasets. 
 
 ## Implementation Roadmap
@@ -26,3 +28,11 @@ Apr 2024 Connect release (tag: 1.0.0.connect.2024-04.1) based on VA-Spec/Cat-VRS
     - SCVs : all 4.1M+ in VA Statement format
     https://bit.ly/clinvar-scvs-20240407  (w/ variations)
 
+## License
+
+This project uses dual licensing:
+
+- **Code** (SQL procedures, shell scripts, etc.): [MIT License](LICENSE)
+- **Data outputs** (transformed ClinVar data in GKS formats): [CC0 1.0 Universal](LICENSE-DATA)
+
+The CC0 public domain dedication for data outputs aligns with FAIR data principles and common practices in the genomics and bioinformatics community, maximizing reusability for research and clinical applications.

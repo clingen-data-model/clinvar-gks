@@ -1,0 +1,48 @@
+# This CITATION.cff file was generated with the help of Claude Code.
+cff-version: 1.2.0
+title: ClinVar-GKS
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Lawrence
+    family-names: Babb
+    email: lbabb@broadinstitute.org
+    affiliation: ClinGen, Broad Institute of MIT and Harvard
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.18343663
+    description: Zenodo concept DOI for all versions
+repository-code: https://github.com/clingen-data-model/clinvar-gks
+url: https://github.com/clingen-data-model/clinvar-gks
+doi: 10.5281/zenodo.18343663
+abstract: >-
+  ClinVar-GKS is a data transformation pipeline that converts ClinVar release
+  data to GA4GH GKS (Global Alliance for Genomics and Health - Genomic Knowledge
+  Standards) format. The project transforms ClinVar's variation and clinical
+  submission data into VRS (Variation Representation Specification), Cat-VRS
+  (Categorical VRS), and VA-Spec (Variant Annotation Specification) compliant
+  formats.
+keywords:
+  - ClinGen
+  - ClinVar
+  - GA4GH
+  - GKS
+  - VRS
+  - Cat-VRS
+  - VA-Spec
+  - genomics
+  - variant annotation
+  - clinical genetics
+  - data transformation
+  - BigQuery
+license: MIT
+license-url: https://github.com/clingen-data-model/clinvar-gks/blob/main/LICENSE
+version: 1.0.0
+date-released: '2025-09-01'
+references:
+  - type: data
+    title: ClinVar-GKS Data Outputs
+    license: CC0-1.0
+    license-url: https://github.com/clingen-data-model/clinvar-gks/blob/main/LICENSE-DATA
