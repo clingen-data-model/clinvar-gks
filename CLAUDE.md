@@ -79,3 +79,11 @@ Check `/examples/` directory for JSONC files demonstrating:
 - Cat-VRS canonical allele format (`cat-vrs-canonical-allele-ex01.jsonc`)
 - VA-Spec statement structures
 - Custom clinical profiles (drug response, etc.)
+
+## Git Commit Conventions
+
+When creating git commits or pull requests:
+
+- Do NOT include "Generated with Claude Code" attribution lines
+- Do NOT include "Co-Authored-By: Claude" lines
+- Keep commit messages clean and focused on the changes
