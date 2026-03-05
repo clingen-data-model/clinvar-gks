@@ -10,7 +10,7 @@ repos:
     schema_path: schema/cat-vrs/json
   - name: va-spec
     owner: ga4gh
-    schema_path: schema/va-spec/json
+    schema_path: schema/va-spec
 
 maturity_levels:
   - draft

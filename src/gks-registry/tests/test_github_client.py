@@ -101,6 +101,47 @@ def test_get_schema_files_recursive():
     assert len(files) == 2
 
 
+def test_get_schema_files_nested_json_dirs():
+    """Test finding schemas in nested json directories (like va-spec)."""
+    from github_client import GitHubClient
+
+    # First call: schema/va-spec returns subdirectories (base, acmg-2015, etc.)
+    mock_response1 = Mock()
+    mock_response1.status_code = 200
+    mock_response1.json.return_value = [
+        {"name": "base", "type": "dir", "path": "schema/va-spec/base"},
+        {"name": "Makefile", "type": "file", "path": "schema/va-spec/Makefile"},
+    ]
+
+    # Second call: schema/va-spec/base returns json dir and other files
+    mock_response2 = Mock()
+    mock_response2.status_code = 200
+    mock_response2.json.return_value = [
+        {"name": "json", "type": "dir", "path": "schema/va-spec/base/json"},
+        {"name": "source.yaml", "type": "file", "path": "schema/va-spec/base/source.yaml"},
+    ]
+
+    # Third call: schema/va-spec/base/json returns schema files
+    mock_response3 = Mock()
+    mock_response3.status_code = 200
+    mock_response3.json.return_value = [
+        {"name": "Statement", "type": "file", "path": "schema/va-spec/base/json/Statement"},
+        {"name": "Agent", "type": "file", "path": "schema/va-spec/base/json/Agent"},
+    ]
+
+    with patch("github_client.requests.get", side_effect=[mock_response1, mock_response2, mock_response3]):
+        client = GitHubClient()
+        files = client.get_schema_files("ga4gh", "va-spec", "v1.0.0", "schema/va-spec")
+
+    # Should only include files from inside json directory
+    assert "schema/va-spec/base/json/Statement" in files
+    assert "schema/va-spec/base/json/Agent" in files
+    # Should NOT include files outside json directories
+    assert "schema/va-spec/Makefile" not in files
+    assert "schema/va-spec/base/source.yaml" not in files
+    assert len(files) == 2
+
+
 def test_get_file_content():
     from github_client import GitHubClient
 

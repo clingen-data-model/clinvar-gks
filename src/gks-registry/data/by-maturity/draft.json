@@ -1,6 +1,6 @@
 {
   "maturity": "draft",
-  "generated_at": "2026-03-05T19:40:38.190996Z",
+  "generated_at": "2026-03-05T19:47:57.078066Z",
   "schemas": [
     {
       "repo": "cat-vrs",
@@ -31,6 +31,54 @@
       "release": "1.1.0-snapshot.2026-02.2",
       "name": "FunctionVariant",
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/FunctionVariant"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "TumorVariantFrequencyStudyResult",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/TumorVariantFrequencyStudyResult"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantDiagnosticStudyStatement",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/aac-2017/json/VariantDiagnosticStudyStatement"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantOncogenicityEvidenceLine",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/ccv-2022/json/VariantOncogenicityEvidenceLine"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantOncogenicityStudyStatement",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/ccv-2022/json/VariantOncogenicityStudyStatement"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantPathogenicityEvidenceLine",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/acmg-2015/json/VariantPathogenicityEvidenceLine"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantPathogenicityStatement",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/acmg-2015/json/VariantPathogenicityStatement"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantPrognosticStudyStatement",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/aac-2017/json/VariantPrognosticStudyStatement"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantTherapeuticResponseStudyStatement",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/aac-2017/json/VariantTherapeuticResponseStudyStatement"
     },
     {
       "repo": "vrs",

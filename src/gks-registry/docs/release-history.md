@@ -15,27 +15,27 @@ All releases across GKS repositories, sorted by date.
 | Date | Repo | Release | Schemas |
 |------|------|---------|---------|
 | 2025-12-08 | gks-core | 1.1.0 | 9 |
-| 2025-07-23 | va-spec | 1.0.1 | 0 |
-| 2025-06-11 | va-spec | 1.0.0 | 0 |
+| 2025-07-23 | va-spec | 1.0.1 | 30 |
+| 2025-06-11 | va-spec | 1.0.0 | 30 |
 | 2025-06-11 | cat-vrs | 1.0.0 | 10 |
-| 2025-05-12 | va-spec | 1.0.0-ballot.2025-03.5 | 0 |
-| 2025-04-03 | va-spec | 1.0.0-ballot.2025-03.4 | 0 |
-| 2025-03-24 | va-spec | 1.0.0-ballot.2025-03.3 | 0 |
-| 2025-03-21 | va-spec | 1.0.0-ballot.2025-03.2 | 0 |
+| 2025-05-12 | va-spec | 1.0.0-ballot.2025-03.5 | 30 |
+| 2025-04-03 | va-spec | 1.0.0-ballot.2025-03.4 | 30 |
+| 2025-03-24 | va-spec | 1.0.0-ballot.2025-03.3 | 29 |
+| 2025-03-21 | va-spec | 1.0.0-ballot.2025-03.2 | 29 |
 | 2025-03-20 | cat-vrs | 1.0.0-ballot.2025-03.2 | 10 |
 | 2025-03-20 | vrs | 2.0.1 | 22 |
-| 2025-03-17 | va-spec | 1.0.0-ballot.2025-03.1 | 0 |
+| 2025-03-17 | va-spec | 1.0.0-ballot.2025-03.1 | 29 |
 | 2025-03-14 | cat-vrs | 1.0.0-ballot.2025-03.1 | 10 |
 | 2025-03-14 | vrs | 2.0.0 | 22 |
 | 2025-03-14 | gks-core | 1.0.0 | 8 |
-| 2025-03-11 | va-spec | 1.0.0-snapshot.2025-02.2 | 0 |
+| 2025-03-11 | va-spec | 1.0.0-snapshot.2025-02.2 | 29 |
 | 2025-03-11 | cat-vrs | 1.0.0-snapshot.2025-02.3 | 10 |
 | 2025-03-11 | vrs | 2.0.0-snapshot.2025-02.4 | 22 |
 | 2025-03-11 | gks-core | 1.0.0-snapshot.2025-02.4 | 8 |
 | 2025-03-03 | cat-vrs | 1.0.0-snapshot.2025-02.2 | 9 |
 | 2025-03-03 | vrs | 2.0.0-snapshot.2025-02.3 | 22 |
 | 2025-03-03 | gks-core | 1.0.0-snapshot.2025-02.3 | 8 |
-| 2025-02-28 | va-spec | 1.0.0-snapshot.2025-02.1 | 0 |
+| 2025-02-28 | va-spec | 1.0.0-snapshot.2025-02.1 | 29 |
 | 2025-02-11 | cat-vrs | 1.0.0-snapshot.2025-02.1 | 9 |
 | 2025-02-11 | vrs | 2.0.0-snapshot.2025-02.2 | 22 |
 | 2025-02-11 | gks-core | 1.0.0-snapshot.2025-02.2 | 8 |
@@ -46,8 +46,8 @@ All releases across GKS repositories, sorted by date.
 
 | Date | Repo | Release | Schemas |
 |------|------|---------|---------|
-| 2024-11-27 | va-spec | 1.0.0-ballot.2024-11.2 | 0 |
-| 2024-11-27 | va-spec | 1.0.0-ballot.2024-11.1 | 0 |
+| 2024-11-27 | va-spec | 1.0.0-ballot.2024-11.2 | 28 |
+| 2024-11-27 | va-spec | 1.0.0-ballot.2024-11.1 | 28 |
 | 2024-11-27 | cat-vrs | 1.0.0-ballot.2024-11.1 | 9 |
 | 2024-11-26 | vrs | 2.0.0-ballot.2024-11.1 | 22 |
 | 2024-11-26 | gks-core | 1.0.0-snapshot.2024-11.1 | 8 |
@@ -57,7 +57,7 @@ All releases across GKS repositories, sorted by date.
 | 2024-09-18 | gks-core | 1.0.0-connect.2024-09.1 | 0 |
 | 2024-08-22 | vrs | 2.0.0-ballot.2024-08.1 | 21 |
 | 2024-05-22 | gks-core | 1.0.0.connect.2024-04.1 | 0 |
-| 2024-05-22 | va-spec | 1.0.0.connect.2024-04.1 | 0 |
+| 2024-05-22 | va-spec | 1.0.0.connect.2024-04.1 | 9 |
 | 2024-05-13 | cat-vrs | 1.0.0.connect.2024-04.1 | 0 |
 | 2024-04-22 | vrs | 2.0.0.connect.2024-04.1 | 17 |
 ## 2023

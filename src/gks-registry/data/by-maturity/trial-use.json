@@ -1,6 +1,6 @@
 {
   "maturity": "trial use",
-  "generated_at": "2026-03-05T19:40:38.190996Z",
+  "generated_at": "2026-03-05T19:47:57.078066Z",
   "schemas": [
     {
       "repo": "cat-vrs",
@@ -97,6 +97,138 @@
       "release": "1.1.0",
       "name": "iriReference",
       "$id": "https://w3id.org/ga4gh/schema/gks-core/1.1.0/json/iriReference"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "Agent",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/Agent"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "CohortAlleleFrequencyStudyResult",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/CohortAlleleFrequencyStudyResult"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "Condition",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/Condition"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "ConditionSet",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/ConditionSet"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "Contribution",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/Contribution"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "DataSet",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/DataSet"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "Document",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/Document"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "EvidenceLine",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/EvidenceLine"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "ExperimentalVariantFunctionalImpactProposition",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/ExperimentalVariantFunctionalImpactProposition"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "ExperimentalVariantFunctionalImpactStudyResult",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/ExperimentalVariantFunctionalImpactStudyResult"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "Method",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/Method"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "Statement",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/Statement"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "StudyGroup",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/StudyGroup"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "StudyResult",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/StudyResult"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "SubjectVariantProposition",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/SubjectVariantProposition"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "Therapeutic",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/Therapeutic"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "TherapyGroup",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/TherapyGroup"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantDiagnosticProposition",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/VariantDiagnosticProposition"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantOncogenicityProposition",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/VariantOncogenicityProposition"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantPathogenicityProposition",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/VariantPathogenicityProposition"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantPrognosticProposition",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/VariantPrognosticProposition"
+    },
+    {
+      "repo": "va-spec",
+      "release": "1.0.1",
+      "name": "VariantTherapeuticResponseProposition",
+      "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.1/base/json/VariantTherapeuticResponseProposition"
     },
     {
       "repo": "vrs",
