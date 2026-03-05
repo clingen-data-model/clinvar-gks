@@ -1,5 +1,4 @@
 """Tests for data models."""
-import pytest
 from datetime import datetime
 
 
@@ -12,7 +11,6 @@ def test_schema_info_creation():
         maturity="trial use",
         description="The state of a molecule at a Location.",
         ga4gh_prefix="VA",
-        version="2.x"
     )
 
     assert schema.title == "Allele"
@@ -28,7 +26,6 @@ def test_schema_info_to_dict():
         maturity="trial use",
         description="The state of a molecule.",
         ga4gh_prefix="VA",
-        version="2.x"
     )
 
     result = schema.to_dict()
@@ -47,7 +44,6 @@ def test_release_info_creation():
         maturity="trial use",
         description="desc",
         ga4gh_prefix="VA",
-        version="2.x"
     )
 
     release = ReleaseInfo(
@@ -65,9 +61,9 @@ def test_release_info_maturity_summary():
     from models import ReleaseInfo, SchemaInfo
 
     schemas = {
-        "Allele": SchemaInfo("id1", "Allele", "normative", "desc", "VA", "2.x"),
-        "Location": SchemaInfo("id2", "Location", "trial use", "desc", None, "2.x"),
-        "Range": SchemaInfo("id3", "Range", "trial use", "desc", None, "2.x"),
+        "Allele": SchemaInfo("id1", "Allele", "normative", "desc", "VA"),
+        "Location": SchemaInfo("id2", "Location", "trial use", "desc", None),
+        "Range": SchemaInfo("id3", "Range", "trial use", "desc", None),
     }
 
     release = ReleaseInfo(

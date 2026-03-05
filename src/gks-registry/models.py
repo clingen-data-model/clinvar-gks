@@ -13,7 +13,6 @@ class SchemaInfo:
     maturity: str
     description: str
     ga4gh_prefix: Optional[str]
-    version: str
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
@@ -23,7 +22,6 @@ class SchemaInfo:
             "maturity": self.maturity,
             "description": self.description,
             "ga4gh_prefix": self.ga4gh_prefix,
-            "version": self.version
         }
 
 

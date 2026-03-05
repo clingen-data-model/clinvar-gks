@@ -59,18 +59,46 @@ def test_get_schema_files():
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = [
-        {"name": "Allele", "type": "file"},
-        {"name": "Location", "type": "file"},
-        {"name": ".gitignore", "type": "file"},  # Should be filtered
+        {"name": "Allele", "type": "file", "path": "schema/vrs/json/Allele"},
+        {"name": "Location", "type": "file", "path": "schema/vrs/json/Location"},
+        {"name": ".gitignore", "type": "file", "path": "schema/vrs/json/.gitignore"},
     ]
 
     with patch("github_client.requests.get", return_value=mock_response):
         client = GitHubClient()
         files = client.get_schema_files("ga4gh", "vrs", "v2.0.0", "schema/vrs/json")
 
-    assert "Allele" in files
-    assert "Location" in files
-    assert ".gitignore" not in files
+    assert "schema/vrs/json/Allele" in files
+    assert "schema/vrs/json/Location" in files
+    # Hidden files should be filtered out
+    assert not any(".gitignore" in f for f in files)
+
+
+def test_get_schema_files_recursive():
+    from github_client import GitHubClient
+
+    # First call returns files and a subdirectory
+    mock_response1 = Mock()
+    mock_response1.status_code = 200
+    mock_response1.json.return_value = [
+        {"name": "Allele", "type": "file", "path": "schema/vrs/json/Allele"},
+        {"name": "subdir", "type": "dir", "path": "schema/vrs/json/subdir"},
+    ]
+
+    # Second call (for subdirectory) returns more files
+    mock_response2 = Mock()
+    mock_response2.status_code = 200
+    mock_response2.json.return_value = [
+        {"name": "Nested", "type": "file", "path": "schema/vrs/json/subdir/Nested"},
+    ]
+
+    with patch("github_client.requests.get", side_effect=[mock_response1, mock_response2]):
+        client = GitHubClient()
+        files = client.get_schema_files("ga4gh", "vrs", "v2.0.0", "schema/vrs/json")
+
+    assert "schema/vrs/json/Allele" in files
+    assert "schema/vrs/json/subdir/Nested" in files
+    assert len(files) == 2
 
 
 def test_get_file_content():

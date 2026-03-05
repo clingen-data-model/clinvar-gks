@@ -53,7 +53,7 @@ class GitHubClient:
 
     def get_schema_files(self, owner: str, repo: str, tag: str, path: str) -> list[str]:
         """
-        List schema files in a directory for a specific release tag.
+        Recursively list schema files in a directory for a specific release tag.
 
         Args:
             owner: Repository owner
@@ -62,8 +62,14 @@ class GitHubClient:
             path: Path to schema directory (e.g., "schema/vrs/json")
 
         Returns:
-            List of schema file names (excluding hidden files)
+            List of full paths to schema files (excluding hidden files)
         """
+        return self._get_files_recursive(owner, repo, tag, path)
+
+    def _get_files_recursive(
+        self, owner: str, repo: str, tag: str, path: str
+    ) -> list[str]:
+        """Recursively get all files from a directory."""
         url = f"{self.BASE_URL}/repos/{owner}/{repo}/contents/{path}"
         params = {"ref": tag}
 
@@ -72,8 +78,16 @@ class GitHubClient:
 
         files = []
         for item in response.json():
-            if item["type"] == "file" and not item["name"].startswith("."):
-                files.append(item["name"])
+            if item["name"].startswith("."):
+                continue
+
+            if item["type"] == "file":
+                files.append(item["path"])
+            elif item["type"] == "dir":
+                # Recursively get files from subdirectory
+                files.extend(
+                    self._get_files_recursive(owner, repo, tag, item["path"])
+                )
 
         return files
 

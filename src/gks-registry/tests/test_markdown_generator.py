@@ -1,5 +1,4 @@
 """Tests for markdown generator."""
-import pytest
 from datetime import datetime
 
 
@@ -17,8 +16,8 @@ def test_generate_readme():
                     name="2.0.0",
                     published_at=datetime(2025, 3, 14),
                     schemas={
-                        "Allele": SchemaInfo("id", "Allele", "normative", "desc", "VA", "2.x"),
-                        "Location": SchemaInfo("id", "Location", "trial use", "desc", None, "2.x"),
+                        "Allele": SchemaInfo("id", "Allele", "normative", "desc", "VA"),
+                        "Location": SchemaInfo("id", "Location", "trial use", "desc", None),
                     }
                 )
             }
@@ -47,8 +46,8 @@ def test_generate_maturity_matrix():
                     name="2.0.0",
                     published_at=datetime(2025, 3, 14),
                     schemas={
-                        "Allele": SchemaInfo("id1", "Allele", "normative", "desc", "VA", "2.x"),
-                        "Location": SchemaInfo("id2", "Location", "trial use", "desc", None, "2.x"),
+                        "Allele": SchemaInfo("id1", "Allele", "normative", "desc", "VA"),
+                        "Location": SchemaInfo("id2", "Location", "trial use", "desc", None),
                     }
                 )
             }
@@ -77,7 +76,7 @@ def test_generate_release_history():
                     tag="v2.0.0",
                     name="2.0.0",
                     published_at=datetime(2025, 3, 14),
-                    schemas={"Allele": SchemaInfo("id", "Allele", "normative", "desc", "VA", "2.x")}
+                    schemas={"Allele": SchemaInfo("id", "Allele", "normative", "desc", "VA")}
                 ),
                 "v1.0.0": ReleaseInfo(
                     tag="v1.0.0",

@@ -64,19 +64,31 @@ def process_release(client: GitHubClient, repo_config: dict, release_data: dict)
             repo_config["schema_path"]
         )
 
-        for filename in schema_files:
+        for file_path in schema_files:
+            # Get filename from full path
+            filename = file_path.split("/")[-1]
+
+            # Skip example schemas
+            if filename.lower().startswith("example"):
+                continue
+
             try:
-                path = f"{repo_config['schema_path']}/{filename}"
                 content = client.get_file_content(
                     repo_config["owner"],
                     repo_config["name"],
                     tag,
-                    path
+                    file_path
                 )
                 schema_info = parse_schema(content)
-                schemas[schema_info.title or filename] = schema_info
+
+                # Skip schemas with titles starting with "example"
+                title = schema_info.title or filename
+                if title.lower().startswith("example"):
+                    continue
+
+                schemas[title] = schema_info
             except Exception as e:
-                print(f"  Warning: Failed to parse {filename}: {e}", file=sys.stderr)
+                print(f"  Warning: Failed to parse {file_path}: {e}", file=sys.stderr)
 
     except Exception as e:
         print(f"  Warning: Failed to list schemas for {tag}: {e}", file=sys.stderr)
@@ -238,9 +250,9 @@ def main(full_refresh: bool = False) -> None:
                             maturity=sdata["maturity"],
                             description=sdata["description"],
                             ga4gh_prefix=sdata["ga4gh_prefix"],
-                            version=sdata["version"]
                         )
                         for sname, sdata in existing_release["schemas"].items()
+                        if not sname.lower().startswith("example")
                     }
                 )
             else:
