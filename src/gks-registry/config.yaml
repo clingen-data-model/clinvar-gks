@@ -1,0 +1,23 @@
+repos:
+  - name: gks-core
+    owner: ga4gh
+    schema_path: schema/gks-core/json
+  - name: vrs
+    owner: ga4gh
+    schema_path: schema/vrs/json
+  - name: cat-vrs
+    owner: ga4gh
+    schema_path: schema/cat-vrs/json
+  - name: va-spec
+    owner: ga4gh
+    schema_path: schema/va-spec/json
+
+maturity_levels:
+  - draft
+  - trial use
+  - normative
+  - deprecated
+
+output:
+  data_dir: data
+  docs_dir: docs
