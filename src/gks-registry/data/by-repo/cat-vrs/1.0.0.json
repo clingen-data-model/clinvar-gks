@@ -15,7 +15,7 @@
       "maturity": "trial use",
       "description": "A canonical allele is defined by an Allele that is representative of a collection of congruent Alleles, each of which depict the same nucleic acid different underlying reference sequences. Congruent representations of an Allele often exist across different genome assemblies and associated cDNA transcript representations.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "CategoricalCnv": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalCnv",
@@ -23,7 +23,7 @@
       "maturity": "draft",
       "description": "A representation of the constraints for matching knowledge about CNVs.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "CategoricalVariant": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalVariant",
@@ -31,7 +31,7 @@
       "maturity": "trial use",
       "description": "A representation of a categorically-defined domain for variation, in which individual Constraintual variation instances may be members of the domain.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "Constraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/Constraint",
@@ -39,7 +39,7 @@
       "maturity": "trial use",
       "description": "Constraints are used to construct an intensional semantics of categorical variant types.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "CopyChangeConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/CopyChangeConstraint",
@@ -47,7 +47,7 @@
       "maturity": "draft",
       "description": "The relative assessment of the change in copies that members of this categorical variant satisfies.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "CopyCountConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/CopyCountConstraint",
@@ -55,7 +55,7 @@
       "maturity": "trial use",
       "description": "The exact or range of copies that members of this categorical variant must satisfy.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "DefiningAlleleConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/DefiningAlleleConstraint",
@@ -63,7 +63,7 @@
       "maturity": "trial use",
       "description": "The defining allele and its associated relationships that are congruent with member variants.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "DefiningLocationConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/DefiningLocationConstraint",
@@ -71,7 +71,7 @@
       "maturity": "trial use",
       "description": "The defining location and its associated relationships that are congruent with member locations.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "FeatureContextConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/FeatureContextConstraint",
@@ -79,7 +79,7 @@
       "maturity": "draft",
       "description": "The feature that members of this categorical variant are associated with.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "ProteinSequenceConsequence": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/ProteinSequenceConsequence",
@@ -87,7 +87,7 @@
       "maturity": "trial use",
       "description": "A change that occurs in a protein sequence as a result of genomic changes. Due to the degenerate nature of the genetic code, there are often several genomic changes that can cause a protein sequence consequence. The protein sequence consequence, like a CanonicalAllele, is defined by an Allele that is representative of a collection of congruent Protein Alleles that share the same altered codon(s).",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_braf-v600": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_braf-v600",
@@ -95,7 +95,7 @@
       "maturity": "trial use",
       "description": "BRAF V600 variants are missense amino acid substitutions that result in Valine changed. V600E is the most common substitution, but V600K, V600M, V600R, and V600G have also been observed.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_canonicalAllele-ex1": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_canonicalAllele-ex1",
@@ -103,7 +103,7 @@
       "maturity": "trial use",
       "description": "An example canonical allele.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_canonicalAllele-ex2": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_canonicalAllele-ex2",
@@ -111,7 +111,7 @@
       "maturity": "trial use",
       "description": "An example canonical allele.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_categoricalCnv-ex1": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_categoricalCnv-ex1",
@@ -119,7 +119,7 @@
       "maturity": "trial use",
       "description": "An example categorical CNV that uses CopyCountConstraint.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_categoricalCnv-ex2": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_categoricalCnv-ex2",
@@ -127,7 +127,7 @@
       "maturity": "trial use",
       "description": "An example categorical CNV that uses CopyChangeConstraint.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_categoricalCnv-ex3": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_categoricalCnv-ex3",
@@ -135,7 +135,7 @@
       "maturity": "trial use",
       "description": "An example categoricalCNV that uses CopyCountConstraint and uses ranges for start/end positions within the DefiningLocationConstraint.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_categoricalCnv-ex4": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_categoricalCnv-ex4",
@@ -143,7 +143,7 @@
       "maturity": "trial use",
       "description": "TP53 Copy Number Loss is a categorical copy-number variant resulting from the deletion of one copy of the TP53 gene.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_describedVariant-ex1": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_describedVariant-ex1",
@@ -151,7 +151,7 @@
       "maturity": "trial use",
       "description": "This described variant is an example of a categorical variant being modeled without constraints. This may be useful to model types of categorical variants as necessary constraints are still being developed.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_proteinSequenceConsequence-ex1": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_proteinSequenceConsequence-ex1",
@@ -159,7 +159,7 @@
       "maturity": "trial use",
       "description": "EGFR L858R has long been recognized as a functionally significant mutation in cancer, and is one of the most prevalent single mutations in lung cancer. Best described in non-small cell lung cancer (NSCLC), the mutation seems to confer sensitivity to first and second generation TKI's like gefitinib and neratinib. NSCLC patients with this mutation treated with TKI's show increased overall and progression-free survival, as compared to chemotherapy alone. Third generation TKI's are currently in clinical trials that specifically focus on mutant forms of EGFR, a few of which have shown efficacy in treating patients that failed to respond to earlier generation TKI therapies.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     },
     "example_proteinSequenceConsequence-ex2": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/example_proteinSequenceConsequence-ex2",
@@ -167,7 +167,7 @@
       "maturity": "trial use",
       "description": "An example categorical variant that models NM_007294.4(BRCA1):c.5558dup (p.Tyr1853Ter) from ClinVar.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0"
     }
   }
 }

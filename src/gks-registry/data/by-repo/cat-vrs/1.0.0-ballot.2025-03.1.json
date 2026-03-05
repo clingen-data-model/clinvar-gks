@@ -15,7 +15,7 @@
       "maturity": "trial use",
       "description": "A canonical allele is defined by an Allele that is representative of a collection of congruent Alleles, each of which depict the same nucleic acid different underlying reference sequences. Congruent representations of an Allele often exist across different genome assemblies and associated cDNA transcript representations.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     },
     "CategoricalCnv": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2025-03.1/json/CategoricalCnv",
@@ -23,7 +23,7 @@
       "maturity": "draft",
       "description": "A representation of the constraints for matching knowledge about CNVs.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     },
     "CategoricalVariant": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2025-03.1/json/CategoricalVariant",
@@ -31,7 +31,7 @@
       "maturity": "trial use",
       "description": "A representation of a categorically-defined domain for variation, in which individual Constraintual variation instances may be members of the domain.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     },
     "Constraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2025-03.1/json/Constraint",
@@ -39,7 +39,7 @@
       "maturity": "trial use",
       "description": "Constraints are used to construct an intensional semantics of categorical variant types.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     },
     "CopyChangeConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2025-03.1/json/CopyChangeConstraint",
@@ -47,7 +47,7 @@
       "maturity": "draft",
       "description": "The relative assessment of the change in copies that members of this categorical variant satisfies.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     },
     "CopyCountConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2025-03.1/json/CopyCountConstraint",
@@ -55,7 +55,7 @@
       "maturity": "trial use",
       "description": "The exact or range of copies that members of this categorical variant must satisfy.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     },
     "DefiningAlleleConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2025-03.1/json/DefiningAlleleConstraint",
@@ -63,7 +63,7 @@
       "maturity": "trial use",
       "description": "The defining allele and its associated relationships that are congruent with member variants.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     },
     "DefiningLocationConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2025-03.1/json/DefiningLocationConstraint",
@@ -71,7 +71,7 @@
       "maturity": "trial use",
       "description": "The defining location and its associated relationships that are congruent with member locations.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     },
     "FeatureContextConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2025-03.1/json/FeatureContextConstraint",
@@ -79,7 +79,7 @@
       "maturity": "draft",
       "description": "The feature that members of this categorical variant are associated with.",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     },
     "ProteinSequenceConsequence": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2025-03.1/json/ProteinSequenceConsequence",
@@ -87,7 +87,7 @@
       "maturity": "trial use",
       "description": "A change that occurs in a protein sequence as a result of genomic changes. Due to the degenerate nature of the genetic code, there are often several genomic changes that can cause a protein sequence consequence. The protein sequence consequence, like a CanonicalAllele, is defined by an Allele that is representative of a collection of congruent Protein Alleles that share the same altered codon(s).",
       "ga4gh_prefix": null,
-      "version": "unknown"
+      "version": "1.0.0-ballot.2025-03.1"
     }
   }
 }

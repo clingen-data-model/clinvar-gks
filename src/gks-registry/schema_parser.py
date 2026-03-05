@@ -9,9 +9,13 @@ def extract_version_from_id(schema_id: str) -> str:
     """
     Extract version string from $id URL.
 
-    Example: "https://w3id.org/ga4gh/schema/vrs/2.x/json/Allele" -> "2.x"
+    Examples:
+        "https://w3id.org/ga4gh/schema/vrs/2.x/json/Allele" -> "2.x"
+        "https://w3id.org/ga4gh/schema/vrs/2.0.0-snapshot.2025-02.3/json/Allele" -> "2.0.0-snapshot.2025-02.3"
     """
-    match = re.search(r'/(\d+\.x)/', schema_id)
+    # Match version between schema/{repo}/ and /json/
+    # Handles: 2.x, 2.0.0, 2.0.0-snapshot.2025-02.3, etc.
+    match = re.search(r'/schema/[^/]+/([^/]+)/json/', schema_id)
     if match:
         return match.group(1)
     return "unknown"
@@ -32,11 +36,13 @@ def parse_schema(content: dict) -> SchemaInfo:
     maturity = content.get("maturity", "unknown")
     description = content.get("description", "")
 
-    # Extract ga4gh prefix from ga4ghDigest.prefix if present
-    ga4gh_digest = content.get("ga4ghDigest", {})
+    # Extract ga4gh prefix - check both 'ga4gh' (newer) and 'ga4ghDigest' (older) properties
     ga4gh_prefix: Optional[str] = None
-    if isinstance(ga4gh_digest, dict):
-        ga4gh_prefix = ga4gh_digest.get("prefix")
+    for prop_name in ("ga4gh", "ga4ghDigest"):
+        ga4gh_obj = content.get(prop_name, {})
+        if isinstance(ga4gh_obj, dict) and "prefix" in ga4gh_obj:
+            ga4gh_prefix = ga4gh_obj["prefix"]
+            break
 
     version = extract_version_from_id(schema_id)
 
