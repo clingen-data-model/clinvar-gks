@@ -1,0 +1,149 @@
+{
+  "repo": "vrs",
+  "tag": "2.0.0.connect.2024-04.1",
+  "name": "GA4GH Connect - April 2024",
+  "published_at": "2024-04-22T07:47:18",
+  "schema_count": 17,
+  "maturity_summary": {
+    "draft": 13,
+    "unknown": 4
+  },
+  "schemas": {
+    "Adjacency": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Adjacency",
+      "title": "Adjacency",
+      "maturity": "draft",
+      "description": "The `Adjacency` class can represent either the termination of a sequence or the adjoining of the end of a sequence with the beginning of an adjacent sequence, potentially with an intervening linker sequence.",
+      "ga4gh_prefix": "AJ",
+      "version": "2.x"
+    },
+    "Allele": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Allele",
+      "title": "Allele",
+      "maturity": "draft",
+      "description": "The state of a molecule at a Location.",
+      "ga4gh_prefix": "VA",
+      "version": "2.x"
+    },
+    "CisPhasedBlock": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/CisPhasedBlock",
+      "title": "CisPhasedBlock",
+      "maturity": "draft",
+      "description": "An ordered set of co-occurring variants on the same molecule.",
+      "ga4gh_prefix": "CPB",
+      "version": "2.x"
+    },
+    "CopyNumberChange": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/CopyNumberChange",
+      "title": "CopyNumberChange",
+      "maturity": "draft",
+      "description": "An assessment of the copy number of a Location or a Gene within a system (e.g. genome, cell, etc.) relative to a baseline ploidy.",
+      "ga4gh_prefix": "CX",
+      "version": "2.x"
+    },
+    "CopyNumberCount": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/CopyNumberCount",
+      "title": "CopyNumberCount",
+      "maturity": "draft",
+      "description": "The absolute count of discrete copies of a Location or Gene, within a system (e.g. genome, cell, etc.).",
+      "ga4gh_prefix": "CN",
+      "version": "2.x"
+    },
+    "LengthExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/LengthExpression",
+      "title": "LengthExpression",
+      "maturity": "draft",
+      "description": "A sequence expressed only by its length.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "LiteralSequenceExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/LiteralSequenceExpression",
+      "title": "LiteralSequenceExpression",
+      "maturity": "draft",
+      "description": "An explicit expression of a Sequence.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "MolecularVariation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/MolecularVariation",
+      "title": "MolecularVariation",
+      "maturity": "unknown",
+      "description": "A variation on a contiguous molecule.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "Range": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Range",
+      "title": "Range",
+      "maturity": "draft",
+      "description": "An inclusive range of values bounded by one or more integers.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "ReferenceLengthExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/ReferenceLengthExpression",
+      "title": "ReferenceLengthExpression",
+      "maturity": "draft",
+      "description": "An expression of a length of a sequence from a repeating reference.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "Residue": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Residue",
+      "title": "Residue",
+      "maturity": "draft",
+      "description": "A character representing a specific residue (i.e., molecular species) or groupings of these (\"ambiguity codes\"), using [one-letter IUPAC abbreviations](https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes) for nucleic acids and amino acids.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "SequenceExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SequenceExpression",
+      "title": "SequenceExpression",
+      "maturity": "unknown",
+      "description": "An expression describing a Sequence.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "SequenceLocation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SequenceLocation",
+      "title": "SequenceLocation",
+      "maturity": "draft",
+      "description": "A Location defined by an interval on a referenced Sequence.",
+      "ga4gh_prefix": "SL",
+      "version": "2.x"
+    },
+    "SequenceReference": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SequenceReference",
+      "title": "SequenceReference",
+      "maturity": "draft",
+      "description": "A sequence of nucleic or amino acid character codes.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "SequenceString": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SequenceString",
+      "title": "SequenceString",
+      "maturity": "draft",
+      "description": "A character string of Residues that represents a biological sequence using the conventional sequence order (5\u2019-to-3\u2019 for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequence Strings.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "SystemicVariation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SystemicVariation",
+      "title": "SystemicVariation",
+      "maturity": "unknown",
+      "description": "A Variation of multiple molecules in the context of a system, e.g. a genome, sample, or homologous chromosomes.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    },
+    "Variation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Variation",
+      "title": "Variation",
+      "maturity": "unknown",
+      "description": "A representation of the state of one or more biomolecules.",
+      "ga4gh_prefix": null,
+      "version": "2.x"
+    }
+  }
+}

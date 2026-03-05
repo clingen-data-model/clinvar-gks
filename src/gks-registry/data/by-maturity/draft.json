@@ -1,0 +1,102 @@
+{
+  "maturity": "draft",
+  "generated_at": "2026-03-05T18:41:38.385663Z",
+  "schemas": [
+    {
+      "repo": "cat-vrs",
+      "release": "1.1.0-snapshot.2026-02.2",
+      "name": "CategoricalCnv",
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalCnv"
+    },
+    {
+      "repo": "cat-vrs",
+      "release": "1.1.0-snapshot.2026-02.2",
+      "name": "CopyChangeConstraint",
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/CopyChangeConstraint"
+    },
+    {
+      "repo": "cat-vrs",
+      "release": "1.1.0-snapshot.2026-02.2",
+      "name": "FeatureContextConstraint",
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/FeatureContextConstraint"
+    },
+    {
+      "repo": "cat-vrs",
+      "release": "1.1.0-snapshot.2026-02.2",
+      "name": "FunctionConstraint",
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/FunctionConstraint"
+    },
+    {
+      "repo": "cat-vrs",
+      "release": "1.1.0-snapshot.2026-02.2",
+      "name": "FunctionVariant",
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/FunctionVariant"
+    },
+    {
+      "repo": "cat-vrs",
+      "release": "1.1.0-snapshot.2026-02.2",
+      "name": "example_functionVariant-ex1",
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_functionVariant-ex1"
+    },
+    {
+      "repo": "cat-vrs",
+      "release": "1.1.0-snapshot.2026-02.2",
+      "name": "example_functionVariant-ex2",
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_functionVariant-ex2"
+    },
+    {
+      "repo": "cat-vrs",
+      "release": "1.1.0-snapshot.2026-02.2",
+      "name": "example_functionVariant-ex3",
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_functionVariant-ex3"
+    },
+    {
+      "repo": "vrs",
+      "release": "2.1.0-snapshot.2026-02.2",
+      "name": "CopyNumberChange",
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/CopyNumberChange"
+    },
+    {
+      "repo": "vrs",
+      "release": "2.1.0-snapshot.2026-02.2",
+      "name": "DerivativeMolecule",
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/DerivativeMolecule"
+    },
+    {
+      "repo": "vrs",
+      "release": "2.1.0-snapshot.2026-02.2",
+      "name": "LengthExpression",
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/LengthExpression"
+    },
+    {
+      "repo": "vrs",
+      "release": "2.1.0-snapshot.2026-02.2",
+      "name": "RelativeAllele",
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/RelativeAllele"
+    },
+    {
+      "repo": "vrs",
+      "release": "2.1.0-snapshot.2026-02.2",
+      "name": "RelativeSequenceLocation",
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/RelativeSequenceLocation"
+    },
+    {
+      "repo": "vrs",
+      "release": "2.1.0-snapshot.2026-02.2",
+      "name": "SequenceOffsetLocation",
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/SequenceOffsetLocation"
+    },
+    {
+      "repo": "vrs",
+      "release": "2.1.0-snapshot.2026-02.2",
+      "name": "Terminus",
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/Terminus"
+    },
+    {
+      "repo": "vrs",
+      "release": "2.1.0-snapshot.2026-02.2",
+      "name": "TraversalBlock",
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/TraversalBlock"
+    }
+  ]
+}

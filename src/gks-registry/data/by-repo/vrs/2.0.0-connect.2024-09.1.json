@@ -1,0 +1,189 @@
+{
+  "repo": "vrs",
+  "tag": "2.0.0-connect.2024-09.1",
+  "name": "2.0.0 GA4GH 12th Plenary Connect Pre-Release",
+  "published_at": "2024-09-18T00:30:13",
+  "schema_count": 22,
+  "maturity_summary": {
+    "draft": 17,
+    "unknown": 5
+  },
+  "schemas": {
+    "Adjacency": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/Adjacency",
+      "title": "Adjacency",
+      "maturity": "draft",
+      "description": "The `Adjacency` class can represent either the termination of a sequence or the adjoining of the end of a sequence with the beginning of an adjacent sequence, potentially with an intervening linker sequence.",
+      "ga4gh_prefix": "AJ",
+      "version": "unknown"
+    },
+    "Allele": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/Allele",
+      "title": "Allele",
+      "maturity": "draft",
+      "description": "The state of a molecule at a Location.",
+      "ga4gh_prefix": "VA",
+      "version": "unknown"
+    },
+    "CisPhasedBlock": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/CisPhasedBlock",
+      "title": "CisPhasedBlock",
+      "maturity": "draft",
+      "description": "An ordered set of co-occurring variants on the same molecule.",
+      "ga4gh_prefix": "CPB",
+      "version": "unknown"
+    },
+    "CopyNumberChange": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/CopyNumberChange",
+      "title": "CopyNumberChange",
+      "maturity": "draft",
+      "description": "An assessment of the copy number of a Location or a Gene within a system (e.g. genome, cell, etc.) relative to a baseline ploidy.",
+      "ga4gh_prefix": "CX",
+      "version": "unknown"
+    },
+    "CopyNumberCount": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/CopyNumberCount",
+      "title": "CopyNumberCount",
+      "maturity": "draft",
+      "description": "The absolute count of discrete copies of a Location or Gene, within a system (e.g. genome, cell, etc.).",
+      "ga4gh_prefix": "CN",
+      "version": "unknown"
+    },
+    "DerivativeMolecule": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/DerivativeMolecule",
+      "title": "DerivativeMolecule",
+      "maturity": "draft",
+      "description": "A molecule derived from segments of multiple adjoined molecular sequences, typically resulting from structural variation.",
+      "ga4gh_prefix": "DM",
+      "version": "unknown"
+    },
+    "Expression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/Expression",
+      "title": "Expression",
+      "maturity": "draft",
+      "description": "Representation of a variation by a specified nomenclature or syntax for a Variation object. Common examples of expressions for the description of molecular variation include the HGVS and ISCN nomenclatures.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "LengthExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/LengthExpression",
+      "title": "LengthExpression",
+      "maturity": "draft",
+      "description": "A sequence expressed only by its length.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "LiteralSequenceExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/LiteralSequenceExpression",
+      "title": "LiteralSequenceExpression",
+      "maturity": "draft",
+      "description": "An explicit expression of a Sequence.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "Location": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/Location",
+      "title": "Location",
+      "maturity": "unknown",
+      "description": "A contiguous segment of a biological sequence.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "MolecularVariation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/MolecularVariation",
+      "title": "MolecularVariation",
+      "maturity": "unknown",
+      "description": "A variation on a contiguous molecule.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "Range": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/Range",
+      "title": "Range",
+      "maturity": "draft",
+      "description": "An inclusive range of values bounded by one or more integers.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "ReferenceLengthExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/ReferenceLengthExpression",
+      "title": "ReferenceLengthExpression",
+      "maturity": "draft",
+      "description": "An expression of a sequence that is derived from repeating a subsequence of an associated SequenceLocation.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "Residue": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/Residue",
+      "title": "Residue",
+      "maturity": "draft",
+      "description": "A character representing a specific residue (i.e., molecular species) or groupings of these (\"ambiguity codes\"), using [one-letter IUPAC abbreviations](https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes) for nucleic acids and amino acids.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "SequenceExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/SequenceExpression",
+      "title": "SequenceExpression",
+      "maturity": "unknown",
+      "description": "An expression describing a Sequence.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "SequenceLocation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/SequenceLocation",
+      "title": "SequenceLocation",
+      "maturity": "draft",
+      "description": "A Location defined by an interval on a referenced Sequence.",
+      "ga4gh_prefix": "SL",
+      "version": "unknown"
+    },
+    "SequenceReference": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/SequenceReference",
+      "title": "SequenceReference",
+      "maturity": "draft",
+      "description": "A sequence of nucleic or amino acid character codes.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "SequenceString": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/SequenceString",
+      "title": "SequenceString",
+      "maturity": "draft",
+      "description": "A character string of Residues that represents a biological sequence using the conventional sequence order (5\u2019-to-3\u2019 for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequence Strings.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "SystemicVariation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/SystemicVariation",
+      "title": "SystemicVariation",
+      "maturity": "unknown",
+      "description": "A Variation of multiple molecules in the context of a system, e.g. a genome, sample, or homologous chromosomes.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "Terminus": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/Terminus",
+      "title": "Terminus",
+      "maturity": "draft",
+      "description": "The `Terminus` data class provides a structure for describing the end (terminus) of a molecule. Structurally similar to Adjacency, but used for describing where a molecule terminates (instead of adjoining another molecule).",
+      "ga4gh_prefix": "TM",
+      "version": "unknown"
+    },
+    "TraversalBlock": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/TraversalBlock",
+      "title": "TraversalBlock",
+      "maturity": "draft",
+      "description": "A component used to describe the orientation of a molecular variation within a DerivativeMolecule.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    },
+    "Variation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.0.0-connect.2024-09.1/json/Variation",
+      "title": "Variation",
+      "maturity": "unknown",
+      "description": "A representation of the state of one or more biomolecules.",
+      "ga4gh_prefix": null,
+      "version": "unknown"
+    }
+  }
+}
