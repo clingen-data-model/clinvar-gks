@@ -36,16 +36,6 @@ Schemas grouped by maturity level from the latest release of each repository.
 | code | gks-core | 1.1.0 | `https://w3id.org/ga4gh/schema/gks-core/1.1.0/json/code` |
 | date | gks-core | 1.1.0 | `https://w3id.org/ga4gh/schema/gks-core/1.1.0/json/date` |
 | datetime | gks-core | 1.1.0 | `https://w3id.org/ga4gh/schema/gks-core/1.1.0/json/datetime` |
-| example_braf-v600 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_braf-v600` |
-| example_canonicalAllele-ex1 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_canonicalAllele-ex1` |
-| example_canonicalAllele-ex2 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_canonicalAllele-ex2` |
-| example_categoricalCnv-ex1 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_categoricalCnv-ex1` |
-| example_categoricalCnv-ex2 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_categoricalCnv-ex2` |
-| example_categoricalCnv-ex3 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_categoricalCnv-ex3` |
-| example_describedVariant-ex1 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_describedVariant-ex1` |
-| example_proteinSequenceConsequence-ex1 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_proteinSequenceConsequence-ex1` |
-| example_proteinSequenceConsequence-ex2 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_proteinSequenceConsequence-ex2` |
-| example_tp53-copy-loss | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_tp53-copy-loss` |
 | iriReference | gks-core | 1.1.0 | `https://w3id.org/ga4gh/schema/gks-core/1.1.0/json/iriReference` |
 | residue | vrs | 2.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/residue` |
 | sequenceString | vrs | 2.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/sequenceString` |
@@ -67,6 +57,3 @@ Schemas grouped by maturity level from the latest release of each repository.
 | SequenceOffsetLocation | vrs | 2.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/SequenceOffsetLocation` |
 | Terminus | vrs | 2.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/Terminus` |
 | TraversalBlock | vrs | 2.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/vrs/2.1.0-snapshot.2026-02.2/json/TraversalBlock` |
-| example_functionVariant-ex1 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_functionVariant-ex1` |
-| example_functionVariant-ex2 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_functionVariant-ex2` |
-| example_functionVariant-ex3 | cat-vrs | 1.1.0-snapshot.2026-02.2 | `https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_functionVariant-ex3` |

@@ -6,9 +6,9 @@ All releases across GKS repositories, sorted by date.
 
 | Date | Repo | Release | Schemas |
 |------|------|---------|---------|
-| 2026-02-13 | cat-vrs | 1.1.0-snapshot.2026-02.2 | 25 |
+| 2026-02-13 | cat-vrs | 1.1.0-snapshot.2026-02.2 | 12 |
 | 2026-02-13 | vrs | 2.1.0-snapshot.2026-02.2 | 25 |
-| 2026-02-12 | cat-vrs | 1.1.0-snapshot.2026-02.1 | 25 |
+| 2026-02-12 | cat-vrs | 1.1.0-snapshot.2026-02.1 | 12 |
 | 2026-02-12 | vrs | 2.1.0-snapshot.2026-02.1 | 25 |
 ## 2025
 
@@ -17,7 +17,7 @@ All releases across GKS repositories, sorted by date.
 | 2025-12-08 | gks-core | 1.1.0 | 9 |
 | 2025-07-23 | va-spec | 1.0.1 | 0 |
 | 2025-06-11 | va-spec | 1.0.0 | 0 |
-| 2025-06-11 | cat-vrs | 1.0.0 | 20 |
+| 2025-06-11 | cat-vrs | 1.0.0 | 10 |
 | 2025-05-12 | va-spec | 1.0.0-ballot.2025-03.5 | 0 |
 | 2025-04-03 | va-spec | 1.0.0-ballot.2025-03.4 | 0 |
 | 2025-03-24 | va-spec | 1.0.0-ballot.2025-03.3 | 0 |

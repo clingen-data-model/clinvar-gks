@@ -1,6 +1,6 @@
 {
   "maturity": "trial use",
-  "generated_at": "2026-03-05T18:54:36.839147Z",
+  "generated_at": "2026-03-05T19:40:38.190996Z",
   "schemas": [
     {
       "repo": "cat-vrs",
@@ -43,66 +43,6 @@
       "release": "1.1.0-snapshot.2026-02.2",
       "name": "ProteinSequenceConsequence",
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/ProteinSequenceConsequence"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_braf-v600",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_braf-v600"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_canonicalAllele-ex1",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_canonicalAllele-ex1"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_canonicalAllele-ex2",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_canonicalAllele-ex2"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_categoricalCnv-ex1",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_categoricalCnv-ex1"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_categoricalCnv-ex2",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_categoricalCnv-ex2"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_categoricalCnv-ex3",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_categoricalCnv-ex3"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_describedVariant-ex1",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_describedVariant-ex1"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_proteinSequenceConsequence-ex1",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_proteinSequenceConsequence-ex1"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_proteinSequenceConsequence-ex2",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_proteinSequenceConsequence-ex2"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_tp53-copy-loss",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_tp53-copy-loss"
     },
     {
       "repo": "gks-core",

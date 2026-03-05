@@ -1,6 +1,6 @@
 {
   "maturity": "draft",
-  "generated_at": "2026-03-05T18:54:36.839147Z",
+  "generated_at": "2026-03-05T19:40:38.190996Z",
   "schemas": [
     {
       "repo": "cat-vrs",
@@ -31,24 +31,6 @@
       "release": "1.1.0-snapshot.2026-02.2",
       "name": "FunctionVariant",
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/FunctionVariant"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_functionVariant-ex1",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_functionVariant-ex1"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_functionVariant-ex2",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_functionVariant-ex2"
-    },
-    {
-      "repo": "cat-vrs",
-      "release": "1.1.0-snapshot.2026-02.2",
-      "name": "example_functionVariant-ex3",
-      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/example_functionVariant-ex3"
     },
     {
       "repo": "vrs",

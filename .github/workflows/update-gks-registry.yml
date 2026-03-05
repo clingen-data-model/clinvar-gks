@@ -27,7 +27,7 @@ jobs:
 
       - name: Fetch and update registry
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GKS_REGISTRY_TOKEN }}
         working-directory: src/gks-registry
         run: |
           if [ "${{ inputs.full_refresh }}" = "true" ]; then
