@@ -4,7 +4,7 @@ from typing import Optional
 from models import SchemaInfo
 
 
-def parse_schema(content: dict) -> SchemaInfo:
+def parse_schema(content: dict) -> tuple[str, SchemaInfo]:
     """
     Parse a JSON schema and extract relevant metadata.
 
@@ -12,7 +12,7 @@ def parse_schema(content: dict) -> SchemaInfo:
         content: Parsed JSON schema dictionary
 
     Returns:
-        SchemaInfo with extracted metadata
+        Tuple of (title, SchemaInfo) - title is used as schema name
     """
     schema_id = content.get("$id", "")
     title = content.get("title", "")
@@ -27,9 +27,8 @@ def parse_schema(content: dict) -> SchemaInfo:
             ga4gh_prefix = ga4gh_obj["prefix"]
             break
 
-    return SchemaInfo(
+    return title, SchemaInfo(
         id=schema_id,
-        title=title,
         maturity=maturity,
         description=description,
         ga4gh_prefix=ga4gh_prefix,

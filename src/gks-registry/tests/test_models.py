@@ -7,14 +7,13 @@ def test_schema_info_creation():
 
     schema = SchemaInfo(
         id="https://w3id.org/ga4gh/schema/vrs/2.x/json/Allele",
-        title="Allele",
         maturity="trial use",
         description="The state of a molecule at a Location.",
         ga4gh_prefix="VA",
     )
 
-    assert schema.title == "Allele"
     assert schema.maturity == "trial use"
+    assert schema.ga4gh_prefix == "VA"
 
 
 def test_schema_info_to_dict():
@@ -22,7 +21,6 @@ def test_schema_info_to_dict():
 
     schema = SchemaInfo(
         id="https://w3id.org/ga4gh/schema/vrs/2.x/json/Allele",
-        title="Allele",
         maturity="trial use",
         description="The state of a molecule.",
         ga4gh_prefix="VA",
@@ -31,8 +29,8 @@ def test_schema_info_to_dict():
     result = schema.to_dict()
 
     assert result["$id"] == "https://w3id.org/ga4gh/schema/vrs/2.x/json/Allele"
-    assert result["title"] == "Allele"
     assert result["maturity"] == "trial use"
+    assert "title" not in result  # title removed
 
 
 def test_release_info_creation():
@@ -40,7 +38,6 @@ def test_release_info_creation():
 
     schema = SchemaInfo(
         id="https://w3id.org/ga4gh/schema/vrs/2.x/json/Allele",
-        title="Allele",
         maturity="trial use",
         description="desc",
         ga4gh_prefix="VA",
@@ -61,9 +58,9 @@ def test_release_info_maturity_summary():
     from models import ReleaseInfo, SchemaInfo
 
     schemas = {
-        "Allele": SchemaInfo("id1", "Allele", "normative", "desc", "VA"),
-        "Location": SchemaInfo("id2", "Location", "trial use", "desc", None),
-        "Range": SchemaInfo("id3", "Range", "trial use", "desc", None),
+        "Allele": SchemaInfo("id1", "normative", "desc", "VA"),
+        "Location": SchemaInfo("id2", "trial use", "desc", None),
+        "Range": SchemaInfo("id3", "trial use", "desc", None),
     }
 
     release = ReleaseInfo(

@@ -3,7 +3,59 @@
   "tag": "1.0.0.connect.2024-04.1",
   "name": "1.0.0.connect.2024-04.1",
   "published_at": "2024-05-13T16:13:56",
-  "schema_count": 0,
-  "maturity_summary": {},
-  "schemas": {}
+  "schema_count": 8,
+  "maturity_summary": {
+    "draft": 7,
+    "unknown": 1
+  },
+  "schemas": {
+    "CanonicalAllele": {
+      "$id": "https://w3id.org/ga4gh/schema/catvrs/1.x/json/CanonicalAllele",
+      "maturity": "draft",
+      "description": "A canonical allele is defined by an `Allele <https://vrs.ga4gh.org/en/2.0/terms_and_model.html#variation>`  that is representative of a collection of congruent Alleles, each of which depict the same nucleic acid  change on different underlying reference sequences. Congruent representations of an Allele often exist across different genome assemblies and associated cDNA transcript representations.",
+      "ga4gh_prefix": null
+    },
+    "CategoricalCnv": {
+      "$id": "https://w3id.org/ga4gh/schema/catvrs/1.x/json/CategoricalCnv",
+      "maturity": "draft",
+      "description": "A categorical variation domain is defined first by a sequence derived from a canonical [Location ](https://vrs.ga4gh.org/en/2.0/terms_and_model.html#Location) , which is representative of  a collection of congruent Locations. The change or count of this sequence is also described, either by a numeric value (e.g. \"3 or more copies\") or categorical representation (e.g. \"high-level gain\").  Categorical CNVs may optionally be defined by rules specifying the location match characteristics for  member CNVs.",
+      "ga4gh_prefix": null
+    },
+    "CategoricalVariation": {
+      "$id": "https://w3id.org/ga4gh/schema/catvrs/1.x/json/CategoricalVariation",
+      "maturity": "unknown",
+      "description": "A representation of a categorically-defined domain for variation, in which individual  contextual variation instances may be members of the domain.",
+      "ga4gh_prefix": null
+    },
+    "DescribedVariation": {
+      "$id": "https://w3id.org/ga4gh/schema/catvrs/1.x/json/DescribedVariation",
+      "maturity": "draft",
+      "description": "Some categorical variation concepts are supported by custom nomenclatures or text-descriptive representations for which a categorical variation model does not exist. DescribedVariation is a class that adds requirements and contextual semantics to the `label` and `description` fields to indicate how a categorical variation concept should be evaluated for matching variants.",
+      "ga4gh_prefix": null
+    },
+    "NumberChange": {
+      "$id": "https://w3id.org/ga4gh/schema/catvrs/1.x/json/NumberChange",
+      "maturity": "draft",
+      "description": "A quantitative assessment of a unit within a system (e.g. genome, cell, etc.) relative to a baseline quantity.",
+      "ga4gh_prefix": null
+    },
+    "NumberCount": {
+      "$id": "https://w3id.org/ga4gh/schema/catvrs/1.x/json/NumberCount",
+      "maturity": "draft",
+      "description": "The absolute count of a discrete assayable unit (e.g. chromosome, gene, or sequence).",
+      "ga4gh_prefix": null
+    },
+    "ProteinSequenceConsequence": {
+      "$id": "https://w3id.org/ga4gh/schema/catvrs/1.x/json/ProteinSequenceConsequence",
+      "maturity": "draft",
+      "description": "A change that occurs in a protein sequence as a result of genomic changes. Due to the degenerate nature of the genetic code, there are often several genomic changes that can cause a protein sequence consequence. The protein sequence consequence, like a CanonicalAllele, is defined by an `Allele <https://vrs.ga4gh.org/en/2.0/terms_and_model.html#variation>` that is representative of a collection of congruent Protein Alleles that share the same altered codon(s).",
+      "ga4gh_prefix": null
+    },
+    "QuantityVariance": {
+      "$id": "https://w3id.org/ga4gh/schema/catvrs/1.x/json/QuantityVariance",
+      "maturity": "draft",
+      "description": "The Quantity Variance class captures one axis of variation in the generalized model of categorical variation.  It is used to model quantitative measure changes in a given biological level of variation.",
+      "ga4gh_prefix": null
+    }
+  }
 }

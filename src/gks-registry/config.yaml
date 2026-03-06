@@ -1,16 +1,27 @@
 repos:
   - name: gks-core
     owner: ga4gh
-    schema_path: schema/gks-core/json
+    schema_paths:
+      - schema/gks-core/json
+      - schema/gks-common/json  # older releases
+    combined_schema: schema/gks-core.json
   - name: vrs
     owner: ga4gh
-    schema_path: schema/vrs/json
+    schema_paths:
+      - schema/vrs/json
+    combined_schema: schema/vrs.json
   - name: cat-vrs
     owner: ga4gh
-    schema_path: schema/cat-vrs/json
+    schema_paths:
+      - schema/cat-vrs/json
+      - schema/catvrs/json  # older releases
+    combined_schema: schema/cat-vrs.json
   - name: va-spec
     owner: ga4gh
-    schema_path: schema/va-spec
+    schema_paths:
+      - schema/va-spec  # searches subdirs for json folders
+      - schema/profiles/json  # older releases
+    combined_schema: schema/va-spec.json
 
 maturity_levels:
   - draft

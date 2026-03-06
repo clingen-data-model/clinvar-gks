@@ -42,6 +42,8 @@ def process_release(client: GitHubClient, repo_config: dict, release_data: dict)
     """
     Process a single release: fetch all schemas and parse them.
 
+    Tries multiple schema paths and falls back to combined schema files.
+
     Args:
         client: GitHub API client
         repo_config: Repository configuration from config.yaml
@@ -55,43 +57,56 @@ def process_release(client: GitHubClient, repo_config: dict, release_data: dict)
     published_at = datetime.fromisoformat(release_data["published_at"].replace("Z", "+00:00"))
 
     schemas = {}
+    owner = repo_config["owner"]
+    repo_name = repo_config["name"]
 
-    try:
-        schema_files = client.get_schema_files(
-            repo_config["owner"],
-            repo_config["name"],
-            tag,
-            repo_config["schema_path"]
-        )
+    # Try each schema path until one works
+    schema_paths = repo_config.get("schema_paths", [repo_config.get("schema_path")])
+    for schema_path in schema_paths:
+        if not schema_path:
+            continue
 
-        for file_path in schema_files:
-            # Get filename from full path
-            filename = file_path.split("/")[-1]
-
-            # Skip example schemas
-            if filename.lower().startswith("example"):
+        try:
+            if not client.path_exists(owner, repo_name, tag, schema_path):
                 continue
 
-            try:
-                content = client.get_file_content(
-                    repo_config["owner"],
-                    repo_config["name"],
-                    tag,
-                    file_path
-                )
-                schema_info = parse_schema(content)
+            schema_files = client.get_schema_files(owner, repo_name, tag, schema_path)
 
-                # Skip schemas with titles starting with "example"
-                title = schema_info.title or filename
-                if title.lower().startswith("example"):
+            for file_path in schema_files:
+                filename = file_path.split("/")[-1]
+
+                # Skip example schemas
+                if filename.lower().startswith("example"):
                     continue
 
-                schemas[title] = schema_info
-            except Exception as e:
-                print(f"  Warning: Failed to parse {file_path}: {e}", file=sys.stderr)
+                try:
+                    content = client.get_file_content(owner, repo_name, tag, file_path)
+                    title, schema_info = parse_schema(content)
 
-    except Exception as e:
-        print(f"  Warning: Failed to list schemas for {tag}: {e}", file=sys.stderr)
+                    # Use title as schema name, fall back to filename
+                    schema_name = title or filename
+                    if schema_name.lower().startswith("example"):
+                        continue
+
+                    schemas[schema_name] = schema_info
+                except Exception as e:
+                    print(f"    Warning: Failed to parse {file_path}: {e}", file=sys.stderr)
+
+            if schemas:
+                break  # Found schemas, stop trying other paths
+
+        except Exception as e:
+            continue  # Try next path
+
+    # If no schemas found, try combined schema file
+    if not schemas and repo_config.get("combined_schema"):
+        combined_path = repo_config["combined_schema"]
+        try:
+            if client.path_exists(owner, repo_name, tag, combined_path):
+                content = client.get_file_content(owner, repo_name, tag, combined_path)
+                schemas = parse_combined_schema(content)
+        except Exception as e:
+            print(f"    Warning: Failed to parse combined schema: {e}", file=sys.stderr)
 
     return ReleaseInfo(
         tag=tag,
@@ -99,6 +114,54 @@ def process_release(client: GitHubClient, repo_config: dict, release_data: dict)
         published_at=published_at.replace(tzinfo=None),
         schemas=schemas
     )
+
+
+def parse_combined_schema(content: dict) -> dict[str, SchemaInfo]:
+    """
+    Parse a combined schema file (like vrs.json) that contains all schemas
+    in a 'definitions' or '$defs' section.
+
+    Args:
+        content: The combined JSON schema content
+
+    Returns:
+        Dictionary of schema name to SchemaInfo
+    """
+    schemas = {}
+
+    # Look for definitions in either 'definitions' or '$defs'
+    definitions = content.get("definitions", content.get("$defs", {}))
+
+    for schema_name, schema_def in definitions.items():
+        # Skip internal/utility types (typically lowercase or very short names)
+        if schema_name[0].islower() and len(schema_name) < 10:
+            continue
+
+        # Skip example schemas
+        if schema_name.lower().startswith("example"):
+            continue
+
+        # Extract what we can from the definition
+        schema_id = schema_def.get("$id", "")
+        description = schema_def.get("description", "")
+        maturity = schema_def.get("maturity", "unknown")
+
+        # Try to extract ga4gh prefix
+        ga4gh_prefix = None
+        for prop_name in ("ga4gh", "ga4ghDigest"):
+            ga4gh_obj = schema_def.get(prop_name, {})
+            if isinstance(ga4gh_obj, dict) and "prefix" in ga4gh_obj:
+                ga4gh_prefix = ga4gh_obj["prefix"]
+                break
+
+        schemas[schema_name] = SchemaInfo(
+            id=schema_id,
+            maturity=maturity,
+            description=description,
+            ga4gh_prefix=ga4gh_prefix,
+        )
+
+    return schemas
 
 
 def save_registry(repos: dict[str, RepoInfo], path: str, generated_at: datetime) -> None:
@@ -246,10 +309,9 @@ def main(full_refresh: bool = False) -> None:
                     schemas={
                         sname: SchemaInfo(
                             id=sdata["$id"],
-                            title=sdata["title"],
                             maturity=sdata["maturity"],
                             description=sdata["description"],
-                            ga4gh_prefix=sdata["ga4gh_prefix"],
+                            ga4gh_prefix=sdata.get("ga4gh_prefix"),
                         )
                         for sname, sdata in existing_release["schemas"].items()
                         if not sname.lower().startswith("example")

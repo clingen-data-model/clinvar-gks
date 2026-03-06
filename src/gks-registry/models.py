@@ -9,7 +9,6 @@ from collections import Counter
 class SchemaInfo:
     """Represents metadata extracted from a JSON schema file."""
     id: str
-    title: str
     maturity: str
     description: str
     ga4gh_prefix: Optional[str]
@@ -18,7 +17,6 @@ class SchemaInfo:
         """Convert to dictionary for JSON serialization."""
         return {
             "$id": self.id,
-            "title": self.title,
             "maturity": self.maturity,
             "description": self.description,
             "ga4gh_prefix": self.ga4gh_prefix,

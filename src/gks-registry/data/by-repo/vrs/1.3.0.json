@@ -3,7 +3,209 @@
   "tag": "1.3.0",
   "name": "1.3.0 Release: Genotype, Copy Changes, and Composed SEs",
   "published_at": "2023-04-16T13:41:26",
-  "schema_count": 0,
-  "maturity_summary": {},
-  "schemas": {}
+  "schema_count": 33,
+  "maturity_summary": {
+    "unknown": 32,
+    "draft": 1
+  },
+  "schemas": {
+    "Variation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A representation of the state of one or more biomolecules.",
+      "ga4gh_prefix": null
+    },
+    "MolecularVariation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A variation on a contiguous molecule.",
+      "ga4gh_prefix": null
+    },
+    "UtilityVariation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A collection of Variation subclasses that cannot be constrained to a specific class of biological variation, but are necessary for some applications of VRS.",
+      "ga4gh_prefix": null
+    },
+    "SystemicVariation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A Variation of multiple molecules in the context of a system, e.g. a genome, sample, or homologous chromosomes.",
+      "ga4gh_prefix": null
+    },
+    "Allele": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "The state of a molecule at a Location.",
+      "ga4gh_prefix": null
+    },
+    "Haplotype": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A set of non-overlapping Allele members that co-occur on the same molecule.",
+      "ga4gh_prefix": null
+    },
+    "Text": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A free-text definition of variation.",
+      "ga4gh_prefix": null
+    },
+    "VariationSet": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An unconstrained set of Variation members.",
+      "ga4gh_prefix": null
+    },
+    "CopyNumberCount": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "The absolute count of discrete copies of a Location or Feature, within a system (e.g. genome, cell, etc.).",
+      "ga4gh_prefix": null
+    },
+    "CopyNumberChange": {
+      "$id": "",
+      "maturity": "draft",
+      "description": "An assessment of the copy number of a Location or a Feature within a system (e.g. genome, cell,  etc.) relative to a baseline ploidy.",
+      "ga4gh_prefix": null
+    },
+    "Genotype": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A quantified set of MolecularVariation associated with a genomic locus.",
+      "ga4gh_prefix": null
+    },
+    "Location": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A contiguous segment of a biological sequence.",
+      "ga4gh_prefix": null
+    },
+    "ChromosomeLocation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A Location on a chromosome defined by a species and chromosome name.",
+      "ga4gh_prefix": null
+    },
+    "SequenceLocation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A Location defined by an interval on a referenced Sequence.",
+      "ga4gh_prefix": null
+    },
+    "SequenceInterval": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A SequenceInterval represents a span on a Sequence. Positions are always represented by contiguous spans using interbase coordinates or coordinate ranges.",
+      "ga4gh_prefix": null
+    },
+    "CytobandInterval": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A contiguous span on a chromosome defined by cytoband features. The span includes the constituent regions described by the start and end cytobands, as well as any intervening regions.",
+      "ga4gh_prefix": null
+    },
+    "SequenceExpression": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An expression describing a Sequence.",
+      "ga4gh_prefix": null
+    },
+    "LiteralSequenceExpression": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An explicit expression of a Sequence.",
+      "ga4gh_prefix": null
+    },
+    "DerivedSequenceExpression": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An approximate expression of a sequence that is derived from a referenced sequence location. Use of this class indicates that the derived sequence is *approximately equivalent* to the reference indicated, and is typically used for describing large regions in contexts where the use of an approximate sequence is inconsequential.",
+      "ga4gh_prefix": null
+    },
+    "RepeatedSequenceExpression": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An expression of a sequence comprised of a tandem repeating subsequence.",
+      "ga4gh_prefix": null
+    },
+    "ComposedSequenceExpression": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An expression of a sequence composed from multiple other Sequence Expressions objects. MUST have at least one component that is not a ref:`LiteralSequenceExpression`. CANNOT be composed from nested composed sequence expressions.",
+      "ga4gh_prefix": null
+    },
+    "GenotypeMember": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A class for expressing the count of a specific MolecularVariation present *in-trans* at a genomic locus represented by a Genotype.",
+      "ga4gh_prefix": null
+    },
+    "Feature": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A named entity that can be mapped to a Location. Genes, protein domains, exons, and chromosomes are some examples of common biological entities that may be Features.",
+      "ga4gh_prefix": null
+    },
+    "Gene": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A reference to a Gene as defined by an authority. For human genes, the use of [hgnc](https://registry.identifiers.org/registry/hgnc) as the gene authority is RECOMMENDED.",
+      "ga4gh_prefix": null
+    },
+    "Number": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A simple integer value as a VRS class.",
+      "ga4gh_prefix": null
+    },
+    "DefiniteRange": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A bounded, inclusive range of numbers.",
+      "ga4gh_prefix": null
+    },
+    "IndefiniteRange": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A half-bounded range of numbers represented as a number bound and associated comparator. The bound operator is interpreted as follows: '>=' are all numbers greater than and including `value`, '<=' are all numbers less than and including `value`.",
+      "ga4gh_prefix": null
+    },
+    "CURIE": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A [W3C Compact URI](https://www.w3.org/TR/curie/) formatted string. A CURIE string has the structure ``prefix``:``reference``, as defined by the W3C syntax.",
+      "ga4gh_prefix": null
+    },
+    "HumanCytoband": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A character string representing cytobands derived from the *International System for Human Cytogenomic Nomenclature* (ISCN) [guidelines](http://doi.org/10.1159/isbn.978-3-318-06861-0).",
+      "ga4gh_prefix": null
+    },
+    "Residue": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A character representing a specific residue (i.e., molecular species) or groupings of these (\"ambiguity codes\"), using [one-letter IUPAC abbreviations](https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes) for nucleic acids and amino acids.",
+      "ga4gh_prefix": null
+    },
+    "Sequence": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A character string of Residues that represents a biological sequence using the conventional sequence order (5\u2019-to-3\u2019 for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequences.",
+      "ga4gh_prefix": null
+    },
+    "SequenceState": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "DEPRECATED. A Sequence as a State. This is the State class to use for representing \"ref-alt\" style variation, including SNVs, MNVs, del, ins, and delins. This class is deprecated. Use LiteralSequenceExpression instead.",
+      "ga4gh_prefix": null
+    },
+    "SimpleInterval": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "DEPRECATED: A SimpleInterval represents a span of sequence. Positions are always represented by contiguous spans using interbase coordinates. This class is deprecated. Use SequenceInterval instead.",
+      "ga4gh_prefix": null
+    }
+  }
 }

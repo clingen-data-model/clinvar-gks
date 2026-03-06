@@ -16,10 +16,10 @@ def test_parse_schema_full():
         }
     }
 
-    result = parse_schema(content)
+    title, result = parse_schema(content)
 
+    assert title == "Allele"
     assert result.id == "https://w3id.org/ga4gh/schema/vrs/2.x/json/Allele"
-    assert result.title == "Allele"
     assert result.maturity == "trial use"
     assert result.description == "The state of a molecule at a Location."
     assert result.ga4gh_prefix == "VA"
@@ -33,9 +33,9 @@ def test_parse_schema_minimal():
         "title": "code"
     }
 
-    result = parse_schema(content)
+    title, result = parse_schema(content)
 
-    assert result.title == "code"
+    assert title == "code"
     assert result.maturity == "unknown"
     assert result.description == ""
     assert result.ga4gh_prefix is None
@@ -55,7 +55,7 @@ def test_parse_schema_with_keys_property():
         }
     }
 
-    result = parse_schema(content)
+    title, result = parse_schema(content)
     assert result.ga4gh_prefix == "VA"
 
 
@@ -74,6 +74,7 @@ def test_parse_schema_with_ga4gh_property():
         }
     }
 
-    result = parse_schema(content)
+    title, result = parse_schema(content)
 
+    assert title == "Allele"
     assert result.ga4gh_prefix == "VA"

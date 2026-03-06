@@ -51,6 +51,13 @@ class GitHubClient:
 
         return releases
 
+    def path_exists(self, owner: str, repo: str, tag: str, path: str) -> bool:
+        """Check if a path exists in a repository at a specific tag."""
+        url = f"{self.BASE_URL}/repos/{owner}/{repo}/contents/{path}"
+        params = {"ref": tag}
+        response = requests.get(url, headers=self.headers, params=params)
+        return response.status_code == 200
+
     def get_schema_files(self, owner: str, repo: str, tag: str, path: str) -> list[str]:
         """
         Recursively list schema files in a directory for a specific release tag.
