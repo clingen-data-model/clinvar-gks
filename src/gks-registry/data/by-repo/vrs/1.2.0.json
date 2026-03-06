@@ -1,0 +1,239 @@
+{
+  "repo": "vrs",
+  "tag": "1.2.0",
+  "name": "New variation Types, SequenceExpressions, CopyNumber",
+  "published_at": "2021-09-20T20:34:02",
+  "schema_count": 28,
+  "maturity_summary": {
+    "unknown": 28
+  },
+  "schemas": {
+    "Variation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A representation of the state of one or more biomolecules.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "MolecularVariation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A variation on a contiguous molecule.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "UtilityVariation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A collection of :ref:`Variation` subclasses that cannot be constrained to a specific class of biological variation, but are necessary for some applications of VRS.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "SystemicVariation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A Variation of multiple molecules in the context of a system, e.g. a genome, sample, or homologous chromosomes.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "Allele": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "The sequence state at a Location.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "Haplotype": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A set of non-overlapping Alleles that co-occur on the same molecule.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "Text": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A free-text definition of variation.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "VariationSet": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An unconstrained set of Variation members.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "CopyNumber": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "The count of discrete copies of a Feature, Molecular Variation, or other molecule within a genome.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "Location": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A contiguous segment of a biological sequence.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "ChromosomeLocation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A Location on a chromosome defined by a species and chromosome name.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "SequenceLocation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A Location defined by an interval on a referenced Sequence.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "SequenceInterval": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A SequenceInterval represents a span of sequence. Positions are always represented by contiguous spans using interbase coordinates.\nSequenceInterval is intended to be compatible with that in Sequence Ontology ([SO:0000001](http://www.sequenceontology.org/browser/current_svn/term/SO:0000001)), with the exception that the GA4GH VRS SequenceInterval may be zero-width. The SO definition is for an \"extent greater than zero\".",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "CytobandInterval": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A contiguous region specified by chromosomal bands features.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "SequenceExpression": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "One of a set of sequence representation syntaxes.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "LiteralSequenceExpression": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An explicit expression of a Sequence.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "DerivedSequenceExpression": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An approximate expression of a sequence that is derived from a referenced sequence location. Use of DerivedSequenceExpression indicates that the derived sequence is approximately equivalent to the reference indicated, and is typically used for describing large regions in contexts where the precision of a literal sequence is unnecessary.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "RepeatedSequenceExpression": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An expression of a sequence comprised of a tandem repeating subsequence.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "Feature": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A named entity that can be mapped to a Location. Genes, protein domains, exons, and chromosomes are some examples of common biological entities that may be Features.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "Gene": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A gene is an authoritative representation of one or more heritable :ref:`Locations <Location>` that includes all sequence elements necessary to perform a biological function. A gene may include regulatory, transcribed, and/or other functional Locations.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "Number": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A simple number value as a VRS class.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "IndefiniteRange": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An indefinite range represented as a number and associated comparator. The bound operator is interpreted as follows: '>=' are all values greater than and including the value, '<=' are all numbers less than and including the value.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "DefiniteRange": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A bounded, inclusive range of numbers.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "Sequence": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A character string of residues that represents a biological sequence using the conventional sequence order (5\u2019-to-3\u2019 for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequences.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "CURIE": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A string that refers to an object uniquely.  The lifetime and scope of an id is defined by the sender.\nVRS does not impose any contraints on strings used as ids in messages. However, to maximize sharability of data, VRS RECOMMENDS that implementations use [W3C Compact URI (CURIE)](https://www.w3.org/TR/curie/) syntax.\nString CURIEs are represented as `prefix`:`reference` (W3C terminology), but often referred to as `namespace`:`accession` or `namespace`:`local id` colloquially.\nVRS also RECOMMENDS that `prefix` be defined in identifiers.org.\nThe `reference` component is an unconstrained string.\nA CURIE is a URI.  URIs may *locate* objects (i.e., specify where to retrieve them) or *name* objects conceptually.  VRS uses CURIEs primarily as a naming mechanism.\nImplementations MAY provide CURIE resolution mechanisms for prefixes to make these objects locatable.\nUsing internal ids in public messages is strongly discouraged.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "HumanCytoband": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A interval on a stained metaphase chromosome specified by cytobands. CytobandIntervals include the regions described by the start and end cytobands.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "SequenceState": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "DEPRECATED: An assertion of the state of a sequence, typically at a Sequence Location within an Allele.\nThis class is deprecated. Use LiteralSequenceExpression instead.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    },
+    "SimpleInterval": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "DEPRECATED: A SimpleInterval represents a span of sequence. Positions are always represented by contiguous spans using interbase coordinates.\nThis class is deprecated. Use SequenceInterval instead.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.2.0/schema/vrs.json"
+    }
+  },
+  "release_notes": "# Deprecations\r\n\r\n- SimpleInterval and SequenceState are deprecated. They will be removed in VRS 2.0.\r\n\r\n# Major Changes\r\n\r\n- New classification of variation types.\r\n  - Molecular Variation refers to variation within or of a contiguous molecular\r\n  - Systemic Variation refers to variation in the context of a system, such as a genome, sample, or homologous chromosomes\r\n  - Utility Variation classes provide useful representations for certain technical operations\r\n\r\n- New SequenceExpressions subclasses replace SequenceState. Subtypes are:\r\n  - DerivedSequenceExpression, which representations sequence notionally derived from a SequenceLocation\r\n  - RepeatedSequenceExpression, which represents contiguous repeats of a sequence\r\n  - LiteralSequenceExpression, which wraps a Sequence and provides data structure parity with other SequenceExpressions\r\n\r\n- CopyNumber, a form of SystemicVariation, represents the copies of a molecule within a genome, and can be used to express concepts such as amplification and copy loss.\r\n\r\n- Gene enables reference to an external definition of a gene, particularly for useas a subject of copy number expressions.\r\n\r\n- DefiniteRange and IndefiniteRange represent bounded and half-bounded ranges respectively. A new Number type wraps integers so that some attributes may assume values of any of these three types.\r\n\r\nFor more changes, see the [release notes](https://vrs.ga4gh.org/en/stable/releases/1.2.html)",
+  "release_url": "https://github.com/ga4gh/vrs/releases/tag/1.2.0",
+  "previous_release": "1.1.2"
+}

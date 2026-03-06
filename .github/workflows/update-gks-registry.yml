@@ -1,0 +1,49 @@
+name: Update GKS Schema Registry
+
+on:
+  workflow_dispatch:
+    inputs:
+      full_refresh:
+        description: 'Re-fetch all releases (not just new ones)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  update-registry:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r src/gks-registry/requirements.txt
+
+      - name: Fetch and update registry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GKS_REGISTRY_TOKEN }}
+        working-directory: src/gks-registry
+        run: |
+          if [ "${{ inputs.full_refresh }}" = "true" ]; then
+            python fetch_schemas.py --full-refresh
+          else
+            python fetch_schemas.py
+          fi
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/gks-registry/data/ src/gks-registry/docs/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update GKS schema registry $(date -u +%Y-%m-%d)"
+            git push
+          fi
