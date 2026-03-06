@@ -14,10 +14,122 @@ from pathlib import Path
 
 import yaml
 
+import re
+
 from github_client import GitHubClient
-from models import RepoInfo, ReleaseInfo, SchemaInfo
+from models import RepoInfo, ReleaseInfo, SchemaInfo, Dependency
 from schema_parser import parse_schema
-from markdown_generator import generate_readme, generate_maturity_matrix, generate_release_history
+
+
+def get_github_schema_url(owner: str, repo: str, tag: str, source_path: str) -> str:
+    """Generate full GitHub URL for a schema file."""
+    return f"https://github.com/{owner}/{repo}/blob/{tag}/{source_path}"
+
+
+def get_release_url(owner: str, repo: str, tag: str) -> str:
+    """Generate GitHub release page URL."""
+    return f"https://github.com/{owner}/{repo}/releases/tag/{tag}"
+
+
+def extract_refs(content: dict, refs: list[str] = None) -> list[str]:
+    """
+    Recursively extract all $ref values from a JSON schema.
+
+    Args:
+        content: JSON schema content (dict or any value)
+        refs: List to accumulate refs (created if None)
+
+    Returns:
+        List of unique $ref values
+    """
+    if refs is None:
+        refs = []
+
+    if isinstance(content, dict):
+        for key, value in content.items():
+            if key == "$ref" and isinstance(value, str):
+                if value not in refs:
+                    refs.append(value)
+            else:
+                extract_refs(value, refs)
+    elif isinstance(content, list):
+        for item in content:
+            extract_refs(item, refs)
+
+    return refs
+
+
+def parse_ref_to_dependency(ref: str, current_repo: str, current_tag: str) -> Dependency | None:
+    """
+    Parse a $ref URL to extract product and release dependency.
+
+    Example refs:
+    - https://w3id.org/ga4gh/schema/gks-core/1.0.0/json/Coding
+    - https://w3id.org/ga4gh/schema/vrs/2.0.0/json/Allele
+    - /ga4gh/schema/gks-common/1.x/json/Extension
+
+    Args:
+        ref: The $ref URL value
+        current_repo: Current repository name (to exclude self-references)
+        current_tag: Current release tag (to exclude self-references)
+
+    Returns:
+        Dependency object or None if self-reference or unparseable
+    """
+    # Pattern for GA4GH schema $refs
+    # Match: /ga4gh/schema/<product>/<version>/... or https://w3id.org/ga4gh/schema/<product>/<version>/...
+    pattern = r"(?:https?://w3id\.org)?/ga4gh/schema/([^/]+)/([^/]+)/"
+    match = re.search(pattern, ref)
+
+    if not match:
+        return None
+
+    product = match.group(1)
+    release = match.group(2)
+
+    # Skip self-references (same product)
+    # Note: product names may differ slightly (gks-common vs gks-core)
+    if product == current_repo:
+        return None
+
+    return Dependency(product=product, release=release)
+
+
+def calculate_dependencies(schemas: dict[str, SchemaInfo], current_repo: str, current_tag: str) -> list[Dependency]:
+    """
+    Calculate unique external dependencies from all schema $refs.
+
+    Args:
+        schemas: Dictionary of schema name to SchemaInfo
+        current_repo: Current repository name
+        current_tag: Current release tag
+
+    Returns:
+        List of unique Dependency objects
+    """
+    seen = set()
+    dependencies = []
+
+    for schema in schemas.values():
+        for ref in schema.refs:
+            dep = parse_ref_to_dependency(ref, current_repo, current_tag)
+            if dep:
+                key = (dep.product, dep.release)
+                if key not in seen:
+                    seen.add(key)
+                    dependencies.append(dep)
+
+    # Sort by product then release
+    dependencies.sort(key=lambda d: (d.product, d.release))
+    return dependencies
+from markdown_generator import (
+    generate_readme,
+    generate_maturity_matrix,
+    generate_release_history,
+    generate_changelog,
+    generate_release_notes,
+    is_standard_release,
+)
 
 
 def load_config(config_path: str = None) -> dict:
@@ -55,10 +167,12 @@ def process_release(client: GitHubClient, repo_config: dict, release_data: dict)
     tag = release_data["tag_name"]
     name = release_data.get("name", tag)
     published_at = datetime.fromisoformat(release_data["published_at"].replace("Z", "+00:00"))
+    release_notes = release_data.get("body", "").strip() or None
 
     schemas = {}
     owner = repo_config["owner"]
     repo_name = repo_config["name"]
+    release_url = get_release_url(owner, repo_name, tag)
 
     # Try each schema path until one works
     schema_paths = repo_config.get("schema_paths", [repo_config.get("schema_path")])
@@ -88,46 +202,110 @@ def process_release(client: GitHubClient, repo_config: dict, release_data: dict)
                     if schema_name.lower().startswith("example"):
                         continue
 
+                    # Set source path and github_url
+                    schema_info.source_path = file_path
+                    schema_info.github_url = get_github_schema_url(owner, repo_name, tag, file_path)
+
+                    # Extract $refs from schema content
+                    schema_info.refs = extract_refs(content)
+
                     schemas[schema_name] = schema_info
                 except Exception as e:
                     print(f"    Warning: Failed to parse {file_path}: {e}", file=sys.stderr)
 
-            if schemas:
-                break  # Found schemas, stop trying other paths
-
         except Exception as e:
             continue  # Try next path
 
-    # If no schemas found, try combined schema file
-    if not schemas and repo_config.get("combined_schema"):
-        combined_path = repo_config["combined_schema"]
-        try:
-            if client.path_exists(owner, repo_name, tag, combined_path):
+    # If no schemas found, try combined schema files
+    if not schemas:
+        combined_schemas = repo_config.get("combined_schemas", [])
+        # Support legacy single combined_schema field
+        if not combined_schemas and repo_config.get("combined_schema"):
+            combined_schemas = [{"path": repo_config["combined_schema"]}]
+
+        for combined_config in combined_schemas:
+            combined_path = combined_config.get("path") if isinstance(combined_config, dict) else combined_config
+            if not combined_path:
+                continue
+
+            try:
+                if not client.path_exists(owner, repo_name, tag, combined_path):
+                    continue
+
                 content = client.get_file_content(owner, repo_name, tag, combined_path)
-                schemas = parse_combined_schema(content)
-        except Exception as e:
-            print(f"    Warning: Failed to parse combined schema: {e}", file=sys.stderr)
+
+                # Check for separate prefix map file
+                prefix_map = {}
+                prefix_map_path = (
+                    combined_config.get("prefix_map")
+                    if isinstance(combined_config, dict) else None
+                )
+                if prefix_map_path and client.path_exists(
+                    owner, repo_name, tag, prefix_map_path
+                ):
+                    try:
+                        prefix_content = client.get_file_content(
+                            owner, repo_name, tag, prefix_map_path
+                        )
+                        # ga4gh.json has type_prefix_map nested under identifiers
+                        identifiers = prefix_content.get("identifiers", {})
+                        prefix_map = identifiers.get("type_prefix_map", {})
+                        # Also check top-level for backwards compatibility
+                        if not prefix_map:
+                            prefix_map = prefix_content.get("type_prefix_map", {})
+                    except Exception:
+                        pass
+
+                schemas = parse_combined_schema(content, prefix_map, combined_path, owner, repo_name, tag)
+                if schemas:
+                    break
+            except Exception as e:
+                print(f"    Warning: Failed to parse {combined_path}: {e}", file=sys.stderr)
+
+    # Calculate dependencies from $refs
+    dependencies = calculate_dependencies(schemas, repo_name, tag)
 
     return ReleaseInfo(
         tag=tag,
         name=name,
         published_at=published_at.replace(tzinfo=None),
-        schemas=schemas
+        schemas=schemas,
+        release_notes=release_notes,
+        release_url=release_url,
+        dependencies=dependencies
     )
 
 
-def parse_combined_schema(content: dict) -> dict[str, SchemaInfo]:
+def parse_combined_schema(
+    content: dict,
+    prefix_map: dict = None,
+    source_path: str = None,
+    owner: str = None,
+    repo_name: str = None,
+    tag: str = None
+) -> dict[str, SchemaInfo]:
     """
     Parse a combined schema file (like vrs.json) that contains all schemas
     in a 'definitions' or '$defs' section.
 
     Args:
         content: The combined JSON schema content
+        prefix_map: Optional mapping of schema name to ga4gh prefix
+        source_path: Path to the combined schema file in the repo
+        owner: GitHub owner (for building github_url)
+        repo_name: Repository name (for building github_url)
+        tag: Release tag (for building github_url)
 
     Returns:
         Dictionary of schema name to SchemaInfo
     """
     schemas = {}
+    prefix_map = prefix_map or {}
+
+    # Build github_url for combined schema file
+    github_url = None
+    if owner and repo_name and tag and source_path:
+        github_url = get_github_schema_url(owner, repo_name, tag, source_path)
 
     # Look for definitions in either 'definitions' or '$defs'
     definitions = content.get("definitions", content.get("$defs", {}))
@@ -146,19 +324,26 @@ def parse_combined_schema(content: dict) -> dict[str, SchemaInfo]:
         description = schema_def.get("description", "")
         maturity = schema_def.get("maturity", "unknown")
 
-        # Try to extract ga4gh prefix
-        ga4gh_prefix = None
-        for prop_name in ("ga4gh", "ga4ghDigest"):
-            ga4gh_obj = schema_def.get(prop_name, {})
-            if isinstance(ga4gh_obj, dict) and "prefix" in ga4gh_obj:
-                ga4gh_prefix = ga4gh_obj["prefix"]
-                break
+        # Try to extract ga4gh prefix from schema, or use prefix_map
+        ga4gh_prefix = prefix_map.get(schema_name)
+        if not ga4gh_prefix:
+            for prop_name in ("ga4gh", "ga4ghDigest"):
+                ga4gh_obj = schema_def.get(prop_name, {})
+                if isinstance(ga4gh_obj, dict) and "prefix" in ga4gh_obj:
+                    ga4gh_prefix = ga4gh_obj["prefix"]
+                    break
+
+        # Extract $refs from this schema definition
+        refs = extract_refs(schema_def)
 
         schemas[schema_name] = SchemaInfo(
             id=schema_id,
             maturity=maturity,
             description=description,
             ga4gh_prefix=ga4gh_prefix,
+            source_path=source_path,
+            github_url=github_url,
+            refs=refs,
         )
 
     return schemas
@@ -252,6 +437,18 @@ def save_docs(repos: dict[str, RepoInfo], docs_dir: str, generated_at: datetime)
     history = generate_release_history(repos)
     (docs_path / "release-history.md").write_text(history)
 
+    # Changelog
+    changelog = generate_changelog(repos)
+    (docs_path / "changelog.md").write_text(changelog)
+
+    # Per-release notes
+    releases_path = docs_path / "releases"
+    release_notes = generate_release_notes(repos, generated_at)
+    for filename, content in release_notes.items():
+        file_path = releases_path / filename
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(content)
+
 
 def main(full_refresh: bool = False) -> None:
     """
@@ -312,10 +509,19 @@ def main(full_refresh: bool = False) -> None:
                             maturity=sdata["maturity"],
                             description=sdata["description"],
                             ga4gh_prefix=sdata.get("ga4gh_prefix"),
+                            source_path=sdata.get("source_path"),
+                            github_url=sdata.get("github_url"),
                         )
                         for sname, sdata in existing_release["schemas"].items()
                         if not sname.lower().startswith("example")
-                    }
+                    },
+                    release_notes=existing_release.get("release_notes"),
+                    release_url=existing_release.get("release_url"),
+                    previous_release=existing_release.get("previous_release"),
+                    dependencies=[
+                        Dependency(product=d["product"], release=d["release"])
+                        for d in existing_release.get("dependencies", [])
+                    ]
                 )
             else:
                 print(f"  Processing {tag}...")
@@ -323,6 +529,31 @@ def main(full_refresh: bool = False) -> None:
                 print(f"    Found {len(repo.releases[tag].schemas)} schemas")
 
         repos[name] = repo
+
+    # Post-process: set previous_release for each release
+    print("\nCalculating previous releases...")
+    for repo in repos.values():
+        # Sort releases by date
+        sorted_releases = sorted(
+            repo.releases.values(),
+            key=lambda r: r.published_at
+        )
+        # Set previous_release for each
+        # Standard releases point to previous standard release
+        # Non-standard releases point to previous release (any type)
+        for i, release in enumerate(sorted_releases):
+            # Reset to None first (clear any stale cached values)
+            release.previous_release = None
+            if i > 0:
+                if is_standard_release(release.tag):
+                    # Find the most recent standard release before this one
+                    for j in range(i - 1, -1, -1):
+                        if is_standard_release(sorted_releases[j].tag):
+                            release.previous_release = sorted_releases[j].tag
+                            break
+                else:
+                    # Non-standard releases point to any previous release
+                    release.previous_release = sorted_releases[i - 1].tag
 
     # Save outputs
     print("\nSaving outputs...")

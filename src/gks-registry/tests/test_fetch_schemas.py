@@ -1,9 +1,6 @@
 """Tests for main orchestrator."""
-import pytest
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
-import json
-import os
 
 
 def test_load_config():
@@ -29,7 +26,13 @@ def test_save_registry():
     from fetch_schemas import save_registry
     from models import RepoInfo
 
-    repos = {"vrs": RepoInfo(name="vrs", url="https://github.com/ga4gh/vrs", releases={})}
+    repos = {
+        "vrs": RepoInfo(
+            name="vrs",
+            url="https://github.com/ga4gh/vrs",
+            releases={}
+        )
+    }
 
     mock_file = MagicMock()
     with patch("builtins.open", return_value=mock_file):
@@ -57,7 +60,11 @@ def test_process_release():
         "name": "vrs",
         "schema_paths": ["schema/vrs/json"],
     }
-    release_data = {"tag_name": "v2.0.0", "name": "2.0.0", "published_at": "2025-03-14T00:00:00Z"}
+    release_data = {
+        "tag_name": "v2.0.0",
+        "name": "2.0.0",
+        "published_at": "2025-03-14T00:00:00Z"
+    }
 
     result = process_release(mock_client, repo_config, release_data)
 
@@ -71,12 +78,16 @@ def test_process_release_falls_back_to_combined_schema():
     from github_client import GitHubClient
 
     mock_client = Mock(spec=GitHubClient)
-    # First path doesn't exist
+    # First path doesn't exist, second (combined) does
     mock_client.path_exists.side_effect = [False, True]
     mock_client.get_file_content.return_value = {
         "title": "VRS",
         "definitions": {
-            "Allele": {"$id": "id1", "description": "An allele", "maturity": "normative"},
+            "Allele": {
+                "$id": "id1",
+                "description": "An allele",
+                "maturity": "normative"
+            },
             "Location": {"$id": "id2", "description": "A location"},
         }
     }
@@ -85,9 +96,13 @@ def test_process_release_falls_back_to_combined_schema():
         "owner": "ga4gh",
         "name": "vrs",
         "schema_paths": ["schema/vrs/json"],
-        "combined_schema": "schema/vrs.json",
+        "combined_schemas": [{"path": "schema/vrs.json"}],
     }
-    release_data = {"tag_name": "v1.3.0", "name": "1.3.0", "published_at": "2023-01-01T00:00:00Z"}
+    release_data = {
+        "tag_name": "v1.3.0",
+        "name": "1.3.0",
+        "published_at": "2023-01-01T00:00:00Z"
+    }
 
     result = process_release(mock_client, repo_config, release_data)
 
@@ -95,6 +110,55 @@ def test_process_release_falls_back_to_combined_schema():
     assert len(result.schemas) == 2
     assert "Allele" in result.schemas
     assert "Location" in result.schemas
+
+
+def test_process_release_with_prefix_map():
+    from fetch_schemas import process_release
+    from github_client import GitHubClient
+
+    mock_client = Mock(spec=GitHubClient)
+    # Schema path doesn't exist, combined does, prefix map does
+    mock_client.path_exists.side_effect = [False, True, True]
+    mock_client.get_file_content.side_effect = [
+        # vr.json content
+        {
+            "title": "VR",
+            "definitions": {
+                "Allele": {"description": "An allele"},
+                "SequenceLocation": {"description": "A location"},
+            }
+        },
+        # ga4gh.json content (nested under identifiers)
+        {
+            "identifiers": {
+                "type_prefix_map": {
+                    "Allele": "VA",
+                    "SequenceLocation": "VSL",
+                }
+            }
+        }
+    ]
+
+    repo_config = {
+        "owner": "ga4gh",
+        "name": "vrs",
+        "schema_paths": ["schema/vrs/json"],
+        "combined_schemas": [
+            {"path": "schema/vr.json", "prefix_map": "schema/ga4gh.json"}
+        ],
+    }
+    release_data = {
+        "tag_name": "v1.0.0",
+        "name": "1.0.0",
+        "published_at": "2020-01-01T00:00:00Z"
+    }
+
+    result = process_release(mock_client, repo_config, release_data)
+
+    assert result.tag == "v1.0.0"
+    assert len(result.schemas) == 2
+    assert result.schemas["Allele"].ga4gh_prefix == "VA"
+    assert result.schemas["SequenceLocation"].ga4gh_prefix == "VSL"
 
 
 def test_parse_combined_schema():

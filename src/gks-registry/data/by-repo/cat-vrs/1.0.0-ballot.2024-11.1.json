@@ -13,55 +13,86 @@
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2024-11.1/json/CanonicalAllele",
       "maturity": "trial use",
       "description": "A canonical allele is defined by an [Allele](https://vrs.ga4gh.org/en/2.x/concepts/MolecularVariation/Allele.html#) that is representative of a collection of congruent Alleles, each of which depict the same nucleic acid change on different underlying reference sequences. Congruent representations of an Allele often exist across different genome assemblies and associated cDNA transcript representations.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CanonicalAllele",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/CanonicalAllele"
     },
     "CategoricalCnv": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2024-11.1/json/CategoricalCnv",
       "maturity": "draft",
       "description": "A representation of the constraints for matching knowledge about CNVs.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CategoricalCnv",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/CategoricalCnv"
     },
     "CategoricalVariant": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2024-11.1/json/CategoricalVariant",
       "maturity": "trial use",
       "description": "A representation of a categorically-defined domain for variation, in which individual Constraintual variation instances may be members of the domain.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CategoricalVariant",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/CategoricalVariant"
     },
     "Constraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2024-11.1/json/Constraint",
       "maturity": "trial use",
       "description": "Constraints are used to construct an intensional semantics of categorical variant types.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/Constraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/Constraint"
     },
     "CopyChangeConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2024-11.1/json/CopyChangeConstraint",
       "maturity": "draft",
       "description": "The relative assessment of the change in copies that members of this categorical variant satisfies.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CopyChangeConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/CopyChangeConstraint"
     },
     "CopyCountConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2024-11.1/json/CopyCountConstraint",
       "maturity": "trial use",
       "description": "The exact or range of copies that members of this categorical variant must satisfy.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CopyCountConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/CopyCountConstraint"
     },
     "DefiningAlleleConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2024-11.1/json/DefiningAlleleConstraint",
       "maturity": "trial use",
       "description": "The defining allele and its associated relationships that are congruent with member variants.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/DefiningAlleleConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/DefiningAlleleConstraint"
     },
     "DefiningLocationConstraint": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2024-11.1/json/DefiningLocationConstraint",
       "maturity": "trial use",
       "description": "The defining location and its associated relationships that are congruent with member locations.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/DefiningLocationConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/DefiningLocationConstraint"
     },
     "ProteinSequenceConsequence": {
       "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0-ballot.2024-11.1/json/ProteinSequenceConsequence",
       "maturity": "trial use",
       "description": "A change that occurs in a protein sequence as a result of genomic changes. Due to the degenerate nature of the genetic code, there are often several genomic changes that can cause a protein sequence consequence. The protein sequence consequence, like a CanonicalAllele, is defined by an [Allele](https://vrs.ga4gh.org/en/2.x/concepts/MolecularVariation/Allele.html#) that is representative of a collection of congruent Protein Alleles that share the same altered codon(s).",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/ProteinSequenceConsequence",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/ProteinSequenceConsequence"
     }
-  }
+  },
+  "release_notes": "This ballot is a GKS community trial use review for the following classes:\r\n\r\n- Categorical Variant [[docs](https://cat-vrs.readthedocs.io/en/1.0.0-ballot.2024-11/concepts/catvrs_model.html#categorical-variant)][[schema](https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/CategoricalVariant)]\r\n- Defining Allele Constraint [[docs](https://cat-vrs.readthedocs.io/en/1.0.0-ballot.2024-11/concepts/catvrs_model.html#definingalleleconstraint)][[schema](https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/DefiningAlleleConstraint)]\r\n- Defining Location Constraint [[docs](https://cat-vrs.readthedocs.io/en/1.0.0-ballot.2024-11/concepts/catvrs_model.html#defininglocationconstraint)][[schema](https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/DefiningLocationConstraint)]\r\n- Copy Count Constraint [[docs](https://cat-vrs.readthedocs.io/en/1.0.0-ballot.2024-11/concepts/catvrs_model.html#copycountconstraint)][[schema](https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/CopyCountConstraint)]\r\n\r\nAs well as the following recipes:\r\n\r\n- Canonical Allele [[docs](https://cat-vrs.readthedocs.io/en/1.0.0-ballot.2024-11/concepts/recipes.html#canonicalallele)][[schema](https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/CanonicalAllele)]\r\n- Protein Sequence Consequence [[docs](https://cat-vrs.readthedocs.io/en/1.0.0-ballot.2024-11/concepts/recipes.html#proteinsequenceconsequence)][[schema](https://github.com/ga4gh/cat-vrs/blob/1.0.0-ballot.2024-11.1/schema/cat-vrs/json/ProteinSequenceConsequence)]\r\n\r\nJoin the discussion at #86!\r\n\r\n**Changelog Since September Connect**: https://github.com/ga4gh/cat-vrs/compare/1.0.0-connect.2024-09.1...1.0.0-ballot.2024-11.1",
+  "release_url": "https://github.com/ga4gh/cat-vrs/releases/tag/1.0.0-ballot.2024-11.1",
+  "previous_release": "1.0.0-connect.2024-09.1",
+  "dependencies": [
+    {
+      "product": "gks-core",
+      "release": "1.0.0-snapshot.2024-11.1"
+    },
+    {
+      "product": "vrs",
+      "release": "2.0.0-ballot.2024-11.1"
+    }
+  ]
 }

@@ -12,55 +12,90 @@
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.0-connect.2024-09.1/profiles/json/AssayVariantEffectClinicalClassificationStatement",
       "maturity": "draft",
       "description": "A statement that assigns a clinical strength of evidence to a variant effect from a functional assay.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/profiles/json/AssayVariantEffectClinicalClassificationStatement",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0-connect.2024-09.1/schema/profiles/json/AssayVariantEffectClinicalClassificationStatement"
     },
     "AssayVariantEffectFunctionalClassificationStatement": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.0-connect.2024-09.1/profiles/json/AssayVariantEffectFunctionalClassificationStatement",
       "maturity": "draft",
       "description": "A statement that assigns a functional classification to a variant effect from a functional assay.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/profiles/json/AssayVariantEffectFunctionalClassificationStatement",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0-connect.2024-09.1/schema/profiles/json/AssayVariantEffectFunctionalClassificationStatement"
     },
     "AssayVariantEffectMeasurementStudyResult": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.0-connect.2024-09.1/profiles/json/AssayVariantEffectMeasurementStudyResult",
       "maturity": "draft",
       "description": "A StudyResult that reports a variant effect score from a functional assay.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/profiles/json/AssayVariantEffectMeasurementStudyResult",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0-connect.2024-09.1/schema/profiles/json/AssayVariantEffectMeasurementStudyResult"
     },
     "CohortAlleleFrequencyStudyResult": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.0.0-connect.2024-09.1/profiles/json/CohortAlleleFrequencyStudyResult",
       "maturity": "draft",
       "description": "A StudyResult that reports measures related to the frequency of an Allele in a cohort",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/profiles/json/CohortAlleleFrequencyStudyResult",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0-connect.2024-09.1/schema/profiles/json/CohortAlleleFrequencyStudyResult"
     },
     "VariantDiagnosticStudyStatement": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/json/VariantDiagnosticStudyStatement",
       "maturity": "draft",
       "description": "A Statement reporting a conclusion from a single study about whether a variant is associated with a disease (a diagnostic inclusion criterion), or absence of a disease (diagnostic exclusion criterion) - based on interpretation of the study's results.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/profiles/json/VariantDiagnosticStudyStatement",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0-connect.2024-09.1/schema/profiles/json/VariantDiagnosticStudyStatement"
     },
     "VariantOncogenicityStudyStatement": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/json/VariantOncogenicityStudyStatement",
       "maturity": "draft",
       "description": "A Statement reporting a conclusion from a single study that supports or refutes a variant's effect on oncogenesis for a specific tumor type - based on interpretation of the study's results.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/profiles/json/VariantOncogenicityStudyStatement",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0-connect.2024-09.1/schema/profiles/json/VariantOncogenicityStudyStatement"
     },
     "VariantPathogenicityStatement": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/json/VariantPathogenicityStatement",
       "maturity": "draft",
       "description": "A Statement describing the role of a variant in causing an inherited condition.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/profiles/json/VariantPathogenicityStatement",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0-connect.2024-09.1/schema/profiles/json/VariantPathogenicityStatement"
     },
     "VariantPrognosticStudyStatement": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/json/VariantPrognosticStudyStatement",
       "maturity": "draft",
       "description": "A Statement reporting a conclusion from a single study about whether a variant is associated with an improved or worse outcome for a disease - based on interpretation of the study's results.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/profiles/json/VariantPrognosticStudyStatement",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0-connect.2024-09.1/schema/profiles/json/VariantPrognosticStudyStatement"
     },
     "VariantTherapeuticResponseStudyStatement": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/json/VariantTherapeuticResponseStudyStatement",
       "maturity": "draft",
       "description": "A Statement reporting a conclusion from a single study about the role of a variant in modulating the response of a neoplasm to drug administration or other therapeutic procedures - based on interpretation of the study's results.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/profiles/json/VariantTherapeuticResponseStudyStatement",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0-connect.2024-09.1/schema/profiles/json/VariantTherapeuticResponseStudyStatement"
     }
-  }
+  },
+  "release_notes": "This is a pre-release version prepared for the GA4GH 12th Plenary Connect (2024) in Melbourne, AUS.\r\n\r\nAll content in this version is at a DRAFT maturity level.",
+  "release_url": "https://github.com/ga4gh/va-spec/releases/tag/1.0.0-connect.2024-09.1",
+  "previous_release": "1.0.0.connect.2024-04.1",
+  "dependencies": [
+    {
+      "product": "cat-vrs",
+      "release": "1.0.0-connect.2024-09.1"
+    },
+    {
+      "product": "gks-common",
+      "release": "1.0.0-connect.2024-09.1"
+    },
+    {
+      "product": "vrs",
+      "release": "2.0.0-connect.2024-09.1"
+    }
+  ]
 }

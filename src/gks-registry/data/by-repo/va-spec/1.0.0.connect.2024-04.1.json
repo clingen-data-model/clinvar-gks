@@ -12,55 +12,93 @@
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/core-im/json/Agent",
       "maturity": "draft",
       "description": "An autonomous actor (person, organization, or computational agent) that bears some form of responsibility for an activity taking place, for the existence of an entity, or for  another agent\u2019s activity.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/va-spec/core-im/json/Agent",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0.connect.2024-04.1/schema/va-spec/core-im/json/Agent"
     },
     "Contribution": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/core-im/json/Contribution",
       "maturity": "draft",
       "description": "The sum of all actions taken by a single agent in contributing to the creation, modification,  assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine, DataItem,  Publication, etc.)",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/va-spec/core-im/json/Contribution",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0.connect.2024-04.1/schema/va-spec/core-im/json/Contribution"
     },
     "DataItem": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/core-im/json/DataItem",
       "maturity": "draft",
       "description": "An InformationEntity representing an individual piece of data, generated/acquired through methods  which reliably produce truthful information about something.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/va-spec/core-im/json/DataItem",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0.connect.2024-04.1/schema/va-spec/core-im/json/DataItem"
     },
     "Document": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/core-im/json/Document",
       "maturity": "draft",
       "description": "a representation of a physical or digital document",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/va-spec/core-im/json/Document",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0.connect.2024-04.1/schema/va-spec/core-im/json/Document"
     },
     "Method": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/core-im/json/Method",
       "maturity": "draft",
       "description": "A set of instructions that specify how to achieve some objective (e.g. experimental protocols,  curation guidelines, rule sets, etc.)",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/va-spec/core-im/json/Method",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0.connect.2024-04.1/schema/va-spec/core-im/json/Method"
     },
     "CohortAlleleFrequency": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/caf/json/CohortAlleleFrequency",
       "maturity": "draft",
       "description": "A measure of the frequency of an Allele in a cohort. ",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/va-spec/profiles/caf/json/CohortAlleleFrequency",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0.connect.2024-04.1/schema/va-spec/profiles/caf/json/CohortAlleleFrequency"
     },
     "VariantOncogenicityStudy": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/oncogenicity/json/VariantOncogenicityStudy",
       "maturity": "draft",
       "description": "A study summarization supporting or refuting the effect of variant on oncogenesis of a tumor type.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/va-spec/profiles/oncogenicity/json/VariantOncogenicityStudy",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0.connect.2024-04.1/schema/va-spec/profiles/oncogenicity/json/VariantOncogenicityStudy"
     },
     "VariantPathogenicity": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/pathogenicity/json/VariantPathogenicity",
       "maturity": "draft",
       "description": "A VariantClassification describing the role of a variant in causing an  inherited disorder.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/va-spec/profiles/pathogenicity/json/VariantPathogenicity",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0.connect.2024-04.1/schema/va-spec/profiles/pathogenicity/json/VariantPathogenicity"
     },
     "VariantTherapeuticResponseStudy": {
       "$id": "https://w3id.org/ga4gh/schema/va-spec/1.x/profiles/t-resp/json/VariantTherapeuticResponseStudy",
       "maturity": "draft",
       "description": "A study summarization describing the role of a variant in modulating the response of a neoplasm to drug administration or other therapeutic procedure.",
-      "ga4gh_prefix": null
+      "ga4gh_prefix": null,
+      "source_path": "schema/va-spec/profiles/t-resp/json/VariantTherapeuticResponseStudy",
+      "github_url": "https://github.com/ga4gh/va-spec/blob/1.0.0.connect.2024-04.1/schema/va-spec/profiles/t-resp/json/VariantTherapeuticResponseStudy"
     }
-  }
+  },
+  "release_notes": "This is a pre-release version which was presented at GA4GH Connect 2024 in Ascona, CH\r\n\r\nSome of the key items included are:\r\n* Draft of the Core Information Model (Core-IM)\r\n* Cohort Allele Frequency Profile\r\n* Pathogenicity Profile\r\n* Therapeutic Response Profile\r\n* Oncogenicity Profile\r\n\r\nAll content in this version is at a DRAFT maturity level.",
+  "release_url": "https://github.com/ga4gh/va-spec/releases/tag/1.0.0.connect.2024-04.1",
+  "dependencies": [
+    {
+      "product": "catvrs",
+      "release": "1.x"
+    },
+    {
+      "product": "gks-common",
+      "release": "1.x"
+    },
+    {
+      "product": "gks-common",
+      "release": "json"
+    },
+    {
+      "product": "vrs",
+      "release": "2.x"
+    }
+  ]
 }
