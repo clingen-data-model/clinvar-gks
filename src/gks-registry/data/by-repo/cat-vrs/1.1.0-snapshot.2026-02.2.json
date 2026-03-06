@@ -1,0 +1,122 @@
+{
+  "repo": "cat-vrs",
+  "tag": "1.1.0-snapshot.2026-02.2",
+  "name": "1.1.0-snapshot.2026-02.2",
+  "published_at": "2026-02-13T13:17:37",
+  "schema_count": 12,
+  "maturity_summary": {
+    "trial use": 7,
+    "draft": 5
+  },
+  "schemas": {
+    "CanonicalAllele": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/CanonicalAllele",
+      "maturity": "trial use",
+      "description": "A canonical allele is defined by an Allele that is representative of a collection of congruent Alleles, each of which depict the same nucleic acid on different underlying reference sequences. Congruent representations of an Allele often exist across different genome assemblies and associated cDNA transcript representations.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CanonicalAllele",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/CanonicalAllele"
+    },
+    "CategoricalCnv": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalCnv",
+      "maturity": "draft",
+      "description": "A representation of the constraints for matching knowledge about CNVs.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CategoricalCnv",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/CategoricalCnv"
+    },
+    "CategoricalVariant": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/CategoricalVariant",
+      "maturity": "trial use",
+      "description": "A representation of a categorically-defined domain for variation, in which individual Constraintual variation instances may be members of the domain.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CategoricalVariant",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/CategoricalVariant"
+    },
+    "Constraint": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/Constraint",
+      "maturity": "trial use",
+      "description": "Constraints are used to construct an intensional semantics of categorical variant types.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/Constraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/Constraint"
+    },
+    "CopyChangeConstraint": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/CopyChangeConstraint",
+      "maturity": "draft",
+      "description": "The relative assessment of the change in copies that members of this categorical variant satisfy.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CopyChangeConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/CopyChangeConstraint"
+    },
+    "CopyCountConstraint": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/CopyCountConstraint",
+      "maturity": "trial use",
+      "description": "The exact or range of copies that members of this categorical variant must satisfy.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/CopyCountConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/CopyCountConstraint"
+    },
+    "DefiningAlleleConstraint": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/DefiningAlleleConstraint",
+      "maturity": "trial use",
+      "description": "The defining allele and its associated relationships that are congruent with member variants.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/DefiningAlleleConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/DefiningAlleleConstraint"
+    },
+    "DefiningLocationConstraint": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/DefiningLocationConstraint",
+      "maturity": "trial use",
+      "description": "The defining location and its associated relationships that are congruent with member locations.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/DefiningLocationConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/DefiningLocationConstraint"
+    },
+    "FeatureContextConstraint": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/FeatureContextConstraint",
+      "maturity": "draft",
+      "description": "The feature that members of this categorical variant are associated with.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/FeatureContextConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/FeatureContextConstraint"
+    },
+    "FunctionConstraint": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.1.0-snapshot.2026-02.1/json/FunctionConstraint",
+      "maturity": "draft",
+      "description": "A classification of the protein functional consequence that characterizes members of this categorical variant.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/FunctionConstraint",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/FunctionConstraint"
+    },
+    "FunctionVariant": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/FunctionVariant",
+      "maturity": "draft",
+      "description": "A representation of the constraints for matching knowledge about function variants; e.g., gain-of-function or loss-of-function.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/FunctionVariant",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/FunctionVariant"
+    },
+    "ProteinSequenceConsequence": {
+      "$id": "https://w3id.org/ga4gh/schema/cat-vrs/1.0.0/json/ProteinSequenceConsequence",
+      "maturity": "trial use",
+      "description": "A change that occurs in a protein sequence as a result of genomic changes. Due to the degenerate nature of the genetic code, there are often several genomic changes that can cause a protein sequence consequence. The protein sequence consequence, like a CanonicalAllele, is defined by an Allele that is representative of a collection of congruent Protein Alleles that share the same altered codon(s).",
+      "ga4gh_prefix": null,
+      "source_path": "schema/cat-vrs/json/ProteinSequenceConsequence",
+      "github_url": "https://github.com/ga4gh/cat-vrs/blob/1.1.0-snapshot.2026-02.2/schema/cat-vrs/json/ProteinSequenceConsequence"
+    }
+  },
+  "release_notes": "## What's Changed\r\n* feat: update vrs refs to 2.1.0-snapshot.2026-02.2 by @korikuzma in https://github.com/ga4gh/cat-vrs/pull/203\r\n\r\n\r\n**Full Changelog**: https://github.com/ga4gh/cat-vrs/compare/1.1.0-snapshot.2026-02.1...1.1.0-snapshot.2026-02.2",
+  "release_url": "https://github.com/ga4gh/cat-vrs/releases/tag/1.1.0-snapshot.2026-02.2",
+  "previous_release": "1.1.0-snapshot.2026-02.1",
+  "dependencies": [
+    {
+      "product": "gks-core",
+      "release": "1.1.0"
+    },
+    {
+      "product": "vrs",
+      "release": "2.1.0-snapshot.2026-02.2"
+    }
+  ]
+}
