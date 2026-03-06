@@ -1,0 +1,143 @@
+{
+  "repo": "vrs",
+  "tag": "1.1.2",
+  "name": "1.1.2",
+  "published_at": "2021-01-02T17:56:16",
+  "schema_count": 16,
+  "maturity_summary": {
+    "unknown": 16
+  },
+  "schemas": {
+    "Allele": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An assertion of a sequence state at a Location.",
+      "ga4gh_prefix": "VA",
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "CURIE": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A string that refers to an object uniquely.  The lifetime and scope of an id is defined by the sender.\nVRS does not impose any contraints on strings used as ids in messages. However, to maximize sharability of data, the VR Specification RECOMMENDS that implementations use [W3C Compact URI (CURIE)](https://www.w3.org/TR/curie/) syntax.\nString CURIEs are represented as `prefix`:`reference` (W3C terminology), but often referred to as `namespace`:`accession` or `namespace`:`local id` colloquially.\nThe VR specification also RECOMMENDS that `prefix` be defined in identifiers.org.\nThe `reference` component is an unconstrained string.\nA CURIE is a URI.  URIs may *locate* objects (i.e., specify where to retrieve them) or *name* objects conceptually.  VRS uses CURIEs primarily as a naming mechanism.\nImplementations MAY provide CURIE resolution mechanisms for prefixes to make these objects locatable.\nUsing internal ids in public messages is strongly discouraged.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "ChromosomeLocation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A region of a chromosomed specified by species and name using cytogenetic naming conventions",
+      "ga4gh_prefix": "VCL",
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "Cytoband": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A feature referencing a giesma-stained band on an unspecified human chromosome.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "CytobandInterval": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A contiguous region specified by chromosomal bands features.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "DateTime": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "Haplotype": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A set of zero or more Alleles",
+      "ga4gh_prefix": "VH",
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "Location": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A Location represents a span on a specific sequence.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "SequenceInterval": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "SequenceLocation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A specified subsequence within another sequence that is used as a reference sequence.",
+      "ga4gh_prefix": "VSL",
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "SequenceState": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "An assertion of the state of a sequence, typically at a Sequence Location within an Allele",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "SimpleInterval": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A SimpleInterval represents a span of sequence. Positions are always represented by contiguous spans using interbase coordinates.\nThis definition of SequenceInterval is intended to be compatible with that in Sequence Ontology ([SO:0000001](http://www.sequenceontology.org/browser/current_svn/term/SO:0000001)), with the exception that the GA4GH VRS SequenceInterval may be zero-width. The SO definition is for an \"extent greater than zero\".",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "State": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "Text": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A textual description of variation, typically not parseable but understood by humans.",
+      "ga4gh_prefix": "VT",
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "Variation": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "The root class of all Variation types",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    },
+    "VariationSet": {
+      "$id": "",
+      "maturity": "unknown",
+      "description": "A set of Variation objects.\nMembers may be specified inline or by reference (with CURIEs)",
+      "ga4gh_prefix": "VS",
+      "source_path": "schema/vr.json",
+      "github_url": "https://github.com/ga4gh/vrs/blob/1.1.2/schema/vr.json"
+    }
+  },
+  "release_notes": "This patch version makes the following corrections and clarifications:\r\n\r\n* Adds the intended ChromosomeLocation prefix to the Computed Identifiers table.\r\n* Revises the Cytoband information model to align with ISCN conventions.\r\n* Updates the Cytoband regex to match the specified model.",
+  "release_url": "https://github.com/ga4gh/vrs/releases/tag/1.1.2",
+  "previous_release": "1.1.0"
+}
