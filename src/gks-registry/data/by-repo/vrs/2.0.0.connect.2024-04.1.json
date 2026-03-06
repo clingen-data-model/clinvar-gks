@@ -1,0 +1,158 @@
+{
+  "repo": "vrs",
+  "tag": "2.0.0.connect.2024-04.1",
+  "name": "GA4GH Connect - April 2024",
+  "published_at": "2024-04-22T07:47:18",
+  "schema_count": 17,
+  "maturity_summary": {
+    "draft": 13,
+    "unknown": 4
+  },
+  "schemas": {
+    "Adjacency": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Adjacency",
+      "maturity": "draft",
+      "description": "The `Adjacency` class can represent either the termination of a sequence or the adjoining of the end of a sequence with the beginning of an adjacent sequence, potentially with an intervening linker sequence.",
+      "ga4gh_prefix": "AJ",
+      "source_path": "schema/vrs/json/Adjacency",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/Adjacency"
+    },
+    "Allele": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Allele",
+      "maturity": "draft",
+      "description": "The state of a molecule at a Location.",
+      "ga4gh_prefix": "VA",
+      "source_path": "schema/vrs/json/Allele",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/Allele"
+    },
+    "CisPhasedBlock": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/CisPhasedBlock",
+      "maturity": "draft",
+      "description": "An ordered set of co-occurring variants on the same molecule.",
+      "ga4gh_prefix": "CPB",
+      "source_path": "schema/vrs/json/CisPhasedBlock",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/CisPhasedBlock"
+    },
+    "CopyNumberChange": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/CopyNumberChange",
+      "maturity": "draft",
+      "description": "An assessment of the copy number of a Location or a Gene within a system (e.g. genome, cell, etc.) relative to a baseline ploidy.",
+      "ga4gh_prefix": "CX",
+      "source_path": "schema/vrs/json/CopyNumberChange",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/CopyNumberChange"
+    },
+    "CopyNumberCount": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/CopyNumberCount",
+      "maturity": "draft",
+      "description": "The absolute count of discrete copies of a Location or Gene, within a system (e.g. genome, cell, etc.).",
+      "ga4gh_prefix": "CN",
+      "source_path": "schema/vrs/json/CopyNumberCount",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/CopyNumberCount"
+    },
+    "LengthExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/LengthExpression",
+      "maturity": "draft",
+      "description": "A sequence expressed only by its length.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/LengthExpression",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/LengthExpression"
+    },
+    "LiteralSequenceExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/LiteralSequenceExpression",
+      "maturity": "draft",
+      "description": "An explicit expression of a Sequence.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/LiteralSequenceExpression",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/LiteralSequenceExpression"
+    },
+    "MolecularVariation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/MolecularVariation",
+      "maturity": "unknown",
+      "description": "A variation on a contiguous molecule.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/MolecularVariation",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/MolecularVariation"
+    },
+    "Range": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Range",
+      "maturity": "draft",
+      "description": "An inclusive range of values bounded by one or more integers.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/Range",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/Range"
+    },
+    "ReferenceLengthExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/ReferenceLengthExpression",
+      "maturity": "draft",
+      "description": "An expression of a length of a sequence from a repeating reference.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/ReferenceLengthExpression",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/ReferenceLengthExpression"
+    },
+    "Residue": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Residue",
+      "maturity": "draft",
+      "description": "A character representing a specific residue (i.e., molecular species) or groupings of these (\"ambiguity codes\"), using [one-letter IUPAC abbreviations](https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes) for nucleic acids and amino acids.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/Residue",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/Residue"
+    },
+    "SequenceExpression": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SequenceExpression",
+      "maturity": "unknown",
+      "description": "An expression describing a Sequence.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/SequenceExpression",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/SequenceExpression"
+    },
+    "SequenceLocation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SequenceLocation",
+      "maturity": "draft",
+      "description": "A Location defined by an interval on a referenced Sequence.",
+      "ga4gh_prefix": "SL",
+      "source_path": "schema/vrs/json/SequenceLocation",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/SequenceLocation"
+    },
+    "SequenceReference": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SequenceReference",
+      "maturity": "draft",
+      "description": "A sequence of nucleic or amino acid character codes.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/SequenceReference",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/SequenceReference"
+    },
+    "SequenceString": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SequenceString",
+      "maturity": "draft",
+      "description": "A character string of Residues that represents a biological sequence using the conventional sequence order (5\u2019-to-3\u2019 for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequence Strings.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/SequenceString",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/SequenceString"
+    },
+    "SystemicVariation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/SystemicVariation",
+      "maturity": "unknown",
+      "description": "A Variation of multiple molecules in the context of a system, e.g. a genome, sample, or homologous chromosomes.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/SystemicVariation",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/SystemicVariation"
+    },
+    "Variation": {
+      "$id": "https://w3id.org/ga4gh/schema/vrs/2.x/json/Variation",
+      "maturity": "unknown",
+      "description": "A representation of the state of one or more biomolecules.",
+      "ga4gh_prefix": null,
+      "source_path": "schema/vrs/json/Variation",
+      "github_url": "https://github.com/ga4gh/vrs/blob/2.0.0.connect.2024-04.1/schema/vrs/json/Variation"
+    }
+  },
+  "release_notes": "Initial work on the VRS 2.0 draft specification, including:\r\n\r\n- Application of maturity model to VRS data classes\r\n- SV support: Adjacency model\r\n- Class refactor: Haplotype / CisPhasedBlock\r\n- GA4GH Digest key support\r\n- Reference Length Expression encoding",
+  "release_url": "https://github.com/ga4gh/vrs/releases/tag/2.0.0.connect.2024-04.1",
+  "previous_release": "1.3.0",
+  "dependencies": [
+    {
+      "product": "gks-common",
+      "release": "1.x"
+    }
+  ]
+}
