@@ -11,8 +11,8 @@ BEGIN
         vrs.out.location.sequenceReference.*,
         CASE 
         WHEN LEFT(vrs.in.accession,3) IN ('AC_','NC_','NG_','NT_','NW_','NZ_') THEN 'genomic'
-        WHEN LEFT(vrs.in.accession,3) IN ('NM_','XM_') THEN 'mrna'
-        WHEN LEFT(vrs.in.accession,3) IN ('NR_','XR_') THEN 'rna'
+        WHEN LEFT(vrs.in.accession,3) IN ('NM_','XM_') THEN 'mRNA'
+        WHEN LEFT(vrs.in.accession,3) IN ('NR_','XR_') THEN 'RNA'
         WHEN LEFT(vrs.in.accession,3) IN ('AP_','NP_','YP_','XP_','WP_') THEN 'protein'
         ELSE null
         END as moleculeType,
