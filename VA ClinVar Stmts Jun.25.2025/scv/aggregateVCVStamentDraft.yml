@@ -39,7 +39,7 @@ evidenceLines:
             - name: ClinvarReviewStatus
               value: CriteriaProvidedSingleSubmitter
         direction: supports
-        strength: ??
+        # strength: ??
         classification: # conflicting classifications of pathogenicity (1-star CriteriaProvidedConflictingClassifications). 
           # note; 1-start can also mean criteria provided, single submitter but clinvar seems to use the conflicting version over the other when there are multiple.
           name: Conflicting classifications of pathogenicity

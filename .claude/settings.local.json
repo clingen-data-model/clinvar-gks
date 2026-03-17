@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(superpowers:brainstorming)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd GKS Schema Registry design document\n\nDesign for a central aggregator tool that captures JSON schema state\nacross ga4gh/gks-core, ga4gh/vrs, ga4gh/cat-vrs, and ga4gh/va-spec repos.\nTracks all releases and schema maturity levels (draft, trial use, normative).\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:executing-plans)",
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(cat:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Skill(superpowers:finishing-a-development-branch)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(source .env:*)",
+      "Bash(export GITHUB_TOKEN)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(set -a)",
+      "Bash(set +a)",
+      "Bash(ls:*)",
+      "Bash(source ../.env)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr:*)",
+      "Bash(git stash push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
