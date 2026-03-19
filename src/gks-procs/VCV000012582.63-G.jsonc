@@ -1,0 +1,403 @@
+{
+  "classification": {
+    "name": "Pathogenic/Likely pathogenic"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "name": "Pathogenic/Likely pathogenic"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "name": "Pathogenic/Likely pathogenic"
+                  },
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "SCV001736991.1"
+                        },
+                        {
+                          "id": "SCV002525678.1"
+                        },
+                        {
+                          "id": "SCV005044128.1"
+                        },
+                        {
+                          "id": "SCV005634967.1"
+                        },
+                        {
+                          "id": "SCV000329383.7"
+                        },
+                        {
+                          "id": "SCV006304919.1"
+                        },
+                        {
+                          "id": "SCV004176950.1"
+                        },
+                        {
+                          "id": "SCV002821689.24"
+                        },
+                        {
+                          "id": "SCV002318898.3"
+                        },
+                        {
+                          "id": "SCV002601600.1"
+                        },
+                        {
+                          "id": "SCV000659085.3"
+                        },
+                        {
+                          "id": "SCV005414064.1"
+                        },
+                        {
+                          "id": "SCV005023563.1"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "id": "VCV000012582.63-G-path-CP",
+                  "proposition": {
+                    "aggregateQualifier": [
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Germline"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Pathogenicity"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "criteria provided"
+                      }
+                    ],
+                    "id": "12582.G.path.CP",
+                    "predicate": "hasAggregateClassification",
+                    "subjectVariant": "12582",
+                    "type": "AggregateStatementProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            },
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "name": "Pathogenic/Likely pathogenic"
+                  },
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "SCV000033659.5"
+                        },
+                        {
+                          "id": "SCV000033658.5"
+                        },
+                        {
+                          "id": "SCV001739511.1"
+                        },
+                        {
+                          "id": "SCV000198480.2"
+                        },
+                        {
+                          "id": "SCV000198479.2"
+                        },
+                        {
+                          "id": "SCV000191996.4"
+                        },
+                        {
+                          "id": "SCV000784594.1"
+                        },
+                        {
+                          "id": "SCV000044088.5"
+                        },
+                        {
+                          "id": "SCV000693723.1"
+                        },
+                        {
+                          "id": "SCV000882686.2"
+                        },
+                        {
+                          "id": "SCV000999192.1"
+                        },
+                        {
+                          "id": "SCV001571657.2"
+                        },
+                        {
+                          "id": "SCV000051861.5"
+                        },
+                        {
+                          "id": "SCV000051860.5"
+                        },
+                        {
+                          "id": "SCV000992585.2"
+                        },
+                        {
+                          "id": "SCV001550138.2"
+                        },
+                        {
+                          "id": "SCV000191997.4"
+                        },
+                        {
+                          "id": "SCV000611562.1"
+                        },
+                        {
+                          "id": "SCV000882700.3"
+                        },
+                        {
+                          "id": "SCV000198478.2"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "id": "VCV000012582.63-G-path-NOCP",
+                  "proposition": {
+                    "aggregateQualifier": [
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Germline"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Pathogenicity"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "no assertion criteria provided"
+                      }
+                    ],
+                    "id": "12582.G.path.NOCP",
+                    "predicate": "hasAggregateClassification",
+                    "subjectVariant": "12582",
+                    "type": "AggregateStatementProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "non-contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "VCV000012582.63-G-path",
+          "proposition": {
+            "aggregateQualifier": [
+              {
+                "name": "AssertionGroup",
+                "value": "Germline"
+              },
+              {
+                "name": "PropositionType",
+                "value": "Pathogenicity"
+              }
+            ],
+            "id": "12582.G.path",
+            "predicate": "hasAggregateClassification",
+            "subjectVariant": "12582",
+            "type": "AggregateStatementProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    },
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "name": "association"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "name": "association"
+                  },
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "SCV004035006.2"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "id": "VCV000012582.63-G-assoc-NOCP",
+                  "proposition": {
+                    "aggregateQualifier": [
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Germline"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Association"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "no assertion criteria provided"
+                      }
+                    ],
+                    "id": "12582.G.assoc.NOCP",
+                    "predicate": "hasAggregateClassification",
+                    "subjectVariant": "12582",
+                    "type": "AggregateStatementProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "VCV000012582.63-G-assoc",
+          "proposition": {
+            "aggregateQualifier": [
+              {
+                "name": "AssertionGroup",
+                "value": "Germline"
+              },
+              {
+                "name": "PropositionType",
+                "value": "Association"
+              }
+            ],
+            "id": "12582.G.assoc",
+            "predicate": "hasAggregateClassification",
+            "subjectVariant": "12582",
+            "type": "AggregateStatementProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        },
+        {
+          "classification": {
+            "name": "not provided"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "name": "not provided"
+                  },
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "SCV002099547.2"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "id": "VCV000012582.63-G-np-NOCL",
+                  "proposition": {
+                    "aggregateQualifier": [
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Germline"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Not Provided"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "no classification"
+                      }
+                    ],
+                    "id": "12582.G.np.NOCL",
+                    "predicate": "hasAggregateClassification",
+                    "subjectVariant": "12582",
+                    "type": "AggregateStatementProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "VCV000012582.63-G-np",
+          "proposition": {
+            "aggregateQualifier": [
+              {
+                "name": "AssertionGroup",
+                "value": "Germline"
+              },
+              {
+                "name": "PropositionType",
+                "value": "Not Provided"
+              }
+            ],
+            "id": "12582.G.np",
+            "predicate": "hasAggregateClassification",
+            "subjectVariant": "12582",
+            "type": "AggregateStatementProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "non-contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "id": "VCV000012582.63-G",
+  "proposition": {
+    "aggregateQualifier": [
+      {
+        "name": "AssertionGroup",
+        "value": "Germline"
+      }
+    ],
+    "id": "12582.G",
+    "predicate": "hasAggregateClassification",
+    "subjectVariant": "12582",
+    "type": "AggregateStatementProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}
