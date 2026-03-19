@@ -1,0 +1,283 @@
+{
+  "classification": {
+    "name": "Tier I (Strong) for 7 tumor types\n+lower levels of evidence for 3 other tumor types"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "name": "Tier I (Strong) for 7 tumor types\n+lower levels of evidence for 3 other tumor types"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "name": "Tier I (Strong) for 7 tumor types"
+                  },
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "SCV007105432.1"
+                        },
+                        {
+                          "id": "SCV007105520.1"
+                        },
+                        {
+                          "id": "SCV007105415.1"
+                        },
+                        {
+                          "id": "SCV007105422.1"
+                        },
+                        {
+                          "id": "SCV007105406.1"
+                        },
+                        {
+                          "id": "SCV007105405.1"
+                        },
+                        {
+                          "id": "SCV007105409.1"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "id": "VCV000012582.63-S-sci-CP-t1",
+                  "proposition": {
+                    "aggregateQualifier": [
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Somatic"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Somatic Clinical Impact"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "criteria provided"
+                      },
+                      {
+                        "name": "ClassificationTier",
+                        "value": "Tier I (Strong)"
+                      }
+                    ],
+                    "id": "12582.S.sci.CP.t1",
+                    "predicate": "hasAggregateClassification",
+                    "subjectVariant": "12582",
+                    "type": "AggregateStatementProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            },
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "name": "Tier II (Potential) for 3 tumor types"
+                  },
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "SCV007105418.1"
+                        },
+                        {
+                          "id": "SCV007105434.1"
+                        },
+                        {
+                          "id": "SCV007105413.1"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "id": "VCV000012582.63-S-sci-CP-t2",
+                  "proposition": {
+                    "aggregateQualifier": [
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Somatic"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Somatic Clinical Impact"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "criteria provided"
+                      },
+                      {
+                        "name": "ClassificationTier",
+                        "value": "Tier II (Potential)"
+                      }
+                    ],
+                    "id": "12582.S.sci.CP.t2",
+                    "predicate": "hasAggregateClassification",
+                    "subjectVariant": "12582",
+                    "type": "AggregateStatementProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "non-contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "VCV000012582.63-S-sci-CP",
+          "proposition": {
+            "aggregateQualifier": [
+              {
+                "name": "AssertionGroup",
+                "value": "Somatic"
+              },
+              {
+                "name": "PropositionType",
+                "value": "Somatic Clinical Impact"
+              },
+              {
+                "name": "SubmissionLevel",
+                "value": "criteria provided"
+              }
+            ],
+            "id": "12582.S.sci.CP",
+            "predicate": "hasAggregateClassification",
+            "subjectVariant": "12582",
+            "type": "AggregateStatementProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    },
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "name": "Tier I (Strong) for Colorectal cancer"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "name": "Tier I (Strong) for Colorectal cancer"
+                  },
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "SCV006076878.1"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "id": "VCV000012582.63-S-sci-NOCP-t1",
+                  "proposition": {
+                    "aggregateQualifier": [
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Somatic"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Somatic Clinical Impact"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "no assertion criteria provided"
+                      },
+                      {
+                        "name": "ClassificationTier",
+                        "value": "Tier I (Strong)"
+                      }
+                    ],
+                    "id": "12582.S.sci.NOCP.t1",
+                    "predicate": "hasAggregateClassification",
+                    "subjectVariant": "12582",
+                    "type": "AggregateStatementProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "VCV000012582.63-S-sci-NOCP",
+          "proposition": {
+            "aggregateQualifier": [
+              {
+                "name": "AssertionGroup",
+                "value": "Somatic"
+              },
+              {
+                "name": "PropositionType",
+                "value": "Somatic Clinical Impact"
+              },
+              {
+                "name": "SubmissionLevel",
+                "value": "no assertion criteria provided"
+              }
+            ],
+            "id": "12582.S.sci.NOCP",
+            "predicate": "hasAggregateClassification",
+            "subjectVariant": "12582",
+            "type": "AggregateStatementProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "non-contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "id": "VCV000012582.63-S-sci",
+  "proposition": {
+    "aggregateQualifier": [
+      {
+        "name": "AssertionGroup",
+        "value": "Somatic"
+      },
+      {
+        "name": "PropositionType",
+        "value": "Somatic Clinical Impact"
+      }
+    ],
+    "id": "12582.S.sci",
+    "predicate": "hasAggregateClassification",
+    "subjectVariant": "12582",
+    "type": "AggregateStatementProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

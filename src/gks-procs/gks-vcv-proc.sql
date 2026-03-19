@@ -1,365 +1,272 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_vcv_proc`(on_date DATE)
 BEGIN
-  DECLARE query_domain_agg STRING;
-  DECLARE query_statement_agg STRING;
-  DECLARE query_final_agg STRING;
+  DECLARE query_layer1 STRING;
+  DECLARE query_layer2 STRING;
+  DECLARE query_layer3 STRING;
+  DECLARE query_layer4 STRING;
 
   FOR rec IN (SELECT s.schema_name FROM `clinvar_ingest.schema_on`(on_date) AS s)
   DO
-    
+  
     -------------------------------------------------------------------------
-    -- LAYER 1: DOMAIN-DRIVEN AGGREGATOR (The 3 Tracks)
+    -- LAYER 1: MATERIALIZE BASE DATA (Metadata Driven)
     -------------------------------------------------------------------------
-    SET query_domain_agg = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_vcv_domain_agg` AS
-      WITH condition_prep AS (
-        SELECT scv_id, TO_JSON_STRING(ARRAY_AGG(STRUCT(trait_name, trait_id) ORDER BY trait_id)) as condition_set_json
-        FROM `%s.gks_scv_condition_mapping` GROUP BY scv_id
-      ),
-      base_data AS (
-          SELECT ss.id, 
-            ss.full_scv_id, 
-            ss.submitter_id, ss.last_evaluated, ss.submission_date, ss.variation_id, 
-            ss.statement_type, cst.code AS statement_code, ss.original_proposition_type as proposition_type,
-            ss.rank as submission_rank, ss.release_date, cct.significance, cct.label AS classif_label, 
-            cct.original_description_order as classif_type_order, cct.code as classif_type,
-            cpt.conflict_detectable, cpt.label as prop_label, cpt.display_order as prop_display_order, 
-            cp.condition_set_json,
-            
-            -- Dynamically pulled from the stable rank mapping
-            sl.code AS submission_level
-            
-          FROM `%s.scv_summary` AS ss
-          JOIN `clinvar_ingest.clinvar_statement_types` AS cst ON cst.statement_type = ss.statement_type
-          JOIN `clinvar_ingest.clinvar_clinsig_types` AS cct ON cct.code = ss.classif_type AND cct.statement_type = ss.statement_type
-          JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON ss.original_proposition_type = cpt.code
+    EXECUTE IMMEDIATE FORMAT("""
+      CREATE OR REPLACE TEMP TABLE base_data_tmp 
+      CLUSTER BY variation_id, statement_group, submission_level AS 
+      SELECT 
+          ss.variation_id, 
+          FORMAT('%%s.%%d', va.id, va.version) AS full_vcv_id,
+          ss.id AS scv_id,
+          ss.full_scv_id, 
+          ss.submitter_id, 
+          ss.rank as submission_rank,
           
-          -- NEW JOIN: Hooking up the submission levels purely by rank
-          LEFT JOIN `clinvar_ingest.submission_level` sl ON ss.rank = sl.rank
+          cst.category_code AS statement_group,
           
-          LEFT JOIN condition_prep cp ON ss.id = cp.scv_id
-      ),
+          cct.label AS classif_label, 
+          cct.code as classif_type, 
+          cct.original_description_order as classif_type_order,
+          cct.significance, -- 1. ADDED SIGNIFICANCE HERE
+          cpt.conflict_detectable,
+          cpt.code as prop_type,
+          cpt.label as prop_label,
+          cpt.display_order as prop_display_order,
+          sl.code AS submission_level
+      FROM `%s.scv_summary2` AS ss
+      JOIN `%s.variation_archive` AS va ON ss.variation_id = va.variation_id
       
-      classif_counts_onco AS (
-          SELECT variation_id, statement_type, submission_level, classif_label, MIN(classif_type_order) as classif_type_order, COUNT(id) as scv_count
-          FROM base_data WHERE statement_code = 'O'
-          GROUP BY 1, 2, 3, 4
-      ),
-      onco_strings AS (
-          SELECT variation_id, statement_type, submission_level,
-                 STRING_AGG(FORMAT('%%s(%%d)', classif_label, scv_count), '; ' ORDER BY classif_type_order) AS agg_string
-          FROM classif_counts_onco
-          GROUP BY 1, 2, 3
-      ),
-      classif_counts_germline AS (
-          SELECT variation_id, statement_type, proposition_type, submission_level, classif_label, classif_type_order, COUNT(id) as scv_count
-          FROM base_data WHERE statement_code = 'G'
+      -- PLURALS RESTORED & JOINS LEFT UNTOUCHED
+      JOIN `clinvar_ingest.clinvar_statement_types` AS cst ON cst.code = ss.statement_type
+      JOIN `clinvar_ingest.clinvar_clinsig_types` AS cct ON cct.code = ss.classif_type AND cct.statement_type = ss.statement_type
+      JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON cpt.code = ss.original_proposition_type
+      LEFT JOIN `clinvar_ingest.submission_level` sl ON sl.rank = ss.rank
+    """, rec.schema_name, rec.schema_name);
+
+    -------------------------------------------------------------------------
+    -- LAYER 1: BASE AGGREGATION
+    -------------------------------------------------------------------------
+    SET query_layer1 = FORMAT("""
+      CREATE OR REPLACE TABLE `%s.gks_vcv_layer1_base_agg` AS
+      WITH 
+      core_agg AS (
+          SELECT 
+            variation_id, full_vcv_id, statement_group, prop_type, submission_level, 
+            IF(prop_type = 'sci', classif_type, CAST(NULL AS STRING)) as tier_grouping,
+            ANY_VALUE(prop_label) as prop_label,
+            ANY_VALUE(conflict_detectable) as conflict_detectable,
+            MIN(classif_type_order) as tier_priority,
+            MIN(prop_display_order) as prop_display_order,
+            ARRAY_AGG(DISTINCT full_scv_id) as full_scv_ids
+          FROM base_data_tmp
           GROUP BY 1, 2, 3, 4, 5, 6
       ),
-      germline_strings AS (
-          SELECT variation_id, statement_type, proposition_type, submission_level,
-                 STRING_AGG(FORMAT('%%s(%%d)', classif_label, scv_count), '; ' ORDER BY classif_type_order) AS agg_string
-          FROM classif_counts_germline
-          GROUP BY 1, 2, 3, 4
+      label_counts AS (
+          SELECT variation_id, statement_group, prop_type, submission_level, 
+                 IF(prop_type = 'sci', classif_type, CAST(NULL AS STRING)) as tier_grouping,
+                 classif_label, classif_type_order, 
+                 significance, -- Passed through
+                 COUNT(full_scv_id) as scv_count
+          FROM base_data_tmp
+          GROUP BY 1, 2, 3, 4, 5, 6, 7, 8 -- Added 8th group
       ),
-      
-      somatic_track AS (
-          SELECT 
-            b.variation_id, b.statement_type, b.statement_code, 
-            b.proposition_type, b.prop_display_order,
-            b.submission_level, b.submission_rank, 
-            b.classif_type AS domain_grouping_key, b.classif_type_order AS priority_order,
-            FALSE AS conflicting,
-            (COUNT(DISTINCT b.submitter_id) > 1) AS multiple,
-            CASE WHEN b.submission_rank = 1 AND COUNT(DISTINCT b.submitter_id) > 1 THEN 2 ELSE b.submission_rank END AS agg_rank,
-            ARRAY_AGG(DISTINCT b.full_scv_id) as full_scv_ids, 
-            ARRAY_AGG(DISTINCT b.condition_set_json IGNORE NULLS) as deduplicated_json_condition_sets,
-            ANY_VALUE(b.classif_label) AS agg_classif_label,
-            CAST(NULL AS STRING) AS agg_label_conflicting_explanation,
-            ANY_VALUE(b.prop_label) AS prop_label,
-            MAX(b.release_date) as release_date
-          FROM base_data b
-          WHERE b.statement_code = 'S'
-          GROUP BY b.variation_id, b.statement_type, b.statement_code, b.proposition_type, b.prop_display_order, b.submission_level, b.submission_rank, b.classif_type, b.classif_type_order
+      conflict_strings AS (
+          SELECT variation_id, statement_group, prop_type, submission_level, tier_grouping,
+                 STRING_AGG(classif_label, '/' ORDER BY classif_type_order) as agg_classif_label,
+                 STRING_AGG(FORMAT('%%s(%%d)', classif_label, scv_count), '; ' ORDER BY classif_type_order) as agg_string,
+                 
+                 -- 2. CHANGED TO COUNT DISTINCT SIGNIFICANCE
+                 COUNT(DISTINCT significance) as significance_count
+                 
+          FROM label_counts
+          GROUP BY 1, 2, 3, 4, 5
       ),
-      
-      onco_track AS (
-          SELECT 
-            b.variation_id, b.statement_type, b.statement_code, 
-            b.proposition_type, b.prop_display_order,
-            b.submission_level, b.submission_rank, 
-            'AGGREGATED' AS domain_grouping_key, MIN(b.classif_type_order) AS priority_order,
-            (COUNT(DISTINCT b.significance) > 1) AS conflicting,
-            (COUNT(DISTINCT b.submitter_id) > 1) AS multiple,
-            CASE WHEN b.submission_rank = 1 AND COUNT(DISTINCT b.significance) = 1 AND COUNT(DISTINCT b.submitter_id) > 1 THEN 2 ELSE b.submission_rank END AS agg_rank,
-            ARRAY_AGG(DISTINCT b.full_scv_id) as full_scv_ids, 
-            ARRAY_AGG(DISTINCT b.condition_set_json IGNORE NULLS) as deduplicated_json_condition_sets,
-            STRING_AGG(DISTINCT b.classif_label, '/' ORDER BY b.classif_label) AS agg_classif_label,
-            IF(COUNT(DISTINCT b.significance) > 1, ANY_VALUE(os.agg_string), NULL) AS agg_label_conflicting_explanation,
-            ANY_VALUE(b.prop_label) AS prop_label,
-            MAX(b.release_date) as release_date
-          FROM base_data b
-          LEFT JOIN onco_strings os USING (variation_id, statement_type, submission_level)
-          WHERE b.statement_code = 'O'
-          GROUP BY b.variation_id, b.statement_type, b.statement_code, b.proposition_type, b.prop_display_order, b.submission_level, b.submission_rank
-      ),
-      
-      germline_track AS (
-          SELECT 
-            b.variation_id, b.statement_type, b.statement_code, 
-            b.proposition_type, b.prop_display_order,
-            b.submission_level, b.submission_rank, 
-            IF(NOT ANY_VALUE(b.conflict_detectable), ANY_VALUE(b.classif_type), 'AGGREGATED') AS domain_grouping_key, 
-            MIN(b.classif_type_order) AS priority_order,
-            (ANY_VALUE(b.conflict_detectable) AND COUNT(DISTINCT b.significance) > 1) AS conflicting,
-            (ANY_VALUE(b.conflict_detectable) AND COUNT(DISTINCT b.submitter_id) > 1) AS multiple,
-            CASE WHEN b.submission_rank = 1 AND COUNT(DISTINCT b.significance) = 1 AND COUNT(DISTINCT b.submitter_id) > 1 THEN 2 ELSE b.submission_rank END AS agg_rank,
-            ARRAY_AGG(DISTINCT b.full_scv_id) as full_scv_ids, 
-            ARRAY_AGG(DISTINCT b.condition_set_json IGNORE NULLS) as deduplicated_json_condition_sets,
-            STRING_AGG(DISTINCT b.classif_label, '/' ORDER BY b.classif_label) AS agg_classif_label,
-            IF(ANY_VALUE(b.conflict_detectable) AND COUNT(DISTINCT b.significance) > 1, ANY_VALUE(gs.agg_string), NULL) AS agg_label_conflicting_explanation,
-            ANY_VALUE(b.prop_label) AS prop_label,
-            MAX(b.release_date) as release_date
-          FROM base_data b
-          LEFT JOIN germline_strings gs USING (variation_id, statement_type, proposition_type, submission_level)
-          WHERE b.statement_code = 'G'
-          GROUP BY b.variation_id, b.statement_type, b.statement_code, b.proposition_type, b.prop_display_order, b.submission_level, b.submission_rank
-      ),
-      
-      combined_tracks AS (
-          SELECT * FROM somatic_track
-          UNION ALL SELECT * FROM onco_track
-          UNION ALL SELECT * FROM germline_track
+      somatic_conditions AS (
+          SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level, b.classif_type as tier_grouping,
+                 ARRAY_AGG(DISTINCT cm.trait_name IGNORE NULLS) as unique_traits
+          FROM base_data_tmp b
+          JOIN `%s.gks_scv_condition_mapping` cm ON b.scv_id = cm.scv_id
+          WHERE b.prop_type = 'sci'
+          GROUP BY 1, 2, 3, 4, 5
       ),
       final_prep AS (
-        SELECT ct.*, FORMAT('%%s.%%i', vcv.id, vcv.version) as full_vcv_id, 
-          CASE 
-               WHEN ct.submission_rank >= 3 THEN 'AUTHORITY' 
-               WHEN ct.conflicting THEN 'CONFLICT' 
-               WHEN ct.multiple THEN 'MULTIPLE_AGREE' 
-               WHEN ct.submission_rank < 0 THEN 'NO_DATA' 
-               ELSE 'SINGLE' 
-          END AS data_state
-        FROM combined_tracks ct
-        JOIN `%s.variation_archive` vcv USING (variation_id)
-      ),
-      label_prep AS (
-          SELECT *,
+          SELECT 
+            c.variation_id, c.full_vcv_id, c.statement_group, c.prop_type, 
+            c.submission_level, c.tier_grouping, c.full_scv_ids,
+            c.tier_priority, c.prop_display_order, COALESCE(sc.unique_traits, []) as unique_traits,
+            
+            -- 3. TRIGGER USING significance_count
+            IF(cs.significance_count > 1 AND c.conflict_detectable, cs.agg_string, CAST(NULL AS STRING)) AS agg_label_conflicting_explanation,
+            
             CASE
-              WHEN conflicting THEN 
+              WHEN cs.significance_count > 1 AND c.conflict_detectable AND c.prop_type != 'sci' THEN 
+                FORMAT('Conflicting classifications of %%s', LOWER(c.prop_label))
+              WHEN c.prop_type = 'sci' THEN
                 CASE 
-                  WHEN statement_code = 'O' THEN 'Conflicting classifications of oncogenicity'
-                  WHEN LOWER(proposition_type) = 'pathogenic' THEN 'Conflicting classifications of pathogenicity'
-                  ELSE FORMAT('Conflicting classifications of %%s', LOWER(prop_label))
+                  WHEN ARRAY_LENGTH(sc.unique_traits) = 1 THEN FORMAT('%%s for %%s', cs.agg_classif_label, sc.unique_traits[OFFSET(0)])
+                  WHEN ARRAY_LENGTH(sc.unique_traits) > 1 THEN FORMAT('%%s for %%d tumor types', cs.agg_classif_label, ARRAY_LENGTH(sc.unique_traits))
+                  ELSE cs.agg_classif_label
                 END
-              WHEN statement_code = 'S' THEN
-                CASE 
-                  WHEN ARRAY_LENGTH(deduplicated_json_condition_sets) = 1 THEN FORMAT('%%s for %%s', agg_classif_label, (SELECT STRING_AGG(JSON_VALUE(t, '$.trait_name'), ', ') FROM UNNEST(JSON_QUERY_ARRAY(deduplicated_json_condition_sets[OFFSET(0)])) t))
-                  WHEN ARRAY_LENGTH(deduplicated_json_condition_sets) > 1 THEN FORMAT('%%s for %%d tumor types', agg_classif_label, ARRAY_LENGTH(deduplicated_json_condition_sets))
-                  ELSE agg_classif_label
-                END
-              ELSE agg_classif_label
+              ELSE cs.agg_classif_label
             END AS actual_agg_classif_label
-          FROM final_prep
-      ),
-      rank_status_lookup AS (
-          SELECT rules.rule_type, rules.is_scv, def.rank, def.review_status, def.start_release_date, def.end_release_date
-          FROM `clinvar_ingest.status_rules` rules JOIN `clinvar_ingest.status_definitions` def USING (review_status)
+          FROM core_agg c
+          LEFT JOIN conflict_strings cs 
+            ON c.variation_id = cs.variation_id AND c.statement_group = cs.statement_group AND c.prop_type = cs.prop_type 
+            AND c.submission_level = cs.submission_level AND IFNULL(c.tier_grouping, '') = IFNULL(cs.tier_grouping, '')
+          LEFT JOIN somatic_conditions sc 
+            ON c.variation_id = sc.variation_id AND c.statement_group = sc.statement_group AND c.prop_type = sc.prop_type 
+            AND c.submission_level = sc.submission_level AND IFNULL(c.tier_grouping, '') = IFNULL(sc.tier_grouping, '')
       )
-      SELECT
+      SELECT 
         CASE 
-          WHEN lp.statement_code = 'G' THEN FORMAT('%%s-%%s-%%s-%%s', lp.full_vcv_id, lp.statement_code, lp.submission_level, lp.proposition_type) 
-          WHEN lp.statement_code = 'S' THEN FORMAT('%%s-%%s-%%s-%%s', lp.full_vcv_id, lp.statement_code, lp.submission_level, LOWER(lp.domain_grouping_key))
-          ELSE FORMAT('%%s-%%s-%%s', lp.full_vcv_id, lp.statement_code, lp.submission_level) 
+          WHEN tier_grouping IS NOT NULL THEN FORMAT('%%s-%%s-%%s-%%s-%%s', full_vcv_id, statement_group, prop_type, submission_level, LOWER(tier_grouping))
+          ELSE FORMAT('%%s-%%s-%%s-%%s', full_vcv_id, statement_group, prop_type, submission_level)
         END AS id,
         CASE 
-          WHEN lp.statement_code = 'G' THEN FORMAT('%%s.%%s.%%s.%%s', lp.variation_id, lp.statement_code, lp.submission_level, lp.proposition_type) 
-          WHEN lp.statement_code = 'S' THEN FORMAT('%%s.%%s.%%s.%%s', lp.variation_id, lp.statement_code, lp.submission_level, LOWER(lp.domain_grouping_key))
-          ELSE FORMAT('%%s.%%s.%%s', lp.variation_id, lp.statement_code, lp.submission_level) 
+          WHEN tier_grouping IS NOT NULL THEN FORMAT('%%s.%%s.%%s.%%s.%%s', variation_id, statement_group, prop_type, submission_level, LOWER(tier_grouping))
+          ELSE FORMAT('%%s.%%s.%%s.%%s', variation_id, statement_group, prop_type, submission_level)
         END AS prop_id,
-        lp.variation_id, lp.full_vcv_id, lp.statement_type, lp.statement_code, lp.submission_level, lp.domain_grouping_key, lp.agg_rank, lp.submission_rank, lp.proposition_type, lp.prop_display_order, lp.priority_order AS tier_priority, lp.conflicting, lp.multiple, lp.data_state, 
-        lp.actual_agg_classif_label, lp.agg_label_conflicting_explanation, lp.deduplicated_json_condition_sets, lp.full_scv_ids, rsl.review_status AS agg_rank_label, lp.release_date
-      FROM label_prep lp
-      LEFT JOIN rank_status_lookup rsl ON lp.agg_rank = rsl.rank AND lp.release_date BETWEEN rsl.start_release_date AND rsl.end_release_date AND rsl.is_scv = FALSE AND (rsl.rule_type IS NULL OR rsl.rule_type = lp.data_state)
-      QUALIFY ROW_NUMBER() OVER(
-        PARTITION BY lp.variation_id, lp.statement_type, lp.proposition_type, lp.submission_level, lp.domain_grouping_key
-        ORDER BY CASE WHEN rsl.rule_type IS NOT NULL THEN 1 ELSE 2 END, rsl.review_status DESC
-      ) = 1;
-    """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name);
-
-    EXECUTE IMMEDIATE query_domain_agg;
+        *
+      FROM final_prep
+    """, rec.schema_name, rec.schema_name);
+    EXECUTE IMMEDIATE query_layer1;
 
     -------------------------------------------------------------------------
-    -- LAYER 2: STATEMENT LEVEL AGGREGATOR
+    -- LAYER 2: TIER AGGREGATOR
     -------------------------------------------------------------------------
-    SET query_statement_agg = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_vcv_statement_level_agg` AS
+    SET query_layer2 = FORMAT("""
+      CREATE OR REPLACE TABLE `%s.gks_vcv_layer2_tier_agg` AS
       WITH statement_base AS (
-          SELECT variation_id, full_vcv_id, statement_type, statement_code, submission_level, submission_rank,
-            ARRAY_AGG(STRUCT(agg_rank, tier_priority, prop_display_order, actual_agg_classif_label, agg_label_conflicting_explanation, deduplicated_json_condition_sets, full_scv_ids, id) ORDER BY tier_priority ASC, agg_rank DESC) as findings,
-            MAX(agg_rank) AS statement_agg_rank, MAX(release_date) as release_date, LOGICAL_OR(conflicting) as statement_conflicting, LOGICAL_OR(multiple) as statement_multiple
-          FROM `%s.gks_vcv_domain_agg`
-          GROUP BY variation_id, full_vcv_id, statement_type, statement_code, submission_level, submission_rank
+          SELECT 
+            variation_id, full_vcv_id, statement_group, prop_type, submission_level,
+            ARRAY_AGG(STRUCT(
+              tier_priority, prop_display_order, actual_agg_classif_label, 
+              agg_label_conflicting_explanation, unique_traits, full_scv_ids, id, tier_grouping
+            ) ORDER BY tier_priority ASC, ARRAY_LENGTH(full_scv_ids) DESC) as findings
+          FROM `%s.gks_vcv_layer1_base_agg`
+          WHERE tier_grouping IS NOT NULL
+          GROUP BY 1, 2, 3, 4, 5
       ),
       delta_prep AS (
-          SELECT sb.*, sb.findings[OFFSET(0)].actual_agg_classif_label as top_label,
+          SELECT sb.*, 
+            sb.findings[OFFSET(0)].tier_grouping as top_tier_grouping,
+            sb.findings[OFFSET(0)].actual_agg_classif_label as top_label,
             sb.findings[OFFSET(0)].agg_label_conflicting_explanation as agg_label_conflicting_explanation,
-            -- LAYER 2 CASCADING FILTER: SCVs, Conditions, AND Prop IDs
-            ARRAY(SELECT DISTINCT scv FROM UNNEST(sb.findings) f WITH OFFSET i, UNNEST(f.full_scv_ids) scv WHERE sb.statement_code IN ('G', 'O') OR i = 0) as contributing_scv_ids,
-            ARRAY(SELECT DISTINCT scv FROM UNNEST(sb.findings) f WITH OFFSET i, UNNEST(f.full_scv_ids) scv WHERE sb.statement_code = 'S' AND i > 0) as non_contributing_scv_ids,
-            
-            ARRAY(SELECT DISTINCT js FROM UNNEST(sb.findings) f WITH OFFSET i, UNNEST(f.deduplicated_json_condition_sets) js WHERE sb.statement_code IN ('G', 'O') OR i = 0) as contributing_condition_sets,
-            ARRAY(SELECT DISTINCT js FROM UNNEST(sb.findings) f WITH OFFSET i, UNNEST(f.deduplicated_json_condition_sets) js WHERE sb.statement_code = 'S' AND i > 0) as non_contributing_condition_sets,
-            
-            ARRAY(SELECT DISTINCT f.id FROM UNNEST(sb.findings) f WITH OFFSET i WHERE sb.statement_code IN ('G', 'O') OR i = 0) as contributing_statement_ids,
-            ARRAY(SELECT DISTINCT f.id FROM UNNEST(sb.findings) f WITH OFFSET i WHERE sb.statement_code = 'S' AND i > 0) as non_contributing_statement_ids,
-
+            sb.findings[OFFSET(0)].unique_traits as top_unique_traits,
+            ARRAY(SELECT DISTINCT f.id FROM UNNEST(sb.findings) f WITH OFFSET i WHERE i = 0) as contributing_tier_ids,
+            ARRAY(SELECT DISTINCT f.id FROM UNNEST(sb.findings) f WITH OFFSET i WHERE i > 0) as non_contributing_tier_ids,
             ARRAY(
-              SELECT DISTINCT js FROM UNNEST(sb.findings) as f WITH OFFSET i CROSS JOIN UNNEST(f.deduplicated_json_condition_sets) as js
-              WHERE i > 0 AND js NOT IN UNNEST(sb.findings[OFFSET(0)].deduplicated_json_condition_sets)
-            ) as secondary_condition_sets_json
+              SELECT DISTINCT t FROM UNNEST(sb.findings) as f WITH OFFSET i CROSS JOIN UNNEST(f.unique_traits) as t
+              WHERE i > 0 AND t NOT IN UNNEST(sb.findings[OFFSET(0)].unique_traits)
+            ) as secondary_traits
           FROM statement_base sb
       ),
       final_state_prep AS (
           SELECT *,
-            CASE 
-              WHEN statement_code IN ('G', 'O') THEN ARRAY_TO_STRING(ARRAY(SELECT f.actual_agg_classif_label FROM UNNEST(findings) f ORDER BY f.prop_display_order ASC), '; ')
-              ELSE top_label || IF(ARRAY_LENGTH(secondary_condition_sets_json) > 0, FORMAT('\\n+lower levels of evidence for %%d other tumor types', ARRAY_LENGTH(secondary_condition_sets_json)), '')
-            END as agg_label,
-            CASE 
-                 WHEN submission_rank >= 3 THEN 'AUTHORITY' WHEN statement_conflicting THEN 'CONFLICT' WHEN statement_multiple THEN 'MULTIPLE_AGREE' WHEN submission_rank < 0 THEN 'NO_DATA' ELSE 'SINGLE' 
-            END AS data_state
+            top_label || IF(ARRAY_LENGTH(secondary_traits) > 0, FORMAT('\\n+lower levels of evidence for %%d other tumor types', ARRAY_LENGTH(secondary_traits)), '') as agg_label
           FROM delta_prep
-      ),
-      rank_status_lookup AS (
-          SELECT rules.rule_type, rules.is_scv, def.rank, def.review_status, def.start_release_date, def.end_release_date
-          FROM `clinvar_ingest.status_rules` rules JOIN `clinvar_ingest.status_definitions` def USING (review_status)
       )
-      SELECT
-        FORMAT('%%s-%%s-%%s', fsp.full_vcv_id, fsp.statement_code, fsp.submission_level) AS id,
-        FORMAT('%%s.%%s.%%s', fsp.variation_id, fsp.statement_code, fsp.submission_level) AS prop_id,
-        fsp.variation_id, fsp.full_vcv_id, fsp.statement_type, fsp.statement_code, fsp.submission_level, fsp.submission_rank, fsp.statement_agg_rank AS agg_rank, fsp.agg_label, fsp.agg_label_conflicting_explanation,
-        fsp.contributing_scv_ids, fsp.non_contributing_scv_ids, fsp.contributing_condition_sets, fsp.non_contributing_condition_sets,
-        fsp.contributing_statement_ids, fsp.non_contributing_statement_ids,
-        fsp.release_date, rsl.review_status AS statement_review_status
-      FROM final_state_prep fsp
-      LEFT JOIN rank_status_lookup rsl ON fsp.statement_agg_rank = rsl.rank AND fsp.release_date BETWEEN rsl.start_release_date AND rsl.end_release_date AND rsl.is_scv = FALSE AND (rsl.rule_type IS NULL OR rsl.rule_type = fsp.data_state)
-      QUALIFY ROW_NUMBER() OVER(
-        PARTITION BY fsp.variation_id, fsp.full_vcv_id, fsp.statement_code, fsp.submission_level 
-        ORDER BY CASE WHEN rsl.rule_type IS NOT NULL THEN 1 ELSE 2 END, rsl.review_status DESC
-      ) = 1;
+      SELECT 
+        FORMAT('%%s-%%s-%%s-%%s', full_vcv_id, statement_group, prop_type, submission_level) AS id,
+        FORMAT('%%s.%%s.%%s.%%s', variation_id, statement_group, prop_type, submission_level) AS prop_id,
+        variation_id, full_vcv_id, statement_group, prop_type, submission_level,
+        agg_label, agg_label_conflicting_explanation,
+        top_unique_traits as unique_traits,
+        contributing_tier_ids as contributing_statement_ids, 
+        non_contributing_tier_ids as non_contributing_statement_ids
+      FROM final_state_prep
     """, rec.schema_name, rec.schema_name);
-
-    EXECUTE IMMEDIATE query_statement_agg;
+    EXECUTE IMMEDIATE query_layer2;
 
     -------------------------------------------------------------------------
-    -- LAYER 3: FINAL STATEMENT AGGREGATOR (Winner Takes All)
+    -- LAYER 3: SUBMISSION LEVEL AGGREGATOR
     -------------------------------------------------------------------------
-    SET query_final_agg = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_vcv_statement_final` AS
-      WITH ranked_statements AS (
+    SET query_layer3 = FORMAT("""
+      CREATE OR REPLACE TABLE `%s.gks_vcv_layer3_prop_agg` AS
+      WITH unified_input AS (
           SELECT 
-              *,
-              ROW_NUMBER() OVER(PARTITION BY variation_id, full_vcv_id, statement_type ORDER BY submission_rank DESC) as rnk
-          FROM `%s.gks_vcv_statement_level_agg`
-      ),
-      contributing AS (
-          SELECT * FROM ranked_statements WHERE rnk = 1
-      ),
-      -- The Great Funnel: SCVs
-      nc_scv_flat AS (
-          SELECT variation_id, full_vcv_id, statement_type, scv AS nc_scv_id
-          FROM ranked_statements CROSS JOIN UNNEST(
-              IF(rnk = 1, non_contributing_scv_ids, ARRAY_CONCAT(contributing_scv_ids, non_contributing_scv_ids))
-          ) scv
-      ),
-      nc_scv_agg AS (
-          SELECT variation_id, full_vcv_id, statement_type, ARRAY_AGG(DISTINCT nc_scv_id) AS final_nc_scv_ids
-          FROM nc_scv_flat GROUP BY variation_id, full_vcv_id, statement_type
-      ),
-      -- The Great Funnel: Conditions
-      nc_cond_flat AS (
-          SELECT variation_id, full_vcv_id, statement_type, cond AS nc_cond_id
-          FROM ranked_statements CROSS JOIN UNNEST(
-              IF(rnk = 1, non_contributing_condition_sets, ARRAY_CONCAT(contributing_condition_sets, non_contributing_condition_sets))
-          ) cond
-      ),
-      nc_cond_agg AS (
-          SELECT variation_id, full_vcv_id, statement_type, ARRAY_AGG(DISTINCT nc_cond_id) AS final_nc_condition_sets
-          FROM nc_cond_flat GROUP BY variation_id, full_vcv_id, statement_type
-      ),
-      -- The Great Funnel: Statement IDs
-      nc_stmt_flat AS (
-          SELECT variation_id, full_vcv_id, statement_type, stmt AS nc_statement_id
-          FROM ranked_statements CROSS JOIN UNNEST(
-              IF(rnk = 1, non_contributing_statement_ids, ARRAY_CONCAT(contributing_statement_ids, non_contributing_statement_ids))
-          ) stmt
-      ),
-      nc_stmt_agg AS (
-          SELECT variation_id, full_vcv_id, statement_type, ARRAY_AGG(DISTINCT nc_statement_id) AS final_nc_statement_ids
-          FROM nc_stmt_flat GROUP BY variation_id, full_vcv_id, statement_type
-      ),
-      
-      nc_details_agg AS (
+            id as source_id, variation_id, full_vcv_id, statement_group, prop_type, submission_level, 
+            agg_label, agg_label_conflicting_explanation, prop_display_order
+          FROM `%s.gks_vcv_layer2_tier_agg`
+          LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `%s.gks_vcv_layer1_base_agg` GROUP BY 1) ON prop_type = pt
+          UNION ALL
           SELECT 
-              variation_id,
-              full_vcv_id, 
-              statement_type,
-              ARRAY_AGG(STRUCT(
-                  id AS layer2_id,
-                  submission_level,
-                  submission_rank,
-                  agg_label,
-                  agg_label_conflicting_explanation,
-                  statement_review_status,
-                  contributing_scv_ids,
-                  non_contributing_scv_ids,
-                  contributing_condition_sets,
-                  non_contributing_condition_sets,
-                  contributing_statement_ids,
-                  non_contributing_statement_ids
-              ) ORDER BY submission_rank DESC) as nc_details
-          FROM ranked_statements 
-          WHERE rnk > 1
-          GROUP BY variation_id, full_vcv_id, statement_type
+            id as source_id, variation_id, full_vcv_id, statement_group, prop_type, submission_level, 
+            actual_agg_classif_label as agg_label, agg_label_conflicting_explanation, prop_display_order
+          FROM `%s.gks_vcv_layer1_base_agg`
+          WHERE tier_grouping IS NULL
+      ),
+      ranked_levels AS (
+          SELECT ui.*,
+            ROW_NUMBER() OVER(PARTITION BY ui.variation_id, ui.statement_group, ui.prop_type ORDER BY sl.rank DESC) as rnk
+          FROM unified_input ui
+          LEFT JOIN `clinvar_ingest.submission_level` sl ON ui.submission_level = sl.code
+      ),
+      winner_takes_all AS (
+          SELECT * FROM ranked_levels WHERE rnk = 1
       ),
       non_contributing AS (
-          SELECT d.variation_id, d.full_vcv_id, d.statement_type, s.final_nc_scv_ids, c.final_nc_condition_sets, p.final_nc_statement_ids, d.nc_details
-          FROM nc_details_agg d
-          LEFT JOIN nc_scv_agg s USING (variation_id, full_vcv_id, statement_type)
-          LEFT JOIN nc_cond_agg c USING (variation_id, full_vcv_id, statement_type)
-          LEFT JOIN nc_stmt_agg p USING (variation_id, full_vcv_id, statement_type)
+          SELECT 
+            variation_id, statement_group, prop_type,
+            ARRAY_AGG(STRUCT(source_id as layer_id, submission_level, agg_label, agg_label_conflicting_explanation)) as non_contributing_details
+          FROM ranked_levels 
+          WHERE rnk > 1
+          GROUP BY 1, 2, 3
       )
-      SELECT
-        FORMAT('%%s-%%s', c.full_vcv_id, c.statement_code) AS id,
-        FORMAT('%%s.%%s', c.variation_id, c.statement_code) AS prop_id,
-        c.variation_id,
-        c.full_vcv_id,
-        c.statement_type,
-        c.statement_code,
-        
-        c.id AS contributing_layer2_id,
-        c.submission_level AS contributing_submission_level,
-        c.submission_rank AS contributing_submission_rank,
-        c.agg_rank AS contributing_agg_rank,
-        c.agg_label AS contributing_agg_label,
-        c.agg_label_conflicting_explanation AS contributing_agg_label_conflicting_explanation,
-        c.statement_review_status AS contributing_review_status,
-        c.contributing_scv_ids,
-        c.contributing_condition_sets,
-        c.contributing_statement_ids,
-        c.release_date,
-        
-        COALESCE(nc.final_nc_scv_ids, []) AS non_contributing_scv_ids,
-        COALESCE(nc.final_nc_condition_sets, []) AS non_contributing_condition_sets,
-        COALESCE(nc.final_nc_statement_ids, []) AS non_contributing_statement_ids,
-        COALESCE(nc.nc_details, []) AS non_contributing_details
+      SELECT 
+        FORMAT('%%s-%%s-%%s', w.full_vcv_id, w.statement_group, w.prop_type) AS id,
+        FORMAT('%%s.%%s.%%s', w.variation_id, w.statement_group, w.prop_type) AS prop_id,
+        w.variation_id, w.full_vcv_id, w.statement_group, w.prop_type,
+        w.source_id as contributing_layer_id, 
+        w.submission_level as contributing_submission_level,
+        w.agg_label, w.agg_label_conflicting_explanation,
+        w.prop_display_order,
+        COALESCE(nc.non_contributing_details, []) as non_contributing_details
+      FROM winner_takes_all w
+      LEFT JOIN non_contributing nc USING (variation_id, statement_group, prop_type)
+    """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name);
+    EXECUTE IMMEDIATE query_layer3;
 
-      FROM contributing c
-      LEFT JOIN non_contributing nc USING (variation_id, full_vcv_id, statement_type);
+    -------------------------------------------------------------------------
+    -- LAYER 4: FINAL GROUP AGGREGATOR
+    -------------------------------------------------------------------------
+    SET query_layer4 = FORMAT("""
+      CREATE OR REPLACE TABLE `%s.gks_vcv_layer4_group_agg` AS
+      WITH ranked_props AS (
+          SELECT rp.*,
+            RANK() OVER(PARTITION BY rp.variation_id, rp.statement_group ORDER BY sl.rank DESC) as grp_rnk
+          FROM `%s.gks_vcv_layer3_prop_agg` rp
+          LEFT JOIN `clinvar_ingest.submission_level` sl ON rp.contributing_submission_level = sl.code
+          WHERE rp.statement_group = 'G'
+      ),
+      contributing_props AS (
+          SELECT variation_id, full_vcv_id, statement_group,
+            ARRAY_AGG(id) as contributing_layer3_ids,
+            ARRAY_TO_STRING(ARRAY_AGG(agg_label ORDER BY prop_display_order ASC), '; ') as agg_label,
+            NULLIF(ARRAY_TO_STRING(ARRAY_AGG(agg_label_conflicting_explanation IGNORE NULLS ORDER BY prop_display_order ASC), '; '), '') as agg_label_conflicting_explanation
+          FROM ranked_props
+          WHERE grp_rnk = 1
+          GROUP BY 1, 2, 3
+      ),
+      non_contributing_props AS (
+          SELECT variation_id, statement_group,
+            ARRAY_AGG(STRUCT(id as layer_id, contributing_submission_level as submission_level, agg_label, agg_label_conflicting_explanation)) as non_contributing_details
+          FROM ranked_props
+          WHERE grp_rnk > 1
+          GROUP BY 1, 2
+      )
+      SELECT 
+        FORMAT('%%s-%%s', c.full_vcv_id, c.statement_group) AS id,
+        FORMAT('%%s.%%s', c.variation_id, c.statement_group) AS prop_id,
+        c.variation_id, c.full_vcv_id, c.statement_group,
+        c.agg_label, c.agg_label_conflicting_explanation,
+        c.contributing_layer3_ids,
+        COALESCE(nc.non_contributing_details, []) as non_contributing_details
+      FROM contributing_props c
+      LEFT JOIN non_contributing_props nc USING (variation_id, statement_group)
     """, rec.schema_name, rec.schema_name);
+    EXECUTE IMMEDIATE query_layer4;
 
-    EXECUTE IMMEDIATE query_final_agg;
-
+    DROP TABLE base_data_tmp;
   END FOR;
 END;

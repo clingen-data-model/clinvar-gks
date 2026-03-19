@@ -1,0 +1,75 @@
+{
+  "classification": {
+    "name": "Oncogenic"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "name": "Oncogenic"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "SCV005094257.2"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "VCV000012582.63-S-onco-CP",
+          "proposition": {
+            "aggregateQualifier": [
+              {
+                "name": "AssertionGroup",
+                "value": "Somatic"
+              },
+              {
+                "name": "PropositionType",
+                "value": "Oncogenicity"
+              },
+              {
+                "name": "SubmissionLevel",
+                "value": "criteria provided"
+              }
+            ],
+            "id": "12582.S.onco.CP",
+            "predicate": "hasAggregateClassification",
+            "subjectVariant": "12582",
+            "type": "AggregateStatementProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "id": "VCV000012582.63-S-onco",
+  "proposition": {
+    "aggregateQualifier": [
+      {
+        "name": "AssertionGroup",
+        "value": "Somatic"
+      },
+      {
+        "name": "PropositionType",
+        "value": "Oncogenicity"
+      }
+    ],
+    "id": "12582.S.onco",
+    "predicate": "hasAggregateClassification",
+    "subjectVariant": "12582",
+    "type": "AggregateStatementProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}
