@@ -4,11 +4,11 @@ ClinVar-GKS is a data transformation pipeline that converts [ClinVar](https://ww
 
 ## What It Does
 
-The pipeline processes the complete ClinVar XML release — over **2.8 million variations** and **4.1 million submitted classifications (SCVs)** — and transforms them into standardized GA4GH formats:
+The pipeline processes the **entirety** of each ClinVar XML release — every variation, submitted classification, and aggregate record — and transforms them into standardized GA4GH formats:
 
 - **[VRS](https://vrs.ga4gh.org/)** (Variation Representation Specification) — normalized, computable variant identifiers
 - **[Cat-VRS](https://cat-vrs.readthedocs.io/)** (Categorical VRS) — categorical variant representations (canonical alleles, copy number variants)
-- **[VA-Spec](https://va-spec.readthedocs.io/)** (Variant Annotation Specification) — clinical variant classification statements
+- **[VA-Spec](https://va-spec.readthedocs.io/)** (Variant Annotation Specification) — variant classification statements
 
 ## Who It's For
 
@@ -24,17 +24,18 @@ See the [Pipeline Overview](pipeline/index.md) for the full workflow, or jump to
 
 ## Output Datasets
 
-Each pipeline run produces three JSONL files distributed via Google Cloud Storage:
+Each pipeline run produces JSONL files distributed via Google Cloud Storage:
 
 | File | Description |
 | --- | --- |
 | `variation` | Cat-VRS categorical variant representations for all ClinVar variations |
 | `scv_by_ref` | VA-Spec SCV statements with variations referenced by ID |
 | `scv_inline` | VA-Spec SCV statements with full variation objects inline |
+| `vcv_by_ref` | VA-Spec VCV aggregate statements with variations referenced by ID |
+| `vcv_inline` | VA-Spec VCV aggregate statements with full variation objects inline |
 
 See [Data Access](data-access/index.md) for download URLs and format details.
 
 ## License
 
-- **Code** (SQL procedures, scripts): [MIT License](https://github.com/clingen-data-model/clinvar-gks/blob/main/LICENSE)
-- **Data outputs**: [CC0 1.0 Universal](https://github.com/clingen-data-model/clinvar-gks/blob/main/LICENSE-DATA) (public domain)
+This project is licensed under [CC0 1.0 Universal](https://github.com/clingen-data-model/clinvar-gks/blob/main/LICENSE) (public domain dedication).

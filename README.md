@@ -4,41 +4,77 @@
   <a href="https://www.ga4gh.org"><img src="docs/assets/images/ga4gh-logo.svg" alt="GA4GH" height="50"></a>
 </p>
 
-# clinvar-gks
+# ClinVar-GKS
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18343663.svg)](https://doi.org/10.5281/zenodo.18343663)
 
-ClinVar GKS is a data transformation project being resourced by the ClinGen driver project.  This project and team aims to stand up and maintain a running pipeline process which will convert all clinvar release data to its GA4GH GKS standard equivalent. It is being developed with the intent to run automatically to create sibling release datasets whenever ClinVar publishes a new release on the ClinVar ftp site (typically once a week).  It also intends to support inclusion of 100% of the data records and elements that are provided in the ClinVar released datasets. 
+ClinVar-GKS is a data transformation pipeline that converts [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/) release data into [GA4GH GKS](https://www.ga4gh.org/genomic-knowledge-standards/) (Genomic Knowledge Standards) format. Developed and maintained by the [ClinGen](https://clinicalgenome.org/) driver project, it transforms the **entirety** of each ClinVar release — every variation, submitted classification, and aggregate record — into standardized, computable formats.
 
-## Implementation Roadmap
-This project has the added complexity of driving the GKS VA-Spec, Cat-VRS and VRS specification efforts. As such, it requires a methodical pace to prioritizing areas of the ClinVar release to focus on to establish a foundation and gain some stability in the schemas with which the remaining data can eventually be included in the pipeline.
+The pipeline is designed to run automatically with each weekly ClinVar release, producing sibling datasets in GA4GH standard format.
 
-The general plan is to apply, iterate, test and harden the schemas related to variation, categorical variation and the submitted classifications or SCVs in ClinVar. By starting with the SCVs, we capture the *source* of data that ClinVar utilizes to derive all the higher order data and statements (e.g. RCVs and VCVs and their aggregated classifications). As the data and schemas receive validation from both the GKS product groups and the implementers the RCV and VCV records will be designed and implemented and the ancillary data elements not included in the first versions will be added to get to the 100% data inclusion objective.
+## GA4GH Standards Implemented
 
-In order to assure the initial roll out of SCVs as GA4GH GKS standard so that the data would be of substantive utility to ClinGen and other community members. As such the following list represent the initial subset of data attributes that are being included in the first releases of the transformed datasets.
+- **[VRS](https://vrs.ga4gh.org/)** (Variation Representation Specification) — normalized, computable variant identifiers
+- **[Cat-VRS](https://cat-vrs.readthedocs.io/)** (Categorical VRS) — categorical variant representations (canonical alleles)
+- **[VA-Spec](https://va-spec.readthedocs.io/)** (Variant Annotation Specification) — variant classification statements
 
-## VA-Spec/Cat-VRS 1.0 Releases
-Coming May 2025, early work in progress and example JSON outpu can be found in the `examples` folder.
-Documentation on the rules and policies are also a work in progress and being updated in the `docs` folder.
+## Output Datasets
 
+Each pipeline run produces JSONL files distributed via Google Cloud Storage:
 
-## Pilot Releases
-Apr 2024 Connect release (tag: 1.0.0.connect.2024-04.1) based on VA-Spec/Cat-VRS Apr.2024 pre-release
+| File | Description |
+| --- | --- |
+| `variation` | Cat-VRS categorical variant representations for all ClinVar variations |
+| `scv_by_ref` | VA-Spec SCV statements with variations referenced by ID |
+| `scv_inline` | VA-Spec SCV statements with full variation objects inline |
+| `vcv_by_ref` | VA-Spec VCV aggregate statements with variations referenced by ID |
+| `vcv_inline` | VA-Spec VCV aggregate statements with full variation objects inline |
 
-  - The First Full ClinVar-GKS Pilot Dataset
-  ClinVar Release 2024-04-07 (json.gz files)
-  
-    - Variations : all 2.8M+ in CatVar format
-    https://bit.ly/clinvar-variation-20240407
-    
-    - SCVs : all 4.1M+ in VA Statement format
-    https://bit.ly/clinvar-scvs-20240407  (w/ variations)
+## Data Access
+
+<!-- TODO: Replace this section with current release access information -->
+
+*Information on accessing current releases is coming soon.*
+
+See the [`examples/`](examples/) directory for sample output in each format.
+
+## Pipeline Overview
+
+The pipeline runs on **Google BigQuery** using SQL stored procedures, with an external VRS processing step:
+
+1. **Variation Identity** — extract core variant data from ClinVar XML
+2. **VRS Processing** — convert variants to VRS format (external Python tooling)
+3. **Cat-VRS Generation** — create categorical variant representations
+4. **Condition & Trait Mapping** — map ClinVar conditions to standardized terms
+5. **SCV Statement Generation** — produce clinical classification statements
+6. **VCV Statement Generation** — produce aggregate classification statements
+7. **Export** — distribute output files to Google Cloud Storage
+
+## Documentation
+
+Full documentation is available at **[clingen-data-model.github.io/clinvar-gks](https://clingen-data-model.github.io/clinvar-gks/)**, including pipeline details, GA4GH profile definitions, data access guides, and a schema registry.
+
+## Repository Structure
+
+```text
+src/
+  procedures/       BigQuery SQL stored procedures
+  scripts/          Shell scripts for pipeline operations
+  vrs-location-transformer/  Cloud Run service for VRS processing
+  gks-registry/     Python tool for GA4GH schema metadata
+examples/           Sample output organized by type (cat-vrs, scv, vcv)
+schemas/            VRS output JSON schemas
+docs/               MkDocs documentation source
+```
+
+## Citation
+
+If you use this project, please cite it:
+
+> Babb, L. (2025). *ClinVar-GKS* [Software]. <https://doi.org/10.5281/zenodo.18343663>
+
+See [CITATION.cff](CITATION.cff) for machine-readable citation metadata.
 
 ## License
 
-This project uses dual licensing:
-
-- **Code** (SQL procedures, shell scripts, etc.): [MIT License](LICENSE)
-- **Data outputs** (transformed ClinVar data in GKS formats): [CC0 1.0 Universal](LICENSE-DATA)
-
-The CC0 public domain dedication for data outputs aligns with FAIR data principles and common practices in the genomics and bioinformatics community, maximizing reusability for research and clinical applications.
+This project is licensed under [CC0 1.0 Universal](LICENSE) (public domain dedication), covering both the code and data outputs. This aligns with FAIR data principles and common practices in the genomics and bioinformatics community.
