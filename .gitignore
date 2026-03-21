@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Environment
+.env
+*.env.local
+
+# MkDocs build output
+site/
+
+# IDE
+.vscode/
+.idea/

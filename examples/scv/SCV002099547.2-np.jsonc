@@ -1,0 +1,185 @@
+{
+  "classification": {
+    "name": "not provided",
+    "primaryCoding": {
+      "code": "not provided",
+      "system": "ClinVar"
+    }
+  },
+  "contributions": [
+    {
+      "activityType": "submitted",
+      "contributor": {
+        "id": "clinvar.submitter:500062",
+        "name": "GeneReviews",
+        "type": "Agent"
+      },
+      "date": "2022-10-01",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "created",
+      "contributor": {
+        "id": "clinvar.submitter:500062",
+        "name": "GeneReviews",
+        "type": "Agent"
+      },
+      "date": "2022-03-03",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "evaluated",
+      "contributor": {
+        "id": "clinvar.submitter:500062",
+        "name": "GeneReviews",
+        "type": "Agent"
+      },
+      "type": "Contribution"
+    }
+  ],
+  "direction": "supports",
+  "extensions": [
+    {
+      "name": "clinvarScvId",
+      "value": "SCV002099547"
+    },
+    {
+      "name": "clinvarScvVersion",
+      "value": "2"
+    },
+    {
+      "name": "clinvarScvReviewStatus",
+      "value": "no classification provided"
+    },
+    {
+      "name": "submittedScvLocalKey",
+      "value": "NM_004985.5:c.35G>A|OMIM:613001"
+    }
+  ],
+  "id": "SCV002099547.2",
+  "proposition": {
+    "geneContextQualifier": {
+      "conceptType": "gene",
+      "mappings": [
+        {
+          "coding": {
+            "code": "6407",
+            "iris": [
+              "https://identifiers.org/hgnc:6407",
+              "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/6407"
+            ],
+            "system": "https://www.genenames.org"
+          },
+          "relation": "exactMatch"
+        }
+      ],
+      "name": "KRAS",
+      "primaryCoding": {
+        "code": "3845",
+        "iris": [
+          "https://identifiers.org/ncbigene:3845",
+          "https://www.ncbi.nlm.nih.gov/gene/3845"
+        ],
+        "name": "KRAS",
+        "system": "https://www.ncbi.nlm.nih.gov/gene/"
+      }
+    },
+    "id": "SCV002099547",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "clinvarTraitId",
+          "value": "6752"
+        },
+        {
+          "name": "clinvarTraitType",
+          "value": "Disease"
+        },
+        {
+          "name": "submittedScvXrefs",
+          "value": [
+            {
+              "code": "C0406612",
+              "system": "MedGen"
+            }
+          ]
+        },
+        {
+          "name": "submittedScvTraitAssignment",
+          "value": "scv trait: medgen id 'c0406612'"
+        },
+        {
+          "name": "clinvarScvTraitAssignment",
+          "value": "rcv-tm medgen id"
+        },
+        {
+          "name": "clinvarScvTraitMappingType:ref(val)",
+          "value": "xref:medgen(c0406612)"
+        },
+        {
+          "name": "clinvarTraitSetType",
+          "value": "Disease"
+        },
+        {
+          "name": "clinvarTraitSetId",
+          "value": "25780"
+        }
+      ],
+      "id": "SCV002099547.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "2396",
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_2396",
+              "http://www.orpha.net/ORDO/Orphanet_2396"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0013074",
+            "iris": [
+              "https://identifiers.org/mondo:0013074",
+              "http://purl.obolibrary.org/obo/MONDO_0013074"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Encephalocraniocutaneous lipomatosis",
+      "primaryCoding": {
+        "code": "C0406612",
+        "iris": [
+          "https://identifiers.org/medgen:C0406612",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0406612"
+        ],
+        "name": "Encephalocraniocutaneous lipomatosis",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "hasNoProvidedClassificationFor",
+    "subjectVariation": "clinvar:12582",
+    "type": "ClinvarNotProvidedProposition"
+  },
+  "reportedIn": [
+    {
+      "pmid": "30443000",
+      "type": "Document",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/30443000"
+      ]
+    },
+    {
+      "type": "Document",
+      "urls": [
+        "https://www.ncbi.nlm.nih.gov/books/NBK576966"
+      ]
+    }
+  ],
+  "type": "Statement"
+}
