@@ -1,9 +1,3 @@
-<p align="center">
-  <a href="https://clinicalgenome.org"><img src="assets/images/clingen-logo.svg" alt="ClinGen" height="60"></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.ga4gh.org"><img src="assets/images/ga4gh-logo.svg" alt="GA4GH" height="50"></a>
-</p>
-
 # ClinVar-GKS
 
 ClinVar-GKS is a data transformation pipeline that converts [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/) release data into its [GA4GH GKS](https://www.ga4gh.org/genomic-knowledge-standards/) (Genomic Knowledge Standards) equivalent. It is developed and maintained by the [ClinGen](https://clinicalgenome.org/) driver project.
