@@ -25,9 +25,15 @@ The system follows a multi-step ETL process:
 
 ## Directory Structure
 
-- `/src/gks-procs/` - Core BigQuery stored procedures and shell scripts
-- `/examples/` - JSONC files showing target data structures (Cat-VRS, VA-Spec)
-- `/notes/` and `/scratch/` - Development documentation and experimental work
+- `/src/procedures/` - BigQuery SQL stored procedures
+- `/src/scripts/` - Shell scripts for pipeline operations (export, import)
+- `/src/vrs-location-transformer/` - Cloud Run service for VRS location transformation
+- `/src/gks-registry/` - Python tool for aggregating GA4GH GKS schema metadata
+- `/examples/` - Example data organized by type (cat-vrs/, scv/, vcv/)
+- `/schemas/` - VRS output JSON schemas
+- `/docs/` - MkDocs documentation source
+- `/notes/` - Working development documentation
+- `/archive/` - Historical/WIP material preserved for reference
 
 ## Development Commands
 
@@ -50,7 +56,7 @@ bq extract --destination_format NEWLINE_DELIMITED_JSON \
   'dataset.variation_identity' gs://bucket/vi.json.gz
 
 # Create VRS tables
-./src/gks-procs/create_gks_vrs_table.sh
+./src/scripts/vrs-to-bq-table.sh
 ```
 
 ## Standards Compliance
@@ -75,10 +81,10 @@ The project implements multiple GA4GH specifications:
 
 ## Example Data Structure
 
-Check `/examples/` directory for JSONC files demonstrating:
-- Cat-VRS canonical allele format (`cat-vrs-canonical-allele-ex01.jsonc`)
-- VA-Spec statement structures
-- Custom clinical profiles (drug response, etc.)
+Check `/examples/` directory for data structure examples organized by type:
+- `cat-vrs/` - Cat-VRS canonical allele examples
+- `scv/` - SCV statement examples (pathogenicity, oncogenicity, somatic, etc.)
+- `vcv/` - VCV aggregate statement examples
 
 ## Git Commit Conventions
 
