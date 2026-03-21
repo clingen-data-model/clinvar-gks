@@ -10,20 +10,29 @@ authors:
     family-names: Babb
     email: lbabb@broadinstitute.org
     affiliation: ClinGen, Broad Institute of MIT and Harvard
+    orcid: 'https://orcid.org/0000-0002-2455-2227'
+  - given-names: Kyle
+    family-names: Ferriter
+    email: kferrite@broadinstitute.org
+    affiliation: ClinGen, Broad Institute of MIT and Harvard   
+    orcid: 'https://orcid.org/0009-0005-2929-1678'
+  - given-names: Terry
+    family-names: O'Neill
+    email: toneill@broadinstitute.org
+    affiliation: ClinGen, Broad Institute of MIT and Harvard   
+    orcid: 'https://orcid.org/0000-0002-8463-8997'  
 identifiers:
   - type: doi
     value: 10.5281/zenodo.18343663
     description: Zenodo concept DOI for all versions
-repository-code: https://github.com/clingen-data-model/clinvar-gks
-url: https://github.com/clingen-data-model/clinvar-gks
+repository-code: 'https://github.com/clingen-data-model/clinvar-gks'
+url: 'https://dataexchange.clinicalgenome.org/clinvar-gks/'
 doi: 10.5281/zenodo.18343663
 abstract: >-
-  ClinVar-GKS is a data transformation pipeline that converts ClinVar release
-  data to GA4GH GKS (Global Alliance for Genomics and Health - Genomic Knowledge
-  Standards) format. The project transforms ClinVar's variation and clinical
-  submission data into VRS (Variation Representation Specification), Cat-VRS
-  (Categorical VRS), and VA-Spec (Variant Annotation Specification) compliant
-  formats.
+  ClinVar-GKS is a data transformation pipeline that
+  converts ClinVar release data into its GA4GH GKS (Genomic
+  Knowledge Standards) equivalent. It is developed and
+  maintained by the ClinGen driver project.
 keywords:
   - ClinGen
   - ClinVar
@@ -37,12 +46,7 @@ keywords:
   - clinical genetics
   - data transformation
   - BigQuery
-license: MIT
+license: CC0-1.0
 license-url: https://github.com/clingen-data-model/clinvar-gks/blob/main/LICENSE
 version: 1.0.0
 date-released: '2025-09-01'
-references:
-  - type: data
-    title: ClinVar-GKS Data Outputs
-    license: CC0-1.0
-    license-url: https://github.com/clingen-data-model/clinvar-gks/blob/main/LICENSE-DATA
