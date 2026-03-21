@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://clinicalgenome.org"><img src="docs/assets/images/clingen-logo.svg" alt="ClinGen" height="60"></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.ga4gh.org"><img src="docs/assets/images/ga4gh-logo.svg" alt="GA4GH" height="50"></a>
+</p>
+
 # clinvar-gks
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18343663.svg)](https://doi.org/10.5281/zenodo.18343663)
