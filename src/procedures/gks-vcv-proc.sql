@@ -33,7 +33,7 @@ BEGIN
           cpt.label as prop_label,
           cpt.display_order as prop_display_order,
           sl.code AS submission_level
-      FROM `%s.scv_summary2` AS ss
+      FROM `%s.scv_summary` AS ss
       JOIN `%s.variation_archive` AS va ON ss.variation_id = va.variation_id
       
       -- PLURALS RESTORED & JOINS LEFT UNTOUCHED
