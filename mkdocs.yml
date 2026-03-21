@@ -7,7 +7,7 @@ repo_name: clingen-data-model/clinvar-gks
 theme:
   name: material
   custom_dir: docs/overrides
-  logo: assets/images/clingen-logo.svg
+  logo: assets/images/clingen-logo-white.svg
   palette:
     - scheme: default
       primary: indigo
