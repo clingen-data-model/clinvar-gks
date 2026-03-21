@@ -1,0 +1,84 @@
+site_name: ClinVar-GKS Documentation
+site_description: ClinVar data transformation pipeline to GA4GH GKS format
+site_url: https://clingen-data-model.github.io/clinvar-gks/
+repo_url: https://github.com/clingen-data-model/clinvar-gks
+repo_name: clingen-data-model/clinvar-gks
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.details
+  - attr_list
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Pipeline:
+    - pipeline/index.md
+    - Variation Identity:
+      - pipeline/variation-identity/index.md
+      - variation_loc: pipeline/variation-identity/variation-loc.md
+      - variation_hgvs: pipeline/variation-identity/variation-hgvs.md
+      - variation_spdi: pipeline/variation-identity/variation-spdi.md
+      - variation_xref: pipeline/variation-identity/variation-xref.md
+      - variation_members: pipeline/variation-identity/variation-members.md
+      - variation_identity: pipeline/variation-identity/variation-identity.md
+    - VRS Processing: pipeline/vrs-processing.md
+    - Cat-VRS: pipeline/cat-vrs.md
+    - Conditions & Traits:
+      - pipeline/conditions-and-traits/index.md
+      - Condition Mapping: pipeline/conditions-and-traits/condition-mapping.md
+      - Traits: pipeline/conditions-and-traits/traits.md
+      - Condition Sets: pipeline/conditions-and-traits/condition-sets.md
+    - SCV Statements:
+      - pipeline/scv-statements/index.md
+      - SCV Records: pipeline/scv-statements/scv-records.md
+      - Propositions: pipeline/scv-statements/propositions.md
+      - Final Statements: pipeline/scv-statements/final-statements.md
+    - VCV Statements:
+      - pipeline/vcv-statements/index.md
+      - VCV Procedures: pipeline/vcv-statements/vcv-proc.md
+    - Export: pipeline/export.md
+  - Profiles:
+    - profiles/index.md
+    - Statement Types: profiles/statement-types.md
+    - Classifications: profiles/classifications.md
+    - Propositions: profiles/propositions.md
+    - Review Status: profiles/review-status.md
+  - Data Access:
+    - data-access/index.md
+    - Output Files: data-access/output-files.md
+    - Examples: data-access/examples.md
+  - Reference:
+    - reference/gks-standards.md
+    - Known Issues: reference/known-issues.md
+    - Glossary: reference/glossary.md
+  - Schema Registry: schema-registry.md
