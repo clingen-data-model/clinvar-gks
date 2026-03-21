@@ -1,0 +1,23 @@
+.md-header__logos {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.md-header__logos a {
+  display: flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.md-header__logos img {
+  height: 24px;
+  width: auto;
+}
+
+/* Invert logos for dark mode so they remain visible */
+[data-md-color-scheme="slate"] .md-header__logos img {
+  filter: brightness(0) invert(1);
+}
