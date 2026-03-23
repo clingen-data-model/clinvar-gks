@@ -1,4 +1,4 @@
-# gks_trait_proc Procedure
+# Traits (gks_trait_proc)
 
 ## Overview
 
@@ -44,7 +44,7 @@ The final query joins traits with their cross-references and aggregates into one
   - `clinvarTraitType` — the trait type (e.g., Disease, Finding, PhenotypeInstruction)
   - `aliases` — comma-separated alternate names (included only when synonyms exist)
 
-**Output:** `gks_trait` — one row per trait with structured codings, mappings, and extensions.
+**Output:** `gks_trait` — one row per trait with structured codings, mappings, and extensions. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ---
 
@@ -68,9 +68,9 @@ MONDO IDs are normalized by extracting the numeric portion — `MONDO:0000001` b
 
 ## Output Tables
 
-| Table | Description |
-| --- | --- |
-| `gks_trait` | GKS-compliant trait records with primary coding, cross-reference mappings, and extensions |
+| Table | Description | Role |
+| --- | --- | --- |
+| `gks_trait` | GKS-compliant trait records with primary coding, cross-reference mappings, and extensions | <span class="role-badge badge-pipeline">Pipeline table</span> |
 
 ---
 

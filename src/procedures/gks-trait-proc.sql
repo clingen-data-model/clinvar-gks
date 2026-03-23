@@ -1,10 +1,15 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_trait_proc`(on_date DATE)
 BEGIN
+  DECLARE gks_trait_query STRING;
+
   FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
   DO
 
-    EXECUTE IMMEDIATE FORMAT("""  
-      CREATE OR REPLACE TABLE `%s.gks_trait`
+    -- -----------------------------------------------------------------------
+    -- STEP 1: Create gks_trait table
+    -- -----------------------------------------------------------------------
+    SET gks_trait_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_trait`
       AS
         WITH traits AS (
           select distinct
@@ -13,10 +18,10 @@ BEGIN
             t.name,
             ARRAY_TO_STRING(t.alternate_names,', ') as synonyms,
             clinvar_ingest.parseXRefItems(t.xrefs) as xrefs
-          FROM `%s.trait` t
+          FROM `{S}.trait` t
         ),
         trait_xrefs AS (
-          select 
+          select
             t.id,
             t.name,
             t.type,
@@ -28,39 +33,39 @@ BEGIN
               CASE xref.db
               WHEN 'MedGen' THEN
                 [
-                  FORMAT('https://identifiers.org/medgen:%%s', xref.id),
-                  FORMAT('https://www.ncbi.nlm.nih.gov/medgen/%%s', xref.id)
-                ] 
+                  FORMAT('https://identifiers.org/medgen:%s', xref.id),
+                  FORMAT('https://www.ncbi.nlm.nih.gov/medgen/%s', xref.id)
+                ]
               WHEN 'OMIM' THEN
                 [
-                  FORMAT('https://identifiers.org/mim:%%s', xref.id),
-                  FORMAT('https://www.ncbi.nlm.nih.gov/medgen/%%s', xref.id)
+                  FORMAT('https://identifiers.org/mim:%s', xref.id),
+                  FORMAT('https://www.ncbi.nlm.nih.gov/medgen/%s', xref.id)
                 ]
               WHEN 'Human Phenotype Ontology' THEN
                 [
-                  FORMAT('https://identifiers.org/%%s', xref.id),
-                  FORMAT('https://hpo.jax.org/browse/term/%%s', xref.id)
+                  FORMAT('https://identifiers.org/%s', xref.id),
+                  FORMAT('https://hpo.jax.org/browse/term/%s', xref.id)
                 ]
               WHEN 'MONDO' THEN
                 [
-                  FORMAT('https://identifiers.org/mondo:%%s', REGEXP_EXTRACT(xref.id, r'(\\d+)')),
-                  FORMAT('http://purl.obolibrary.org/obo/MONDO_%%s', REGEXP_EXTRACT(xref.id, r'(\\d+)'))
-                ]    
+                  FORMAT('https://identifiers.org/mondo:%s', REGEXP_EXTRACT(xref.id, r'(\\d+)')),
+                  FORMAT('http://purl.obolibrary.org/obo/MONDO_%s', REGEXP_EXTRACT(xref.id, r'(\\d+)'))
+                ]
               WHEN 'Orphanet' THEN
                 [
-                  FORMAT('https://identifiers.org/orphanet.ordo:Orphanet_%%s', xref.id),
-                  FORMAT('http://www.orpha.net/ORDO/Orphanet_%%s', xref.id)
-                ]    
+                  FORMAT('https://identifiers.org/orphanet.ordo:Orphanet_%s', xref.id),
+                  FORMAT('http://www.orpha.net/ORDO/Orphanet_%s', xref.id)
+                ]
               WHEN 'MeSH' THEN
                 [
-                  FORMAT('https://identifiers.org/mesh:%%s', xref.id),
-                  FORMAT('https://www.ncbi.nlm.nih.gov/mesh/?term=%%s', xref.id)
-                ]    
+                  FORMAT('https://identifiers.org/mesh:%s', xref.id),
+                  FORMAT('https://www.ncbi.nlm.nih.gov/mesh/?term=%s', xref.id)
+                ]
               WHEN 'EFO' THEN
                 [
-                  FORMAT('https://identifiers.org/efo:%%s', xref.id),
-                  FORMAT('http://www.ebi.ac.uk/efo/EFO_%%s', xref.id)
-                ]    
+                  FORMAT('https://identifiers.org/efo:%s', xref.id),
+                  FORMAT('http://www.ebi.ac.uk/efo/EFO_%s', xref.id)
+                ]
               ELSE
                 []
               END as iris
@@ -68,40 +73,40 @@ BEGIN
           from traits t
           CROSS JOIN UNNEST(t.xrefs) as xref
           WHERE
-            xref.ref_field is null 
-            and 
+            xref.ref_field is null
+            and
             xref.db <> 'Gene'
             and
             (xref.type is null or xref.type = 'primary')
         )
-        SELECT 
+        SELECT
           t.id,
           t.type as conceptType,
           t.name,
-          ARRAY_AGG( 
+          ARRAY_AGG(
             IF(
               tx.mapping.system = 'MedGen',
-              tx.mapping, 
+              tx.mapping,
               null
             )
-            IGNORE NULLS  
+            IGNORE NULLS
           )[SAFE_OFFSET(0)] as primaryCoding,
-          ARRAY_AGG( 
+          ARRAY_AGG(
             IF(
               tx.mapping.system <> 'MedGen',
-              STRUCT(tx.mapping as coding, 'relatedMatch' as relation), 
+              STRUCT(tx.mapping as coding, 'relatedMatch' as relation),
               null
             )
             IGNORE NULLS
           ) as mappings,
           ARRAY_CONCAT(
             [
-              STRUCT( 
+              STRUCT(
                 'clinvarTraitId' as name,
                 t.id as value_string,
                 [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
               ),
-              STRUCT( 
+              STRUCT(
                 'clinvarTraitType' as name,
                 t.type as value_string,
                 [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
@@ -110,26 +115,25 @@ BEGIN
             IF(
               t.synonyms is not null and t.synonyms <> '',
               [STRUCT(
-                'aliases' as name, 
+                'aliases' as name,
                 t.synonyms as value_string,
                 [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
               )],
-              [] 
+              []
             )
           ) as extensions
         FROM traits t
         LEFT JOIN trait_xrefs tx
         ON
           tx.id = t.id
-        GROUP BY 
+        GROUP BY
           t.id,
           t.type,
           t.name,
           t.synonyms
-      """, 
-      rec.schema_name, 
-      rec.schema_name
-      );
+      """, '{S}', rec.schema_name);
+
+    EXECUTE IMMEDIATE gks_trait_query;
 
   END FOR;
 
@@ -141,15 +145,17 @@ END;
 
 -- CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_trait_proc`(on_date DATE)
 -- BEGIN
+--   DECLARE gks_trait_query STRING;
+--
 --   FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
 --   DO
---     EXECUTE IMMEDIATE FORMAT("""
---       CREATE OR REPLACE TABLE `%s.gks_trait`
+--     SET gks_trait_query = REPLACE("""
+--       CREATE OR REPLACE TABLE `{S}.gks_trait`
 --       as
---         select 
+--         select
 --           scv.id as scv_id,
 --           scv.version as scv_ver,
---           FORMAT('%%s.%%i', scv.id, scv.version) as full_scv_id,
+--           FORMAT('%s.%i', scv.id, scv.version) as full_scv_id,
 --           ts.id as trait_set_id,
 --           ts.type as trait_set_type,
 --           scv.clinical_assertion_trait_set_id as ca_trait_set_id,
@@ -158,7 +164,7 @@ END;
 --           t.id as trait_id,
 --           ca_trait_id,
 --           STRUCT (
---             FORMAT('clinvarTrait:%%s',t.id) as id,
+--             FORMAT('clinvarTrait:%s',t.id) as id,
 --             t.type as type,
 --             IFNULL(t.name, 'None') as label,
 --             IF(
@@ -167,7 +173,7 @@ END;
 --                 -- for now just do medgen, leave the other xrefs for later
 --                 STRUCT(
 --                     STRUCT (
---                     t.medgen_id as code, 
+--                     t.medgen_id as code,
 --                     'https://www.ncbi.nlm.nih.gov/medgen/' as system
 --                     ) as coding,
 --                   'exactMatch' as relation
@@ -175,30 +181,32 @@ END;
 --               ]
 --             ) as mappings
 --           ) as condition
---         FROM `%s.gks_scv` scv
---         JOIN `%s.clinical_assertion_trait_set` cats
+--         FROM `{S}.gks_scv` scv
+--         JOIN `{S}.clinical_assertion_trait_set` cats
 --         ON
 --           scv.clinical_assertion_trait_set_id = cats.id
 --         CROSS JOIN UNNEST(cats.clinical_assertion_trait_ids) as ca_trait_id
---         JOIN `%s.clinical_assertion_trait` cat
+--         JOIN `{S}.clinical_assertion_trait` cat
 --         ON
 --           cat.id = ca_trait_id
---         LEFT JOIN `%s.trait` t
+--         LEFT JOIN `{S}.trait` t
 --         ON
 --           t.id = cat.trait_id
---         LEFT JOIN `%s.trait_set` ts
+--         LEFT JOIN `{S}.trait_set` ts
 --         ON
 --           ts.id = scv.trait_set_id
---     """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name);
-
+--     """, '{S}', rec.schema_name);
+--
+--     EXECUTE IMMEDIATE gks_trait_query;
+--
 --   END FOR;
-
+--
 -- END;
 
 
 -- CREATE OR REPLACE TABLE `%s.gks_ts_lookup`
 -- as
--- select 
+-- select
 --   ts.id as trait_set_id, ts.type as trait_set_type,
 --   ARRAY_TO_STRING((ARRAY_AGG(trait_id RESPECT NULLS ORDER BY trait_id)), '|','NULL') as traits
 -- from `%s.trait_set` ts
@@ -219,12 +227,12 @@ END;
 -- --   tslu.*
 -- UPDATE `%s.clinical_assertion` ca
 -- set ca.trait_set_id = tslu.trait_set_id
--- from 
+-- from
 -- (
---   select 
+--   select
 --     gkt.scv_id, gkt.trait_set_id,
 --     ARRAY_TO_STRING((ARRAY_AGG(gkt.trait_id RESPECT NULLS ORDER BY gkt.trait_id)), '|','NULL') as traits
---   from `%s.gks_traits` gkt  
+--   from `%s.gks_traits` gkt
 --   group by gkt.scv_id, gkt.trait_set_id
 
 --   -- 250,023 of  are null trait_set_ids
@@ -238,11 +246,11 @@ END;
 -- ) x
 -- left join `%s.gks_ts_lookup` tslu
 -- on
---   tslu.traits = x.traits 
+--   tslu.traits = x.traits
 -- -- join `clinvar_2024_08_05_v1_6_62.clinical_assertion` ca
 -- -- on x.scv_id = ca.id
--- where 
---   x.trait_set_id is null 
+-- where
+--   x.trait_set_id is null
 --   and tslu.trait_set_id is not null
 --   and x.scv_id = ca.id
 --   -- and ca.trait_set_id is  null

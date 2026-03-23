@@ -86,6 +86,36 @@ Check `/examples/` directory for data structure examples organized by type:
 - `scv/` - SCV statement examples (pathogenicity, oncogenicity, somatic, etc.)
 - `vcv/` - VCV aggregate statement examples
 
+## SQL Stored Procedure Conventions
+
+### Dynamic SQL with REPLACE Pattern
+
+All stored procedures use a `DECLARE` / `SET` / `REPLACE` / `EXECUTE IMMEDIATE` pattern for dynamic SQL. This replaces the older `FORMAT("""...""", schema, ...)` approach.
+
+```sql
+DECLARE query STRING;
+
+SET query = """
+  CREATE OR REPLACE TABLE {S}.my_table AS
+  SELECT * FROM {S}.source_table
+""";
+SET query = REPLACE(query, '{S}', rec.schema_name);
+EXECUTE IMMEDIATE query;
+```
+
+**Why REPLACE over FORMAT:**
+
+- Eliminates positional `%s` parameter counting — schema references use a named `{S}` placeholder
+- Eliminates `%%` double-escaping — inner `FORMAT()` calls within the SQL template use normal `%s`/`%i` syntax
+- Easier to read, maintain, and debug
+
+**Conventions:**
+
+- Use `{S}` as the placeholder for `rec.schema_name` (the target dataset/schema)
+- One `DECLARE` per query variable at the top of the procedure body
+- `SET` the query string, then `REPLACE`, then `EXECUTE IMMEDIATE` — three separate statements
+- For procedures that use a variable other than `rec.schema_name` (e.g., `target_schema`), adjust the REPLACE call accordingly
+
 ## Git Commit Conventions
 
 When creating git commits or pull requests:

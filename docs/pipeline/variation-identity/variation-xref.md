@@ -1,4 +1,4 @@
-# variation_xref Table
+# Cross-References (variation_xref)
 
 ## Overview
 
@@ -8,12 +8,16 @@ The `variation_xref` table is created by the `clinvar_ingest.variation_identity`
 
 ## Fields
 
+<div class="field-table" markdown>
+
 | Field | Type | Description |
 |---|---|---|
-| `variation_id` | STRING | ClinVar variation identifier. |
-| `db` | STRING | The name of the external database (e.g., `ClinGen`, `dbSNP`, `OMIM`, `UniProtKB`). Parsed from the XRef list in the variation's XML content. |
-| `id` | STRING | The identifier assigned to this variant in the external database (e.g., a ClinGen allele registry ID, an rsID). |
-| `type` | STRING | The type or category of the cross-reference as provided by ClinVar. |
+| `variation_id` | string | ClinVar variation identifier. |
+| `db` | string | The name of the external database (e.g., `ClinGen`, `dbSNP`, `OMIM`, `UniProtKB`). Parsed from the XRef list in the variation's XML content. |
+| `id` | string | The identifier assigned to this variant in the external database (e.g., a ClinGen allele registry ID, an rsID). |
+| `type` | string | The type or category of the cross-reference as provided by ClinVar. |
+
+</div>
 
 ---
 

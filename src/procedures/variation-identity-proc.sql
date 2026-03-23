@@ -1,15 +1,24 @@
 
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.variation_identity`(on_date DATE)
 BEGIN
+  DECLARE query_temp_variation STRING;
+  DECLARE query_variation_loc STRING;
+  DECLARE query_variation_hgvs STRING;
+  DECLARE query_refine_vrs_class STRING;
+  DECLARE query_variation_xref STRING;
+  DECLARE query_variation_spdi STRING;
+  DECLARE query_variation_members STRING;
+  DECLARE query_variation_identity STRING;
 
   FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
   DO
-    -- the only way to acquire consistent copy number count info is from the scv data
-    -- using the AbsoluteCopyNumber and CopyNumberTuple submitted values
-    -- the presumption is that if multiple scvs exist for the same variant they will all
-    -- have the same absCN or CNTuple value. If not exceptions will likely occur.
-    EXECUTE IMMEDIATE FORMAT("""
-      CREATE or REPLACE TABLE `%s.temp_variation`
+
+    -------------------------------------------------------------------------
+    -- Step 1: Extract variation records with copy number data and initial
+    --         VRS class assignment
+    -------------------------------------------------------------------------
+    SET query_temp_variation = REPLACE("""
+      CREATE OR REPLACE TEMP TABLE temp_variation
       AS
       WITH cn AS (
         SELECT
@@ -23,25 +32,25 @@ BEGIN
             v.name AS variation_name,
             cav.clinical_assertion_id AS scv_id,
             `clinvar_ingest.parseAttributeSet`(cav.content) AS attribs
-          FROM `%s.clinical_assertion_variation` cav
-          JOIN `%s.clinical_assertion` ca 
-          ON 
+          FROM `{S}.clinical_assertion_variation` cav
+          JOIN `{S}.clinical_assertion` ca
+          ON
             ca.id = cav.clinical_assertion_id
             AND
             -- exclude null statement_type records which were introduced in the 2025-08-08 release due to
             -- the segregation of functional data statements from GermlineClassification scvs.
             ca.statement_type IS NOT NULL
-          JOIN `%s.variation` v 
-          ON 
+          JOIN `{S}.variation` v
+          ON
             v.id = ca.variation_id
-          WHERE 
-            cav.content LIKE '%%CopyNumber%%'
+          WHERE
+            cav.content LIKE '%CopyNumber%'
         ) x
         CROSS JOIN UNNEST(x.attribs) AS a
-        WHERE 
+        WHERE
           a.attribute.type IN ('AbsoluteCopyNumber','CopyNumberTuple')
-        GROUP BY 
-          x.variation_id, 
+        GROUP BY
+          x.variation_id,
           x.variation_name
       ),
       var AS (
@@ -54,23 +63,23 @@ BEGIN
           JSON_EXTRACT_SCALAR(v.content, "$['CanonicalSPDI']['$']") AS canonical_spdi,
           CAST(
             IF(
-              cn.copy_type = 'AbsoluteCopyNumber', 
-              cn.copy_value, 
+              cn.copy_type = 'AbsoluteCopyNumber',
+              cn.copy_value,
               null
-            ) 
+            )
             AS INT64
           ) AS absolute_copies,
           IF(
-            cn.copy_type = 'CopyNumberTuple', 
+            cn.copy_type = 'CopyNumberTuple',
             ARRAY(
-              SELECT 
-                CAST(elem AS INT64) 
+              SELECT
+                CAST(elem AS INT64)
                 FROM UNNEST(SPLIT(cn.copy_value)) AS elem
-            ), 
+            ),
             null
           ) AS range_copies,
           v.content
-        FROM `%s.variation` v
+        FROM `{S}.variation` v
         LEFT JOIN cn ON cn.variation_id = v.id
         WHERE
           -- bad variant list DO NOT try to deal with these right now, these have been submitted to clinvar for correction
@@ -112,10 +121,16 @@ BEGIN
         END as issue,
         var.content
       FROM var
-    """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name);
+    """, '{S}', rec.schema_name);
 
-    EXECUTE IMMEDIATE FORMAT("""
-      CREATE OR REPLACE TABLE `%s.variation_loc` AS
+    EXECUTE IMMEDIATE query_temp_variation;
+
+    -------------------------------------------------------------------------
+    -- Step 2: Parse sequence locations with derived gnomAD and HGVS
+    --         expressions
+    -------------------------------------------------------------------------
+    SET query_variation_loc = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.variation_loc` AS
       WITH l AS (
         SELECT
           v.variation_id,
@@ -125,12 +140,12 @@ BEGIN
           -- derive a vcf/gnomad-formatted representation from the vcf data if available and
           -- required non-nulls are position_vcf, ref_allele_vcf, alt_allele_vcf and accession
           -- SPECIAL case: some clinvar locations have a chromosome value of 'Un', these should be skipped)
-          IF(seq.chr = 'Un', NULL, FORMAT('%%s-%%i-%%s-%%s',seq.chr, seq.position_vcf, seq.reference_allele_vcf, seq.alternate_allele_vcf)) as gnomad_source,
+          IF(seq.chr = 'Un', NULL, FORMAT('%s-%i-%s-%s',seq.chr, seq.position_vcf, seq.reference_allele_vcf, seq.alternate_allele_vcf)) as gnomad_source,
           IF(seq.accession is not null,
             `clinvar_ingest.deriveHGVS`(v.variation_type,seq),
             null
           ) as loc_hgvs_source
-        FROM `%s.temp_variation` v
+        FROM temp_variation v
         CROSS JOIN UNNEST(
           `clinvar_ingest.parseSequenceLocations`(JSON_EXTRACT(v.content, r'$.Location'))
         ) as seq
@@ -169,8 +184,8 @@ BEGIN
         WHEN IFNULL(l.outer_start, IFNULL(l.outer_stop, NULL)) is not null THEN
           (l.outer_stop - l.outer_start)
         END as derived_variant_length,
-        IFNULL(CAST(l.start as STRING), FORMAT('[%%s,%%s]', IFNULL(CAST(l.outer_start as STRING), 'null'), IFNULL(CAST(l.inner_start as STRING), 'null'))) as derived_start,
-        IFNULL(CAST(l.stop as STRING), FORMAT('[%%s,%%s]', IFNULL(CAST(l.inner_stop as STRING), 'null'), IFNULL(CAST(l.outer_stop as STRING), 'null'))) as derived_stop
+        IFNULL(CAST(l.start as STRING), FORMAT('[%s,%s]', IFNULL(CAST(l.outer_start as STRING), 'null'), IFNULL(CAST(l.inner_start as STRING), 'null'))) as derived_start,
+        IFNULL(CAST(l.stop as STRING), FORMAT('[%s,%s]', IFNULL(CAST(l.inner_stop as STRING), 'null'), IFNULL(CAST(l.outer_stop as STRING), 'null'))) as derived_stop
       FROM l
       LEFT JOIN li
       ON
@@ -179,12 +194,16 @@ BEGIN
         -- use additional assembly string match since mito accessions are duplicated across assemblies
         -- without this it will produce a cartesian product of rows for all mito variants.
         li.assembly = l.assembly
-    """, 
-    rec.schema_name, 
-    rec.schema_name);
+    """, '{S}', rec.schema_name);
 
-    EXECUTE IMMEDIATE FORMAT("""
-      CREATE OR REPLACE TABLE `%s.variation_hgvs` AS
+    EXECUTE IMMEDIATE query_variation_loc;
+
+    -------------------------------------------------------------------------
+    -- Step 3: Parse HGVS expressions with molecular consequences and
+    --         MANE designations
+    -------------------------------------------------------------------------
+    SET query_variation_hgvs = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.variation_hgvs` AS
 
       WITH h AS (
         -- clinvar has thousands of variants that have multiple representations on the same accession
@@ -200,7 +219,7 @@ BEGIN
           hgvs.assembly,
           hgvs.nucleotide_expression.expression as nucleotide,
           hgvs.protein_expression.expression as protein,
-          STRING_AGG(DISTINCT IF(STARTS_WITH(mc.id, mc.db), mc.id, FORMAT('%%s:%%s', mc.db, mc.id)) ) as consq_id,
+          STRING_AGG(DISTINCT IF(STARTS_WITH(mc.id, mc.db), mc.id, FORMAT('%s:%s', mc.db, mc.id)) ) as consq_id,
           STRING_AGG(DISTINCT mc.type) as consq_label,
           hgvs.nucleotide_expression.mane_select,
           hgvs.nucleotide_expression.mane_plus_clinical as mane_plus,
@@ -211,8 +230,8 @@ BEGIN
           REGEXP_REPLACE(hgvs.nucleotide_expression.expression, r"del[0-9]+", "del") as hgvs_source,
           -- capture the build_number for sorting
           CAST(REGEXP_EXTRACT(hgvs.assembly, r'\\d+') as INT64) as assembly_version
-        FROM `%s.temp_variation` tv
-        JOIN `%s.variation` v
+        FROM temp_variation tv
+        JOIN `{S}.variation` v
         ON
           v.id = tv.variation_id
         cross join unnest (`clinvar_ingest.parseHGVS`(JSON_EXTRACT(v.content, r'$.HGVSlist')) ) as hgvs
@@ -335,13 +354,16 @@ BEGIN
         h_top.varlen_precedence,
         h_top.start_pos,
         h_top.end_pos
-    """, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name);
+    """, '{S}', rec.schema_name);
 
-    EXECUTE IMMEDIATE FORMAT("""
-      UPDATE `%s.temp_variation` tv
+    EXECUTE IMMEDIATE query_variation_hgvs;
+
+    -------------------------------------------------------------------------
+    -- Step 4: Refine VRS class assignments using derived variant length
+    --         and range endpoint information
+    -------------------------------------------------------------------------
+    SET query_refine_vrs_class = REPLACE("""
+      UPDATE temp_variation tv
         SET tv.vrs_class =
           CASE
             WHEN (tv.variation_type IN ('Deletion', 'Duplication'))
@@ -360,8 +382,8 @@ BEGIN
             vl.variation_id,
             vl.has_range_endpoints,
             vl.derived_variant_length,
-            row_number() over (partition by vl.variation_id order by vl.varlen_precedence) as rn
-          FROM `%s.variation_loc` vl
+            row_number() over (partition by vl.variation_id order by vl.varlen_precedence, vl.derived_variant_length DESC NULLS LAST) as rn
+          FROM `{S}.variation_loc` vl
         )
         WHERE rn = 1
         UNION DISTINCT
@@ -372,9 +394,9 @@ BEGIN
             vh.variation_id,
             vh.has_range_endpoints,
             vh.derived_variant_length,
-            row_number() over (partition by vh.variation_id order by vh.varlen_precedence) as rn
-          FROM `%s.variation_hgvs` vh
-          LEFT JOIN `%s.variation_loc` vl
+            row_number() over (partition by vh.variation_id order by vh.varlen_precedence, vh.derived_variant_length DESC NULLS LAST) as rn
+          FROM `{S}.variation_hgvs` vh
+          LEFT JOIN `{S}.variation_loc` vl
           on
             vl.variation_id = vh.variation_id
           WHERE
@@ -385,37 +407,47 @@ BEGIN
       WHERE
         var.variation_id = tv.variation_id and
         tv.vrs_class is null
-    """, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name);
+    """, '{S}', rec.schema_name);
 
-    EXECUTE IMMEDIATE FORMAT("""
-      CREATE OR REPLACE TABLE `%s.variation_xref` AS
+    EXECUTE IMMEDIATE query_refine_vrs_class;
+
+    -------------------------------------------------------------------------
+    -- Step 5: Extract cross-references to external databases
+    -------------------------------------------------------------------------
+    SET query_variation_xref = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.variation_xref` AS
       SELECT
         v.variation_id,
         xref.*
-      FROM `%s.temp_variation` v
+      FROM temp_variation v
       CROSS JOIN UNNEST(`clinvar_ingest.parseXRefs`(JSON_EXTRACT(v.content, r'$.XRefList'))) as xref
-    """, 
-    rec.schema_name, 
-    rec.schema_name);
+    """, '{S}', rec.schema_name);
 
-    EXECUTE IMMEDIATE FORMAT("""
-      CREATE OR REPLACE TABLE `%s.variation_spdi` AS
+    EXECUTE IMMEDIATE query_variation_xref;
+
+    -------------------------------------------------------------------------
+    -- Step 6: Extract canonical SPDI expressions (internal temp table)
+    -------------------------------------------------------------------------
+    SET query_variation_spdi = """
+      CREATE OR REPLACE TEMP TABLE variation_spdi AS
       SELECT
         v.variation_id,
         'GRCh38' as assembly,
         38 as assembly_version,
-        SPLIT(v.canonical_spdi, ":")[OFFSET(0)] as accession,
+        SPLIT(v.canonical_spdi, ':')[OFFSET(0)] as accession,
         v.canonical_spdi as spdi_source
-      FROM `%s.temp_variation` v
+      FROM temp_variation v
       WHERE v.canonical_spdi is not null
-    """, rec.schema_name, rec.schema_name);
+    """;
 
-    EXECUTE IMMEDIATE FORMAT("""
-      CREATE OR REPLACE TABLE `%s.variation_members` AS
+    EXECUTE IMMEDIATE query_variation_spdi;
+
+    -------------------------------------------------------------------------
+    -- Step 7: Consolidate all expression sources with 9-level precedence
+    --         hierarchy (internal temp table)
+    -------------------------------------------------------------------------
+    SET query_variation_members = REPLACE("""
+      CREATE OR REPLACE TEMP TABLE variation_members AS
       WITH var_source as (
         select DISTINCT
           variation_id,
@@ -426,7 +458,7 @@ BEGIN
           CAST(null AS STRING) as issue,
           -- #1 spdi (genomic top level b38 alleles)
           1 as precedence
-        from  `%s.variation_spdi` vs
+        from  variation_spdi vs
         UNION ALL
         select DISTINCT
           vh.variation_id,
@@ -437,7 +469,7 @@ BEGIN
           vh.issue,
           -- #2 hgvs (genomic, top-level)
           2 as precedence
-        from  `%s.variation_hgvs` vh
+        from  `{S}.variation_hgvs` vh
         where
           vh.hgvs_source is not null
           and
@@ -452,7 +484,7 @@ BEGIN
           CAST(null AS STRING) as issue,
           -- #3 gnomad location-based (genomic 'top-level')
           3 as precedence
-        from  `%s.variation_loc` vl
+        from  `{S}.variation_loc` vl
         where
           vl.gnomad_source is not null
         UNION ALL
@@ -465,7 +497,7 @@ BEGIN
           vl.loc_hgvs_issue as issue,
           -- #4 derived hgvs for non-precise location regions (genomic 'top-level')
           4 as precedence
-        from  `%s.variation_loc` vl
+        from  `{S}.variation_loc` vl
         where
           vl.loc_hgvs_source is not null
           and
@@ -480,7 +512,7 @@ BEGIN
           vh.issue,
           -- #5 hgvs genomic (not top-level)
           5 as precedence
-        from  `%s.variation_hgvs` vh
+        from  `{S}.variation_hgvs` vh
         where
           vh.hgvs_source is not null
           and
@@ -495,7 +527,7 @@ BEGIN
           vh.issue,
           -- #6 hgvs coding mane select
           6 as precedence
-        from `%s.variation_hgvs` vh
+        from `{S}.variation_hgvs` vh
         where
           vh.hgvs_source is not null
           and
@@ -510,7 +542,7 @@ BEGIN
           vh.issue,
           -- #7 hgvs coding mane plus
           7 as precedence
-        from `%s.variation_hgvs` vh
+        from `{S}.variation_hgvs` vh
         where
           vh.hgvs_source is not null
           and
@@ -525,7 +557,7 @@ BEGIN
           vh.issue,
           -- #8 hgvs coding not mane select or plus
           8 as precedence
-        from `%s.variation_hgvs` vh
+        from `{S}.variation_hgvs` vh
         where
           vh.hgvs_source is not null
           and
@@ -540,7 +572,7 @@ BEGIN
           vh.issue,
           -- #9 hgvs not 'genomic, top-level' or 'genomic' or 'coding'
           9 as precedence
-        from `%s.variation_hgvs` vh
+        from `{S}.variation_hgvs` vh
         where
           vh.hgvs_source is not null
           and
@@ -589,17 +621,17 @@ BEGIN
           row_number() over (partition by variation_id, accession order by precedence) as rn
         from var_source
       ) vs
-      join `%s.temp_variation` tv
+      join temp_variation tv
       on
         tv.variation_id = vs.variation_id
-      left join `%s.variation_hgvs` vh
+      left join `{S}.variation_hgvs` vh
       on
         vh.variation_id = vs.variation_id
         and
         vh.accession = vs.accession
         and
         IFNULL(vh.assembly_version,0) = IFNULL(vs.assembly_version,0)
-      left join `%s.variation_loc` vl
+      left join `{S}.variation_loc` vl
       on
         vl.variation_id = vs.variation_id
         and
@@ -609,23 +641,16 @@ BEGIN
       where vs.rn = 1
       -- 27,578,636 (2024-03-31)
       -- 27,576,509 (2024-04-07)
-    """, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name);
+    """, '{S}', rec.schema_name);
 
-    EXECUTE IMMEDIATE FORMAT("""
-      CREATE OR REPLACE TABLE `%s.variation_identity` AS
+    EXECUTE IMMEDIATE query_variation_members;
+
+    -------------------------------------------------------------------------
+    -- Step 8: Select single best expression per variation and build
+    --         final output with cross-reference mappings
+    -------------------------------------------------------------------------
+    SET query_variation_identity = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.variation_identity` AS
         -- find potential resolvable originating alleles per variation_id
         WITH v AS (
           select
@@ -634,7 +659,7 @@ BEGIN
             select
               vm.*,
               row_number() over (partition by vm.variation_id order by vm.precedence, vm.assembly_version desc, vm.issue, vm.accession) as rn
-            from `%s.variation_members` vm
+            from variation_members vm
             )
           where rn = 1
           -- 2,814,021 (2024-03-31)
@@ -646,7 +671,7 @@ BEGIN
             x.db as system,
             x.id as code,
             IF(x.db='ClinGen', 'closeMatch', 'relatedMatch') as relation
-          FROM `%s.variation_xref` x
+          FROM `{S}.variation_xref` x
           group by
             x.id,
             x.db,
@@ -679,17 +704,15 @@ BEGIN
           v.variant_length,
           m.mappings,
 
-        FROM `%s.temp_variation` tv
+        FROM temp_variation tv
         LEFT JOIN v
         ON
           v.variation_id = tv.variation_id
         LEFT JOIN m
         ON tv.variation_id = m.variation_id
-    """, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name);
+    """, '{S}', rec.schema_name);
+
+    EXECUTE IMMEDIATE query_variation_identity;
 
   END FOR;
 END;

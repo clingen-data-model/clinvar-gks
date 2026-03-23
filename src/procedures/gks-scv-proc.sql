@@ -1,11 +1,16 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_scv_proc`(start_with DATE)
 BEGIN
+
+  DECLARE query_scv_records STRING;
+
   FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(start_with) as s)
   DO
-    EXECUTE IMMEDIATE FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_scv`
+
+    -- Step 1: Create GKS SCV table
+    SET query_scv_records = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_scv`
       AS
-        SELECT 
+        SELECT
           scv.id,
           scv.version,
           IF(
@@ -15,7 +20,7 @@ BEGIN
           ) as proposition,
 
           CASE scv.clinical_impact_assertion_type
-            WHEN 'prognostic' THEN 
+            WHEN 'prognostic' THEN
               CASE scv.clinical_impact_clinical_significance
                 WHEN 'better outcome' THEN
                   STRUCT('VariantPrognosticProposition' as type, 'associatedWithBetterOutcomeFor' as pred)
@@ -25,7 +30,7 @@ BEGIN
                   -- should never occur
                   STRUCT('VariantPrognosticProposition' as type, 'associatedWithUndefinedOutcomeFor' as pred)
               END
-            WHEN 'diagnostic' THEN 
+            WHEN 'diagnostic' THEN
               CASE scv.clinical_impact_clinical_significance
                 WHEN 'supports diagnosis' THEN
                   STRUCT('VariantDiagnosticProposition' as type, 'isDiagnosticInclusionCriterionFor' as pred)
@@ -34,8 +39,8 @@ BEGIN
                 ELSE
                   -- should never occur
                   STRUCT('VariantDiagnosticProposition' as type, 'isDiagnosticUndefinedCriterionFor' as pred)
-              END              
-            WHEN 'therapeutic' THEN 
+              END
+            WHEN 'therapeutic' THEN
               CASE scv.clinical_impact_clinical_significance
                 WHEN 'sensitivity/response' THEN
                   STRUCT('VariantTherapeuticResponseProposition' as type, 'predictsSensitivityTo' as pred)
@@ -47,9 +52,9 @@ BEGIN
                 ELSE
                   -- should never occur
                   STRUCT('VariantTherapeuticResponseProposition' as type, 'predictsUndefinedResponseTo' as pred)
-              END            
+              END
           END as evidence_line_target_proposition,
-          
+
           scv.date_created,
           scv.date_last_updated,
           scv.local_key,
@@ -73,7 +78,7 @@ BEGIN
           -- -- ideally we'd move the drugTherapy extraction to the scv_summary table - future improvement.
           SPLIT(
             JSON_EXTRACT_SCALAR(
-              ca.content, 
+              ca.content,
               "$.Classification.SomaticClinicalImpact['@DrugForTherapeuticAssertion']"
             ),
             ';'
@@ -89,28 +94,26 @@ BEGIN
                   `clinvar_ingest.parseCitations`(JSON_EXTRACT(ca.content,'$.Classification'))
                 )
               ) AS s
-            ) 
+            )
           ) as scvCitations,
           STRUCT (
-            FORMAT('clinvar.submitter:%%s',scv.submitter_id) as id,
+            FORMAT('clinvar.submitter:%s',scv.submitter_id) as id,
             'Agent' as type,
             scv.submitter_name as name
           ) as submitter
 
-        FROM `%s.clinical_assertion` ca
-        JOIN `%s.scv_summary` scv
+        FROM `{S}.clinical_assertion` ca
+        JOIN `{S}.scv_summary` scv
         ON
-          scv.id = ca.id 
-        LEFT JOIN `clinvar_ingest.clinvar_clinsig_types` cct 
-          ON 
+          scv.id = ca.id
+        LEFT JOIN `clinvar_ingest.clinvar_clinsig_types` cct
+          ON
             cct.code = scv.classif_type
             AND
             cct.statement_type = scv.statement_type
-    """, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name
-    );
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE query_scv_records;
+
   END FOR;
 
 END;

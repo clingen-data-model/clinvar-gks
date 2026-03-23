@@ -104,6 +104,15 @@ CALL `clinvar_ingest.gks_statement_scv_proc`(CURRENT_DATE());
 
 See [Export](export.md) for configuration and naming details.
 
+## Documentation Tracks
+
+The pipeline documentation serves two audiences:
+
+- **Pipeline** (this section) — documents how data flows through BigQuery stored procedures, including internal table schemas, transformation logic, and step-by-step workflows. Each step is tagged as <span class="role-badge badge-pipeline">Pipeline table</span>, <span class="role-badge badge-artifact">JSON artifact</span>, or <span class="role-badge badge-internal">Internal</span> to indicate its role
+- **[Output Reference](../output-reference/index.md)** — documents the JSON output files from a consumer perspective, covering record structure, field meanings, and usage guidance
+
+---
+
 ## Detailed Documentation
 
 Each pipeline step has its own documentation page:
