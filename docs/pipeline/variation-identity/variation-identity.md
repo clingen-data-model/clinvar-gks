@@ -21,7 +21,7 @@ The `variation_identity` table is the final output of the `clinvar_ingest.variat
 | `source` | STRING | The actual variant expression string selected for VRS resolution. NULL when no viable source was identified. |
 | `copy_change_type` | STRING | For `CopyNumberChange` variants, the direction of change: `loss` or `gain`. NULL for other VRS classes. |
 | `issue` | STRING | Any issue preventing VRS resolution. Sources include: expression-level issues (unsupported accession, intronic positions, etc.), variation-level issues (unsupported subtypes), or the fallback message `No viable variation members identified.` when no candidate sources exist. NULL when the variation can be resolved. |
-| `precedence` | INT64 | The precedence rank of the selected source (1–9). See `variation_members` documentation for the full precedence hierarchy. NULL when no source was selected. |
+| `precedence` | INT64 | The precedence rank of the selected source (1–9). See [Precedence Hierarchy](index.md#precedence-hierarchy) for the full ranking. NULL when no source was selected. |
 | `variation_type` | STRING | The ClinVar variation type (e.g., `single nucleotide variant`, `Deletion`, `Duplication`, `copy number gain`, `copy number loss`, `Insertion`, `Indel`, `Microsatellite`). |
 | `subclass_type` | STRING | The ClinVar variation subclass (e.g., `SimpleAllele`, `Haplotype`, `Genotype`). |
 | `cytogenetic` | STRING | The cytogenetic location (e.g., `17p13.1`). NULL when not provided by ClinVar. |
@@ -33,7 +33,7 @@ The `variation_identity` table is the final output of the `clinvar_ingest.variat
 
 ## Row Granularity
 
-One row per **variation_id**. Every ClinVar variation is represented exactly once. The selected expression source is the highest-precedence member from `variation_members`, with ties broken by descending assembly version, issue status (NULL issues preferred), and accession.
+One row per **variation_id**. Every ClinVar variation is represented exactly once. The selected expression source is the highest-precedence candidate from the consolidated expression sources (see [Precedence Hierarchy](index.md#precedence-hierarchy)), with ties broken by descending assembly version, issue status (NULL issues preferred), and accession.
 
 ---
 

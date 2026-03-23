@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `variation_hgvs` table is created by the `clinvar_ingest.variation_identity` stored procedure (defined in `variation-identity-proc.sql`). It extracts and normalizes HGVS (Human Genome Variation Society) nomenclature expressions from ClinVar variation records, selecting the best representative expression per variation/accession pair when multiple representations exist.
+The `variation_hgvs` table is created by the `clinvar_ingest.variation_identity` stored procedure. It extracts and normalizes HGVS (Human Genome Variation Society) nomenclature expressions from ClinVar variation records, selecting the best representative expression per variation/accession pair when multiple representations exist.
 
 ---
 

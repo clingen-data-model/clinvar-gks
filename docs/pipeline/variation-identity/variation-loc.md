@@ -45,4 +45,4 @@ One row per **variation_id + accession + assembly** combination. A single variat
 
 ## Notes
 
-The `gnomad_source` and `loc_hgvs_source` fields are complementary derivations from the same positional data. The `gnomad_source` is available for simple variants with VCF-style representation, while `loc_hgvs_source` is derived for all variants with an accession. In `variation_members`, the `loc_hgvs_source` is only used as a fallback when `gnomad_source` is not available.
+The `gnomad_source` and `loc_hgvs_source` fields are complementary derivations from the same positional data. The `gnomad_source` is available for simple variants with VCF-style representation, while `loc_hgvs_source` is derived for all variants with an accession. During expression source consolidation, the `loc_hgvs_source` is only used as a fallback when `gnomad_source` is not available (see [Precedence Hierarchy](index.md#precedence-hierarchy)).
