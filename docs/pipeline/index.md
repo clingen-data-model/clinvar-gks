@@ -110,7 +110,7 @@ Each pipeline step has its own documentation page:
 
 - [Variation Identity](variation-identity/index.md) — variant extraction, normalization, VRS class assignment
 - [VRS Processing](vrs-processing.md) — external VRS Python step
-- [Cat-VRS](cat-vrs.md) — categorical variant generation
+- [Cat-VRS](cat-vrs/index.md) — categorical variant generation
 - [Conditions & Traits](conditions-and-traits/index.md) — condition mapping, traits, condition sets
 - [SCV Statements](scv-statements/index.md) — SCV records, propositions, final statements
 - [VCV Statements](vcv-statements/index.md) — aggregate VCV/RCV statements (in progress)
