@@ -40,6 +40,7 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.details
   - attr_list
+  - md_in_html
   - toc:
       permalink: true
 
@@ -73,6 +74,10 @@ nav:
       - pipeline/vcv-statements/index.md
       - VCV Procedures: pipeline/vcv-statements/vcv-proc.md
     - Export: pipeline/export.md
+  - Output Reference:
+    - output-reference/index.md
+    - Categorical Variants: output-reference/cat-vrs.md
+    - SCV Statements: output-reference/scv-statements.md
   - Profiles:
     - profiles/index.md
     - Statement Types: profiles/statement-types.md

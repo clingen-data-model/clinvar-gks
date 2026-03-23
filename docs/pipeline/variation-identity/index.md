@@ -12,6 +12,12 @@ The procedure accepts a single parameter — `on_date DATE` — which identifies
 
 The procedure executes the following steps sequentially within a loop over the target schema(s) identified by the `on_date` parameter.
 
+Steps produce three types of output:
+
+- <span class="role-badge badge-pipeline">Pipeline table</span> — persists in BigQuery for use by downstream procedures or external processing
+- <span class="role-badge badge-artifact">JSON artifact</span> — exported as a JSONL file for public distribution
+- <span class="role-badge badge-internal">Internal</span> — exists only within the procedure and is consumed by later steps
+
 ### Step 1: Extract Variation Records
 
 Builds a foundational working table of variation records from ClinVar, enriched with:
@@ -26,7 +32,7 @@ Builds a foundational working table of variation records from ClinVar, enriched 
   - `Haplotype` for haplotype subclass types
   - `Not Available` for genotype subclass types
 
-**Output:** Internal temporary table used by all subsequent steps.
+**Output:** Internal temporary table used by all subsequent steps. <span class="role-badge badge-internal">Internal</span>
 
 ### Step 2: Build `variation_loc`
 
@@ -39,7 +45,7 @@ Parses the `Location` element from each variation's content to extract sequence 
 
 See [Sequence Locations](variation-loc.md) for full field documentation.
 
-**Output:** `variation_loc` — one row per variation + accession + assembly combination.
+**Output:** `variation_loc` — one row per variation + accession + assembly combination. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ### Step 3: Build `variation_hgvs`
 
@@ -53,7 +59,7 @@ Also captures:
 
 See [HGVS Expressions](variation-hgvs.md) for full field documentation.
 
-**Output:** `variation_hgvs` — one row per variation + accession combination.
+**Output:** `variation_hgvs` — one row per variation + accession combination. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ### Step 4: Refine VRS Class Assignments
 
@@ -65,7 +71,7 @@ Classification rules:
 - **Allele** — deletions, duplications, indels, insertions, microsatellites, tandem duplications, and SNVs with precise endpoints
 - **Not Available** — all other cases
 
-**Output:** Updates the internal working table in place.
+**Output:** Updates the internal working table in place. <span class="role-badge badge-internal">Internal</span>
 
 ### Step 5: Build `variation_xref`
 
@@ -73,13 +79,13 @@ Extracts cross-references to external databases (ClinGen, dbSNP, OMIM, UniProtKB
 
 See [Cross-References](variation-xref.md) for full field documentation.
 
-**Output:** `variation_xref` — one row per variation + external reference combination.
+**Output:** `variation_xref` — one row per variation + external reference combination. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ### Step 6: Extract Canonical SPDI
 
 Extracts the canonical SPDI expression for variations that have one, associating it with the GRCh38 assembly and deriving the sequence accession from the expression. SPDI is NCBI's normalized variant representation format and serves as the highest-precedence source for VRS resolution.
 
-**Output:** Internal temporary table consumed by Step 7.
+**Output:** Internal temporary table consumed by Step 7. <span class="role-badge badge-internal">Internal</span>
 
 ### Step 7: Consolidate Expression Sources
 
@@ -101,7 +107,7 @@ Consolidates all candidate expression sources — SPDI, HGVS, gnomAD, and locati
 
 Within the same precedence level for a given variation + accession, ties are broken by row-number windowing (first row wins).
 
-**Output:** Internal temporary table consumed by Step 8.
+**Output:** Internal temporary table consumed by Step 8. <span class="role-badge badge-internal">Internal</span>
 
 ### Step 8: Build `variation_identity`
 
@@ -109,18 +115,18 @@ Selects the single best expression source per variation from the consolidated me
 
 See [Variation Identity](variation-identity.md) for full field documentation.
 
-**Output:** `variation_identity` — one row per ClinVar variation.
+**Output:** `variation_identity` — one row per ClinVar variation. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ---
 
 ## Output Tables
 
-| Table | Description |
-| --- | --- |
-| `variation_loc` | Sequence locations with derived gnomAD and HGVS expressions |
-| `variation_hgvs` | HGVS expressions with molecular consequences and MANE designations |
-| `variation_xref` | Cross-references to external databases |
-| `variation_identity` | Final single-best expression per variation with full metadata |
+| Table | Description | Role |
+| --- | --- | --- |
+| `variation_loc` | Sequence locations with derived gnomAD and HGVS expressions | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `variation_hgvs` | HGVS expressions with molecular consequences and MANE designations | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `variation_xref` | Cross-references to external databases | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `variation_identity` | Final single-best expression per variation with full metadata | <span class="role-badge badge-pipeline">Pipeline table</span> |
 
 ---
 
