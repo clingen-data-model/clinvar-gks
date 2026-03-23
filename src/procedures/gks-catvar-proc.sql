@@ -15,8 +15,8 @@ BEGIN
     -------------------------------------------------------------------------
     -- Step 1a: Enriched sequence references (small lookup table)
     -------------------------------------------------------------------------
-    SET query_seqref = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_seqref`
+    SET query_seqref = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_seqref`
       AS
       SELECT DISTINCT
         vrs.in.accession as name,
@@ -35,23 +35,23 @@ BEGIN
         WHEN 36 THEN [STRUCT("assembly" as name,"NCBI36" as value)]
         ELSE NULL
         END as extensions
-      FROM `%s.gks_vrs` vrs
+      FROM `{S}.gks_vrs` vrs
       WHERE
         vrs.out.location.sequenceReference.refgetAccession is not null
-    """, rec.schema_name, rec.schema_name);
+    """, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_seqref;
 
     -------------------------------------------------------------------------
     -- Step 1b: Sequence locations with sequence reference join
     -------------------------------------------------------------------------
-    SET query_seqloc = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_seqloc`
+    SET query_seqloc = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_seqloc`
       AS
       WITH x AS (
         SELECT DISTINCT
           vrs.out.location.*
-        FROM `%s.gks_vrs` vrs
+        FROM `{S}.gks_vrs` vrs
         WHERE
           vrs.out.location.id is not null
       )
@@ -79,18 +79,18 @@ BEGIN
         ) as end_range,
         (SELECT AS STRUCT sq.*) AS sequenceReference
       FROM x
-      JOIN `%s.gks_seqref` sq
+      JOIN `{S}.gks_seqref` sq
       ON
         sq.refgetAccession = x.sequenceReference.refgetAccession
-    """, rec.schema_name, rec.schema_name, rec.schema_name);
+    """, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_seqloc;
 
     -------------------------------------------------------------------------
     -- Step 2: Contextual variant expressions with precedence-ranked naming
     -------------------------------------------------------------------------
-    SET query_ctxvar_expr = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_ctxvar_expression`
+    SET query_ctxvar_expr = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_ctxvar_expression`
       AS
       WITH exp_item AS (
         SELECT
@@ -102,7 +102,7 @@ BEGIN
           CAST(null as STRING) as issue,
           1 as precedence,
           vrs.in.assembly_version
-        FROM `%s.gks_vrs` vrs
+        FROM `{S}.gks_vrs` vrs
         WHERE
           vrs.in.fmt = 'spdi'
           AND
@@ -113,7 +113,7 @@ BEGIN
           vl.variation_id,
           IFNULL(
             vl.accession,
-            FORMAT('%%i-chr%%s', vl.assembly_version, vl.chr)
+            FORMAT('%i-chr%s', vl.assembly_version, vl.chr)
           ) as accession,
           'gnomad' as syntax,
           vl.gnomad_source as value,
@@ -121,8 +121,8 @@ BEGIN
           CAST(null as STRING) as issue,
           3 as precedence,
           vl.assembly_version
-        FROM `%s.variation_loc` vl
-        JOIN `%s.gks_vrs` vrs
+        FROM `{S}.variation_loc` vl
+        JOIN `{S}.gks_vrs` vrs
         ON
           vl.variation_id = vrs.in.variation_id
           AND
@@ -137,15 +137,15 @@ BEGIN
         SELECT
           vh.variation_id,
           vh.accession,
-          format('hgvs.%%s', IFNULL(REGEXP_EXTRACT(e.nucleotide, r':([gmcnrp])\\.'), LEFT(vh.type, 1))) as syntax,
+          format('hgvs.%s', IFNULL(REGEXP_EXTRACT(e.nucleotide, r':([gmcnrp])\\.'), LEFT(vh.type, 1))) as syntax,
           e.nucleotide as value,
           vh.type as hgvs_type,
           vh.issue,
           2 as precedence,
           vh.assembly_version
-        FROM `%s.variation_hgvs` vh
+        FROM `{S}.variation_hgvs` vh
         CROSS JOIN unnest(expr) as e
-        JOIN `%s.gks_vrs` vrs
+        JOIN `{S}.gks_vrs` vrs
         ON
           vh.variation_id = vrs.in.variation_id
           AND
@@ -166,15 +166,15 @@ BEGIN
           vl.loc_hgvs_issue as issue,
           4 as precedence,
           vl.assembly_version
-        FROM `%s.variation_loc` vl
-        JOIN `%s.gks_vrs` vrs
+        FROM `{S}.variation_loc` vl
+        JOIN `{S}.gks_vrs` vrs
         ON
           vl.variation_id = vrs.in.variation_id
           AND
           vl.accession = vrs.in.accession
           AND
           vl.assembly_version is not distinct from vrs.in.assembly_version
-        LEFT JOIN `%s.variation_hgvs` vh
+        LEFT JOIN `{S}.variation_hgvs` vh
         ON
           vh.variation_id = vl.variation_id
           AND
@@ -204,15 +204,15 @@ BEGIN
         exp_item.variation_id,
         exp_item.accession,
         exp_item.assembly_version
-    """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name);
+    """, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_ctxvar_expr;
 
     -------------------------------------------------------------------------
     -- Step 3: Contextual variants with VRS type mapping
     -------------------------------------------------------------------------
-    SET query_ctxvar = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_ctxvar`
+    SET query_ctxvar = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_ctxvar`
       AS
       WITH ctxvar AS (
         SELECT
@@ -227,7 +227,7 @@ BEGIN
           END as catvar_type,
           vrs.in.name,
           vrs.out.*
-        FROM `%s.gks_vrs` vrs
+        FROM `{S}.gks_vrs` vrs
       )
       SELECT DISTINCT
         ctxvar.variation_id,
@@ -245,21 +245,21 @@ BEGIN
         ctxvar.copyChange,
         exp.expressions
       FROM ctxvar
-      LEFT JOIN `%s.gks_ctxvar_expression` exp
+      LEFT JOIN `{S}.gks_ctxvar_expression` exp
       ON
         exp.variation_id = ctxvar.variation_id
-      LEFT JOIN `%s.gks_seqloc` sl
+      LEFT JOIN `{S}.gks_seqloc` sl
       ON
         sl.id = ctxvar.location.id
-    """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name);
+    """, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_ctxvar;
 
     -------------------------------------------------------------------------
     -- Step 4: Categorical variant extensions (HGVS list, gene lists, type metadata)
     -------------------------------------------------------------------------
-    SET query_catvar_ext = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_catvar_extension`
+    SET query_catvar_ext = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_catvar_extension`
       AS
       WITH so_lookup AS (
         SELECT
@@ -296,16 +296,16 @@ BEGIN
         SELECT
           vh.variation_id,
           vh.accession,
-          format('hgvs.%%s', IFNULL(REGEXP_EXTRACT(exp.nucleotide, r':([gmcnrp])\\.'), '?')) as nucleotide_syntax,
+          format('hgvs.%s', IFNULL(REGEXP_EXTRACT(exp.nucleotide, r':([gmcnrp])\\.'), '?')) as nucleotide_syntax,
           exp.nucleotide as nucleotide_value,
-          format('hgvs.%%s', IFNULL(REGEXP_EXTRACT(exp.protein, r':([gmcnrp])\\.'), '?')) as protein_syntax,
+          format('hgvs.%s', IFNULL(REGEXP_EXTRACT(exp.protein, r':([gmcnrp])\\.'), '?')) as protein_syntax,
           exp.protein as protein_value,
           SPLIT(vh.consq_id) as consq_ids,
           vh.hgvs_source,
           vh.mane_plus,
           vh.mane_select,
           vh.type
-        FROM `%s.variation_hgvs` vh
+        FROM `{S}.variation_hgvs` vh
         LEFT JOIN UNNEST(vh.expr) as exp
       ),
       hgvs_consq AS (
@@ -330,7 +330,7 @@ BEGIN
               hcsq.consq_code as code,
               'http://www.sequenceontology.org/' as system,
               hcsq.consq_label as name,
-              [format('https://identifiers.org/%%s',hcsq.consq_code)] as iris
+              [format('https://identifiers.org/%s',hcsq.consq_code)] as iris
             )
           ) as molecularConsequence
         FROM hgvs_items hgvs
@@ -388,19 +388,19 @@ BEGIN
               IF(
                 g.hgnc_id is null,
                 [
-                  FORMAT('https://identifiers.org/ncbigene:%%s',g.id),
-                  FORMAT('https://www.ncbi.nlm.nih.gov/gene/%%s',g.id)
+                  FORMAT('https://identifiers.org/ncbigene:%s',g.id),
+                  FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s',g.id)
                 ],
                 [
-                  FORMAT('https://identifiers.org/%%s',LOWER(g.hgnc_id)),
-                  FORMAT('https://identifiers.org/ncbigene:%%s',g.id),
-                  FORMAT('https://www.ncbi.nlm.nih.gov/gene/%%s',g.id)
+                  FORMAT('https://identifiers.org/%s',LOWER(g.hgnc_id)),
+                  FORMAT('https://identifiers.org/ncbigene:%s',g.id),
+                  FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s',g.id)
                 ]
               ) as iris
             )
           ) as genes
-        FROM `%s.gene_association` ga
-        JOIN `%s.gene` g
+        FROM `{S}.gene_association` ga
+        JOIN `{S}.gene` g
         ON
           g.id = ga.gene_id
         GROUP BY
@@ -415,7 +415,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `%s.gks_ctxvar` ctx
+        FROM `{S}.gks_ctxvar` ctx
         UNION ALL
         SELECT
           ctx.variation_id,
@@ -425,7 +425,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `%s.gks_ctxvar` ctx
+        FROM `{S}.gks_ctxvar` ctx
         UNION ALL
         SELECT
           ctx.variation_id,
@@ -435,7 +435,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `%s.gks_ctxvar` ctx
+        FROM `{S}.gks_ctxvar` ctx
         WHERE
           ctx.vrs_issue is not null
         UNION ALL
@@ -447,7 +447,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `%s.variation_identity` vi
+        FROM `{S}.variation_identity` vi
         WHERE
           vi.variation_type is not null
         UNION ALL
@@ -459,7 +459,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `%s.variation_identity` vi
+        FROM `{S}.variation_identity` vi
         WHERE
           vi.subclass_type is not null
         UNION ALL
@@ -471,7 +471,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `%s.variation_identity` vi
+        FROM `{S}.variation_identity` vi
         WHERE
           vi.cytogenetic is not null
         UNION ALL
@@ -483,7 +483,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `%s.gks_vrs` vrs
+        FROM `{S}.gks_vrs` vrs
         WHERE
           vrs.out.errors is not null
         UNION ALL
@@ -522,15 +522,15 @@ BEGIN
         FROM cat_ext_item x
         GROUP BY
           x.variation_id
-    """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name);
+    """, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_catvar_ext;
 
     -------------------------------------------------------------------------
     -- Step 5: Cross-reference mappings for categorical variants
     -------------------------------------------------------------------------
-    SET query_catvar_map = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_catvar_mappings`
+    SET query_catvar_map = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_catvar_mappings`
       AS
       WITH catvar_mappings AS (
 
@@ -539,10 +539,10 @@ BEGIN
           STRUCT(
             'ClinVar' as system,
             vrs.in.variation_id as code,
-            [FORMAT('https://identifiers.org/clinvar:%%s',vrs.in.variation_id)] as iris
+            [FORMAT('https://identifiers.org/clinvar:%s',vrs.in.variation_id)] as iris
           ) as coding,
           'exactMatch' as relation
-        FROM `%s.gks_vrs` vrs
+        FROM `{S}.gks_vrs` vrs
         WHERE vrs.in.variation_id is not null
 
         UNION ALL
@@ -553,14 +553,14 @@ BEGIN
             x.db as system,
             x.id as code,
             CASE LOWER(x.db)
-            WHEN 'clinvar' THEN [FORMAT('https://identifiers.org/clinvar:%%s',x.id)]
-            WHEN 'clingen' THEN [FORMAT('https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid=%%s', x.id)]
-            WHEN 'dbvar' THEN [FORMAT('https://www.ncbi.nlm.nih.gov/dbvar/variants/%%s', x.id)]
-            WHEN 'dbsnp' THEN [FORMAT('https://identifiers.org/dbsnp:rs%%s', x.id)]
-            WHEN 'pharmgkb clinical annotation' THEN [FORMAT('https://www.pharmgkb.org/clinicalAnnotation/%%s', x.id)]
-            WHEN 'omim' THEN [FORMAT('http://www.omim.org/entry/%%s', REPLACE(x.id, '.','#'))]
-            WHEN 'uniprotkb' THEN [FORMAT('https://www.uniprot.org/uniprot/%%s', x.id)]
-            WHEN 'genetic testing registry (gtr)' THEN [FORMAT('https://www.ncbi.nlm.nih.gov/gtr/tests/%%s', x.id)]
+            WHEN 'clinvar' THEN [FORMAT('https://identifiers.org/clinvar:%s',x.id)]
+            WHEN 'clingen' THEN [FORMAT('https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid=%s', x.id)]
+            WHEN 'dbvar' THEN [FORMAT('https://www.ncbi.nlm.nih.gov/dbvar/variants/%s', x.id)]
+            WHEN 'dbsnp' THEN [FORMAT('https://identifiers.org/dbsnp:rs%s', x.id)]
+            WHEN 'pharmgkb clinical annotation' THEN [FORMAT('https://www.pharmgkb.org/clinicalAnnotation/%s', x.id)]
+            WHEN 'omim' THEN [FORMAT('http://www.omim.org/entry/%s', REPLACE(x.id, '.','#'))]
+            WHEN 'uniprotkb' THEN [FORMAT('https://www.uniprot.org/uniprot/%s', x.id)]
+            WHEN 'genetic testing registry (gtr)' THEN [FORMAT('https://www.ncbi.nlm.nih.gov/gtr/tests/%s', x.id)]
             ELSE [] -- others exist which haven't been reconciled (e.g. VARSOME, BIC, Leiden, LOVD, etc..)
             END as iris
           ) as coding,
@@ -569,28 +569,28 @@ BEGIN
           WHEN 'clingen' THEN 'closeMatch'
           ELSE 'relatedMatch'
           END as relation
-        FROM `%s.variation_xref` x
+        FROM `{S}.variation_xref` x
       )
       SELECT
         m.variation_id,
         ARRAY_AGG(STRUCT(m.coding, m.relation)) as mappings
       FROM catvar_mappings m
       GROUP BY m.variation_id
-    """, rec.schema_name, rec.schema_name, rec.schema_name);
+    """, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_catvar_map;
 
     -------------------------------------------------------------------------
     -- Step 6: Assemble preliminary categorical variant records with constraints
     -------------------------------------------------------------------------
-    SET query_catvar_pre = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_catvar_pre`
+    SET query_catvar_pre = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_catvar_pre`
       AS
       WITH catvar AS (
         SELECT
           ctx.variation_id,
           ctx.catvar_type,
-          FORMAT('clinvar:%%s', ctx.variation_id) as id,
+          FORMAT('clinvar:%s', ctx.variation_id) as id,
           'CategoricalVariant' as type,
           ctx.catvar_name as name,
           STRUCT(
@@ -604,7 +604,7 @@ BEGIN
             ctx.copyChange,
             ctx.expressions
           ) as member
-        FROM `%s.gks_ctxvar` ctx
+        FROM `{S}.gks_ctxvar` ctx
         -- safe guard for upstream vrs process that returns bad records
         WHERE ctx.variation_id is not null
       ),
@@ -726,21 +726,21 @@ BEGIN
       LEFT JOIN cv_constraints cvc
       ON
         cvc.variation_id = cv.variation_id
-      LEFT JOIN `%s.gks_catvar_extension` cvext
+      LEFT JOIN `{S}.gks_catvar_extension` cvext
       ON
         cvext.variation_id = cv.variation_id
-      LEFT JOIN `%s.gks_catvar_mappings` vm
+      LEFT JOIN `{S}.gks_catvar_mappings` vm
       ON
         vm.variation_id = cv.variation_id
-    """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name);
+    """, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_catvar_pre;
 
     -------------------------------------------------------------------------
     -- Step 7: Final JSON-normalized categorical variant output
     -------------------------------------------------------------------------
-    SET query_catvar = FORMAT("""
-      CREATE OR REPLACE TABLE `%s.gks_catvar`
+    SET query_catvar = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_catvar`
       AS
       WITH x as (
         SELECT
@@ -749,13 +749,13 @@ BEGIN
             TO_JSON(cv),
             remove_empty => TRUE
           ) AS json_data
-        FROM `%s.gks_catvar_pre` cv
+        FROM `{S}.gks_catvar_pre` cv
       )
       SELECT
         x.id,
         `clinvar_ingest.normalizeAndKeyById`(x.json_data, true) as rec
       FROM x
-    """, rec.schema_name, rec.schema_name);
+    """, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_catvar;
 

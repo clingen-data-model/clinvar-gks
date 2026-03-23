@@ -1,10 +1,14 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_scv_condition_sets_proc`(on_date DATE)
 BEGIN
+
+  DECLARE query_condition_sets STRING;
+
   FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
   DO
 
-    EXECUTE IMMEDIATE FORMAT("""  
-      CREATE OR REPLACE TABLE `%s.gks_scv_condition_sets`
+    -- Step 1: Create SCV condition sets table
+    SET query_condition_sets = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_scv_condition_sets`
       AS
       WITH scv_trait AS (
         -- build up each individually submitted condition records based on the normalized gks_trait.
@@ -21,19 +25,19 @@ BEGIN
                 ARRAY_CONCAT(
                   t.extensions,
                   IF(
-                    ARRAY_LENGTH(scm.submitted_xrefs) > 0, 
+                    ARRAY_LENGTH(scm.submitted_xrefs) > 0,
                     [STRUCT(
-                      'submittedScvXrefs' as name, 
+                      'submittedScvXrefs' as name,
                       CAST(null as string) as value_string,
                       scm.submitted_xrefs as value_array_codings
-                    )], 
+                    )],
                     []
                   )
-                ),       
+                ),
                 IF(
-                  scm.cat_tm_match IS NOT NULL, 
+                  scm.cat_tm_match IS NOT NULL,
                   [STRUCT(
-                    'submittedScvTraitAssignment' as name, 
+                    'submittedScvTraitAssignment' as name,
                     scm.cat_tm_match as value_string,
                     [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
                   )],
@@ -41,9 +45,9 @@ BEGIN
                 )
               ),
               IF(
-                scm.assign_type IS NOT NULL, 
+                scm.assign_type IS NOT NULL,
                 [STRUCT(
-                  'clinvarScvTraitAssignment' as name, 
+                  'clinvarScvTraitAssignment' as name,
                   scm.assign_type as value_string,
                   [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
                 )],
@@ -51,17 +55,17 @@ BEGIN
               )
             ),
             IF(
-              scm.mapping_type IS NOT NULL, 
+              scm.mapping_type IS NOT NULL,
               [STRUCT(
-                'clinvarScvTraitMappingType:ref(val)' as name, 
-                FORMAT('%%s:%%s(%%s)', scm.mapping_type, scm.mapping_ref, scm.mapping_value) as value_string,
+                'clinvarScvTraitMappingType:ref(val)' as name,
+                FORMAT('%s:%s(%s)', scm.mapping_type, scm.mapping_ref, scm.mapping_value) as value_string,
                 [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
               )],
               []
             )
           ) as extensions
-        FROM `%s.gks_scv_condition_mapping` scm
-        LEFT JOIN `%s.gks_trait` t
+        FROM `{S}.gks_scv_condition_mapping` scm
+        LEFT JOIN `{S}.gks_trait` t
         ON
           t.id = scm.trait_id
       ),
@@ -80,11 +84,11 @@ BEGIN
             )
           ) as conditions,
           IF(
-            ANY_VALUE(scm.trait_relationship_type) IN ('Finding member','co-occurring condition'), 
-            'AND', 
+            ANY_VALUE(scm.trait_relationship_type) IN ('Finding member','co-occurring condition'),
+            'AND',
             'OR'
           ) as membershipOperator
-        FROM `%s.gks_scv_condition_mapping` scm
+        FROM `{S}.gks_scv_condition_mapping` scm
         JOIN scv_trait st
         ON
           st.id = scm.cat_id
@@ -92,7 +96,7 @@ BEGIN
           scm.scv_id
         HAVING COUNT(*) > 1
       )
-      SELECT 
+      SELECT
         gsts.scv_id,
         IF(
           st.id IS NOT NULL,
@@ -102,7 +106,7 @@ BEGIN
             st.conceptType,
             st.primaryCoding,
             st.mappings,
-            -- trait sets with single traits will be displayed as 'Condition' domain entities 
+            -- trait sets with single traits will be displayed as 'Condition' domain entities
             -- but should share the wrapping trait set information from clinvar.
             ARRAY_CONCAT(
               ARRAY_CONCAT(
@@ -110,11 +114,11 @@ BEGIN
                 gsts.extensions
               ),
               IF(
-                gsts.cats_type IS NOT NULL 
-                AND 
-                gsts.cats_type IS DISTINCT FROM gsts.trait_set_type, 
+                gsts.cats_type IS NOT NULL
+                AND
+                gsts.cats_type IS DISTINCT FROM gsts.trait_set_type,
                 [STRUCT(
-                  'submittedScvTraitSetType' as name, 
+                  'submittedScvTraitSetType' as name,
                   gsts.cats_type as value_string,
                   [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
                 )],
@@ -122,7 +126,7 @@ BEGIN
               )
             ) as extensions
           ),
-          NULL   
+          NULL
         ) as condition,
         IF(
           sts.scv_id IS NOT NULL,
@@ -133,11 +137,11 @@ BEGIN
             ARRAY_CONCAT(
               gsts.extensions,
               IF(
-                gsts.cats_type IS NOT NULL 
-                AND 
-                gsts.cats_type IS DISTINCT FROM gsts.trait_set_type, 
+                gsts.cats_type IS NOT NULL
+                AND
+                gsts.cats_type IS DISTINCT FROM gsts.trait_set_type,
                 [STRUCT(
-                  'submittedScvTraitSetType' as name, 
+                  'submittedScvTraitSetType' as name,
                   gsts.cats_type as value_string,
                   [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
                 )],
@@ -146,21 +150,16 @@ BEGIN
             ) as extensions
           ),
           NULL
-        ) as conditionSet   
-      FROM `%s.gks_scv_trait_sets` gsts
+        ) as conditionSet
+      FROM `{S}.gks_scv_trait_sets` gsts
       LEFT JOIN scv_trait_set sts
       ON
         sts.scv_id = gsts.scv_id
       LEFT JOIN scv_trait st
       ON
         sts.scv_id is NULL AND st.scv_id = gsts.scv_id
-    """, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name, 
-    rec.schema_name
-    );
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE query_condition_sets;
 
   END FOR;
 
