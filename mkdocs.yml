@@ -57,12 +57,15 @@ nav:
       - variation_members: pipeline/variation-identity/variation-members.md
       - variation_identity: pipeline/variation-identity/variation-identity.md
     - VRS Processing: pipeline/vrs-processing.md
-    - Cat-VRS: pipeline/cat-vrs.md
+    - Cat-VRS:
+      - pipeline/cat-vrs/index.md
+      - Categorical Variant Extensions: pipeline/cat-vrs/catvar-extensions.md
     - Conditions & Traits:
       - pipeline/conditions-and-traits/index.md
       - Condition Mapping: pipeline/conditions-and-traits/condition-mapping.md
       - Traits: pipeline/conditions-and-traits/traits.md
       - Condition Sets: pipeline/conditions-and-traits/condition-sets.md
+      - Condition Extensions: pipeline/conditions-and-traits/condition-extensions.md
     - SCV Statements:
       - pipeline/scv-statements/index.md
       - SCV Records: pipeline/scv-statements/scv-records.md
