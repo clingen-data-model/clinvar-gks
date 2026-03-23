@@ -1,4 +1,4 @@
-# gks_scv_condition_sets_proc Procedure
+# Condition Sets (gks_scv_condition_sets_proc)
 
 ## Overview
 
@@ -47,7 +47,7 @@ The final query joins `gks_scv_trait_sets` with the condition and condition set 
 - A `ConditionSet` struct with the conditions array, membershipOperator, and extensions
 - Extensions include the trait set extensions and the optional `submittedScvTraitSetType`
 
-**Output:** `gks_scv_condition_sets` — one row per SCV with either a `condition` or `conditionSet` field populated.
+**Output:** `gks_scv_condition_sets` — one row per SCV with either a `condition` or `conditionSet` field populated. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ---
 
@@ -59,9 +59,9 @@ See [Condition Extensions](condition-extensions.md) for the complete extension r
 
 ## Output Tables
 
-| Table | Description |
-| --- | --- |
-| `gks_scv_condition_sets` | Per-SCV condition or condition set with structured codings, mappings, and extensions |
+| Table | Description | Role |
+| --- | --- | --- |
+| `gks_scv_condition_sets` | Per-SCV condition or condition set with structured codings, mappings, and extensions | <span class="role-badge badge-pipeline">Pipeline table</span> |
 
 ---
 

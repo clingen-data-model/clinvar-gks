@@ -40,6 +40,7 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.details
   - attr_list
+  - md_in_html
   - toc:
       permalink: true
 
@@ -50,12 +51,10 @@ nav:
     - pipeline/index.md
     - Variation Identity:
       - pipeline/variation-identity/index.md
-      - variation_loc: pipeline/variation-identity/variation-loc.md
-      - variation_hgvs: pipeline/variation-identity/variation-hgvs.md
-      - variation_spdi: pipeline/variation-identity/variation-spdi.md
-      - variation_xref: pipeline/variation-identity/variation-xref.md
-      - variation_members: pipeline/variation-identity/variation-members.md
-      - variation_identity: pipeline/variation-identity/variation-identity.md
+      - Sequence Locations: pipeline/variation-identity/variation-loc.md
+      - HGVS Expressions: pipeline/variation-identity/variation-hgvs.md
+      - Cross-References: pipeline/variation-identity/variation-xref.md
+      - Variation Identity Table: pipeline/variation-identity/variation-identity.md
     - VRS Processing: pipeline/vrs-processing.md
     - Cat-VRS:
       - pipeline/cat-vrs/index.md
@@ -75,6 +74,10 @@ nav:
       - pipeline/vcv-statements/index.md
       - VCV Procedures: pipeline/vcv-statements/vcv-proc.md
     - Export: pipeline/export.md
+  - Output Reference:
+    - output-reference/index.md
+    - Categorical Variants: output-reference/cat-vrs.md
+    - SCV Statements: output-reference/scv-statements.md
   - Profiles:
     - profiles/index.md
     - Statement Types: profiles/statement-types.md
