@@ -51,12 +51,8 @@ DATASET_VERSION='v2_4_3' # The version suffix of the dataset
 # BigQuery Stored Procedures to run in order.
 BIGQUERY_PROCEDURES=(
   'clinvar_ingest.gks_catvar_proc'
-  'clinvar_ingest.gks_scv_condition_mapping_proc'
-  'clinvar_ingest.gks_trait_proc'
-  'clinvar_ingest.gks_scv_condition_sets_proc'
-  'clinvar_ingest.gks_scv_proc'
-  'clinvar_ingest.gks_scv_proposition_proc'
-  'clinvar_ingest.gks_statement_scv_proc'
+  'clinvar_ingest.gks_scv_condition_proc'
+  'clinvar_ingest.gks_scv_statement_proc'
 )
 
 # BigQuery Export Configuration
@@ -145,11 +141,18 @@ execute_bq_procedures() {
 
   for proc in "${BIGQUERY_PROCEDURES[@]}"; do
     echo "  - Calling procedure: $proc..."
-    if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false "CALL \`${proc}\`('$release_date')" > /dev/null; then
+    if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false "CALL \`${proc}\`('$release_date', FALSE)" > /dev/null; then
       echo "❌ Procedure call FAILED for: $proc"; return 1;
     fi
     echo "    ✅ Success."
   done
+
+  echo "  - Calling procedure: clinvar_ingest.gks_json_proc..."
+  if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false "CALL \`clinvar_ingest.gks_json_proc\`('$release_date', 'all', FALSE)" > /dev/null; then
+    echo "❌ Procedure call FAILED for: clinvar_ingest.gks_json_proc"; return 1;
+  fi
+  echo "    ✅ Success."
+
   echo "✅ All BigQuery procedures completed successfully."; return 0;
 }
 

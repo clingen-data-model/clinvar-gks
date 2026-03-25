@@ -2,15 +2,15 @@
 
 ## Overview
 
-ClinVar submissions (SCVs) reference conditions — diseases, phenotypes, or findings — that a submitter associates with a variant. Internally, ClinVar uses the term "trait" for these condition records, and each submission's traits may differ from the normalized traits that ClinVar assigns at the RCV (aggregate review) level. The three procedures documented in this section bridge that gap: they map each SCV's submitted traits to ClinVar's normalized trait records, build GKS-compliant condition structures with standardized codings and cross-references, and assemble multi-condition submissions into condition sets.
+ClinVar submissions (SCVs) reference conditions — diseases, phenotypes, or findings — that a submitter associates with a variant. Internally, ClinVar uses the term "trait" for these condition records, and each submission's traits may differ from the normalized traits that ClinVar assigns at the RCV (aggregate review) level. The `gks_scv_condition_proc` procedure bridges that gap: it maps each SCV's submitted traits to ClinVar's normalized trait records, builds GKS-compliant condition structures with standardized codings and cross-references, and assembles multi-condition submissions into condition sets.
 
-The conditions and traits pipeline spans three stored procedures that execute in sequence:
+The procedure executes three logical phases in sequence:
 
-1. **Condition Mapping** (`gks_scv_condition_mapping_proc`) — resolves each SCV's submitted traits to ClinVar's normalized RCV traits through a multi-stage matching strategy
-2. **Traits** (`gks_trait_proc`) — builds GKS-compliant trait records with standardized codings (MedGen, OMIM, MONDO, HPO, Orphanet, MeSH, EFO)
-3. **Condition Sets** (`gks_scv_condition_sets_proc`) — assembles individual conditions into `Condition` or `ConditionSet` domain entities for each SCV
+1. **Traits** (Step 1) — builds GKS-compliant trait records with standardized codings (MedGen, OMIM, MONDO, HPO, Orphanet, MeSH, EFO)
+2. **Condition Mapping** (Steps 2–14) — resolves each SCV's submitted traits to ClinVar's normalized RCV traits through a multi-stage matching strategy
+3. **Condition Sets** (Step 15) — assembles individual conditions into `Condition` or `ConditionSet` domain entities for each SCV
 
-These steps do not produce a standalone output file. Instead, the resulting `gks_scv_condition_sets` table feeds directly into the SCV record assembly (Step 7), where conditions become part of the full SCV statement output. The same condition structures will also be critical for RCV accession output when that is added to the pipeline.
+These steps do not produce a standalone output file. Instead, the resulting `gks_scv_condition_sets` table feeds directly into the SCV record assembly, where conditions become part of the full SCV statement output. The same condition structures will also be critical for RCV accession output when that is added to the pipeline.
 
 ---
 
@@ -31,38 +31,21 @@ ClinVar's XML schema uses "trait" where the GKS output uses "condition." The map
 
 ```text
 ┌──────────────────────────────────────────────────────────────────┐
-│  Step 4: Condition Mapping                                       │
-│  gks_scv_condition_mapping_proc                                  │
+│  gks_scv_condition_proc                                          │
 │                                                                  │
-│  Inputs:  trait_mapping, rcv_mapping, clinical_assertion_trait,   │
+│  Step 1:     Traits (temp_gks_trait)                             │
+│  Steps 2–14: Condition Mapping (gks_scv_condition_mapping)       │
+│  Step 15:    Condition Sets (gks_scv_condition_sets)             │
+│                                                                  │
+│  Inputs:  trait, trait_mapping, rcv_mapping,                     │
+│           clinical_assertion_trait,                               │
 │           clinical_assertion_trait_set                            │
 │                                                                  │
-│  Outputs: gks_scv_trait_sets, gks_normalized_traits,             │
-│           gks_all_scv_traits, gks_all_mapped_scv_traits,         │
-│           gks_scv_condition_mapping                               │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │
-┌──────────────────────────▼───────────────────────────────────────┐
-│  Step 5: Traits                                                  │
-│  gks_trait_proc                                                  │
-│                                                                  │
-│  Inputs:  trait                                                  │
-│                                                                  │
-│  Outputs: gks_trait                                              │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │
-┌──────────────────────────▼───────────────────────────────────────┐
-│  Step 6: Condition Sets                                          │
-│  gks_scv_condition_sets_proc                                     │
-│                                                                  │
-│  Inputs:  gks_scv_condition_mapping, gks_trait,                  │
-│           gks_scv_trait_sets                                     │
-│                                                                  │
-│  Outputs: gks_scv_condition_sets                                 │
+│  Outputs: gks_scv_condition_mapping, gks_scv_condition_sets      │
 └──────────────────────────┬───────────────────────────────────────┘
                            │
                            ▼
-                  SCV Record Assembly (Step 7)
+                  SCV Record Assembly
 ```
 
 ---

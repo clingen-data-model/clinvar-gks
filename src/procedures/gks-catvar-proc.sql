@@ -1,22 +1,38 @@
-CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_catvar_proc`(on_date DATE)
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_catvar_proc`(on_date DATE, debug BOOL)
 BEGIN
-  DECLARE query_seqref STRING;
-  DECLARE query_seqloc STRING;
-  DECLARE query_ctxvar_expr STRING;
-  DECLARE query_ctxvar STRING;
-  DECLARE query_catvar_ext STRING;
-  DECLARE query_catvar_map STRING;
-  DECLARE query_catvar_pre STRING;
-  DECLARE query_catvar STRING;
+  DECLARE temp_seqref_query STRING;
+  DECLARE temp_seqloc_query STRING;
+  DECLARE temp_ctxvar_expr_query STRING;
+  DECLARE temp_ctxvar_query STRING;
+  DECLARE temp_catvar_ext_query STRING;
+  DECLARE temp_catvar_map_query STRING;
+  DECLARE gks_catvar_pre_query STRING;
+
+  DECLARE temp_create STRING;
+  DECLARE temp_prefix STRING;
+
+  IF debug THEN
+    SET temp_create = 'CREATE OR REPLACE TABLE';
+  ELSE
+    SET temp_create = 'CREATE TEMP TABLE';
+  END IF;
 
   FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
   DO
 
+    -- Clean up any persistent temp tables from a prior debug run
+    IF NOT debug THEN
+      CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
+        'temp_seqref', 'temp_seqloc', 'temp_ctxvar_expression',
+        'temp_ctxvar', 'temp_catvar_extension', 'temp_catvar_mappings'
+      ]);
+    END IF;
+
     -------------------------------------------------------------------------
     -- Step 1a: Enriched sequence references (small lookup table)
     -------------------------------------------------------------------------
-    SET query_seqref = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_seqref`
+    SET temp_seqref_query = REPLACE("""
+      {CT} {P}.temp_seqref
       AS
       SELECT DISTINCT
         vrs.in.accession as name,
@@ -39,14 +55,16 @@ BEGIN
       WHERE
         vrs.out.location.sequenceReference.refgetAccession is not null
     """, '{S}', rec.schema_name);
+    SET temp_seqref_query = REPLACE(temp_seqref_query, '{CT}', temp_create);
+    SET temp_seqref_query = REPLACE(temp_seqref_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_seqref;
+    EXECUTE IMMEDIATE temp_seqref_query;
 
     -------------------------------------------------------------------------
     -- Step 1b: Sequence locations with sequence reference join
     -------------------------------------------------------------------------
-    SET query_seqloc = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_seqloc`
+    SET temp_seqloc_query = REPLACE("""
+      {CT} {P}.temp_seqloc
       AS
       WITH x AS (
         SELECT DISTINCT
@@ -79,18 +97,20 @@ BEGIN
         ) as end_range,
         (SELECT AS STRUCT sq.*) AS sequenceReference
       FROM x
-      JOIN `{S}.gks_seqref` sq
+      JOIN {P}.temp_seqref sq
       ON
         sq.refgetAccession = x.sequenceReference.refgetAccession
     """, '{S}', rec.schema_name);
+    SET temp_seqloc_query = REPLACE(temp_seqloc_query, '{CT}', temp_create);
+    SET temp_seqloc_query = REPLACE(temp_seqloc_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_seqloc;
+    EXECUTE IMMEDIATE temp_seqloc_query;
 
     -------------------------------------------------------------------------
     -- Step 2: Contextual variant expressions with precedence-ranked naming
     -------------------------------------------------------------------------
-    SET query_ctxvar_expr = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_ctxvar_expression`
+    SET temp_ctxvar_expr_query = REPLACE("""
+      {CT} {P}.temp_ctxvar_expression
       AS
       WITH exp_item AS (
         SELECT
@@ -205,14 +225,16 @@ BEGIN
         exp_item.accession,
         exp_item.assembly_version
     """, '{S}', rec.schema_name);
+    SET temp_ctxvar_expr_query = REPLACE(temp_ctxvar_expr_query, '{CT}', temp_create);
+    SET temp_ctxvar_expr_query = REPLACE(temp_ctxvar_expr_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_ctxvar_expr;
+    EXECUTE IMMEDIATE temp_ctxvar_expr_query;
 
     -------------------------------------------------------------------------
     -- Step 3: Contextual variants with VRS type mapping
     -------------------------------------------------------------------------
-    SET query_ctxvar = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_ctxvar`
+    SET temp_ctxvar_query = REPLACE("""
+      {CT} {P}.temp_ctxvar
       AS
       WITH ctxvar AS (
         SELECT
@@ -245,21 +267,23 @@ BEGIN
         ctxvar.copyChange,
         exp.expressions
       FROM ctxvar
-      LEFT JOIN `{S}.gks_ctxvar_expression` exp
+      LEFT JOIN {P}.temp_ctxvar_expression exp
       ON
         exp.variation_id = ctxvar.variation_id
-      LEFT JOIN `{S}.gks_seqloc` sl
+      LEFT JOIN {P}.temp_seqloc sl
       ON
         sl.id = ctxvar.location.id
     """, '{S}', rec.schema_name);
+    SET temp_ctxvar_query = REPLACE(temp_ctxvar_query, '{CT}', temp_create);
+    SET temp_ctxvar_query = REPLACE(temp_ctxvar_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_ctxvar;
+    EXECUTE IMMEDIATE temp_ctxvar_query;
 
     -------------------------------------------------------------------------
     -- Step 4: Categorical variant extensions (HGVS list, gene lists, type metadata)
     -------------------------------------------------------------------------
-    SET query_catvar_ext = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_catvar_extension`
+    SET temp_catvar_ext_query = REPLACE("""
+      {CT} {P}.temp_catvar_extension
       AS
       WITH so_lookup AS (
         SELECT
@@ -415,7 +439,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `{S}.gks_ctxvar` ctx
+        FROM {P}.temp_ctxvar ctx
         UNION ALL
         SELECT
           ctx.variation_id,
@@ -425,7 +449,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `{S}.gks_ctxvar` ctx
+        FROM {P}.temp_ctxvar ctx
         UNION ALL
         SELECT
           ctx.variation_id,
@@ -435,7 +459,7 @@ BEGIN
           null as value_coding,
           null as value_hgvs_array,
           null as value_gene_array
-        FROM `{S}.gks_ctxvar` ctx
+        FROM {P}.temp_ctxvar ctx
         WHERE
           ctx.vrs_issue is not null
         UNION ALL
@@ -523,14 +547,16 @@ BEGIN
         GROUP BY
           x.variation_id
     """, '{S}', rec.schema_name);
+    SET temp_catvar_ext_query = REPLACE(temp_catvar_ext_query, '{CT}', temp_create);
+    SET temp_catvar_ext_query = REPLACE(temp_catvar_ext_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_catvar_ext;
+    EXECUTE IMMEDIATE temp_catvar_ext_query;
 
     -------------------------------------------------------------------------
     -- Step 5: Cross-reference mappings for categorical variants
     -------------------------------------------------------------------------
-    SET query_catvar_map = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_catvar_mappings`
+    SET temp_catvar_map_query = REPLACE("""
+      {CT} {P}.temp_catvar_mappings
       AS
       WITH catvar_mappings AS (
 
@@ -577,13 +603,15 @@ BEGIN
       FROM catvar_mappings m
       GROUP BY m.variation_id
     """, '{S}', rec.schema_name);
+    SET temp_catvar_map_query = REPLACE(temp_catvar_map_query, '{CT}', temp_create);
+    SET temp_catvar_map_query = REPLACE(temp_catvar_map_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_catvar_map;
+    EXECUTE IMMEDIATE temp_catvar_map_query;
 
     -------------------------------------------------------------------------
     -- Step 6: Assemble preliminary categorical variant records with constraints
     -------------------------------------------------------------------------
-    SET query_catvar_pre = REPLACE("""
+    SET gks_catvar_pre_query = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_catvar_pre`
       AS
       WITH catvar AS (
@@ -604,7 +632,7 @@ BEGIN
             ctx.copyChange,
             ctx.expressions
           ) as member
-        FROM `{S}.gks_ctxvar` ctx
+        FROM {P}.temp_ctxvar ctx
         -- safe guard for upstream vrs process that returns bad records
         WHERE ctx.variation_id is not null
       ),
@@ -726,38 +754,25 @@ BEGIN
       LEFT JOIN cv_constraints cvc
       ON
         cvc.variation_id = cv.variation_id
-      LEFT JOIN `{S}.gks_catvar_extension` cvext
+      LEFT JOIN {P}.temp_catvar_extension cvext
       ON
         cvext.variation_id = cv.variation_id
-      LEFT JOIN `{S}.gks_catvar_mappings` vm
+      LEFT JOIN {P}.temp_catvar_mappings vm
       ON
         vm.variation_id = cv.variation_id
     """, '{S}', rec.schema_name);
+    SET gks_catvar_pre_query = REPLACE(gks_catvar_pre_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_catvar_pre;
+    EXECUTE IMMEDIATE gks_catvar_pre_query;
 
-    -------------------------------------------------------------------------
-    -- Step 7: Final JSON-normalized categorical variant output
-    -------------------------------------------------------------------------
-    SET query_catvar = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_catvar`
-      AS
-      WITH x as (
-        SELECT
-          cv.id,
-          JSON_STRIP_NULLS(
-            TO_JSON(cv),
-            remove_empty => TRUE
-          ) AS json_data
-        FROM `{S}.gks_catvar_pre` cv
-      )
-      SELECT
-        x.id,
-        `clinvar_ingest.normalizeAndKeyById`(x.json_data, true) as rec
-      FROM x
-    """, '{S}', rec.schema_name);
-
-    EXECUTE IMMEDIATE query_catvar;
+    IF NOT debug THEN
+      DROP TABLE _SESSION.temp_seqref;
+      DROP TABLE _SESSION.temp_seqloc;
+      DROP TABLE _SESSION.temp_ctxvar_expression;
+      DROP TABLE _SESSION.temp_ctxvar;
+      DROP TABLE _SESSION.temp_catvar_extension;
+      DROP TABLE _SESSION.temp_catvar_mappings;
+    END IF;
 
   END FOR;
 

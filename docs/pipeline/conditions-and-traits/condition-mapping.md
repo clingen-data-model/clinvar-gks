@@ -1,10 +1,8 @@
-# Condition Mapping (gks_scv_condition_mapping_proc)
+# Condition Mapping (Steps 2–14 of gks_scv_condition_proc)
 
 ## Overview
 
-The `clinvar_ingest.gks_scv_condition_mapping_proc` stored procedure maps each SCV's submitted traits (clinical assertion traits) to ClinVar's normalized RCV traits. This is the most complex step in the conditions pipeline because submitters provide their own trait names and cross-references, which frequently differ from the curated trait records that ClinVar assigns at the RCV level. The procedure uses a progressive, multi-stage matching strategy — starting with high-confidence trait mapping records and falling back through increasingly broad matching techniques — to resolve as many SCV traits as possible to a normalized `trait_id`.
-
-The procedure accepts a single parameter — `on_date DATE` — which identifies the ClinVar release schema to process.
+Steps 2–14 of the `clinvar_ingest.gks_scv_condition_proc` procedure map each SCV's submitted traits (clinical assertion traits) to ClinVar's normalized RCV traits. This is the most complex phase in the conditions pipeline because submitters provide their own trait names and cross-references, which frequently differ from the curated trait records that ClinVar assigns at the RCV level. The procedure uses a progressive, multi-stage matching strategy — starting with high-confidence trait mapping records and falling back through increasingly broad matching techniques — to resolve as many SCV traits as possible to a normalized `trait_id`.
 
 ---
 
@@ -18,14 +16,14 @@ Steps produce three types of output:
 - <span class="role-badge badge-artifact">JSON artifact</span> — exported as a JSONL file for public distribution
 - <span class="role-badge badge-internal">Internal</span> — exists only within the procedure and is consumed by later steps
 
-### Step 1: Prepare Trait Mappings and RCV Mapping Traits
+### Steps 2–3: Prepare Trait Mappings and RCV Mapping Traits
 
 Two temp tables are created to stage the input data:
 
 - **`temp_normalized_trait_mappings`** — loads ClinVar's `trait_mapping` table, normalizing `mapping_type`, `mapping_ref`, and `mapping_value` to lowercase for consistent matching
 - **`temp_rcv_mapping_traits`** — parses RCV mapping records, unnesting the `scv_accessions` array so each SCV is paired with its RCV's parsed trait set content
 
-### Step 2: Build `gks_scv_trait_sets`
+### Step 4: Build `temp_gks_scv_trait_sets`
 
 Joins the parsed RCV mapping traits with the `clinical_assertion_trait_set` table to produce a per-SCV record containing:
 
@@ -35,11 +33,11 @@ Joins the parsed RCV mapping traits with the `clinical_assertion_trait_set` tabl
 - The SCV's submitted trait set type (`cats_type`) vs. the RCV trait set type
 - Extensions for `clinvarTraitSetType` and `clinvarTraitSetId`
 
-**Output:** `gks_scv_trait_sets` — one row per SCV with its associated RCV trait set. <span class="role-badge badge-pipeline">Pipeline table</span>
+**Output:** `temp_gks_scv_trait_sets` — one row per SCV with its associated RCV trait set. <span class="role-badge badge-internal">Internal</span>
 
-### Step 3: Build `temp_all_rcv_traits`
+### Step 5: Build `temp_all_rcv_traits`
 
-Unnests the `rcv_traits` array from `gks_scv_trait_sets` to extract individual RCV trait records. For each trait, extracts:
+Unnests the `rcv_traits` array from `temp_gks_scv_trait_sets` to extract individual RCV trait records. For each trait, extracts:
 
 - Preferred and alternate names
 - Cross-reference IDs by database: MedGen, MONDO, OMIM, HPO, Orphanet, MeSH
@@ -51,13 +49,13 @@ Unnests the `rcv_traits` array from `gks_scv_trait_sets` to extract individual R
 
 **Output:** `temp_all_rcv_traits` — one row per trait set + trait ID + MedGen ID combination. <span class="role-badge badge-internal">Internal</span>
 
-### Step 4: Build `gks_normalized_traits`
+### Step 6: Build `temp_normalized_traits`
 
 Deduplicates the RCV trait records to create a master lookup of unique trait IDs. When a trait ID appears in multiple trait sets with different amounts of cross-reference data, the record with the most lookup values (alternate names, OMIM IDs, HPO IDs, etc.) is retained. Ties in cross-reference coverage are broken alphabetically by `trait_type`, which prioritizes "Disease" over "Finding."
 
-**Output:** `gks_normalized_traits` — one row per unique trait ID with the richest cross-reference data available. <span class="role-badge badge-pipeline">Pipeline table</span>
+**Output:** `temp_normalized_traits` — one row per unique trait ID with the richest cross-reference data available. <span class="role-badge badge-internal">Internal</span>
 
-### Step 5: Build `temp_scv_trait_name_xrefs`
+### Step 7: Build `temp_scv_trait_name_xrefs`
 
 Extracts name and cross-reference data from the SCV-side `clinical_assertion_trait` records. Only processes traits with 2-part IDs (direct SCV traits, not observation traits). For each SCV trait, extracts:
 
@@ -67,7 +65,7 @@ Extracts name and cross-reference data from the SCV-side `clinical_assertion_tra
 
 **Output:** `temp_scv_trait_name_xrefs` — one row per SCV trait with parsed cross-references. <span class="role-badge badge-internal">Internal</span>
 
-### Step 6: Build `gks_all_scv_traits`
+### Step 8: Build `temp_all_scv_traits`
 
 Joins SCV trait records with their trait mappings and trait set metadata. This is the central table that all subsequent matching stages operate against. Includes:
 
@@ -78,9 +76,9 @@ Joins SCV trait records with their trait mappings and trait set metadata. This i
 
 Only direct SCV traits (2-part IDs) are included — observation traits are filtered out.
 
-**Output:** `gks_all_scv_traits` — one row per SCV + SCV trait combination. <span class="role-badge badge-pipeline">Pipeline table</span>
+**Output:** `temp_all_scv_traits` — one row per SCV + SCV trait combination. <span class="role-badge badge-internal">Internal</span>
 
-### Step 7: Build `gks_all_mapped_scv_traits`
+### Step 9: Build `temp_all_mapped_scv_traits`
 
 Matches SCV traits to their ClinVar trait mapping records by comparing submitted trait data against the normalized trait mappings. Matching is attempted via multiple UNION branches:
 
@@ -95,18 +93,18 @@ Matches SCV traits to their ClinVar trait mapping records by comparing submitted
 
 Each match records a `tm_match` string describing how the match was made (e.g., `scv trait: preferred name 'breast cancer'`).
 
-**Output:** `gks_all_mapped_scv_traits` — one row per SCV trait with its matched trait mapping record. <span class="role-badge badge-pipeline">Pipeline table</span>
+**Output:** `temp_all_mapped_scv_traits` — one row per SCV trait with its matched trait mapping record. <span class="role-badge badge-internal">Internal</span>
 
-### Step 8: RCV Trait Assignment — Stage 1
+### Step 10: RCV Trait Assignment — Stage 1
 
-Assigns RCV traits to SCV traits using the trait mapping results from Step 7. Two sub-strategies execute in sequence:
+Assigns RCV traits to SCV traits using the trait mapping results from Step 9. Two sub-strategies execute in sequence:
 
 1. **Trait mapping MedGen ID** — joins the mapped SCV trait's `medgen_id` (from the trait mapping) to the RCV trait's `medgen_id` within the same trait set
 2. **Trait mapping ref/type/values** — for SCV traits unmatched by MedGen ID, compares the trait mapping's `mapping_type`/`mapping_ref`/`mapping_value` against RCV traits by preferred name, alternate names, and xref IDs (MedGen, OMIM, MONDO, HPO, MeSH, Orphanet)
 
 **Output:** `temp_rcv_trait_assignment_stage1` — cumulative assignments from this stage. <span class="role-badge badge-internal">Internal</span>
 
-### Step 9: RCV Trait Assignment — Stage 2
+### Step 11: RCV Trait Assignment — Stage 2
 
 Handles singleton SCV traits — cases where:
 
@@ -117,7 +115,7 @@ These are paired by elimination.
 
 **Output:** `temp_rcv_trait_assignment_stage2` — cumulative assignments from Stages 1–2. <span class="role-badge badge-internal">Internal</span>
 
-### Step 10: RCV Trait Assignment — Stage 3
+### Step 12: RCV Trait Assignment — Stage 3
 
 Directly matches remaining unassigned SCV traits to RCV traits by comparing the SCV's submitted xref IDs against the normalized trait's xref IDs:
 
@@ -130,9 +128,9 @@ Directly matches remaining unassigned SCV traits to RCV traits by comparing the 
 
 **Output:** `temp_rcv_trait_assignment_stage3` — cumulative assignments from Stages 1–3. <span class="role-badge badge-internal">Internal</span>
 
-### Step 11: RCV Trait Assignment — Stage 4 (Rogue Traits)
+### Step 13: RCV Trait Assignment — Stage 4 (Rogue Traits)
 
-Handles "rogue" SCV traits — those that do not appear in the expected RCV trait set. These are matched against the full `gks_normalized_traits` table (not constrained to the SCV's trait set) in a cascading sequence:
+Handles "rogue" SCV traits — those that do not appear in the expected RCV trait set. These are matched against the full `temp_normalized_traits` table (not constrained to the SCV's trait set) using a prioritized single-pass lookup:
 
 1. OMIM ID match
 2. HPO ID match
@@ -147,7 +145,7 @@ Each sub-step only processes traits that were not matched by a previous sub-step
 
 **Output:** `temp_rcv_trait_assignment_stage4` — cumulative assignments from all stages. <span class="role-badge badge-internal">Internal</span>
 
-### Step 12: Build `gks_scv_condition_mapping`
+### Step 14: Build `gks_scv_condition_mapping`
 
 Assembles the final condition mapping table by joining Stage 4 assignments with the SCV trait data and trait mapping records. Includes:
 
@@ -168,10 +166,10 @@ SCV traits that could not be resolved by any stage are included with a null `tra
 
 | Table | Description | Role |
 | --- | --- | --- |
-| `gks_scv_trait_sets` | Per-SCV record with RCV trait set, trait counts, and trait set extensions | <span class="role-badge badge-pipeline">Pipeline table</span> |
-| `gks_normalized_traits` | Deduplicated master list of unique RCV trait IDs with richest cross-reference data | <span class="role-badge badge-pipeline">Pipeline table</span> |
-| `gks_all_scv_traits` | All direct SCV traits with parsed xrefs, counts, and trait set metadata | <span class="role-badge badge-pipeline">Pipeline table</span> |
-| `gks_all_mapped_scv_traits` | SCV traits matched to ClinVar trait mapping records | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `temp_gks_scv_trait_sets` | Per-SCV record with RCV trait set, trait counts, and trait set extensions | <span class="role-badge badge-internal">Internal</span> |
+| `temp_normalized_traits` | Deduplicated master list of unique RCV trait IDs with richest cross-reference data | <span class="role-badge badge-internal">Internal</span> |
+| `temp_all_scv_traits` | All direct SCV traits with parsed xrefs, counts, and trait set metadata | <span class="role-badge badge-internal">Internal</span> |
+| `temp_all_mapped_scv_traits` | SCV traits matched to ClinVar trait mapping records | <span class="role-badge badge-internal">Internal</span> |
 | `gks_scv_condition_mapping` | Final per-SCV-trait mapping to a normalized trait ID with assignment provenance | <span class="role-badge badge-pipeline">Pipeline table</span> |
 
 ---
@@ -211,7 +209,7 @@ The `assign_type` field in `gks_scv_condition_mapping` records how each SCV trai
 
 ## Dependencies
 
-- **UDFs**: `clinvar_ingest.schema_on`, `clinvar_ingest.parseTraitSet`, `clinvar_ingest.parseXRefItems`, `clinvar_ingest.normalizeHpId`
+- **UDFs**: `clinvar_ingest.parseTraitSet`, `clinvar_ingest.parseXRefItems`, `clinvar_ingest.normalizeHpId`
 - **Source Tables**: `trait_mapping`, `rcv_mapping`, `clinical_assertion_trait_set`, `clinical_assertion_trait`
-- **Upstream Procedures**: None — operates on base ClinVar ingest tables
-- **Downstream Consumers**: `gks_scv_condition_sets_proc`, `gks_scv_proc`
+- **Upstream Steps**: Step 1 (Traits) — `temp_gks_trait` is available but not used by these steps
+- **Downstream Steps**: Step 15 (Condition Sets); `gks_scv_condition_mapping` also consumed by `gks_vcv_proc`

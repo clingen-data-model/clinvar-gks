@@ -1,24 +1,39 @@
 
-CREATE OR REPLACE PROCEDURE `clinvar_ingest.variation_identity`(on_date DATE)
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.variation_identity`(on_date DATE, debug BOOL)
 BEGIN
-  DECLARE query_temp_variation STRING;
+  DECLARE temp_variation_query STRING;
   DECLARE query_variation_loc STRING;
   DECLARE query_variation_hgvs STRING;
   DECLARE query_refine_vrs_class STRING;
   DECLARE query_variation_xref STRING;
-  DECLARE query_variation_spdi STRING;
-  DECLARE query_variation_members STRING;
+  DECLARE temp_variation_spdi_query STRING;
+  DECLARE temp_variation_members_query STRING;
   DECLARE query_variation_identity STRING;
+  DECLARE temp_create STRING;
+  DECLARE temp_prefix STRING;
+
+  IF debug THEN
+    SET temp_create = 'CREATE OR REPLACE TABLE';
+  ELSE
+    SET temp_create = 'CREATE TEMP TABLE';
+  END IF;
 
   FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
   DO
+
+    -- Clean up any persistent temp tables from a prior debug run
+    IF NOT debug THEN
+      CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
+        'temp_variation', 'temp_variation_spdi', 'temp_variation_members'
+      ]);
+    END IF;
 
     -------------------------------------------------------------------------
     -- Step 1: Extract variation records with copy number data and initial
     --         VRS class assignment
     -------------------------------------------------------------------------
-    SET query_temp_variation = REPLACE("""
-      CREATE OR REPLACE TEMP TABLE temp_variation
+    SET temp_variation_query = REPLACE("""
+      {CT} {P}.temp_variation
       AS
       WITH cn AS (
         SELECT
@@ -122,8 +137,10 @@ BEGIN
         var.content
       FROM var
     """, '{S}', rec.schema_name);
+    SET temp_variation_query = REPLACE(temp_variation_query, '{CT}', temp_create);
+    SET temp_variation_query = REPLACE(temp_variation_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_temp_variation;
+    EXECUTE IMMEDIATE temp_variation_query;
 
     -------------------------------------------------------------------------
     -- Step 2: Parse sequence locations with derived gnomAD and HGVS
@@ -145,7 +162,7 @@ BEGIN
             `clinvar_ingest.deriveHGVS`(v.variation_type,seq),
             null
           ) as loc_hgvs_source
-        FROM temp_variation v
+        FROM {P}.temp_variation v
         CROSS JOIN UNNEST(
           `clinvar_ingest.parseSequenceLocations`(JSON_EXTRACT(v.content, r'$.Location'))
         ) as seq
@@ -195,6 +212,8 @@ BEGIN
         -- without this it will produce a cartesian product of rows for all mito variants.
         li.assembly = l.assembly
     """, '{S}', rec.schema_name);
+    SET query_variation_loc = REPLACE(query_variation_loc, '{CT}', temp_create);
+    SET query_variation_loc = REPLACE(query_variation_loc, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE query_variation_loc;
 
@@ -230,7 +249,7 @@ BEGIN
           REGEXP_REPLACE(hgvs.nucleotide_expression.expression, r"del[0-9]+", "del") as hgvs_source,
           -- capture the build_number for sorting
           CAST(REGEXP_EXTRACT(hgvs.assembly, r'\\d+') as INT64) as assembly_version
-        FROM temp_variation tv
+        FROM {P}.temp_variation tv
         JOIN `{S}.variation` v
         ON
           v.id = tv.variation_id
@@ -355,6 +374,8 @@ BEGIN
         h_top.start_pos,
         h_top.end_pos
     """, '{S}', rec.schema_name);
+    SET query_variation_hgvs = REPLACE(query_variation_hgvs, '{CT}', temp_create);
+    SET query_variation_hgvs = REPLACE(query_variation_hgvs, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE query_variation_hgvs;
 
@@ -363,7 +384,7 @@ BEGIN
     --         and range endpoint information
     -------------------------------------------------------------------------
     SET query_refine_vrs_class = REPLACE("""
-      UPDATE temp_variation tv
+      UPDATE {P}.temp_variation tv
         SET tv.vrs_class =
           CASE
             WHEN (tv.variation_type IN ('Deletion', 'Duplication'))
@@ -408,6 +429,8 @@ BEGIN
         var.variation_id = tv.variation_id and
         tv.vrs_class is null
     """, '{S}', rec.schema_name);
+    SET query_refine_vrs_class = REPLACE(query_refine_vrs_class, '{CT}', temp_create);
+    SET query_refine_vrs_class = REPLACE(query_refine_vrs_class, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE query_refine_vrs_class;
 
@@ -419,35 +442,39 @@ BEGIN
       SELECT
         v.variation_id,
         xref.*
-      FROM temp_variation v
+      FROM {P}.temp_variation v
       CROSS JOIN UNNEST(`clinvar_ingest.parseXRefs`(JSON_EXTRACT(v.content, r'$.XRefList'))) as xref
     """, '{S}', rec.schema_name);
+    SET query_variation_xref = REPLACE(query_variation_xref, '{CT}', temp_create);
+    SET query_variation_xref = REPLACE(query_variation_xref, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE query_variation_xref;
 
     -------------------------------------------------------------------------
     -- Step 6: Extract canonical SPDI expressions (internal temp table)
     -------------------------------------------------------------------------
-    SET query_variation_spdi = """
-      CREATE OR REPLACE TEMP TABLE variation_spdi AS
+    SET temp_variation_spdi_query = """
+      {CT} {P}.temp_variation_spdi AS
       SELECT
         v.variation_id,
         'GRCh38' as assembly,
         38 as assembly_version,
         SPLIT(v.canonical_spdi, ':')[OFFSET(0)] as accession,
         v.canonical_spdi as spdi_source
-      FROM temp_variation v
+      FROM {P}.temp_variation v
       WHERE v.canonical_spdi is not null
     """;
+    SET temp_variation_spdi_query = REPLACE(temp_variation_spdi_query, '{CT}', temp_create);
+    SET temp_variation_spdi_query = REPLACE(temp_variation_spdi_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_variation_spdi;
+    EXECUTE IMMEDIATE temp_variation_spdi_query;
 
     -------------------------------------------------------------------------
     -- Step 7: Consolidate all expression sources with 9-level precedence
     --         hierarchy (internal temp table)
     -------------------------------------------------------------------------
-    SET query_variation_members = REPLACE("""
-      CREATE OR REPLACE TEMP TABLE variation_members AS
+    SET temp_variation_members_query = REPLACE("""
+      {CT} {P}.temp_variation_members AS
       WITH var_source as (
         select DISTINCT
           variation_id,
@@ -458,7 +485,7 @@ BEGIN
           CAST(null AS STRING) as issue,
           -- #1 spdi (genomic top level b38 alleles)
           1 as precedence
-        from  variation_spdi vs
+        from  {P}.temp_variation_spdi vs
         UNION ALL
         select DISTINCT
           vh.variation_id,
@@ -621,7 +648,7 @@ BEGIN
           row_number() over (partition by variation_id, accession order by precedence) as rn
         from var_source
       ) vs
-      join temp_variation tv
+      join {P}.temp_variation tv
       on
         tv.variation_id = vs.variation_id
       left join `{S}.variation_hgvs` vh
@@ -642,8 +669,10 @@ BEGIN
       -- 27,578,636 (2024-03-31)
       -- 27,576,509 (2024-04-07)
     """, '{S}', rec.schema_name);
+    SET temp_variation_members_query = REPLACE(temp_variation_members_query, '{CT}', temp_create);
+    SET temp_variation_members_query = REPLACE(temp_variation_members_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE query_variation_members;
+    EXECUTE IMMEDIATE temp_variation_members_query;
 
     -------------------------------------------------------------------------
     -- Step 8: Select single best expression per variation and build
@@ -659,7 +688,7 @@ BEGIN
             select
               vm.*,
               row_number() over (partition by vm.variation_id order by vm.precedence, vm.assembly_version desc, vm.issue, vm.accession) as rn
-            from variation_members vm
+            from {P}.temp_variation_members vm
             )
           where rn = 1
           -- 2,814,021 (2024-03-31)
@@ -704,15 +733,23 @@ BEGIN
           v.variant_length,
           m.mappings,
 
-        FROM temp_variation tv
+        FROM {P}.temp_variation tv
         LEFT JOIN v
         ON
           v.variation_id = tv.variation_id
         LEFT JOIN m
         ON tv.variation_id = m.variation_id
     """, '{S}', rec.schema_name);
+    SET query_variation_identity = REPLACE(query_variation_identity, '{CT}', temp_create);
+    SET query_variation_identity = REPLACE(query_variation_identity, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE query_variation_identity;
+
+    IF NOT debug THEN
+      DROP TABLE _SESSION.temp_variation;
+      DROP TABLE _SESSION.temp_variation_spdi;
+      DROP TABLE _SESSION.temp_variation_members;
+    END IF;
 
   END FOR;
 END;

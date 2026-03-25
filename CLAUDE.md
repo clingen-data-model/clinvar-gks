@@ -40,13 +40,13 @@ The system follows a multi-step ETL process:
 ### BigQuery Procedure Execution
 ```sql
 -- Step 1: Extract variation identity
-CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE());
+CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE(), FALSE);
 
 -- Step 2: Generate Cat-VRS canonical alleles
-CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE());
+CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE(), FALSE);
 
 -- Step 3: Generate SCV statements
-CALL `clinvar_ingest.gks_statement_scv_proc`(CURRENT_DATE());
+CALL `clinvar_ingest.gks_scv_statement_proc`(CURRENT_DATE(), FALSE);
 ```
 
 ### Data Export Commands
