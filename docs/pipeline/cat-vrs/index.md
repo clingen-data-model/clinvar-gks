@@ -18,7 +18,7 @@ Steps produce three types of output:
 - <span class="role-badge badge-artifact">JSON artifact</span> — exported as a JSONL file for public distribution
 - <span class="role-badge badge-internal">Internal</span> — exists only within the procedure and is consumed by later steps
 
-### Step 1a: Build `gks_seqref`
+### Step 1a: Build `temp_seqref`
 
 Extracts enriched sequence reference records from VRS output. For each distinct accession with a resolved `refgetAccession`, derives:
 
@@ -28,13 +28,13 @@ Extracts enriched sequence reference records from VRS output. For each distinct 
 
 **Output:** Small lookup table joined by subsequent steps. <span class="role-badge badge-internal">Internal</span>
 
-### Step 1b: Build `gks_seqloc`
+### Step 1b: Build `temp_seqloc`
 
-Extracts distinct sequence locations from VRS output and joins each to its enriched sequence reference from `gks_seqref`. Transforms range endpoints into the Cat-VRS `start_range`/`end_range` array format for imprecise locations.
+Extracts distinct sequence locations from VRS output and joins each to its enriched sequence reference from `temp_seqref`. Transforms range endpoints into the Cat-VRS `start_range`/`end_range` array format for imprecise locations.
 
-**Output:** `gks_seqloc` — one row per unique VRS sequence location. <span class="role-badge badge-internal">Internal</span>
+**Output:** `temp_seqloc` — one row per unique VRS sequence location. <span class="role-badge badge-internal">Internal</span>
 
-### Step 2: Build `gks_ctxvar_expression`
+### Step 2: Build `temp_ctxvar_expression`
 
 Consolidates all variant expressions (SPDI, HGVS, gnomAD) for each variation+accession pair, ranked by a 4-level precedence hierarchy:
 
@@ -45,9 +45,9 @@ Consolidates all variant expressions (SPDI, HGVS, gnomAD) for each variation+acc
 
 Only includes expressions for variations that successfully resolved through VRS processing. Selects the best expression as the variant `name` using HGVS type (descending) and precedence ordering.
 
-**Output:** `gks_ctxvar_expression` — one row per variation+accession+assembly. <span class="role-badge badge-internal">Internal</span>
+**Output:** `temp_ctxvar_expression` — one row per variation+accession+assembly. <span class="role-badge badge-internal">Internal</span>
 
-### Step 3: Build `gks_ctxvar`
+### Step 3: Build `temp_ctxvar`
 
 Joins VRS output with expressions and sequence locations to build contextual variant records. Maps VRS output types to categorical variant types:
 
@@ -58,9 +58,9 @@ Joins VRS output with expressions and sequence locations to build contextual var
 | `CopyNumberCount` | `CategoricalCnvCount` |
 | Other | `Non-Constrained` |
 
-**Output:** `gks_ctxvar` — one row per distinct contextual variant. <span class="role-badge badge-internal">Internal</span>
+**Output:** `temp_ctxvar` — one row per distinct contextual variant. <span class="role-badge badge-internal">Internal</span>
 
-### Step 4: Build `gks_catvar_extension`
+### Step 4: Build `temp_catvar_extension`
 
 Assembles all extension metadata for each variation into a single extensions array. Includes:
 
@@ -72,16 +72,16 @@ Assembles all extension metadata for each variation into a single extensions arr
 
 See [Categorical Variant Extensions](catvar-extensions.md) for a reference of all extension types.
 
-**Output:** `gks_catvar_extension` — one row per variation with an `extensions` array. <span class="role-badge badge-internal">Internal</span>
+**Output:** `temp_catvar_extension` — one row per variation with an `extensions` array. <span class="role-badge badge-internal">Internal</span>
 
-### Step 5: Build `gks_catvar_mappings`
+### Step 5: Build `temp_catvar_mappings`
 
 Builds cross-reference mappings for each variation from two sources:
 
 - **ClinVar self-reference** — an `exactMatch` mapping to the ClinVar variation identifier
 - **External cross-references** — `relatedMatch` (or `closeMatch` for ClinGen) mappings from `variation_xref` with IRI resolution for known databases (dbSNP, OMIM, UniProtKB, GTR, etc.)
 
-**Output:** `gks_catvar_mappings` — one row per variation with a `mappings` array. <span class="role-badge badge-internal">Internal</span>
+**Output:** `temp_catvar_mappings` — one row per variation with a `mappings` array. <span class="role-badge badge-internal">Internal</span>
 
 ### Step 6: Build `gks_catvar_pre`
 
@@ -107,12 +107,12 @@ Converts the structured records from `gks_catvar_pre` into JSON format using `TO
 
 | Table | Description | Role |
 |---|---|---|
-| `gks_seqref` | Enriched sequence references with molecule type and assembly | <span class="role-badge badge-internal">Internal</span> |
-| `gks_seqloc` | Sequence locations with joined sequence references | <span class="role-badge badge-internal">Internal</span> |
-| `gks_ctxvar_expression` | Precedence-ranked variant expressions per variation+accession | <span class="role-badge badge-internal">Internal</span> |
-| `gks_ctxvar` | Contextual variants with VRS type mapping | <span class="role-badge badge-internal">Internal</span> |
-| `gks_catvar_extension` | Extension metadata arrays (HGVS list, genes, types) | <span class="role-badge badge-internal">Internal</span> |
-| `gks_catvar_mappings` | Cross-reference mappings to external databases | <span class="role-badge badge-internal">Internal</span> |
+| `temp_seqref` | Enriched sequence references with molecule type and assembly | <span class="role-badge badge-internal">Internal</span> |
+| `temp_seqloc` | Sequence locations with joined sequence references | <span class="role-badge badge-internal">Internal</span> |
+| `temp_ctxvar_expression` | Precedence-ranked variant expressions per variation+accession | <span class="role-badge badge-internal">Internal</span> |
+| `temp_ctxvar` | Contextual variants with VRS type mapping | <span class="role-badge badge-internal">Internal</span> |
+| `temp_catvar_extension` | Extension metadata arrays (HGVS list, genes, types) | <span class="role-badge badge-internal">Internal</span> |
+| `temp_catvar_mappings` | Cross-reference mappings to external databases | <span class="role-badge badge-internal">Internal</span> |
 | `gks_catvar_pre` | Assembled categorical variant records with constraints | <span class="role-badge badge-pipeline">Pipeline table</span> |
 | `gks_catvar` | Final JSON-normalized output | <span class="role-badge badge-artifact">JSON artifact</span> |
 
@@ -123,4 +123,4 @@ Converts the structured records from `gks_catvar_pre` into JSON format using `TO
 - **UDFs**: `clinvar_ingest.normalizeAndKeyById`, `clinvar_ingest.schema_on`
 - **Source Tables**: `gks_vrs`, `variation_loc`, `variation_hgvs`, `variation_identity`, `variation_xref`, `gene_association`, `gene`
 - **Upstream Procedures**: `variation_identity_proc`, VRS Python processing
-- **Downstream Consumers**: `gks_statement_scv_proc`, export pipeline
+- **Downstream Consumers**: `gks_scv_statement_proc`, export pipeline

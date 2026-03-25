@@ -26,43 +26,26 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 4. Condition Mapping         │  gks_scv_condition_mapping_proc
-│    Map traits & conditions   │  → condition mapping tables
-│    between SCVs and RCVs     │
+│ 4. Conditions & Traits       │  gks_scv_condition_proc
+│    Map traits, build         │  → condition mapping &
+│    conditions & condition    │    condition set tables
+│    sets                      │
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 5. Traits                    │  gks_trait_proc
-│    Generate normalized       │  → gks_trait table
-│    trait records              │
+│ 5. SCV Statements            │  gks_scv_statement_proc
+│    Build SCV records,        │  → gks_statement_scv_pre table
+│    propositions & statements │
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 6. Condition Sets            │  gks_scv_condition_sets_proc
-│    Build submitted           │  → condition set tables
-│    condition sets            │
+│ 6. JSON Output               │  gks_json_proc
+│    Convert pre-tables to     │  → gks_catvar, gks_statement_scv
+│    final JSON artifacts      │    _by_ref, _inline tables
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 7. SCV Records               │  gks_scv_proc
-│    Build SCV records with    │  → gks_scv table
-│    propositions              │
-└──────────────┬───────────────┘
-               │
-┌──────────────▼───────────────┐
-│ 8. SCV Propositions          │  gks_scv_proposition_proc
-│    Generate variant          │  → gks_scv_proposition table
-│    propositions              │
-└──────────────┬───────────────┘
-               │
-┌──────────────▼───────────────┐
-│ 9. SCV Statements            │  gks_statement_scv_proc
-│    Assemble final GKS SCV    │  → gks_statement_scv tables
-│    statements                │
-└──────────────┬───────────────┘
-               │
-┌──────────────▼───────────────┐
-│ 10. Export                   │  export-gks-files-to-gcs.sh
+│ 7. Export                    │  export-gks-files-to-gcs.sh
 │     Export to GCS &          │  → public bucket
 │     public bucket            │
 └──────────────────────────────┘
@@ -75,7 +58,7 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
 From the BigQuery console:
 
 ```sql
-CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE());
+CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE(), FALSE);
 ```
 
 ### Step 2: VRS Processing
@@ -87,13 +70,10 @@ Export, process externally with vrs-python, and load back. See [VRS Processing](
 From the BigQuery console:
 
 ```sql
-CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE());
-CALL `clinvar_ingest.gks_scv_condition_mapping_proc`(CURRENT_DATE());
-CALL `clinvar_ingest.gks_trait_proc`(CURRENT_DATE());
-CALL `clinvar_ingest.gks_scv_condition_sets_proc`(CURRENT_DATE());
-CALL `clinvar_ingest.gks_scv_proc`(CURRENT_DATE());
-CALL `clinvar_ingest.gks_scv_proposition_proc`(CURRENT_DATE());
-CALL `clinvar_ingest.gks_statement_scv_proc`(CURRENT_DATE());
+CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_scv_condition_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_scv_statement_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all', FALSE);
 ```
 
 ### Step 4: Export

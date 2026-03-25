@@ -10,13 +10,9 @@
 --    and it will import them into the BQ dataset as table 'gks_vrs'
 
 -- 3. run the following procedures below (change date arg if not the most recent release)
--- CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE());
--- CALL `clinvar_ingest.gks_scv_condition_mapping_proc`(CURRENT_DATE());
--- CALL `clinvar_ingest.gks_trait_proc`(CURRENT_DATE());
--- CALL `clinvar_ingest.gks_scv_condition_sets_proc`(CURRENT_DATE());
--- CALL `clinvar_ingest.gks_scv_proc`(CURRENT_DATE());
--- CALL `clinvar_ingest.gks_scv_proposition_proc`(CURRENT_DATE());
--- CALL `clinvar_ingest.gks_statement_scv_proc`(CURRENT_DATE());
+-- CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE(), FALSE);
+-- CALL `clinvar_ingest.gks_scv_condition_proc`(CURRENT_DATE(), FALSE);
+-- CALL `clinvar_ingest.gks_scv_statement_proc`(CURRENT_DATE(), FALSE);
 
 -- 4. export the gks files to gcs by runing gh:clinvar-gks/src/gks-procs/export-gks-files-to-gcs.sh
 --    by default add these files to the gs://clingen-public/clinvar-gks/* bucket
@@ -41,7 +37,7 @@ for the `clinvar_2025_03_23_v2_3_1` dataset in the `ClinGen Dev` GCP project
 From BQ Console (NOTE: this example assumes CURRENT_DATE() will resolve to the 2025-03-23 clinvar release)
 
 ```
-CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE());
+CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE(), FALSE);
 ```
 
 ## STEP 2
@@ -82,27 +78,16 @@ From the BQ console
 
 ```
 -- create the catvar entries and all the upstream supporting tables
-CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE());
+CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE(), FALSE);
 
--- create the condition mappings from the traits and rcv_mapping entries
-CALL `clinvar_ingest.gks_scv_condition_mapping_proc`(CURRENT_DATE());
+-- create the conditions, traits, condition mappings, and condition sets
+CALL `clinvar_ingest.gks_scv_condition_proc`(CURRENT_DATE(), FALSE);
 
--- create the gks_trait entries
-CALL `clinvar_ingest.gks_trait_proc`(CURRENT_DATE());
+-- create the scv records, propositions, and pre-JSON statement records
+CALL `clinvar_ingest.gks_scv_statement_proc`(CURRENT_DATE(), FALSE);
 
--- create the condition set  entries
-CALL `clinvar_ingest.gks_scv_condition_sets_proc`(CURRENT_DATE());
-
--- create the scv entries
-CALL `clinvar_ingest.gks_scv_proc`(CURRENT_DATE());
-
--- create the scv proposition entries
-CALL `clinvar_ingest.gks_scv_proposition_proc`(CURRENT_DATE());
-
--- complete the creation of all final GKS SCV Statements for the release
-CALL `clinvar_ingest.gks_statement_scv_proc`(CURRENT_DATE());
-
-
+-- generate final JSON output for all artifact types
+CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all', FALSE);
 
 ```
 
