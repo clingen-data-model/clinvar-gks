@@ -1,20 +1,18 @@
-# Condition Sets (gks_scv_condition_sets_proc)
+# Condition Sets (Step 15 of gks_scv_condition_proc)
 
 ## Overview
 
-The `clinvar_ingest.gks_scv_condition_sets_proc` stored procedure assembles individual conditions into structured domain entities for each SCV. SCVs with a single condition produce a `Condition` record; SCVs with multiple conditions produce a `ConditionSet` containing a `conditions` array and a `membershipOperator`. The resulting `gks_scv_condition_sets` table feeds directly into the SCV record assembly procedure (`gks_scv_proc`), where it becomes the condition component of the full SCV statement.
-
-The procedure accepts a single parameter — `on_date DATE` — which identifies the ClinVar release schema to process.
+Step 15 of the `clinvar_ingest.gks_scv_condition_proc` procedure assembles individual conditions into structured domain entities for each SCV. SCVs with a single condition produce a `Condition` record; SCVs with multiple conditions produce a `ConditionSet` containing a `conditions` array and a `membershipOperator`. The resulting `gks_scv_condition_sets` table feeds directly into the SCV statement assembly procedure (`gks_scv_statement_proc`), where it becomes the condition component of the full SCV statement.
 
 ---
 
 ## Workflow
 
-The procedure executes as a single query with two CTEs within a loop over the target schema(s) identified by the `on_date` parameter.
+This step executes as a single query with two CTEs.
 
-### Step 1: Build Individual Condition Records
+### Build Individual Condition Records
 
-The `scv_trait` CTE joins each SCV trait from `gks_scv_condition_mapping` with its normalized trait record from `gks_trait`. For each condition, the output includes:
+The `enriched_conditions` CTE joins each SCV trait from `gks_scv_condition_mapping` with its normalized trait record from `temp_gks_trait`, and uses a `COUNT(*) OVER` window function to classify single vs multi-condition SCVs in one pass. For each condition, the output includes:
 
 - **`id`** — the clinical assertion trait ID (`cat_id`)
 - **`name`** — the CA trait name, falling back to the submitted trait name if the CA name is null
@@ -23,18 +21,18 @@ The `scv_trait` CTE joins each SCV trait from `gks_scv_condition_mapping` with i
 - **`mappings`** — from the normalized `gks_trait` record (non-MedGen cross-references)
 - **`extensions`** — a concatenation of trait extensions plus condition-specific extensions (see [Condition Extensions](condition-extensions.md) for full field documentation)
 
-### Step 2: Build Condition Sets for Multi-Condition SCVs
+### Build Condition Sets for Multi-Condition SCVs
 
-The `scv_trait_set` CTE groups conditions by SCV ID for SCVs that have more than one condition. The grouping produces:
+The `multi_sets` CTE filters to only multi-condition SCVs (where `trait_count > 1`) and aggregates. The grouping produces:
 
 - **`conditions`** — an array of condition structs (id, name, conceptType, primaryCoding, mappings, extensions)
 - **`membershipOperator`** — determines how multiple conditions relate to each other:
   - `AND` — when the trait relationship type is `Finding member` or `co-occurring condition`
   - `OR` — for all other relationship types
 
-### Step 3: Assemble Final Output
+### Assemble Final Output
 
-The final query joins `gks_scv_trait_sets` with the condition and condition set CTEs to produce one row per SCV with two mutually exclusive fields:
+The final query joins `temp_gks_scv_trait_sets` with the condition and condition set CTEs to produce one row per SCV with two mutually exclusive fields:
 
 **Single-condition SCVs** populate the `condition` field:
 
@@ -67,7 +65,6 @@ See [Condition Extensions](condition-extensions.md) for the complete extension r
 
 ## Dependencies
 
-- **UDFs**: `clinvar_ingest.schema_on`
-- **Source Tables**: `gks_scv_condition_mapping`, `gks_trait`, `gks_scv_trait_sets`
-- **Upstream Procedures**: `gks_scv_condition_mapping_proc`, `gks_trait_proc`
-- **Downstream Consumers**: `gks_scv_proc`
+- **Source Tables**: `gks_scv_condition_mapping` (persistent), `temp_gks_trait` (internal), `temp_gks_scv_trait_sets` (internal)
+- **Upstream Steps**: Step 1 (Traits), Steps 2–14 (Condition Mapping)
+- **Downstream Consumers**: `gks_scv_statement_proc`

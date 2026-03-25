@@ -1,10 +1,8 @@
-# Traits (gks_trait_proc)
+# Traits (Step 1 of gks_scv_condition_proc)
 
 ## Overview
 
-The `clinvar_ingest.gks_trait_proc` stored procedure builds GKS-compliant trait records from ClinVar's normalized `trait` table. Each output record includes a primary coding (MedGen when available), cross-reference mappings to external ontologies (OMIM, MONDO, HPO, Orphanet, MeSH, EFO), and ClinVar-specific extensions. The resulting `gks_trait` table serves as the lookup for the [Condition Sets](condition-sets.md) procedure, which joins it with condition mapping results to build the final condition structures.
-
-The procedure accepts a single parameter — `on_date DATE` — which identifies the ClinVar release schema to process.
+Step 1 of the `clinvar_ingest.gks_scv_condition_proc` procedure builds GKS-compliant trait records from ClinVar's normalized `trait` table. Each output record includes a primary coding (MedGen when available), cross-reference mappings to external ontologies (OMIM, MONDO, HPO, Orphanet, MeSH, EFO), and ClinVar-specific extensions. The resulting `temp_gks_trait` table serves as the lookup for the [Condition Sets](condition-sets.md) step (Step 15), which joins it with condition mapping results to build the final condition structures.
 
 ---
 
@@ -33,7 +31,7 @@ Cross-references are filtered to include only:
 - Records with no `ref_field` (inline xrefs only)
 - Primary type xrefs (or xrefs with no type specified)
 
-### Step 3: Aggregate into `gks_trait`
+### Step 3: Aggregate into `temp_gks_trait`
 
 The final query joins traits with their cross-references and aggregates into one row per trait:
 
@@ -44,7 +42,7 @@ The final query joins traits with their cross-references and aggregates into one
   - `clinvarTraitType` — the trait type (e.g., Disease, Finding, PhenotypeInstruction)
   - `aliases` — comma-separated alternate names (included only when synonyms exist)
 
-**Output:** `gks_trait` — one row per trait with structured codings, mappings, and extensions. <span class="role-badge badge-pipeline">Pipeline table</span>
+**Output:** `temp_gks_trait` — one row per trait with structured codings, mappings, and extensions. <span class="role-badge badge-internal">Internal</span>
 
 ---
 
@@ -70,13 +68,13 @@ MONDO IDs are normalized by extracting the numeric portion — `MONDO:0000001` b
 
 | Table | Description | Role |
 | --- | --- | --- |
-| `gks_trait` | GKS-compliant trait records with primary coding, cross-reference mappings, and extensions | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `temp_gks_trait` | GKS-compliant trait records with primary coding, cross-reference mappings, and extensions | <span class="role-badge badge-internal">Internal</span> |
 
 ---
 
 ## Dependencies
 
-- **UDFs**: `clinvar_ingest.schema_on`, `clinvar_ingest.parseXRefItems`
+- **UDFs**: `clinvar_ingest.parseXRefItems`
 - **Source Tables**: `trait`
-- **Upstream Procedures**: None — operates on base ClinVar ingest tables
-- **Downstream Consumers**: `gks_scv_condition_sets_proc`
+- **Upstream Steps**: None — operates on base ClinVar ingest tables
+- **Downstream Steps**: Step 15 (Condition Sets)
