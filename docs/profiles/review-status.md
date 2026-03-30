@@ -34,3 +34,23 @@ The rank order is a quantification of the review status levels used to appropria
 | 0 | no assertion criteria provided | 0 |
 | -1 | no classification provided | 0 |
 | -3 | flagged submission | 0 |
+
+## Aggregate Review Status
+
+When individual submissions are aggregated into VCV-level statements, the resulting aggregate review status reflects both the submission level and the aggregation outcome. The aggregate review status appears as a `clinvarReviewStatus` extension on each VCV statement.
+
+| Submission Level | Condition | Aggregate Review Status |
+| --- | --- | --- |
+| PGEP (mixed) | Both PG and EP contribute | `practice guideline and expert panel mix` |
+| PGEP (PG only) | Only PG SCVs contribute | `practice guideline` |
+| PGEP (EP only) | Only EP SCVs contribute | `reviewed by expert panel` |
+| CP | Single submitter | `criteria provided, single submitter` |
+| CP | Multiple submitters, concordant | `criteria provided, multiple submitters, no conflicts` |
+| CP | Multiple submitters, conflicting | `criteria provided, conflicting classifications` |
+| NOCP | Any | `no assertion criteria provided` |
+| NOCL | Any | `no classification provided` |
+| FLAG | Any | `flagged submission` |
+
+CP is the only submission level where the aggregate review status changes based on the aggregation result. All other levels produce a fixed review status regardless of the number of contributing submissions.
+
+See [VCV Aggregation Rules](../pipeline/vcv-statements/vcv-aggregation-rules.md) for full details on how submission levels are aggregated.
