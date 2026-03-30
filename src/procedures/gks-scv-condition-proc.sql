@@ -56,9 +56,6 @@ BEGIN
         trait_xrefs AS (
           select
             t.id,
-            t.name,
-            t.type,
-            t.synonyms,
             STRUCT(
               IF(xref.db='MedGen', t.name, null) as name,
               xref.id as code,
@@ -77,16 +74,47 @@ BEGIN
                 FROM `clinvar_ingest.gks_xref_iri_templates` iri
                 WHERE iri.db = xref.db
                   AND iri.type = IFNULL(xref.type, 'primary')
-              ) as iris
+              ) as iris,
+              ARRAY_CONCAT(
+                IF(
+                  xref.type IS NOT NULL,
+                  [STRUCT('mappingType' as name, xref.type as value)],
+                  []
+                ),
+                IF(
+                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.status IGNORE NULLS))>0,
+                  [STRUCT(
+                    'mappingStatuses' as name,
+                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.status IGNORE NULLS), ', ') as value
+                  )],
+                  []
+                ),
+                IF(
+                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.url IGNORE NULLS))>0,
+                  [STRUCT(
+                    'mappingUrls' as name,
+                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.url IGNORE NULLS), ', ') as value
+                  )],
+                  []
+                ),
+                IF(
+                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.ref_field IGNORE NULLS))>0,
+                  [STRUCT(
+                    'mappingRefFields' as name,
+                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.ref_field IGNORE NULLS), ', ') as value
+                  )],
+                  []
+                )
+              ) as extensions
             ) as mapping
           from traits t
           CROSS JOIN UNNEST(t.xrefs) as xref
-          WHERE
-            xref.ref_field is null
-            and
-            xref.db <> 'Gene'
-            and
-            (xref.type is null or xref.type = 'primary')
+          GROUP BY
+            t.id,
+            t.name,
+            xref.type,
+            xref.id,
+            xref.db
         )
         SELECT
           t.id,
