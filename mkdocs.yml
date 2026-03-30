@@ -72,6 +72,7 @@ nav:
       - Final Statements: pipeline/scv-statements/final-statements.md
     - VCV Statements:
       - pipeline/vcv-statements/index.md
+      - Aggregation Rules: pipeline/vcv-statements/vcv-aggregation-rules.md
       - VCV Procedures: pipeline/vcv-statements/vcv-proc.md
     - Export: pipeline/export.md
   - Output Reference:
