@@ -124,7 +124,9 @@ BEGIN
             FORMAT('clinvar.submitter:%s',scv.submitter_id) as id,
             'Agent' as type,
             scv.submitter_name as name
-          ) as submitter
+          ) as submitter,
+          sl.code AS submission_level,
+          sl.label AS submission_level_label
 
         FROM `{S}.clinical_assertion` ca
         JOIN `{S}.scv_summary` scv
@@ -135,6 +137,9 @@ BEGIN
             cct.code = scv.classif_type
             AND
             cct.statement_type = scv.statement_type
+        LEFT JOIN `clinvar_ingest.submission_level` sl
+          ON
+            sl.rank = scv.rank
     """, '{S}', rec.schema_name);
     SET query_scv_records = REPLACE(query_scv_records, '{CT}', temp_create);
     SET query_scv_records = REPLACE(query_scv_records, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -448,7 +453,18 @@ BEGIN
     SET query_statement_scv_pre = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_statement_scv_pre`
       as
-      WITH scv_citation AS (
+      WITH scv_condition_name AS (
+        SELECT
+          scv_id,
+          CASE
+            WHEN condition.name IS NOT NULL THEN condition.name
+            WHEN ARRAY_LENGTH(conditionSet.conditions) >= 2
+              THEN FORMAT('%%d conditions', ARRAY_LENGTH(conditionSet.conditions))
+            ELSE 'unspecified condition'
+          END AS condition_name
+        FROM `{S}.gks_scv_condition_sets`
+      ),
+      scv_citation AS (
         SELECT
           scv.id,
           STRUCT(
@@ -547,7 +563,15 @@ BEGIN
             scv.classification_code IS NOT NULL,
             STRUCT(scv.classification_code as code, scv.classif_and_strength_code_system as system),
             null
-          ) as primaryCoding
+          ) as primaryCoding,
+          [STRUCT(
+            'description' AS name,
+            CONCAT(
+              'for ', COALESCE(scn.condition_name, 'unspecified condition'), '\\n',
+              'Classification is based on the ', COALESCE(scv.submission_level_label, 'unknown'), ' submission', '\\n',
+              COALESCE(FORMAT_DATE('%%b %%Y', scv.last_evaluated), '(-)'), ' by ', scv.submitter.name
+            ) AS value_string
+          )] AS extensions
         ) as classification,
          STRUCT(
           scv.strength_name as name,
@@ -600,6 +624,11 @@ BEGIN
             scv.local_key IS NULL,
             [],
             [STRUCT('submittedScvLocalKey' as name, scv.local_key as value_string)]
+          ),
+          IF(
+            scv.submission_level IS NULL,
+            [],
+            [STRUCT('submissionLevel' as name, scv.submission_level as value_string)]
           )
         ) as extensions,
         IF (
@@ -635,6 +664,9 @@ BEGIN
       LEFT JOIN scv_citations scit
       ON
         scit.id = scv.id
+      LEFT JOIN scv_condition_name scn
+      ON
+        scn.scv_id = scv.id
     """, '{S}', rec.schema_name);
     SET query_statement_scv_pre = REPLACE(query_statement_scv_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_statement_scv_pre;
