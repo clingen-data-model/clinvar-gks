@@ -1,19 +1,33 @@
-CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_vcv_proc`(on_date DATE)
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_vcv_proc`(on_date DATE, debug BOOL)
 BEGIN
   DECLARE query_base STRING;
   DECLARE query_layer1 STRING;
   DECLARE query_layer2 STRING;
   DECLARE query_layer3 STRING;
   DECLARE query_layer4 STRING;
+  DECLARE temp_create STRING;
+
+  IF debug THEN
+    SET temp_create = 'CREATE OR REPLACE TABLE';
+  ELSE
+    SET temp_create = 'CREATE TEMP TABLE';
+  END IF;
 
   FOR rec IN (SELECT s.schema_name FROM `clinvar_ingest.schema_on`(on_date) AS s)
   DO
+
+    -- Clean up any persistent temp tables from a prior debug run
+    IF NOT debug THEN
+      CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
+        'TEMP_vcv_base_data'
+      ]);
+    END IF;
 
     -------------------------------------------------------------------------
     -- LAYER 1: MATERIALIZE BASE DATA (Metadata Driven)
     -------------------------------------------------------------------------
     SET query_base = REPLACE("""
-      CREATE OR REPLACE TEMP TABLE base_data_tmp
+      {CT} `{P}.TEMP_vcv_base_data`
       CLUSTER BY variation_id, statement_group, submission_level AS
       SELECT
           ss.variation_id,
@@ -43,6 +57,8 @@ BEGIN
       JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON cpt.code = ss.original_proposition_type
       LEFT JOIN `clinvar_ingest.submission_level` sl ON sl.rank = ss.rank
     """, '{S}', rec.schema_name);
+    SET query_base = REPLACE(query_base, '{CT}', temp_create);
+    SET query_base = REPLACE(query_base, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_base;
 
     -------------------------------------------------------------------------
@@ -60,7 +76,7 @@ BEGIN
             MIN(classif_type_order) as tier_priority,
             MIN(prop_display_order) as prop_display_order,
             ARRAY_AGG(DISTINCT full_scv_id) as full_scv_ids
-          FROM base_data_tmp
+          FROM `{P}.TEMP_vcv_base_data`
           GROUP BY 1, 2, 3, 4, 5, 6
       ),
       label_counts AS (
@@ -69,7 +85,7 @@ BEGIN
                  classif_label, classif_type_order,
                  significance, -- Passed through
                  COUNT(full_scv_id) as scv_count
-          FROM base_data_tmp
+          FROM `{P}.TEMP_vcv_base_data`
           GROUP BY 1, 2, 3, 4, 5, 6, 7, 8 -- Added 8th group
       ),
       conflict_strings AS (
@@ -86,7 +102,7 @@ BEGIN
       somatic_conditions AS (
           SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level, b.classif_type as tier_grouping,
                  ARRAY_AGG(DISTINCT cm.trait_name IGNORE NULLS) as unique_traits
-          FROM base_data_tmp b
+          FROM `{P}.TEMP_vcv_base_data` b
           JOIN `{S}.gks_scv_condition_mapping` cm ON b.scv_id = cm.scv_id
           WHERE b.prop_type = 'sci'
           GROUP BY 1, 2, 3, 4, 5
@@ -131,6 +147,7 @@ BEGIN
         *
       FROM final_prep
     """, '{S}', rec.schema_name);
+    SET query_layer1 = REPLACE(query_layer1, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_layer1;
 
     -------------------------------------------------------------------------
@@ -165,7 +182,7 @@ BEGIN
       ),
       final_state_prep AS (
           SELECT *,
-            top_label || IF(ARRAY_LENGTH(secondary_traits) > 0, FORMAT('\n+lower levels of evidence for %d other tumor types', ARRAY_LENGTH(secondary_traits)), '') as agg_label
+            top_label || IF(ARRAY_LENGTH(secondary_traits) > 0, FORMAT('\\n+lower levels of evidence for %d other tumor types', ARRAY_LENGTH(secondary_traits)), '') as agg_label
           FROM delta_prep
       )
       SELECT
@@ -269,6 +286,9 @@ BEGIN
     """, '{S}', rec.schema_name);
     EXECUTE IMMEDIATE query_layer4;
 
-    DROP TABLE base_data_tmp;
+    IF NOT debug THEN
+      DROP TABLE _SESSION.TEMP_vcv_base_data;
+    END IF;
+
   END FOR;
 END;

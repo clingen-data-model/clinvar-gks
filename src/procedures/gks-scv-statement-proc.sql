@@ -538,7 +538,7 @@ BEGIN
       )
       -- final output before it is normalized into json
       SELECT
-        FORMAT('%s.%i', scv.id, scv.version) as id,
+        FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
         'Statement' as type,
         sp as proposition,
         STRUCT(
@@ -606,7 +606,7 @@ BEGIN
           stp.id is not null,
           [
             STRUCT(
-              FORMAT('%s.%i', scv.id, scv.version) as id,
+              FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
               'EvidenceLine' as type,
               stp as proposition,
               'supports' as directionOfEvidenceProvided,
