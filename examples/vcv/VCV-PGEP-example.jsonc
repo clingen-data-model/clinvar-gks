@@ -1,0 +1,63 @@
+{
+  // Hypothetical PGEP VCV statement example (Layer 1 - Base Aggregator)
+  // Demonstrates aggregate_classification_array for combined PG+EP submissions
+  "aggregate_classification_array": [
+    {
+      "conceptType": "AggregateClassification",
+      "name": "Pathogenic",
+      "description": "for Breast cancer\nClassification is based on the expert panel submission\nMar 2024 by GeneDx"
+    },
+    {
+      "conceptType": "AggregateClassification",
+      "name": "Pathogenic",
+      "description": "for Hereditary cancer\nClassification is based on the practice guideline submission\nJan 2023 by NCCN"
+    }
+  ],
+  "direction": "supports",
+  "extensions": [
+    {"name": "clinvarReviewStatus", "value": "practice guideline and expert panel mix"}
+  ],
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {"id": "clinvar.submission:SCV000000001.1"},
+        {"id": "clinvar.submission:SCV000000002.1"}
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "id": "VCV999999999.1-G-path-PGEP",
+  "proposition": {
+    "aggregateQualifiers": [
+      {"name": "AssertionGroup", "value": "Germline"},
+      {"name": "PropositionType", "value": "Pathogenicity"},
+      {"name": "SubmissionLevel", "value": "practice guideline and expert panel"}
+    ],
+    "id": "999999999.G.path.PGEP",
+    "objectClassification_conceptSet": {
+      "type": "ConceptSet",
+      "concepts": [
+        {
+          "conceptType": "Classification",
+          "name": "Pathogenic",
+          "condition": "Breast cancer",
+          "submissionLevel": "expert panel"
+        },
+        {
+          "conceptType": "Classification",
+          "name": "Pathogenic",
+          "condition": "Hereditary cancer",
+          "submissionLevel": "practice guideline"
+        }
+      ],
+      "membershipOperator": "OR"
+    },
+    "predicate": "hasAggregateClassification",
+    "subjectVariant": "clinvar:999999999",
+    "type": "VariantAggregateClassificationProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}
