@@ -43,11 +43,11 @@ BEGIN
         'supports' AS direction,
         'definitive' AS strength,
 
-        -- aggregate_classification_single: for non-PGEP submission levels
+        -- classification_mappableConcept: for non-PGEP submission levels
         IF(
           agg.submission_level != 'PGEP',
           STRUCT(
-            'AggregateClassification' AS conceptType,
+            'Classification' AS conceptType,
             agg.actual_agg_classif_label AS name,
             IF(
               agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
@@ -56,14 +56,27 @@ BEGIN
             ) AS extension
           ),
           NULL
-        ) AS aggregate_classification_single,
+        ) AS classification_mappableConcept,
 
-        -- aggregate_classification_array: populated in L1 PRE for PGEP
-        CAST(NULL AS ARRAY<STRUCT<
-          conceptType STRING,
-          name STRING,
-          description STRING
-        >>) AS aggregate_classification_array,
+        -- classification_conceptSet: populated in L1 PRE for PGEP with 1 classification
+        CAST(NULL AS STRUCT<
+          type STRING,
+          concepts ARRAY<STRUCT<conceptType STRING, name STRING>>,
+          membershipOperator STRING,
+          extensions ARRAY<STRUCT<name STRING, value STRING>>
+        >) AS classification_conceptSet,
+
+        -- classification_conceptSetSet: populated in L1 PRE for PGEP with 2+ classifications
+        CAST(NULL AS STRUCT<
+          type STRING,
+          concepts ARRAY<STRUCT<
+            type STRING,
+            concepts ARRAY<STRUCT<conceptType STRING, name STRING>>,
+            membershipOperator STRING,
+            extensions ARRAY<STRUCT<name STRING, value STRING>>
+          >>,
+          membershipOperator STRING
+        >) AS classification_conceptSetSet,
 
         STRUCT(
           'VariantAggregateClassificationProposition' AS type,
@@ -75,16 +88,35 @@ BEGIN
             STRUCT('Classification' AS conceptType, agg.actual_agg_classif_label AS name),
             NULL
           ) AS objectClassification_mappableConcept,
+
+          -- objectClassification_conceptSet: populated in L1 PRE for PGEP with 1 classification
           CAST(NULL AS STRUCT<
             type STRING,
-            concepts ARRAY<STRUCT<conceptType STRING, name STRING, condition STRING, submissionLevel STRING>>,
+            concepts ARRAY<STRUCT<conceptType STRING, name STRING>>,
             membershipOperator STRING
           >) AS objectClassification_conceptSet,
+
+          -- objectClassification_conceptSetSet: populated in L1 PRE for PGEP with 2+ classifications
+          CAST(NULL AS STRUCT<
+            type STRING,
+            concepts ARRAY<STRUCT<
+              type STRING,
+              concepts ARRAY<STRUCT<conceptType STRING, name STRING>>,
+              membershipOperator STRING
+            >>,
+            membershipOperator STRING
+          >) AS objectClassification_conceptSetSet,
 
           [
             STRUCT('AssertionGroup' AS name, CAST(csc.label AS STRING) AS value),
             STRUCT('PropositionType' AS name, CAST(cpt.label AS STRING) AS value),
-            STRUCT('SubmissionLevel' AS name, CAST(sl.label AS STRING) AS value)
+            STRUCT('SubmissionLevel' AS name, CAST(
+              CASE
+                WHEN agg.pgep_strength = 'PG' THEN 'practice guideline'
+                WHEN agg.pgep_strength = 'EP' THEN 'expert panel'
+                WHEN agg.pgep_strength = 'PGEP' THEN 'practice guideline and expert panel mix'
+                ELSE sl.label
+              END AS STRING) AS value)
           ] || IF(
             agg.tier_grouping IS NOT NULL,
             [STRUCT('ClassificationTier' AS name, CAST(cct.label AS STRING) AS value)],
@@ -134,23 +166,19 @@ BEGIN
         'supports' AS direction,
         'definitive' AS strength,
 
-        -- aggregate_classification_single: Layer 2 is tier-level (somatic only), never PGEP
+        -- classification_mappableConcept: Layer 2 is tier-level (somatic only), never PGEP
         STRUCT(
-          'AggregateClassification' AS conceptType,
+          'Classification' AS conceptType,
           agg.agg_label AS name,
           IF(
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
           ) AS extension
-        ) AS aggregate_classification_single,
+        ) AS classification_mappableConcept,
 
-        -- aggregate_classification_array: never used at Layer 2
-        CAST(NULL AS ARRAY<STRUCT<
-          conceptType STRING,
-          name STRING,
-          description STRING
-        >>) AS aggregate_classification_array,
+        CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING, extensions ARRAY<STRUCT<name STRING, value STRING>>>) AS classification_conceptSet,
+        CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING, extensions ARRAY<STRUCT<name STRING, value STRING>>>>, membershipOperator STRING>) AS classification_conceptSetSet,
 
         STRUCT(
           'VariantAggregateClassificationProposition' AS type,
@@ -159,11 +187,8 @@ BEGIN
           'hasAggregateClassification' AS predicate,
 
           STRUCT('Classification' AS conceptType, agg.agg_label AS name) AS objectClassification_mappableConcept,
-          CAST(NULL AS STRUCT<
-            type STRING,
-            concepts ARRAY<STRUCT<conceptType STRING, name STRING, condition STRING, submissionLevel STRING>>,
-            membershipOperator STRING
-          >) AS objectClassification_conceptSet,
+          CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING>) AS objectClassification_conceptSet,
+          CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING>>, membershipOperator STRING>) AS objectClassification_conceptSetSet,
 
           [
             STRUCT('AssertionGroup' AS name, CAST(csc.label AS STRING) AS value),
@@ -226,11 +251,11 @@ BEGIN
         'supports' AS direction,
         'definitive' AS strength,
 
-        -- aggregate_classification_single: for non-PGEP (Layer 3 carries forward from contributing layer)
+        -- classification_mappableConcept: for non-PGEP (Layer 3 carries forward from contributing layer)
         IF(
           agg.contributing_submission_level != 'PGEP',
           STRUCT(
-            'AggregateClassification' AS conceptType,
+            'Classification' AS conceptType,
             agg.agg_label AS name,
             IF(
               agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
@@ -239,14 +264,11 @@ BEGIN
             ) AS extension
           ),
           NULL
-        ) AS aggregate_classification_single,
+        ) AS classification_mappableConcept,
 
-        -- aggregate_classification_array: populated downstream for PGEP
-        CAST(NULL AS ARRAY<STRUCT<
-          conceptType STRING,
-          name STRING,
-          description STRING
-        >>) AS aggregate_classification_array,
+        -- classification_conceptSet/conceptSetSet: populated downstream for PGEP
+        CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING, extensions ARRAY<STRUCT<name STRING, value STRING>>>) AS classification_conceptSet,
+        CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING, extensions ARRAY<STRUCT<name STRING, value STRING>>>>, membershipOperator STRING>) AS classification_conceptSetSet,
 
         STRUCT(
           'VariantAggregateClassificationProposition' AS type,
@@ -258,11 +280,8 @@ BEGIN
             STRUCT('Classification' AS conceptType, agg.agg_label AS name),
             NULL
           ) AS objectClassification_mappableConcept,
-          CAST(NULL AS STRUCT<
-            type STRING,
-            concepts ARRAY<STRUCT<conceptType STRING, name STRING, condition STRING, submissionLevel STRING>>,
-            membershipOperator STRING
-          >) AS objectClassification_conceptSet,
+          CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING>) AS objectClassification_conceptSet,
+          CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING>>, membershipOperator STRING>) AS objectClassification_conceptSetSet,
 
           [
             STRUCT('AssertionGroup' AS name, CAST(csc.label AS STRING) AS value),
@@ -320,11 +339,11 @@ BEGIN
         'supports' AS direction,
         'definitive' AS strength,
 
-        -- aggregate_classification_single: for non-PGEP (Layer 4 carries forward from contributing layer)
+        -- classification_mappableConcept: for non-PGEP (Layer 4 uses pgep_strength to detect PGEP)
         IF(
-          agg.contributing_submission_level != 'PGEP',
+          agg.pgep_strength IS NULL,
           STRUCT(
-            'AggregateClassification' AS conceptType,
+            'Classification' AS conceptType,
             agg.agg_label AS name,
             IF(
               agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
@@ -333,14 +352,11 @@ BEGIN
             ) AS extension
           ),
           NULL
-        ) AS aggregate_classification_single,
+        ) AS classification_mappableConcept,
 
-        -- aggregate_classification_array: populated downstream for PGEP
-        CAST(NULL AS ARRAY<STRUCT<
-          conceptType STRING,
-          name STRING,
-          description STRING
-        >>) AS aggregate_classification_array,
+        -- classification_conceptSet/conceptSetSet: populated downstream for PGEP
+        CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING, extensions ARRAY<STRUCT<name STRING, value STRING>>>) AS classification_conceptSet,
+        CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING, extensions ARRAY<STRUCT<name STRING, value STRING>>>>, membershipOperator STRING>) AS classification_conceptSetSet,
 
         STRUCT(
           'VariantAggregateClassificationProposition' AS type,
@@ -348,15 +364,12 @@ BEGIN
           FORMAT('clinvar:%s', agg.variation_id) AS subjectVariant,
           'hasAggregateClassification' AS predicate,
 
-          IF(agg.contributing_submission_level != 'PGEP',
+          IF(agg.pgep_strength IS NULL,
             STRUCT('Classification' AS conceptType, agg.agg_label AS name),
             NULL
           ) AS objectClassification_mappableConcept,
-          CAST(NULL AS STRUCT<
-            type STRING,
-            concepts ARRAY<STRUCT<conceptType STRING, name STRING, condition STRING, submissionLevel STRING>>,
-            membershipOperator STRING
-          >) AS objectClassification_conceptSet,
+          CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING>) AS objectClassification_conceptSet,
+          CAST(NULL AS STRUCT<type STRING, concepts ARRAY<STRUCT<type STRING, concepts ARRAY<STRUCT<conceptType STRING, name STRING>>, membershipOperator STRING>>, membershipOperator STRING>) AS objectClassification_conceptSetSet,
 
           [
             STRUCT('AssertionGroup' AS name, CAST(csc.label AS STRING) AS value)
@@ -404,67 +417,111 @@ BEGIN
 
     -------------------------------------------------------------------------
     -- LAYER 1 PRE: L1 statements with inlined SCV evidence items
-    -- For PGEP: populates aggregate_classification_array and proposition objectClassification_conceptSet
+    -- For PGEP: populates classification_conceptSet/conceptSetSet and objectClassification_conceptSet/conceptSetSet
     -------------------------------------------------------------------------
     SET query_l1_pre = REPLACE("""
       {CT} `{P}.temp_vcv_layer1_pre` AS
       WITH
-      pgep_classifications AS (
+      -- Per-SCV classification data for PGEP (not deduplicated — one entry per SCV)
+      pgep_scv_data AS (
         SELECT
           agg.id AS l1_id,
-          ARRAY_AGG(
-            STRUCT(
-              'AggregateClassification' AS conceptType,
-              scv_pre.classification.name AS name,
-              (SELECT ext.value_string FROM UNNEST(scv_pre.classification.extensions) ext WHERE ext.name = 'description' LIMIT 1) AS description
-            )
-            ORDER BY scv_pre.id
-          ) AS classifications
+          scv_pre.classification.name AS classif_name,
+          (SELECT ext.value_string FROM UNNEST(scv_pre.classification.extensions) ext WHERE ext.name = 'description' LIMIT 1) AS description,
+          CASE
+            WHEN scs.condition.name IS NOT NULL THEN scs.condition.name
+            WHEN scs.conditionSet IS NOT NULL AND ARRAY_LENGTH(scs.conditionSet.conditions) >= 2
+              THEN FORMAT('%i conditions', ARRAY_LENGTH(scs.conditionSet.conditions))
+            ELSE 'unspecified condition'
+          END AS condition_name,
+          sl.label AS submission_level_label
         FROM `{S}.gks_vcv_layer1_base_agg` agg
         CROSS JOIN UNNEST(agg.full_scv_ids) AS full_scv_id
         JOIN `{S}.gks_statement_scv_pre` scv_pre ON scv_pre.id = FORMAT('clinvar.submission:%s', full_scv_id)
-        WHERE agg.submission_level = 'PGEP'
-        GROUP BY agg.id
-      ),
-      pgep_object_concepts AS (
-        SELECT
-          agg.id AS l1_id,
-          STRUCT(
-            'ConceptSet' AS type,
-            ARRAY_AGG(DISTINCT
-              STRUCT(
-                'Classification' AS conceptType,
-                ss.classification_name AS name,
-                CASE
-                  WHEN scs.condition.name IS NOT NULL THEN scs.condition.name
-                  WHEN scs.conditionSet IS NOT NULL AND ARRAY_LENGTH(scs.conditionSet.conditions) >= 2
-                    THEN FORMAT('%i conditions', ARRAY_LENGTH(scs.conditionSet.conditions))
-                  ELSE 'unspecified condition'
-                END AS condition,
-                sl.label AS submissionLevel
-              )
-            ) AS concepts,
-            'OR' AS membershipOperator
-          ) AS concept_set
-        FROM `{S}.gks_vcv_layer1_base_agg` agg
-        CROSS JOIN UNNEST(agg.full_scv_ids) AS full_scv_id
         JOIN `{S}.scv_summary` ss ON ss.full_scv_id = full_scv_id
         LEFT JOIN `{S}.gks_scv_condition_sets` scs ON scs.scv_id = ss.id
         LEFT JOIN `clinvar_ingest.submission_level` sl ON sl.rank = ss.rank
         WHERE agg.submission_level = 'PGEP'
-        GROUP BY agg.id
+      ),
+      -- Build per-SCV AND-group concept arrays for classification (with extensions)
+      pgep_classif_concept_groups AS (
+        SELECT
+          l1_id,
+          STRUCT(
+            'ConceptSet' AS type,
+            [
+              STRUCT('Classification' AS conceptType, classif_name AS name),
+              STRUCT('Condition' AS conceptType, condition_name AS name),
+              STRUCT('SubmissionLevel' AS conceptType, submission_level_label AS name)
+            ] AS concepts,
+            'AND' AS membershipOperator,
+            [STRUCT('description' AS name, description AS value)] AS extensions
+          ) AS concept_group
+        FROM pgep_scv_data
+      ),
+      -- Build per-SCV AND-group concept arrays for objectClassification (no extensions, deduplicated)
+      pgep_obj_distinct AS (
+        SELECT DISTINCT l1_id, classif_name, condition_name, submission_level_label
+        FROM pgep_scv_data
+      ),
+      pgep_obj_concept_groups AS (
+        SELECT
+          l1_id,
+          STRUCT(
+            'ConceptSet' AS type,
+            [
+              STRUCT('Classification' AS conceptType, classif_name AS name),
+              STRUCT('Condition' AS conceptType, condition_name AS name),
+              STRUCT('SubmissionLevel' AS conceptType, submission_level_label AS name)
+            ] AS concepts,
+            'AND' AS membershipOperator
+          ) AS concept_group
+        FROM pgep_obj_distinct
+      ),
+      -- Aggregate into conceptSet (1 SCV) or conceptSetSet (2+ SCVs)
+      pgep_classif_agg AS (
+        SELECT l1_id,
+          COUNT(*) AS scv_count,
+          ARRAY_AGG(concept_group) AS concept_groups
+        FROM pgep_classif_concept_groups
+        GROUP BY l1_id
+      ),
+      pgep_obj_agg AS (
+        SELECT l1_id,
+          COUNT(*) AS concept_count,
+          ARRAY_AGG(concept_group) AS concept_groups
+        FROM pgep_obj_concept_groups
+        GROUP BY l1_id
       )
       SELECT
         l1.id, l1.type, l1.direction, l1.strength,
-        l1.aggregate_classification_single,
-        COALESCE(pgep.classifications, l1.aggregate_classification_array) AS aggregate_classification_array,
+        IF(agg.submission_level != 'PGEP', l1.classification_mappableConcept, NULL) AS classification_mappableConcept,
+        -- classification_conceptSet: single PGEP classification
+        IF(agg.submission_level = 'PGEP' AND pca.scv_count = 1,
+          pca.concept_groups[OFFSET(0)],
+          l1.classification_conceptSet
+        ) AS classification_conceptSet,
+        -- classification_conceptSetSet: multiple PGEP classifications
+        IF(agg.submission_level = 'PGEP' AND pca.scv_count > 1,
+          STRUCT('ConceptSet' AS type, pca.concept_groups AS concepts, 'AND' AS membershipOperator),
+          l1.classification_conceptSetSet
+        ) AS classification_conceptSetSet,
         STRUCT(
           l1.proposition.type,
           l1.proposition.id,
           l1.proposition.subjectVariant,
           l1.proposition.predicate,
           IF(agg.submission_level != 'PGEP', l1.proposition.objectClassification_mappableConcept, NULL) AS objectClassification_mappableConcept,
-          COALESCE(poc.concept_set, l1.proposition.objectClassification_conceptSet) AS objectClassification_conceptSet,
+          -- objectClassification_conceptSet: single PGEP concept group
+          IF(agg.submission_level = 'PGEP' AND poa.concept_count = 1,
+            poa.concept_groups[OFFSET(0)],
+            l1.proposition.objectClassification_conceptSet
+          ) AS objectClassification_conceptSet,
+          -- objectClassification_conceptSetSet: multiple PGEP concept groups
+          IF(agg.submission_level = 'PGEP' AND poa.concept_count > 1,
+            STRUCT('ConceptSet' AS type, poa.concept_groups AS concepts, 'AND' AS membershipOperator),
+            l1.proposition.objectClassification_conceptSetSet
+          ) AS objectClassification_conceptSetSet,
           l1.proposition.aggregateQualifiers
         ) AS proposition,
         l1.extensions,
@@ -481,8 +538,8 @@ BEGIN
         ] AS evidenceLines
       FROM `{P}.temp_vcv_layer1_statements` l1
       JOIN `{S}.gks_vcv_layer1_base_agg` agg ON l1.id = agg.id
-      LEFT JOIN pgep_classifications pgep ON pgep.l1_id = l1.id
-      LEFT JOIN pgep_object_concepts poc ON poc.l1_id = l1.id
+      LEFT JOIN pgep_classif_agg pca ON pca.l1_id = l1.id
+      LEFT JOIN pgep_obj_agg poa ON poa.l1_id = l1.id
     """, '{S}', rec.schema_name);
     SET query_l1_pre = REPLACE(query_l1_pre, '{CT}', temp_create);
     SET query_l1_pre = REPLACE(query_l1_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -497,7 +554,7 @@ BEGIN
       l2_contributing AS (
         SELECT l2.id, ARRAY_AGG(TO_JSON(
           STRUCT(l1.type, l1.id, l1.direction, l1.strength,
-            l1.aggregate_classification_single, l1.aggregate_classification_array,
+            l1.classification_mappableConcept, l1.classification_conceptSet, l1.classification_conceptSetSet,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_vcv_layer2_statements` l2
@@ -510,7 +567,7 @@ BEGIN
       l2_non_contributing AS (
         SELECT l2.id, ARRAY_AGG(TO_JSON(
           STRUCT(l1.type, l1.id, l1.direction, l1.strength,
-            l1.aggregate_classification_single, l1.aggregate_classification_array,
+            l1.classification_mappableConcept, l1.classification_conceptSet, l1.classification_conceptSetSet,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_vcv_layer2_statements` l2
@@ -522,8 +579,9 @@ BEGIN
       )
       SELECT
         l2.id, l2.type, l2.direction, l2.strength,
-        l2.aggregate_classification_single,
-        l2.aggregate_classification_array,
+        l2.classification_mappableConcept,
+        l2.classification_conceptSet,
+        l2.classification_conceptSetSet,
         l2.proposition,
         l2.extensions,
         ARRAY_CONCAT(
@@ -554,11 +612,11 @@ BEGIN
         SELECT l3.id, ARRAY_AGG(TO_JSON(
           COALESCE(
             (SELECT AS STRUCT l2p.type, l2p.id, l2p.direction, l2p.strength,
-              l2p.aggregate_classification_single, l2p.aggregate_classification_array,
+              l2p.classification_mappableConcept, l2p.classification_conceptSet, l2p.classification_conceptSetSet,
               l2p.proposition, l2p.extensions, l2p.evidenceLines
              FROM `{P}.temp_vcv_layer2_pre` l2p WHERE l2p.id = JSON_VALUE(item, '$.id')),
             (SELECT AS STRUCT l1.type, l1.id, l1.direction, l1.strength,
-              l1.aggregate_classification_single, l1.aggregate_classification_array,
+              l1.classification_mappableConcept, l1.classification_conceptSet, l1.classification_conceptSetSet,
               l1.proposition, l1.extensions, l1.evidenceLines
              FROM `{P}.temp_vcv_layer1_pre` l1 WHERE l1.id = JSON_VALUE(item, '$.id'))
           )
@@ -573,11 +631,11 @@ BEGIN
         SELECT l3.id, ARRAY_AGG(TO_JSON(
           COALESCE(
             (SELECT AS STRUCT l2p.type, l2p.id, l2p.direction, l2p.strength,
-              l2p.aggregate_classification_single, l2p.aggregate_classification_array,
+              l2p.classification_mappableConcept, l2p.classification_conceptSet, l2p.classification_conceptSetSet,
               l2p.proposition, l2p.extensions, l2p.evidenceLines
              FROM `{P}.temp_vcv_layer2_pre` l2p WHERE l2p.id = JSON_VALUE(item, '$.id')),
             (SELECT AS STRUCT l1.type, l1.id, l1.direction, l1.strength,
-              l1.aggregate_classification_single, l1.aggregate_classification_array,
+              l1.classification_mappableConcept, l1.classification_conceptSet, l1.classification_conceptSetSet,
               l1.proposition, l1.extensions, l1.evidenceLines
              FROM `{P}.temp_vcv_layer1_pre` l1 WHERE l1.id = JSON_VALUE(item, '$.id'))
           )
@@ -587,12 +645,41 @@ BEGIN
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         WHERE el.strengthOfEvidenceProvided = 'non-contributing'
         GROUP BY l3.id
+      ),
+      -- Propagate classification and proposition objectClassification from contributing child (L3 has single contributing child)
+      l3_child_props AS (
+        SELECT l3.id,
+          COALESCE(child.classification_conceptSet) AS child_classif_conceptSet,
+          COALESCE(child.classification_conceptSetSet) AS child_classif_conceptSetSet,
+          COALESCE(child.proposition.objectClassification_mappableConcept) AS child_obj_mappableConcept,
+          COALESCE(child.proposition.objectClassification_conceptSet) AS child_obj_conceptSet,
+          COALESCE(child.proposition.objectClassification_conceptSetSet) AS child_obj_conceptSetSet
+        FROM `{P}.temp_vcv_layer3_statements` l3
+        CROSS JOIN UNNEST(l3.evidenceLines) AS el
+        CROSS JOIN UNNEST(el.evidenceItems) AS item
+        LEFT JOIN `{P}.temp_vcv_layer2_pre` l2p ON l2p.id = JSON_VALUE(item, '$.id')
+        LEFT JOIN `{P}.temp_vcv_layer1_pre` l1p ON l1p.id = JSON_VALUE(item, '$.id') AND l2p.id IS NULL
+        CROSS JOIN UNNEST([COALESCE(
+          IF(l2p.id IS NOT NULL, STRUCT(l2p.classification_conceptSet, l2p.classification_conceptSetSet, l2p.proposition), NULL),
+          STRUCT(l1p.classification_conceptSet, l1p.classification_conceptSetSet, l1p.proposition)
+        )]) AS child
+        WHERE el.strengthOfEvidenceProvided = 'contributing'
       )
       SELECT
         l3.id, l3.type, l3.direction, l3.strength,
-        l3.aggregate_classification_single,
-        l3.aggregate_classification_array,
-        l3.proposition,
+        l3.classification_mappableConcept,
+        COALESCE(lcp.child_classif_conceptSet, l3.classification_conceptSet) AS classification_conceptSet,
+        COALESCE(lcp.child_classif_conceptSetSet, l3.classification_conceptSetSet) AS classification_conceptSetSet,
+        STRUCT(
+          l3.proposition.type,
+          l3.proposition.id,
+          l3.proposition.subjectVariant,
+          l3.proposition.predicate,
+          COALESCE(lcp.child_obj_mappableConcept, l3.proposition.objectClassification_mappableConcept) AS objectClassification_mappableConcept,
+          COALESCE(lcp.child_obj_conceptSet, l3.proposition.objectClassification_conceptSet) AS objectClassification_conceptSet,
+          COALESCE(lcp.child_obj_conceptSetSet, l3.proposition.objectClassification_conceptSetSet) AS objectClassification_conceptSetSet,
+          l3.proposition.aggregateQualifiers
+        ) AS proposition,
         l3.extensions,
         ARRAY_CONCAT(
           IF(c.evidenceItems IS NOT NULL,
@@ -607,6 +694,7 @@ BEGIN
       FROM `{P}.temp_vcv_layer3_statements` l3
       LEFT JOIN l3_contributing c ON l3.id = c.id
       LEFT JOIN l3_non_contributing nc ON l3.id = nc.id
+      LEFT JOIN l3_child_props lcp ON l3.id = lcp.id
     """, '{S}', rec.schema_name);
     SET query_l3_pre = REPLACE(query_l3_pre, '{CT}', temp_create);
     SET query_l3_pre = REPLACE(query_l3_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -621,7 +709,7 @@ BEGIN
       l4_contributing AS (
         SELECT l4.id, ARRAY_AGG(TO_JSON(
           (SELECT AS STRUCT l3p.type, l3p.id, l3p.direction, l3p.strength,
-            l3p.aggregate_classification_single, l3p.aggregate_classification_array,
+            l3p.classification_mappableConcept, l3p.classification_conceptSet, l3p.classification_conceptSetSet,
             l3p.proposition, l3p.extensions, l3p.evidenceLines
            FROM `{P}.temp_vcv_layer3_pre` l3p WHERE l3p.id = JSON_VALUE(item, '$.id'))
         )) AS evidenceItems
@@ -634,7 +722,7 @@ BEGIN
       l4_non_contributing AS (
         SELECT l4.id, ARRAY_AGG(TO_JSON(
           (SELECT AS STRUCT l3p.type, l3p.id, l3p.direction, l3p.strength,
-            l3p.aggregate_classification_single, l3p.aggregate_classification_array,
+            l3p.classification_mappableConcept, l3p.classification_conceptSet, l3p.classification_conceptSetSet,
             l3p.proposition, l3p.extensions, l3p.evidenceLines
            FROM `{P}.temp_vcv_layer3_pre` l3p WHERE l3p.id = JSON_VALUE(item, '$.id'))
         )) AS evidenceItems
@@ -643,12 +731,77 @@ BEGIN
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         WHERE el.strengthOfEvidenceProvided = 'non-contributing'
         GROUP BY l4.id
+      ),
+      -- Collect inner AND-groups from contributing L3 children that have conceptSet/conceptSetSet (PGEP-type)
+      -- MappableConcept-only children are excluded — they stay as mappableConcept on the L4 BASE
+      l4_classif_inner_groups AS (
+        SELECT l4.id, concept_group
+        FROM `{P}.temp_vcv_layer4_statements` l4
+        CROSS JOIN UNNEST(l4.evidenceLines) AS el
+        CROSS JOIN UNNEST(el.evidenceItems) AS item
+        JOIN `{P}.temp_vcv_layer3_pre` l3p ON l3p.id = JSON_VALUE(item, '$.id')
+        CROSS JOIN UNNEST(
+          CASE
+            WHEN l3p.classification_conceptSetSet IS NOT NULL THEN l3p.classification_conceptSetSet.concepts
+            WHEN l3p.classification_conceptSet IS NOT NULL THEN [l3p.classification_conceptSet]
+            ELSE []
+          END
+        ) AS concept_group
+        WHERE el.strengthOfEvidenceProvided = 'contributing'
+      ),
+      l4_classif_agg AS (
+        SELECT id,
+          COUNT(*) AS group_count,
+          ARRAY_AGG(concept_group) AS concept_groups
+        FROM l4_classif_inner_groups
+        GROUP BY id
+      ),
+      -- Same for objectClassification — only conceptSet/conceptSetSet children contribute
+      l4_obj_inner_groups AS (
+        SELECT l4.id, concept_group
+        FROM `{P}.temp_vcv_layer4_statements` l4
+        CROSS JOIN UNNEST(l4.evidenceLines) AS el
+        CROSS JOIN UNNEST(el.evidenceItems) AS item
+        JOIN `{P}.temp_vcv_layer3_pre` l3p ON l3p.id = JSON_VALUE(item, '$.id')
+        CROSS JOIN UNNEST(
+          CASE
+            WHEN l3p.proposition.objectClassification_conceptSetSet IS NOT NULL THEN l3p.proposition.objectClassification_conceptSetSet.concepts
+            WHEN l3p.proposition.objectClassification_conceptSet IS NOT NULL THEN [l3p.proposition.objectClassification_conceptSet]
+            ELSE []
+          END
+        ) AS concept_group
+        WHERE el.strengthOfEvidenceProvided = 'contributing'
+      ),
+      l4_obj_agg AS (
+        SELECT id,
+          COUNT(*) AS group_count,
+          ARRAY_AGG(concept_group) AS concept_groups
+        FROM l4_obj_inner_groups
+        GROUP BY id
       )
       SELECT
         l4.id, l4.type, l4.direction, l4.strength,
-        l4.aggregate_classification_single,
-        l4.aggregate_classification_array,
-        l4.proposition,
+        l4.classification_mappableConcept,
+        -- classification_conceptSet: 1 combined PGEP group (only set when children have conceptSet data)
+        IF(lca.group_count = 1, lca.concept_groups[OFFSET(0)], l4.classification_conceptSet) AS classification_conceptSet,
+        -- classification_conceptSetSet: 2+ combined PGEP groups
+        IF(lca.group_count > 1,
+          STRUCT('ConceptSet' AS type, lca.concept_groups AS concepts, 'AND' AS membershipOperator),
+          l4.classification_conceptSetSet
+        ) AS classification_conceptSetSet,
+        STRUCT(
+          l4.proposition.type,
+          l4.proposition.id,
+          l4.proposition.subjectVariant,
+          l4.proposition.predicate,
+          l4.proposition.objectClassification_mappableConcept,
+          IF(loa.group_count = 1, loa.concept_groups[OFFSET(0)], l4.proposition.objectClassification_conceptSet) AS objectClassification_conceptSet,
+          IF(loa.group_count > 1,
+            STRUCT('ConceptSet' AS type, loa.concept_groups AS concepts, 'AND' AS membershipOperator),
+            l4.proposition.objectClassification_conceptSetSet
+          ) AS objectClassification_conceptSetSet,
+          l4.proposition.aggregateQualifiers
+        ) AS proposition,
         l4.extensions,
         ARRAY_CONCAT(
           IF(c.evidenceItems IS NOT NULL,
@@ -663,6 +816,8 @@ BEGIN
       FROM `{P}.temp_vcv_layer4_statements` l4
       LEFT JOIN l4_contributing c ON l4.id = c.id
       LEFT JOIN l4_non_contributing nc ON l4.id = nc.id
+      LEFT JOIN l4_classif_agg lca ON l4.id = lca.id
+      LEFT JOIN l4_obj_agg loa ON l4.id = loa.id
     """, '{S}', rec.schema_name);
     SET query_l4_pre = REPLACE(query_l4_pre, '{CT}', temp_create);
     SET query_l4_pre = REPLACE(query_l4_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));

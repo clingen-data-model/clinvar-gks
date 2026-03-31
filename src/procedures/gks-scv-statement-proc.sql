@@ -459,7 +459,7 @@ BEGIN
           CASE
             WHEN condition.name IS NOT NULL THEN condition.name
             WHEN ARRAY_LENGTH(conditionSet.conditions) >= 2
-              THEN FORMAT('%%d conditions', ARRAY_LENGTH(conditionSet.conditions))
+              THEN FORMAT('%d conditions', ARRAY_LENGTH(conditionSet.conditions))
             ELSE 'unspecified condition'
           END AS condition_name
         FROM `{S}.gks_scv_condition_sets`
@@ -569,7 +569,7 @@ BEGIN
             CONCAT(
               'for ', COALESCE(scn.condition_name, 'unspecified condition'), '\\n',
               'Classification is based on the ', COALESCE(scv.submission_level_label, 'unknown'), ' submission', '\\n',
-              COALESCE(FORMAT_DATE('%%b %%Y', scv.last_evaluated), '(-)'), ' by ', scv.submitter.name
+              COALESCE(FORMAT_DATE('%b %Y', scv.last_evaluated), '(-)'), ' by ', scv.submitter.name
             ) AS value_string
           )] AS extensions
         ) as classification,

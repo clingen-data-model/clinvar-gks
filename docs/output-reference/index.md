@@ -28,6 +28,14 @@ All output files share these conventions:
 
 ---
 
+## Cross-File References
+
+Records in different output files reference each other by ID. For example, a VCV statement's leaf-level evidence items contain `{"id": "clinvar.submission:SCV000123.1"}` references that resolve to full SCV records in `scv_by_ref.jsonl.gz`, and `proposition.subjectVariant` references resolve to categorical variants in `variation.jsonl.gz`.
+
+See [ID References and Cross-File Resolution](id-references.md) for the complete reference resolution guide, identifier formats, and code examples.
+
+---
+
 ## Specifications
 
 The output conforms to these GA4GH standards:
