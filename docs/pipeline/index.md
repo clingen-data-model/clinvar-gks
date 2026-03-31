@@ -39,13 +39,19 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 6. JSON Output               │  gks_json_proc
-│    Convert pre-tables to     │  → gks_catvar, gks_statement_scv
-│    final JSON artifacts      │    _by_ref, _inline tables
+│ 6. VCV Statements            │  gks_vcv_proc +
+│    Aggregate SCVs into       │  gks_vcv_statement_proc
+│    variant-level statements  │  → gks_vcv_statement_pre table
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 7. Export                    │  export-gks-files-to-gcs.sh
+│ 7. JSON Output               │  gks_json_proc
+│    Convert pre-tables to     │  → gks_catvar, gks_statement_scv
+│    final JSON artifacts      │    _by_ref, _inline, gks_statement_vcv
+└──────────────┬───────────────┘
+               │
+┌──────────────▼───────────────┐
+│ 8. Export                    │  export-gks-files-to-gcs.sh
 │     Export to GCS &          │  → public bucket
 │     public bucket            │
 └──────────────────────────────┘
@@ -65,7 +71,7 @@ CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE(), FALSE);
 
 Export, process externally with vrs-python, and load back. See [VRS Processing](vrs-processing.md).
 
-### Step 3: Cat-VRS through SCV Statements
+### Step 3: Cat-VRS through VCV Statements
 
 From the BigQuery console:
 
@@ -73,6 +79,8 @@ From the BigQuery console:
 CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_scv_condition_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_scv_statement_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_vcv_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_vcv_statement_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all', FALSE);
 ```
 

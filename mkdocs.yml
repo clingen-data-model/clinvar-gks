@@ -79,6 +79,7 @@ nav:
     - output-reference/index.md
     - Categorical Variants: output-reference/cat-vrs.md
     - SCV Statements: output-reference/scv-statements.md
+    - ID References: output-reference/id-references.md
   - Profiles:
     - profiles/index.md
     - Statement Types: profiles/statement-types.md

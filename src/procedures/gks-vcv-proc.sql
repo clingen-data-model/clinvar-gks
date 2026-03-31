@@ -262,7 +262,8 @@ BEGIN
       ),
       ranked_levels AS (
           SELECT ui.*,
-            ROW_NUMBER() OVER(PARTITION BY ui.variation_id, ui.statement_group, ui.prop_type ORDER BY sl.rank DESC) as rnk
+            ROW_NUMBER() OVER(PARTITION BY ui.variation_id, ui.statement_group, ui.prop_type
+              ORDER BY CASE WHEN ui.submission_level = 'PGEP' THEN 5 ELSE sl.rank END DESC) as rnk
           FROM unified_input ui
           LEFT JOIN `clinvar_ingest.submission_level` sl ON ui.submission_level = sl.code
       ),
@@ -299,7 +300,8 @@ BEGIN
       CREATE OR REPLACE TABLE `{S}.gks_vcv_layer4_group_agg` AS
       WITH ranked_props AS (
           SELECT rp.*,
-            RANK() OVER(PARTITION BY rp.variation_id, rp.statement_group ORDER BY sl.rank DESC) as grp_rnk
+            RANK() OVER(PARTITION BY rp.variation_id, rp.statement_group
+              ORDER BY CASE WHEN rp.contributing_submission_level = 'PGEP' THEN 5 ELSE sl.rank END DESC) as grp_rnk
           FROM `{S}.gks_vcv_layer3_prop_agg` rp
           LEFT JOIN `clinvar_ingest.submission_level` sl ON rp.contributing_submission_level = sl.code
           WHERE rp.statement_group = 'G'
