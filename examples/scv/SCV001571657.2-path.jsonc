@@ -57,7 +57,7 @@
       "value": "NM_004985.5:c.35G>A|Acute myeloid leukemia"
     }
   ],
-  "id": "SCV001571657.2",
+  "id": "clinvar.submission:SCV001571657.2",
   "proposition": {
     "geneContextQualifier": {
       "conceptType": "gene",
@@ -85,7 +85,7 @@
         "system": "https://www.ncbi.nlm.nih.gov/gene/"
       }
     },
-    "id": "SCV001571657",
+    "id": "clinvar.submission:SCV001571657",
     "objectCondition": {
       "conceptType": "Disease",
       "extensions": [
@@ -181,7 +181,7 @@
       }
     },
     "predicate": "isCausalFor",
-    "subjectVariation": "clinvar:12582",
+    "subjectVariant": "clinvar:12582",
     "type": "VariantPathogenicityProposition"
   },
   "strength": {

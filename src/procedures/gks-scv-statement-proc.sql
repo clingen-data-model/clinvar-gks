@@ -124,7 +124,9 @@ BEGIN
             FORMAT('clinvar.submitter:%s',scv.submitter_id) as id,
             'Agent' as type,
             scv.submitter_name as name
-          ) as submitter
+          ) as submitter,
+          sl.code AS submission_level,
+          sl.label AS submission_level_label
 
         FROM `{S}.clinical_assertion` ca
         JOIN `{S}.scv_summary` scv
@@ -135,6 +137,9 @@ BEGIN
             cct.code = scv.classif_type
             AND
             cct.statement_type = scv.statement_type
+        LEFT JOIN `clinvar_ingest.submission_level` sl
+          ON
+            sl.rank = scv.rank
     """, '{S}', rec.schema_name);
     SET query_scv_records = REPLACE(query_scv_records, '{CT}', temp_create);
     SET query_scv_records = REPLACE(query_scv_records, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -323,9 +328,10 @@ BEGIN
       {CT} {P}.temp_gks_scv_proposition
       AS
         SELECT
-          scv.id,
+          scv.id as scv_id,
+          FORMAT('clinvar.submission:%s', scv.id) as id,
           scv.proposition.type as type,
-          FORMAT('clinvar:%s', scv.variation_id) as subjectVariation,
+          FORMAT('clinvar:%s', scv.variation_id) as subjectVariant,
           scv.proposition.pred as predicate,
           scs.condition as objectCondition_single,
           scs.conditionSet as objectCondition_compound,
@@ -386,9 +392,10 @@ BEGIN
           HAVING COUNT(*) = 1
         )
         SELECT
-          scv.id,
+          scv.id as scv_id,
+          FORMAT('clinvar.submission:%s', scv.id) as id,
           scv.evidence_line_target_proposition.type as type,
-          '4/proposition/subjectVariation' as subjectVariation,
+          '4/proposition/subjectVariant' as subjectVariant,
           scv.evidence_line_target_proposition.pred as predicate,
           IF(
             scv.clinical_impact_assertion_type IS DISTINCT FROM 'therapeutic',
@@ -446,9 +453,20 @@ BEGIN
     -- Step 7: Create statement SCV pre table
     ---------------------------------------------------------------------------
     SET query_statement_scv_pre = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_statement_scv_pre`
+      CREATE OR REPLACE TABLE `{S}.gks_scv_statement_pre`
       as
-      WITH scv_citation AS (
+      WITH scv_condition_name AS (
+        SELECT
+          scv_id,
+          CASE
+            WHEN condition.name IS NOT NULL THEN condition.name
+            WHEN ARRAY_LENGTH(conditionSet.conditions) >= 2
+              THEN FORMAT('%d conditions', ARRAY_LENGTH(conditionSet.conditions))
+            ELSE 'unspecified condition'
+          END AS condition_name
+        FROM `{S}.gks_scv_condition_sets`
+      ),
+      scv_citation AS (
         SELECT
           scv.id,
           STRUCT(
@@ -538,16 +556,24 @@ BEGIN
       )
       -- final output before it is normalized into json
       SELECT
-        FORMAT('%s.%i', scv.id, scv.version) as id,
+        FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
         'Statement' as type,
-        sp as proposition,
+        (SELECT AS STRUCT sp.* EXCEPT(scv_id)) as proposition,
         STRUCT(
           scv.submitted_classification as name,
           IF(
             scv.classification_code IS NOT NULL,
             STRUCT(scv.classification_code as code, scv.classif_and_strength_code_system as system),
             null
-          ) as primaryCoding
+          ) as primaryCoding,
+          [STRUCT(
+            'description' AS name,
+            CONCAT(
+              'for ', COALESCE(scn.condition_name, 'unspecified condition'), '\\n',
+              'Classification is based on the ', COALESCE(scv.submission_level_label, 'unknown'), ' submission', '\\n',
+              COALESCE(FORMAT_DATE('%b %Y', scv.last_evaluated), '(-)'), ' by ', scv.submitter.name
+            ) AS value_string
+          )] AS extensions
         ) as classification,
          STRUCT(
           scv.strength_name as name,
@@ -600,15 +626,20 @@ BEGIN
             scv.local_key IS NULL,
             [],
             [STRUCT('submittedScvLocalKey' as name, scv.local_key as value_string)]
+          ),
+          IF(
+            scv.submission_level IS NULL,
+            [],
+            [STRUCT('submissionLevel' as name, scv.submission_level as value_string)]
           )
         ) as extensions,
         IF (
           stp.id is not null,
           [
             STRUCT(
-              FORMAT('%s.%i', scv.id, scv.version) as id,
+              FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
               'EvidenceLine' as type,
-              stp as proposition,
+              (SELECT AS STRUCT stp.* EXCEPT(scv_id)) as proposition,
               'supports' as directionOfEvidenceProvided,
               CASE scv.classification_code
                 WHEN 'tier 1' THEN
@@ -625,16 +656,19 @@ BEGIN
       FROM {P}.temp_gks_scv scv
       JOIN {P}.temp_gks_scv_proposition sp
       ON
-        sp.id = scv.id
+        sp.scv_id = scv.id
       LEFT JOIN {P}.temp_gks_scv_target_proposition stp
       ON
-        stp.id = scv.id
+        stp.scv_id = scv.id
       LEFT JOIN scv_method sm
       ON
         sm.id = scv.id
       LEFT JOIN scv_citations scit
       ON
         scit.id = scv.id
+      LEFT JOIN scv_condition_name scn
+      ON
+        scn.scv_id = scv.id
     """, '{S}', rec.schema_name);
     SET query_statement_scv_pre = REPLACE(query_statement_scv_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_statement_scv_pre;

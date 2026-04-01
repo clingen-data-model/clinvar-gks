@@ -57,7 +57,7 @@
       "value": "NM_004448.4:c.2329G>T|MedGen:C0027651|OncogenicityClassification"
     }
   ],
-  "id": "SCV005093950.2",
+  "id": "clinvar.submission:SCV005093950.2",
   "proposition": {
     "geneContextQualifier": {
       "conceptType": "gene",
@@ -93,7 +93,7 @@
         "system": "https://www.ncbi.nlm.nih.gov/gene/"
       }
     },
-    "id": "SCV005093950",
+    "id": "clinvar.submission:SCV005093950",
     "objectCondition": {
       "conceptType": "Disease",
       "extensions": [
@@ -187,7 +187,7 @@
       }
     },
     "predicate": "isOncogenicFor",
-    "subjectVariation": {
+    "subjectVariant": {
       "constraints": [
         {
           "allele": "2/members/0/",

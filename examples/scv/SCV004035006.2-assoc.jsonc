@@ -56,7 +56,7 @@
       "value": "SUB13829362"
     }
   ],
-  "id": "SCV004035006.2",
+  "id": "clinvar.submission:SCV004035006.2",
   "proposition": {
     "geneContextQualifier": {
       "conceptType": "gene",
@@ -84,7 +84,7 @@
         "system": "https://www.ncbi.nlm.nih.gov/gene/"
       }
     },
-    "id": "SCV004035006",
+    "id": "clinvar.submission:SCV004035006",
     "objectCondition": {
       "conditions": [
         {
@@ -218,7 +218,7 @@
       "membershipOperator": "AND"
     },
     "predicate": "isAssociatedWith",
-    "subjectVariation": "clinvar:12582",
+    "subjectVariant": "clinvar:12582",
     "type": "ClinvarAssociationProposition"
   },
   "type": "Statement"

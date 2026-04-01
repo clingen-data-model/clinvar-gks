@@ -4,6 +4,7 @@ BEGIN
   DECLARE gks_catvar_query STRING;
   DECLARE query_statement_scv_by_ref STRING;
   DECLARE query_statement_scv_inline STRING;
+  DECLARE query_statement_vcv STRING;
 
   FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
   DO
@@ -40,7 +41,7 @@ BEGIN
     IF output_type IN ('scv_by_ref', 'all') THEN
 
       SET query_statement_scv_by_ref = REPLACE("""
-        CREATE OR REPLACE TABLE `{S}.gks_statement_scv_by_ref`
+        CREATE OR REPLACE TABLE `{S}.gks_scv_statement_by_ref`
         AS
         WITH json_draft AS (
           SELECT
@@ -49,7 +50,7 @@ BEGIN
               TO_JSON(tv),
             remove_empty => TRUE
             ) AS rec
-          FROM `{S}.gks_statement_scv_pre` AS tv
+          FROM `{S}.gks_scv_statement_pre` AS tv
         )
         select
           json_draft.id,
@@ -66,25 +67,25 @@ BEGIN
     IF output_type IN ('scv_inline', 'all') THEN
 
       SET query_statement_scv_inline = REPLACE("""
-        CREATE OR REPLACE TABLE `{S}.gks_statement_scv_inline`
+        CREATE OR REPLACE TABLE `{S}.gks_scv_statement_inline`
         AS
         WITH inline_proposition AS (
           SELECT
-            scv.proposition.* EXCEPT (subjectVariation),
-            var AS subjectVariation
-          FROM `{S}.gks_statement_scv_pre` AS scv
+            scv.proposition.* EXCEPT (subjectVariant),
+            var AS subjectVariant
+          FROM `{S}.gks_scv_statement_pre` AS scv
           JOIN `clingen-dev.{S}.gks_catvar_pre` AS var
           ON
-            scv.proposition.subjectVariation = var.id
+            scv.proposition.subjectVariant = var.id
         ),
         inline_scv AS (
           SELECT
             scv.* EXCEPT (proposition),
             inline_proposition AS proposition
           FROM inline_proposition
-          JOIN `clingen-dev.{S}.gks_statement_scv_pre` AS scv
+          JOIN `clingen-dev.{S}.gks_scv_statement_pre` AS scv
           ON
-            SPLIT(scv.id,'.')[SAFE_OFFSET(0)] = inline_proposition.id
+            scv.proposition.id = inline_proposition.id
         ),
         json_draft AS (
           SELECT
@@ -101,6 +102,32 @@ BEGIN
         from json_draft
       """, '{S}', rec.schema_name);
       EXECUTE IMMEDIATE query_statement_scv_inline;
+
+    END IF;
+
+    -------------------------------------------------------------------------
+    -- VCV statement JSON output
+    -------------------------------------------------------------------------
+    IF output_type IN ('vcv', 'all') THEN
+
+      SET query_statement_vcv = REPLACE("""
+        CREATE OR REPLACE TABLE `{S}.gks_vcv_statement`
+        AS
+        WITH json_draft AS (
+          SELECT
+            tv.id,
+            JSON_STRIP_NULLS(
+              TO_JSON(tv),
+            remove_empty => TRUE
+            ) AS rec
+          FROM `{S}.gks_vcv_statement_pre` AS tv
+        )
+        SELECT
+          json_draft.id,
+          `clinvar_ingest.normalizeAndKeyById`(json_draft.rec, true) as rec
+        FROM json_draft
+      """, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_statement_vcv;
 
     END IF;
 

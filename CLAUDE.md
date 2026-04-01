@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## General Rules
+
+- Only modify files explicitly requested by the user. Do not proactively edit test files, SQL files, or other files beyond the scope of the current request without asking first.
+
 ## Project Overview
 
 ClinVar-GKS is a data transformation pipeline that converts ClinVar release data to GA4GH GKS (Global Alliance for Genomics and Health - Genomic Knowledge Standards) format. The project is BigQuery-centric and relies heavily on SQL stored procedures for data processing.
@@ -86,6 +90,14 @@ Check `/examples/` directory for data structure examples organized by type:
 - `scv/` - SCV statement examples (pathogenicity, oncogenicity, somatic, etc.)
 - `vcv/` - VCV aggregate statement examples
 
+## BigQuery SQL Conventions
+
+When modifying SQL stored procedures for BigQuery, always validate:
+
+1. INSERT column lists match SELECT columns
+2. No DEFAULT parameter values (unsupported in BigQuery)
+3. Escape sequences in EXECUTE IMMEDIATE triple-quoted strings are properly handled (`\n`, `\d`)
+
 ## SQL Stored Procedure Conventions
 
 ### Dynamic SQL with REPLACE Pattern
@@ -115,6 +127,14 @@ EXECUTE IMMEDIATE query;
 - One `DECLARE` per query variable at the top of the procedure body
 - `SET` the query string, then `REPLACE`, then `EXECUTE IMMEDIATE` — three separate statements
 - For procedures that use a variable other than `rec.schema_name` (e.g., `target_schema`), adjust the REPLACE call accordingly
+
+## Git Operations
+
+- Before any git push, always check the default branch name (main vs master) with `git remote show origin` or `git branch -r`. Never assume 'master' is the default branch.
+
+## Documentation
+
+- When working with MkDocs, always run `mkdocs build --strict` after any documentation changes to validate before committing.
 
 ## Git Commit Conventions
 
