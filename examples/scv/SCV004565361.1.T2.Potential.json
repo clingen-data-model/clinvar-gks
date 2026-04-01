@@ -64,7 +64,7 @@
       "evidenceOutcome": {
         "name": "Level C/D"
       },
-      "id": "SCV004565361.1",
+      "id": "clinvar.submission:SCV004565361.1",
       "proposition": {
         "geneContextQualifier": {
           "conceptType": "gene",
@@ -100,7 +100,7 @@
             "system": "https://www.ncbi.nlm.nih.gov/gene/"
           }
         },
-        "id": "SCV004565361",
+        "id": "clinvar.submission:SCV004565361",
         "objectCondition": {
           "conceptType": "Disease",
           "extensions": [
@@ -159,13 +159,13 @@
           }
         },
         "predicate": "isDiagnosticInclusionCriterionFor",
-        "subjectVariation": "4/proposition/subjectVariation",
+        "subjectVariant": "4/proposition/subjectVariant",
         "type": "VariantDiagnosticProposition"
       },
       "type": "EvidenceLine"
     }
   ],
-  "id": "SCV004565361.1",
+  "id": "clinvar.submission:SCV004565361.1",
   "proposition": {
     "geneContextQualifier": {
       "conceptType": "gene",
@@ -201,7 +201,7 @@
         "system": "https://www.ncbi.nlm.nih.gov/gene/"
       }
     },
-    "id": "SCV004565361",
+    "id": "clinvar.submission:SCV004565361",
     "objectCondition": {
       "conceptType": "Disease",
       "extensions": [
@@ -260,7 +260,7 @@
       }
     },
     "predicate": "isClinicallySignificantFor",
-    "subjectVariation": {
+    "subjectVariant": {
       "constraints": [
         {
           "allele": "2/members/0/",

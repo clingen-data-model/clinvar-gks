@@ -18,3 +18,5 @@ site/
 .vscode/
 .idea/
 .claude/settings.local.json
+.claude/Useful background for the documentation.md
+.claude/settings.json

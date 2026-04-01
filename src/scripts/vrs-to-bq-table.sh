@@ -58,8 +58,8 @@ BIGQUERY_PROCEDURES=(
 # BigQuery Export Configuration
 EXPORT_TABLE_NAMES=(
   "gks_catvar"
-  "gks_statement_scv_by_ref"
-  "gks_statement_scv_inline"
+  "gks_scv_statement_by_ref"
+  "gks_scv_statement_inline"
 )
 EXPORT_OUTPUT_NAMES=(
   "variation"

@@ -11,8 +11,8 @@ This section documents the JSON output from a **consumer perspective** — what 
 | File | Content | Records | Pipeline Source |
 | --- | --- | --- | --- |
 | `variation.jsonl.gz` | [Categorical Variants](cat-vrs.md) | One per ClinVar variation with a resolved VRS identity | `gks_catvar` table via [Cat-VRS](../pipeline/cat-vrs/index.md) |
-| `scv_by_ref.jsonl.gz` | [SCV Statements (by reference)](scv-statements.md#by-reference-format) | One per submitted clinical assertion | `gks_statement_scv_by_ref` table via [SCV Statements](../pipeline/scv-statements/index.md) |
-| `scv_inline.jsonl.gz` | [SCV Statements (inline)](scv-statements.md#inline-format) | One per submitted clinical assertion | `gks_statement_scv_inline` table via [SCV Statements](../pipeline/scv-statements/index.md) |
+| `scv_by_ref.jsonl.gz` | [SCV Statements (by reference)](scv-statements.md#by-reference-format) | One per submitted clinical assertion | `gks_scv_statement_by_ref` table via [SCV Statements](../pipeline/scv-statements/index.md) |
+| `scv_inline.jsonl.gz` | [SCV Statements (inline)](scv-statements.md#inline-format) | One per submitted clinical assertion | `gks_scv_statement_inline` table via [SCV Statements](../pipeline/scv-statements/index.md) |
 
 ---
 
@@ -25,6 +25,14 @@ All output files share these conventions:
 - **Null stripping** — null-valued fields and empty arrays are omitted from the output
 - **GA4GH identifiers** — VRS identifiers use the `ga4gh:` prefix (e.g., `ga4gh:VA.abc123`)
 - **ClinVar identifiers** — ClinVar-scoped identifiers use the `clinvar:` prefix (e.g., `clinvar:12345`)
+
+---
+
+## Cross-File References
+
+Records in different output files reference each other by ID. For example, a VCV statement's leaf-level evidence items contain `{"id": "clinvar.submission:SCV000123.1"}` references that resolve to full SCV records in `scv_by_ref.jsonl.gz`, and `proposition.subjectVariant` references resolve to categorical variants in `variation.jsonl.gz`.
+
+See [ID References and Cross-File Resolution](id-references.md) for the complete reference resolution guide, identifier formats, and code examples.
 
 ---
 

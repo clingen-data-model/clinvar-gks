@@ -64,7 +64,7 @@
       "evidenceOutcome": {
         "name": "Level A/B"
       },
-      "id": "SCV004565358.1",
+      "id": "clinvar.submission:SCV004565358.1",
       "proposition": {
         "conditionQualifier": {
           "conceptType": "Disease",
@@ -183,19 +183,19 @@
             "system": "https://www.ncbi.nlm.nih.gov/gene/"
           }
         },
-        "id": "SCV004565358",
+        "id": "clinvar.submission:SCV004565358",
         "objectTherapy": {
           "conceptType": "Drug",
           "name": "Erlotinib"
         },
         "predicate": "predictsSensitivityTo",
-        "subjectVariation": "4/proposition/subjectVariation",
+        "subjectVariant": "4/proposition/subjectVariant",
         "type": "VariantTherapeuticResponseProposition"
       },
       "type": "EvidenceLine"
     }
   ],
-  "id": "SCV004565358.1",
+  "id": "clinvar.submission:SCV004565358.1",
   "proposition": {
     "geneContextQualifier": {
       "conceptType": "gene",
@@ -231,7 +231,7 @@
         "system": "https://www.ncbi.nlm.nih.gov/gene/"
       }
     },
-    "id": "SCV004565358",
+    "id": "clinvar.submission:SCV004565358",
     "objectCondition": {
       "conceptType": "Disease",
       "extensions": [
@@ -316,7 +316,7 @@
       }
     },
     "predicate": "isClinicallySignificantFor",
-    "subjectVariation": {
+    "subjectVariant": {
       "constraints": [
         {
           "allele": "2/members/0/",

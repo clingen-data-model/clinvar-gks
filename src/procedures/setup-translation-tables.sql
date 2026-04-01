@@ -26,14 +26,14 @@
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE TABLE `clinvar_ingest.gks_xref_iri_templates` (
   db STRING NOT NULL,
-  type STRING NOT NULL DEFAULT 'primary',
+  type STRING DEFAULT 'primary' NOT NULL,
   template STRING NOT NULL,
   id_extract_pattern STRING,
   id_replace_pattern STRING,
   id_replacement STRING
 );
 
-INSERT INTO `clinvar_ingest.gks_xref_iri_templates` (db, type, template, id_extract_pattern, id_replace_pattern, id_replacement)
+INSERT INTO `clinvar_ingest.gks_xref_iri_templates` (db, type, template, id_extract_pattern)
 VALUES
   -- Condition / Trait xrefs
   ('MedGen',                   'primary',           'https://identifiers.org/medgen:%s',                                NULL),
@@ -43,8 +43,7 @@ VALUES
   ('OMIM',                     'primary',           'https://www.omim.org/entry/%s',                                    NULL),
   ('OMIM',                     'MIM',               'https://identifiers.org/mim:%s',                                   NULL),
   ('OMIM',                     'MIM',               'https://www.omim.org/entry/%s',                                    NULL),
-  ('OMIM',                     'Allelic variant',   'https://www.omim.org/entry/%s',                                    NULL, '\\.', '#'),
-  ('OMIM',                     'Phenotypic series', 'https://www.omim.org/phenotypicSeries/PS%s',                       NULL),
+  ('OMIM',                     'Phenotypic series', 'https://www.omim.org/phenotypicSeries/%s',                       NULL),
 
   ('Human Phenotype Ontology', 'primary',           'https://identifiers.org/%s',                                       NULL),
   ('Human Phenotype Ontology', 'primary',           'https://hpo.jax.org/browse/term/%s',                               NULL),
@@ -63,8 +62,6 @@ VALUES
   ('EFO: The Experimental Factor Ontology', 'primary', 'https://identifiers.org/efo:%s',                               '\\d+'),
   ('EFO: The Experimental Factor Ontology', 'primary', 'http://www.ebi.ac.uk/efo/EFO_%s',                              '\\d+'),
 
-  ('Office of Rare Diseases',  'primary',           'https://rarediseases.info.nih.gov/diseases/%s',                    NULL),
-
   ('GeneReviews',              'primary',           'https://www.ncbi.nlm.nih.gov/books/%s',                            NULL),
 
   ('SNOMED CT',                'primary',           'https://identifiers.org/snomedct:%s',                              NULL),
@@ -78,7 +75,10 @@ VALUES
   ('Medical Genetics Summaries', 'primary',         'https://www.ncbi.nlm.nih.gov/books/%s',                            NULL),
 
   ('PharmGKB',                 'primary',           'https://www.pharmgkb.org/disease/%s',                              NULL),
-  ('PharmGKB',                 'drug',              'https://www.pharmgkb.org/chemical/%s',                             NULL),
+  ('PharmGKB',                 'drug',              'https://www.pharmgkb.org/drug/%s',                             NULL),
+
+  ('ClinPGx',                 'primary',           'https://www.clinpgx.org/disease/%s',                              NULL),
+  ('ClinPGx',                 'drug',              'https://www.clinpgx.org/drug/%s',                             NULL),
 
   -- Citation sources
   ('pubmed',                   'primary',           'https://pubmed.ncbi.nlm.nih.gov/%s',                              NULL),
@@ -101,4 +101,10 @@ VALUES
   ('pharmgkb clinical annotation', 'primary',       'https://www.pharmgkb.org/clinicalAnnotation/%s',                   NULL),
   ('uniprotkb',               'primary',            'https://www.uniprot.org/uniprot/%s',                               NULL),
   ('genetic testing registry (gtr)', 'primary',     'https://www.ncbi.nlm.nih.gov/gtr/tests/%s',                       NULL)
+;
+
+-- Rows requiring id_replace_pattern / id_replacement (all 6 columns)
+INSERT INTO `clinvar_ingest.gks_xref_iri_templates` (db, type, template, id_extract_pattern, id_replace_pattern, id_replacement)
+VALUES
+  ('OMIM',                     'Allelic variant',   'https://www.omim.org/entry/%s',                                    NULL, '\\.', '#')
 ;

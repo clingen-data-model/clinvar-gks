@@ -57,7 +57,7 @@
       "value": "NM_000546.6:c.802delA|MONDO:11996|ClinicalImpactClassification"
     }
   ],
-  "id": "SCV005061369.1",
+  "id": "clinvar.submission:SCV005061369.1",
   "proposition": {
     "geneContextQualifier": {
       "conceptType": "gene",
@@ -85,7 +85,7 @@
         "system": "https://www.ncbi.nlm.nih.gov/gene/"
       }
     },
-    "id": "SCV005061369",
+    "id": "clinvar.submission:SCV005061369",
     "objectCondition": {
       "conceptType": "Disease",
       "extensions": [
@@ -190,7 +190,7 @@
       }
     },
     "predicate": "isClinicallySignificantFor",
-    "subjectVariation": {
+    "subjectVariant": {
       "constraints": [
         {
           "allele": "2/members/0/",
