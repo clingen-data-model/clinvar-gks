@@ -34,7 +34,7 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
                │
 ┌──────────────▼───────────────┐
 │ 5. SCV Statements            │  gks_scv_statement_proc
-│    Build SCV records,        │  → gks_statement_scv_pre table
+│    Build SCV records,        │  → gks_scv_statement_pre table
 │    propositions & statements │
 └──────────────┬───────────────┘
                │
@@ -46,8 +46,8 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
                │
 ┌──────────────▼───────────────┐
 │ 7. JSON Output               │  gks_json_proc
-│    Convert pre-tables to     │  → gks_catvar, gks_statement_scv
-│    final JSON artifacts      │    _by_ref, _inline, gks_statement_vcv
+│    Convert pre-tables to     │  → gks_catvar, gks_scv_statement
+│    final JSON artifacts      │    _by_ref, _inline, gks_vcv_statement
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐

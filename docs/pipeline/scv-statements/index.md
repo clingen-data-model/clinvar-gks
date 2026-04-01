@@ -53,11 +53,11 @@ Builds somatic target propositions for clinical impact assertions (prognostic, d
 
 **Output:** `temp_gks_scv_target_proposition` — one row per somatic SCV with target proposition. <span class="role-badge badge-internal">Internal</span>
 
-### Step 7: Build `gks_statement_scv_pre`
+### Step 7: Build `gks_scv_statement_pre`
 
 Final assembly of VA-Spec Statement records. Joins SCV records with propositions, conditions, citations, and assertion methods. Builds the classification struct with description extension, contributions array, extensions array (clinvarScvId, clinvarScvVersion, clinvarScvReviewStatus, submittedScvClassification, submittedScvLocalKey, submissionLevel), and somatic evidence lines.
 
-**Output:** `gks_statement_scv_pre` — one row per SCV with complete VA-Spec Statement record. <span class="role-badge badge-pipeline">Pipeline table</span>
+**Output:** `gks_scv_statement_pre` — one row per SCV with complete VA-Spec Statement record. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ---
 
@@ -71,7 +71,7 @@ Final assembly of VA-Spec Statement records. Joins SCV records with propositions
 | `temp_penetrance_qualifiers` | Penetrance qualifiers for low-penetrance and risk alleles | <span class="role-badge badge-internal">Internal</span> |
 | `temp_gks_scv_proposition` | Assembled primary propositions with qualifiers and conditions | <span class="role-badge badge-internal">Internal</span> |
 | `temp_gks_scv_target_proposition` | Somatic target propositions for clinical impact assertions | <span class="role-badge badge-internal">Internal</span> |
-| `gks_statement_scv_pre` | Complete VA-Spec Statement records for all SCVs | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `gks_scv_statement_pre` | Complete VA-Spec Statement records for all SCVs | <span class="role-badge badge-pipeline">Pipeline table</span> |
 
 ---
 
