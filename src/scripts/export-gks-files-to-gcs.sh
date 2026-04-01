@@ -30,8 +30,8 @@ PUBLIC_FILE_VERSION="_${DATASET_VERSION}"
 # --- Table and Output Mapping ---
 TABLE_NAMES=(
   "gks_catvar"
-  "gks_statement_scv_by_ref"
-  "gks_statement_scv_inline"
+  "gks_scv_statement_by_ref"
+  "gks_scv_statement_inline"
 )
 OUTPUT_NAMES=(
   "variation"

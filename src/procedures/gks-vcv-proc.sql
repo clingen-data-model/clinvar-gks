@@ -178,12 +178,12 @@ BEGIN
       )
       SELECT
         CASE
-          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s-%s-%s-%s-%s', full_vcv_id, statement_group, prop_type, submission_level, LOWER(tier_grouping))
-          ELSE FORMAT('%s-%s-%s-%s', full_vcv_id, statement_group, prop_type, submission_level)
+          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s-%s-%s-%s-%s', full_vcv_id, statement_group, UPPER(prop_type), submission_level, LOWER(tier_grouping))
+          ELSE FORMAT('%s-%s-%s-%s', full_vcv_id, statement_group, UPPER(prop_type), submission_level)
         END AS id,
         CASE
-          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s.%s.%s.%s.%s', variation_id, statement_group, prop_type, submission_level, LOWER(tier_grouping))
-          ELSE FORMAT('%s.%s.%s.%s', variation_id, statement_group, prop_type, submission_level)
+          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s.%s.%s.%s.%s', variation_id, statement_group, UPPER(prop_type), submission_level, LOWER(tier_grouping))
+          ELSE FORMAT('%s.%s.%s.%s', variation_id, statement_group, UPPER(prop_type), submission_level)
         END AS prop_id,
         *
       FROM final_prep
@@ -227,8 +227,8 @@ BEGIN
           FROM delta_prep
       )
       SELECT
-        FORMAT('%s-%s-%s-%s', full_vcv_id, statement_group, prop_type, submission_level) AS id,
-        FORMAT('%s.%s.%s.%s', variation_id, statement_group, prop_type, submission_level) AS prop_id,
+        FORMAT('%s-%s-%s-%s', full_vcv_id, statement_group, UPPER(prop_type), submission_level) AS id,
+        FORMAT('%s.%s.%s.%s', variation_id, statement_group, UPPER(prop_type), submission_level) AS prop_id,
         variation_id, full_vcv_id, statement_group, prop_type, submission_level,
         agg_label, agg_label_conflicting_explanation,
         top_unique_traits as unique_traits,
@@ -279,8 +279,8 @@ BEGIN
           GROUP BY 1, 2, 3
       )
       SELECT
-        FORMAT('%s-%s-%s', w.full_vcv_id, w.statement_group, w.prop_type) AS id,
-        FORMAT('%s.%s.%s', w.variation_id, w.statement_group, w.prop_type) AS prop_id,
+        FORMAT('%s-%s-%s', w.full_vcv_id, w.statement_group, UPPER(w.prop_type)) AS id,
+        FORMAT('%s.%s.%s', w.variation_id, w.statement_group, UPPER(w.prop_type)) AS prop_id,
         w.variation_id, w.full_vcv_id, w.statement_group, w.prop_type,
         w.source_id as contributing_layer_id,
         w.submission_level as contributing_submission_level,
