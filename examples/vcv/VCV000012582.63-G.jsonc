@@ -41,32 +41,32 @@
                     {
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
-                        {"id": "SCV001736991.1"},
-                        {"id": "SCV002525678.1"},
-                        {"id": "SCV005044128.1"},
-                        {"id": "SCV005634967.1"},
-                        {"id": "SCV000329383.7"},
-                        {"id": "SCV006304919.1"},
-                        {"id": "SCV004176950.1"},
-                        {"id": "SCV002821689.24"},
-                        {"id": "SCV002318898.3"},
-                        {"id": "SCV002601600.1"},
-                        {"id": "SCV000659085.3"},
-                        {"id": "SCV005414064.1"},
-                        {"id": "SCV005023563.1"}
+                        {"id": "clinvar.submission:SCV001736991.1"},
+                        {"id": "clinvar.submission:SCV002525678.1"},
+                        {"id": "clinvar.submission:SCV005044128.1"},
+                        {"id": "clinvar.submission:SCV005634967.1"},
+                        {"id": "clinvar.submission:SCV000329383.7"},
+                        {"id": "clinvar.submission:SCV006304919.1"},
+                        {"id": "clinvar.submission:SCV004176950.1"},
+                        {"id": "clinvar.submission:SCV002821689.24"},
+                        {"id": "clinvar.submission:SCV002318898.3"},
+                        {"id": "clinvar.submission:SCV002601600.1"},
+                        {"id": "clinvar.submission:SCV000659085.3"},
+                        {"id": "clinvar.submission:SCV005414064.1"},
+                        {"id": "clinvar.submission:SCV005023563.1"}
                       ],
                       "strengthOfEvidenceProvided": "contributing",
                       "type": "EvidenceLine"
                     }
                   ],
-                  "id": "VCV000012582.63-G-path-CP",
+                  "id": "VCV000012582.63-G-PATH-CP",
                   "proposition": {
                     "aggregateQualifiers": [
                       {"name": "AssertionGroup", "value": "Germline"},
                       {"name": "PropositionType", "value": "Pathogenicity"},
                       {"name": "SubmissionLevel", "value": "criteria provided"}
                     ],
-                    "id": "12582.G.path.CP",
+                    "id": "12582.G.PATH.CP",
                     "objectClassification_mappableConcept": {
                       "conceptType": "Classification",
                       "name": "Pathogenic/Likely pathogenic"
@@ -99,39 +99,39 @@
                     {
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
-                        {"id": "SCV000033659.5"},
-                        {"id": "SCV000033658.5"},
-                        {"id": "SCV001739511.1"},
-                        {"id": "SCV000198480.2"},
-                        {"id": "SCV000198479.2"},
-                        {"id": "SCV000191996.4"},
-                        {"id": "SCV000784594.1"},
-                        {"id": "SCV000044088.5"},
-                        {"id": "SCV000693723.1"},
-                        {"id": "SCV000882686.2"},
-                        {"id": "SCV000999192.1"},
-                        {"id": "SCV001571657.2"},
-                        {"id": "SCV000051861.5"},
-                        {"id": "SCV000051860.5"},
-                        {"id": "SCV000992585.2"},
-                        {"id": "SCV001550138.2"},
-                        {"id": "SCV000191997.4"},
-                        {"id": "SCV000611562.1"},
-                        {"id": "SCV000882700.3"},
-                        {"id": "SCV000198478.2"}
+                        {"id": "clinvar.submission:SCV000033659.5"},
+                        {"id": "clinvar.submission:SCV000033658.5"},
+                        {"id": "clinvar.submission:SCV001739511.1"},
+                        {"id": "clinvar.submission:SCV000198480.2"},
+                        {"id": "clinvar.submission:SCV000198479.2"},
+                        {"id": "clinvar.submission:SCV000191996.4"},
+                        {"id": "clinvar.submission:SCV000784594.1"},
+                        {"id": "clinvar.submission:SCV000044088.5"},
+                        {"id": "clinvar.submission:SCV000693723.1"},
+                        {"id": "clinvar.submission:SCV000882686.2"},
+                        {"id": "clinvar.submission:SCV000999192.1"},
+                        {"id": "clinvar.submission:SCV001571657.2"},
+                        {"id": "clinvar.submission:SCV000051861.5"},
+                        {"id": "clinvar.submission:SCV000051860.5"},
+                        {"id": "clinvar.submission:SCV000992585.2"},
+                        {"id": "clinvar.submission:SCV001550138.2"},
+                        {"id": "clinvar.submission:SCV000191997.4"},
+                        {"id": "clinvar.submission:SCV000611562.1"},
+                        {"id": "clinvar.submission:SCV000882700.3"},
+                        {"id": "clinvar.submission:SCV000198478.2"}
                       ],
                       "strengthOfEvidenceProvided": "contributing",
                       "type": "EvidenceLine"
                     }
                   ],
-                  "id": "VCV000012582.63-G-path-NOCP",
+                  "id": "VCV000012582.63-G-PATH-NOCP",
                   "proposition": {
                     "aggregateQualifiers": [
                       {"name": "AssertionGroup", "value": "Germline"},
                       {"name": "PropositionType", "value": "Pathogenicity"},
                       {"name": "SubmissionLevel", "value": "no assertion criteria provided"}
                     ],
-                    "id": "12582.G.path.NOCP",
+                    "id": "12582.G.PATH.NOCP",
                     "objectClassification_mappableConcept": {
                       "conceptType": "Classification",
                       "name": "Pathogenic/Likely pathogenic"
@@ -148,13 +148,13 @@
               "type": "EvidenceLine"
             }
           ],
-          "id": "VCV000012582.63-G-path",
+          "id": "VCV000012582.63-G-PATH",
           "proposition": {
             "aggregateQualifiers": [
               {"name": "AssertionGroup", "value": "Germline"},
               {"name": "PropositionType", "value": "Pathogenicity"}
             ],
-            "id": "12582.G.path",
+            "id": "12582.G.PATH",
             "objectClassification_mappableConcept": {
               "conceptType": "Classification",
               "name": "Pathogenic/Likely pathogenic"
@@ -193,20 +193,20 @@
                     {
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
-                        {"id": "SCV004035006.2"}
+                        {"id": "clinvar.submission:SCV004035006.2"}
                       ],
                       "strengthOfEvidenceProvided": "contributing",
                       "type": "EvidenceLine"
                     }
                   ],
-                  "id": "VCV000012582.63-G-assoc-NOCP",
+                  "id": "VCV000012582.63-G-ASSOC-NOCP",
                   "proposition": {
                     "aggregateQualifiers": [
                       {"name": "AssertionGroup", "value": "Germline"},
                       {"name": "PropositionType", "value": "Association"},
                       {"name": "SubmissionLevel", "value": "no assertion criteria provided"}
                     ],
-                    "id": "12582.G.assoc.NOCP",
+                    "id": "12582.G.ASSOC.NOCP",
                     "objectClassification_mappableConcept": {
                       "conceptType": "Classification",
                       "name": "association"
@@ -223,13 +223,13 @@
               "type": "EvidenceLine"
             }
           ],
-          "id": "VCV000012582.63-G-assoc",
+          "id": "VCV000012582.63-G-ASSOC",
           "proposition": {
             "aggregateQualifiers": [
               {"name": "AssertionGroup", "value": "Germline"},
               {"name": "PropositionType", "value": "Association"}
             ],
-            "id": "12582.G.assoc",
+            "id": "12582.G.ASSOC",
             "objectClassification_mappableConcept": {
               "conceptType": "Classification",
               "name": "association"
@@ -268,20 +268,20 @@
                     {
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
-                        {"id": "SCV002099547.2"}
+                        {"id": "clinvar.submission:SCV002099547.2"}
                       ],
                       "strengthOfEvidenceProvided": "contributing",
                       "type": "EvidenceLine"
                     }
                   ],
-                  "id": "VCV000012582.63-G-np-NOCL",
+                  "id": "VCV000012582.63-G-NP-NOCL",
                   "proposition": {
                     "aggregateQualifiers": [
                       {"name": "AssertionGroup", "value": "Germline"},
                       {"name": "PropositionType", "value": "Not Provided"},
                       {"name": "SubmissionLevel", "value": "no classification"}
                     ],
-                    "id": "12582.G.np.NOCL",
+                    "id": "12582.G.NP.NOCL",
                     "objectClassification_mappableConcept": {
                       "conceptType": "Classification",
                       "name": "not provided"
@@ -298,13 +298,13 @@
               "type": "EvidenceLine"
             }
           ],
-          "id": "VCV000012582.63-G-np",
+          "id": "VCV000012582.63-G-NP",
           "proposition": {
             "aggregateQualifiers": [
               {"name": "AssertionGroup", "value": "Germline"},
               {"name": "PropositionType", "value": "Not Provided"}
             ],
-            "id": "12582.G.np",
+            "id": "12582.G.NP",
             "objectClassification_mappableConcept": {
               "conceptType": "Classification",
               "name": "not provided"
