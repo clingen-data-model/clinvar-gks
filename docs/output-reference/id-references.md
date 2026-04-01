@@ -29,7 +29,7 @@ When a field contains an ID-only reference (rather than a full embedded object),
 
 | Reference Field | Appears In | ID Format | Resolves To | Target File |
 | --- | --- | --- | --- | --- |
-| `proposition.subjectVariation` | SCV statements (by-ref) | `clinvar:{variation_id}` | Categorical Variant record | `variation.jsonl.gz` |
+| `proposition.subjectVariant` | SCV statements (by-ref) | `clinvar:{variation_id}` | Categorical Variant record | `variation.jsonl.gz` |
 | `proposition.subjectVariant` | VCV statements | `clinvar:{variation_id}` | Categorical Variant record | `variation.jsonl.gz` |
 | `evidenceItems[].id` (leaf) | VCV statements | `clinvar.submission:SCV{id}.{ver}` | SCV Statement record | `scv_by_ref.jsonl.gz` |
 | `contributor.id` | SCV statements | `clinvar.submitter:{id}` | Submitter organization | Not exported as standalone — embedded in SCV records |

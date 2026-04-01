@@ -15,11 +15,11 @@ These files are produced by the [SCV Statements procedure](../pipeline/scv-state
 
 ## By-Reference Format
 
-In the by-reference format, the `proposition.subjectVariation` field contains a string reference (JSON pointer) to the categorical variant record rather than the full embedded structure. This format is compact and avoids duplicating variant data across thousands of statements that reference the same variant.
+In the by-reference format, the `proposition.subjectVariant` field contains a string reference (JSON pointer) to the categorical variant record rather than the full embedded structure. This format is compact and avoids duplicating variant data across thousands of statements that reference the same variant.
 
 ## Inline Format
 
-In the inline format, the `proposition.subjectVariation` field contains the full `CategoricalVariant` structure — the same content found in `variation.jsonl.gz` — embedded directly within each statement. Conditions are similarly embedded. This format is self-contained — each record has all the data needed to interpret the statement without cross-referencing other files.
+In the inline format, the `proposition.subjectVariant` field contains the full `CategoricalVariant` structure — the same content found in `variation.jsonl.gz` — embedded directly within each statement. Conditions are similarly embedded. This format is self-contained — each record has all the data needed to interpret the statement without cross-referencing other files.
 
 ---
 
@@ -31,7 +31,7 @@ Each record is a VA-Spec `Statement` with the following top-level fields:
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `id` | string | SCV accession with version — `SCV000123456.1` |
+| `id` | string | SCV accession with version — `clinvar.submission:SCV000123456.1` |
 | `type` | string | Always `Statement` |
 | `classification` | object | The submitter's clinical classification (e.g., Pathogenic, Tier I) |
 | `direction` | string | Whether the evidence `supports` or `disputes` the proposition |
@@ -65,7 +65,7 @@ The `proposition` describes the clinical claim being made. Its `type` determines
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `subjectVariation` | object or string | The variant — inline `CategoricalVariant` or a JSON pointer reference |
+| `subjectVariant` | object or string | The variant — inline `CategoricalVariant` or a JSON pointer reference |
 | `objectCondition` | object | The disease or condition (for pathogenicity/oncogenicity) |
 | `objectTherapy` | object | The therapy (for therapeutic response propositions) |
 | `conditionQualifier` | object | The disease context (for therapeutic response propositions) |

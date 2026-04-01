@@ -145,11 +145,11 @@ Layer-specific differences:
 
 ### Layer 1 PRE
 
-Inlines SCV evidence items from `gks_statement_scv_pre` and populates the PGEP classification and objectClassification fields.
+Inlines SCV evidence items from `gks_scv_statement_pre` and populates the PGEP classification and objectClassification fields.
 
 For PGEP records, the step:
 
-1. Joins each contributing SCV to `gks_statement_scv_pre`, `scv_summary`, `gks_scv_condition_sets`, and `submission_level` to extract per-SCV classification, condition, and submission level data
+1. Joins each contributing SCV to `gks_scv_statement_pre`, `scv_summary`, `gks_scv_condition_sets`, and `submission_level` to extract per-SCV classification, condition, and submission level data
 2. Builds ConceptSet AND-groups for **classification** -- each group contains three concepts (Classification, Condition, SubmissionLevel) plus a `description` extension
 3. Builds ConceptSet AND-groups for **objectClassification** -- same structure but deduplicated across submitters and without extensions
 4. Populates `classification_conceptSet` (single classification) or `classification_conceptSetSet` (multiple classifications) based on SCV count
@@ -236,7 +236,7 @@ Combines Layer 4 PRE (germline) and Layer 3 PRE (somatic, filtered by `id LIKE '
 ### gks_vcv_statement_proc
 
 - **Aggregation Tables**: `gks_vcv_layer1_base_agg`, `gks_vcv_layer2_tier_agg`, `gks_vcv_layer3_prop_agg`, `gks_vcv_layer4_group_agg`
-- **Statement Tables**: `gks_statement_scv_pre`, `gks_scv_condition_sets`
+- **Statement Tables**: `gks_scv_statement_pre`, `gks_scv_condition_sets`
 - **Source Tables**: `scv_summary`
 - **Lookup Tables**: `clinvar_statement_categories`, `clinvar_proposition_types`, `submission_level`, `clinvar_clinsig_types`
 - **UDFs**: `clinvar_ingest.schema_on`, `clinvar_ingest.cleanup_temp_tables`

@@ -401,7 +401,7 @@ CASE
 END AS pgep_scv_ids,
 ```
 
-The actual per-SCV classification data (name, description) will be resolved in the VCV statement proc by joining back to `gks_statement_scv_pre` using these SCV IDs. This avoids duplicating condition/submitter data in the aggregation tables.
+The actual per-SCV classification data (name, description) will be resolved in the VCV statement proc by joining back to `gks_scv_statement_pre` using these SCV IDs. This avoids duplicating condition/submitter data in the aggregation tables.
 
 - [ ] **Step 3.6: Add aggregate review status to Layer 1**
 
@@ -589,7 +589,7 @@ git commit -m "Replace classification with aggregate_classification_single/array
 
 The current L1 PRE has `ep_pg_scv_name` CTE that generates formatted explanation strings. This needs to be reworked to populate both `aggregate_classification_array` and `proposition.objectClassification_conceptSet` for PGEP records.
 
-For PGEP records, join to `gks_statement_scv_pre` to get each SCV's classification name and description extension, then build the statement-level array:
+For PGEP records, join to `gks_scv_statement_pre` to get each SCV's classification name and description extension, then build the statement-level array:
 
 ```sql
 pgep_classifications AS (
@@ -605,7 +605,7 @@ pgep_classifications AS (
     ) AS classifications
   FROM `{S}.gks_vcv_layer1_base_agg` agg
   CROSS JOIN UNNEST(agg.full_scv_ids) AS full_scv_id
-  JOIN `{S}.gks_statement_scv_pre` scv_pre ON scv_pre.id = FORMAT('clinvar.submission:%s', full_scv_id)
+  JOIN `{S}.gks_scv_statement_pre` scv_pre ON scv_pre.id = FORMAT('clinvar.submission:%s', full_scv_id)
   WHERE agg.submission_level = 'PGEP'
   GROUP BY agg.id
 )
@@ -645,7 +645,7 @@ pgep_object_concepts AS (
     ) AS concept_set
   FROM `{S}.gks_vcv_layer1_base_agg` agg
   CROSS JOIN UNNEST(agg.full_scv_ids) AS full_scv_id
-  JOIN `{S}.gks_statement_scv_pre` scv_pre ON scv_pre.id = FORMAT('clinvar.submission:%s', full_scv_id)
+  JOIN `{S}.gks_scv_statement_pre` scv_pre ON scv_pre.id = FORMAT('clinvar.submission:%s', full_scv_id)
   JOIN `{S}.scv_summary` ss ON ss.full_scv_id = full_scv_id
   LEFT JOIN `clinvar_ingest.submission_level` sl ON sl.rank = ss.rank
   LEFT JOIN `{S}.gks_scv_condition_sets` scs ON scs.scv_id = ss.id

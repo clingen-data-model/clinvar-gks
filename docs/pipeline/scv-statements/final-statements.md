@@ -2,7 +2,7 @@
 
 ## Overview
 
-Step 7 of `gks_scv_statement_proc` performs the final assembly of complete VA-Spec Statement records into `gks_statement_scv_pre`. This step joins all previously built components -- SCV records, propositions, conditions, citations, and assertion methods -- into the output structure consumed by VCV procedures and the JSON export pipeline.
+Step 7 of `gks_scv_statement_proc` performs the final assembly of complete VA-Spec Statement records into `gks_scv_statement_pre`. This step joins all previously built components -- SCV records, propositions, conditions, citations, and assertion methods -- into the output structure consumed by VCV procedures and the JSON export pipeline.
 
 ---
 
@@ -89,7 +89,7 @@ For somatic clinical impact assertions, the `hasEvidenceLines` field contains ev
 
 ## Output
 
-**`gks_statement_scv_pre`** -- one row per SCV with the complete VA-Spec Statement record. <span class="role-badge badge-pipeline">Pipeline table</span>
+**`gks_scv_statement_pre`** -- one row per SCV with the complete VA-Spec Statement record. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 Consumed by `gks_vcv_proc`, `gks_vcv_statement_proc`, and `gks_json_proc` for VCV aggregation and JSON export.
 

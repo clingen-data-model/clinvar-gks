@@ -11,8 +11,8 @@ This section documents the JSON output from a **consumer perspective** — what 
 | File | Content | Records | Pipeline Source |
 | --- | --- | --- | --- |
 | `variation.jsonl.gz` | [Categorical Variants](cat-vrs.md) | One per ClinVar variation with a resolved VRS identity | `gks_catvar` table via [Cat-VRS](../pipeline/cat-vrs/index.md) |
-| `scv_by_ref.jsonl.gz` | [SCV Statements (by reference)](scv-statements.md#by-reference-format) | One per submitted clinical assertion | `gks_statement_scv_by_ref` table via [SCV Statements](../pipeline/scv-statements/index.md) |
-| `scv_inline.jsonl.gz` | [SCV Statements (inline)](scv-statements.md#inline-format) | One per submitted clinical assertion | `gks_statement_scv_inline` table via [SCV Statements](../pipeline/scv-statements/index.md) |
+| `scv_by_ref.jsonl.gz` | [SCV Statements (by reference)](scv-statements.md#by-reference-format) | One per submitted clinical assertion | `gks_scv_statement_by_ref` table via [SCV Statements](../pipeline/scv-statements/index.md) |
+| `scv_inline.jsonl.gz` | [SCV Statements (inline)](scv-statements.md#inline-format) | One per submitted clinical assertion | `gks_scv_statement_inline` table via [SCV Statements](../pipeline/scv-statements/index.md) |
 
 ---
 
