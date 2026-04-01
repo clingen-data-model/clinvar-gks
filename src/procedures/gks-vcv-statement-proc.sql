@@ -437,7 +437,7 @@ BEGIN
           sl.label AS submission_level_label
         FROM `{S}.gks_vcv_layer1_base_agg` agg
         CROSS JOIN UNNEST(agg.full_scv_ids) AS full_scv_id
-        JOIN `{S}.gks_statement_scv_pre` scv_pre ON scv_pre.id = FORMAT('clinvar.submission:%s', full_scv_id)
+        JOIN `{S}.gks_scv_statement_pre` scv_pre ON scv_pre.id = FORMAT('clinvar.submission:%s', full_scv_id)
         JOIN `{S}.scv_summary` ss ON ss.full_scv_id = full_scv_id
         LEFT JOIN `{S}.gks_scv_condition_sets` scs ON scs.scv_id = ss.id
         LEFT JOIN `clinvar_ingest.submission_level` sl ON sl.rank = ss.rank

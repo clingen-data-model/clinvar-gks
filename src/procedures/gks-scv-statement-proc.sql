@@ -328,9 +328,10 @@ BEGIN
       {CT} {P}.temp_gks_scv_proposition
       AS
         SELECT
-          scv.id,
+          scv.id as scv_id,
+          FORMAT('clinvar.submission:%s', scv.id) as id,
           scv.proposition.type as type,
-          FORMAT('clinvar:%s', scv.variation_id) as subjectVariation,
+          FORMAT('clinvar:%s', scv.variation_id) as subjectVariant,
           scv.proposition.pred as predicate,
           scs.condition as objectCondition_single,
           scs.conditionSet as objectCondition_compound,
@@ -391,9 +392,10 @@ BEGIN
           HAVING COUNT(*) = 1
         )
         SELECT
-          scv.id,
+          scv.id as scv_id,
+          FORMAT('clinvar.submission:%s', scv.id) as id,
           scv.evidence_line_target_proposition.type as type,
-          '4/proposition/subjectVariation' as subjectVariation,
+          '4/proposition/subjectVariant' as subjectVariant,
           scv.evidence_line_target_proposition.pred as predicate,
           IF(
             scv.clinical_impact_assertion_type IS DISTINCT FROM 'therapeutic',
@@ -451,7 +453,7 @@ BEGIN
     -- Step 7: Create statement SCV pre table
     ---------------------------------------------------------------------------
     SET query_statement_scv_pre = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_statement_scv_pre`
+      CREATE OR REPLACE TABLE `{S}.gks_scv_statement_pre`
       as
       WITH scv_condition_name AS (
         SELECT
@@ -556,7 +558,7 @@ BEGIN
       SELECT
         FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
         'Statement' as type,
-        sp as proposition,
+        (SELECT AS STRUCT sp.* EXCEPT(scv_id)) as proposition,
         STRUCT(
           scv.submitted_classification as name,
           IF(
@@ -637,7 +639,7 @@ BEGIN
             STRUCT(
               FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
               'EvidenceLine' as type,
-              stp as proposition,
+              (SELECT AS STRUCT stp.* EXCEPT(scv_id)) as proposition,
               'supports' as directionOfEvidenceProvided,
               CASE scv.classification_code
                 WHEN 'tier 1' THEN
@@ -654,10 +656,10 @@ BEGIN
       FROM {P}.temp_gks_scv scv
       JOIN {P}.temp_gks_scv_proposition sp
       ON
-        sp.id = scv.id
+        sp.scv_id = scv.id
       LEFT JOIN {P}.temp_gks_scv_target_proposition stp
       ON
-        stp.id = scv.id
+        stp.scv_id = scv.id
       LEFT JOIN scv_method sm
       ON
         sm.id = scv.id
