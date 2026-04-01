@@ -57,7 +57,7 @@
       "value": "SUB14849276"
     }
   ],
-  "id": "SCV005387955.1",
+  "id": "clinvar.submission:SCV005387955.1",
   "proposition": {
     "geneContextQualifier": {
       "conceptType": "gene",
@@ -85,7 +85,7 @@
         "system": "https://www.ncbi.nlm.nih.gov/gene/"
       }
     },
-    "id": "SCV005387955",
+    "id": "clinvar.submission:SCV005387955",
     "objectCondition": {
       "conceptType": "Disease",
       "extensions": [
@@ -168,7 +168,7 @@
       }
     },
     "predicate": "isClinicallySignificantFor",
-    "subjectVariation": {
+    "subjectVariant": {
       "constraints": [
         {
           "allele": "2/members/0/",

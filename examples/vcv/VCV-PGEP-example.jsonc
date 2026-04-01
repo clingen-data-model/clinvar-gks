@@ -28,14 +28,14 @@
       "type": "EvidenceLine"
     }
   ],
-  "id": "VCV999999999.1-G-path-PGEP",
+  "id": "VCV999999999.1-G-PATH-PGEP",
   "proposition": {
     "aggregateQualifiers": [
       {"name": "AssertionGroup", "value": "Germline"},
       {"name": "PropositionType", "value": "Pathogenicity"},
       {"name": "SubmissionLevel", "value": "practice guideline and expert panel"}
     ],
-    "id": "999999999.G.path.PGEP",
+    "id": "999999999.G.PATH.PGEP",
     "objectClassification_conceptSet": {
       "type": "ConceptSet",
       "concepts": [

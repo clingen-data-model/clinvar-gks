@@ -56,7 +56,7 @@
       "value": "NM_004985.5:c.35G>A|OMIM:613001"
     }
   ],
-  "id": "SCV002099547.2",
+  "id": "clinvar.submission:SCV002099547.2",
   "proposition": {
     "geneContextQualifier": {
       "conceptType": "gene",
@@ -84,7 +84,7 @@
         "system": "https://www.ncbi.nlm.nih.gov/gene/"
       }
     },
-    "id": "SCV002099547",
+    "id": "clinvar.submission:SCV002099547",
     "objectCondition": {
       "conceptType": "Disease",
       "extensions": [
@@ -163,7 +163,7 @@
       }
     },
     "predicate": "hasNoProvidedClassificationFor",
-    "subjectVariation": "clinvar:12582",
+    "subjectVariant": "clinvar:12582",
     "type": "ClinvarNotProvidedProposition"
   },
   "reportedIn": [

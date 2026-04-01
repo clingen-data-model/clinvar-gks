@@ -17,14 +17,14 @@
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "id": "SCV005094257.2"
+                  "id": "clinvar.submission:SCV005094257.2"
                 }
               ],
               "strengthOfEvidenceProvided": "contributing",
               "type": "EvidenceLine"
             }
           ],
-          "id": "VCV000012582.63-S-onco-CP",
+          "id": "VCV000012582.63-S-ONCO-CP",
           "proposition": {
             "aggregateQualifier": [
               {
@@ -40,9 +40,9 @@
                 "value": "criteria provided"
               }
             ],
-            "id": "12582.S.onco.CP",
+            "id": "12582.S.ONCO.CP",
             "predicate": "hasAggregateClassification",
-            "subjectVariant": "12582",
+            "subjectVariant": "clinvar:12582",
             "type": "AggregateStatementProposition"
           },
           "strength": "definitive",
@@ -53,7 +53,7 @@
       "type": "EvidenceLine"
     }
   ],
-  "id": "VCV000012582.63-S-onco",
+  "id": "VCV000012582.63-S-ONCO",
   "proposition": {
     "aggregateQualifier": [
       {
@@ -65,9 +65,9 @@
         "value": "Oncogenicity"
       }
     ],
-    "id": "12582.S.onco",
+    "id": "12582.S.ONCO",
     "predicate": "hasAggregateClassification",
-    "subjectVariant": "12582",
+    "subjectVariant": "clinvar:12582",
     "type": "AggregateStatementProposition"
   },
   "strength": "definitive",
