@@ -24,6 +24,12 @@ Per-profile reference pages with downloadable JSON Schema (draft 2020-12) files 
 
 **Status:** Planning complete. Implementation in progress on `feature/profile-schemas-and-docs` branch.
 
+### ACMGv4 Variant Pathogenicity Profile
+
+Defining the ClinVar-GKS profile for variant pathogenicity classification using the ACMG/AMP v4 evidence framework. This project maps ACMG v4 evidence criteria, rule combinations, and classification outcomes into GKS Statement and EvidenceLine structures.
+
+**Status:** Early design. See [ACMGv4 Variant Pathogenicity](acmgv4-variant-pathogenicity.md) for the draft.
+
 ### VCV Aggregate Classification Refactor
 
 Restructured VCV aggregate classification using a 3-way attribute split:
@@ -42,6 +48,7 @@ The same 3-way split applies to `objectClassification` in the proposition. Each 
 
 Pages linked below are early drafts. They may contain incomplete information or placeholder content.
 
+- [ACMGv4 Variant Pathogenicity](acmgv4-variant-pathogenicity.md) — ACMG v4 evidence criteria and classification profile
 - [VCV Aggregation Rules](../pipeline/vcv-statements/vcv-aggregation-rules.md) — submission level logic, ConceptSet classification schema
 - [ID References](../output-reference/id-references.md) — cross-file reference resolution guide
 
