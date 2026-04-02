@@ -114,7 +114,7 @@ BEGIN
       ),
       final_prep AS (
           SELECT
-            c.variation_id, c.full_vcv_id, c.statement_group, c.prop_type,
+            c.variation_id, c.vcv_accession, c.full_vcv_id, c.statement_group, c.prop_type,
             c.submission_level, c.tier_grouping, c.full_scv_ids,
             c.tier_priority, c.prop_display_order, COALESCE(sc.unique_traits, []) as unique_traits,
 
