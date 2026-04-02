@@ -206,7 +206,7 @@ BEGIN
             ) ORDER BY tier_priority ASC, ARRAY_LENGTH(full_scv_ids) DESC) as findings
           FROM `{S}.gks_vcv_layer1_base_agg`
           WHERE tier_grouping IS NOT NULL
-          GROUP BY 1, 2, 3, 4, 5
+          GROUP BY 1, 2, 3, 4, 5, 6
       ),
       delta_prep AS (
           SELECT sb.*,
