@@ -1,6 +1,12 @@
 {
   "classification": {
-    "name": "Tier III",
+    "extensions": [
+      {
+        "name": "description",
+        "value": "for Familial papillary thyroid carcinoma with renal papillary neoplasia\nClassification is based on the no assertion criteria provided submission\nSep 2024 by Excellence Center for Genomics and Precision Medicine, King Chulalongkorn Memorial Hospital and Chulalongkorn University, Chulalongkorn University"
+      }
+    ],
+    "name": "Tier III - Unknown",
     "primaryCoding": {
       "code": "tier 3",
       "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017"
@@ -53,8 +59,16 @@
       "value": "no assertion criteria provided"
     },
     {
+      "name": "submittedScvClassification",
+      "value": "Tier III - Unknown"
+    },
+    {
       "name": "submittedScvLocalKey",
       "value": "SUB14849276"
+    },
+    {
+      "name": "submissionLevel",
+      "value": "NOCP"
     }
   ],
   "id": "clinvar.submission:SCV005387955.1",
@@ -147,11 +161,51 @@
         {
           "coding": {
             "code": "MONDO:0011578",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "name"
+              }
+            ],
             "iris": [
-              "https://identifiers.org/mondo:0011578",
-              "http://purl.obolibrary.org/obo/MONDO_0011578"
+              "http://purl.obolibrary.org/obo/MONDO_0011578",
+              "https://identifiers.org/mondo:0011578"
             ],
             "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "605642",
+            "extensions": [
+              {
+                "name": "mappingType",
+                "value": "MIM"
+              },
+              {
+                "name": "mappingRefFields",
+                "value": "alternate_symbols"
+              }
+            ],
+            "iris": [
+              "https://www.omim.org/entry/605642",
+              "https://identifiers.org/mim:605642"
+            ],
+            "system": "OMIM"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "16853",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "gard_id"
+              }
+            ],
+            "system": "Office of Rare Diseases"
           },
           "relation": "relatedMatch"
         }
@@ -194,6 +248,22 @@
       ],
       "extensions": [
         {
+          "name": "clinvarVariationType",
+          "value": "single nucleotide variant"
+        },
+        {
+          "name": "clinvarSubclassType",
+          "value": "SimpleAllele"
+        },
+        {
+          "name": "definingVrsVariationType",
+          "value": "Allele"
+        },
+        {
+          "name": "clinvarCytogeneticLocation",
+          "value": "8q24.22"
+        },
+        {
           "name": "clinvarGeneList",
           "value": [
             {
@@ -211,24 +281,8 @@
           ]
         },
         {
-          "name": "definingVrsVariationType",
-          "value": "Allele"
-        },
-        {
           "name": "categoricalVariationType",
           "value": "CanonicalAllele"
-        },
-        {
-          "name": "clinvarSubclassType",
-          "value": "SimpleAllele"
-        },
-        {
-          "name": "clinvarVariationType",
-          "value": "single nucleotide variant"
-        },
-        {
-          "name": "clinvarCytogeneticLocation",
-          "value": "8q24.22"
         },
         {
           "name": "clinvarHgvsList",
@@ -246,6 +300,13 @@
                 "value": "NG_015832.1:g.61460G>A"
               },
               "nucleotideType": "genomic"
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000008.10:g.133935664G>A"
+              },
+              "nucleotideType": "genomic, top-level"
             },
             {
               "nucleotideExpression": {
@@ -275,13 +336,6 @@
                 "syntax": "hgvs.p",
                 "value": "NP_003226.4:p.Gly1537Asp"
               }
-            },
-            {
-              "nucleotideExpression": {
-                "syntax": "hgvs.g",
-                "value": "NC_000008.10:g.133935664G>A"
-              },
-              "nucleotideType": "genomic, top-level"
             }
           ]
         }

@@ -121,3 +121,11 @@ Common extensions:
 | `clinvar cytogenetic location` | string | Chromosomal band location (e.g., `1p36.22`) |
 | `clinvar assembly` | string | Reference genome assembly (e.g., `GRCh38`) |
 | `hgvs list` | array | All HGVS expressions with molecular consequences and MANE designations |
+
+---
+
+## Examples
+
+Annotated JSONC examples of categorical variant records are available in the repository:
+
+- [Cat-VRS examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/cat-vrs) — `CanonicalAllele` records for ClinVar variations

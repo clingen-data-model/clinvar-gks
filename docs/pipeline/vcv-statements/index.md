@@ -53,3 +53,9 @@ SCV Statements (gks_scv_statement_pre)
 
 - [Aggregation Rules](vcv-aggregation-rules.md) — submission level logic, classification output formats, review status derivation, and layer hierarchy
 - [VCV Procedures](vcv-proc.md) — detailed documentation of `gks_vcv_proc` and `gks_vcv_statement_proc`
+
+---
+
+## Examples
+
+See [VCV statement examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/vcv) in the repository for annotated JSONC examples of germline, somatic, and PGEP aggregate classification statements.

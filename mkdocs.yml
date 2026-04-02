@@ -92,6 +92,8 @@ nav:
     - drafts/index.md
     - ACMGv4 Variant Pathogenicity:
       - drafts/acmgv4-variant-pathogenicity/index.md
+      - Case Data Model (Notes): drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM.md
+      - Case Schema & Matrix: drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM-Schema.md
   - Reference:
     - reference/gks-standards.md
     - Known Issues: reference/known-issues.md

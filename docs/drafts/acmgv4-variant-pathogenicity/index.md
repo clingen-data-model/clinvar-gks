@@ -183,6 +183,15 @@ The full annotated example is available as a JSON file:
 
 ---
 
+## Human Observation Case Data Model
+
+Working documents for the case data structures used in the ACMGv4 Human Observation evidence framework:
+
+- [Case Data Model (Notes)](ACMGv4-Case-DM.md) — Annotated JSON examples for each CLN case group (UAF, ALT, AFF, DNV), showing the attributes and controlled values used in each workflow grouping
+- [Case Schema & Attribute Matrix](ACMGv4-Case-DM-Schema.md) — Superset case schema derived from all examples, with an attribute-by-group matrix and reference tables for acronyms and controlled values
+
+---
+
 ## Open Questions
 
 These design questions are being discussed with the SVC v4 working group:
