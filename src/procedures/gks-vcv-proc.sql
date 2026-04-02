@@ -31,6 +31,7 @@ BEGIN
       CLUSTER BY variation_id, statement_group, submission_level AS
       SELECT
           ss.variation_id,
+          va.id AS vcv_accession,
           FORMAT('%s.%d', va.id, va.version) AS full_vcv_id,
           ss.id AS scv_id,
           ss.full_scv_id,
@@ -71,7 +72,7 @@ BEGIN
       WITH
       core_agg AS (
           SELECT
-            variation_id, full_vcv_id, statement_group, prop_type, submission_level,
+            variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             IF(prop_type = 'sci', classif_type, CAST(NULL AS STRING)) as tier_grouping,
             ANY_VALUE(prop_label) as prop_label,
             ANY_VALUE(conflict_detectable) as conflict_detectable,
@@ -182,8 +183,8 @@ BEGIN
           ELSE FORMAT('%s-%s-%s-%s', full_vcv_id, statement_group, UPPER(prop_type), submission_level)
         END AS id,
         CASE
-          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s.%s.%s.%s.%s', variation_id, statement_group, UPPER(prop_type), submission_level, LOWER(tier_grouping))
-          ELSE FORMAT('%s.%s.%s.%s', variation_id, statement_group, UPPER(prop_type), submission_level)
+          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s-%s-%s-%s-%s', vcv_accession, statement_group, UPPER(prop_type), submission_level, LOWER(tier_grouping))
+          ELSE FORMAT('%s-%s-%s-%s', vcv_accession, statement_group, UPPER(prop_type), submission_level)
         END AS prop_id,
         *
       FROM final_prep
@@ -198,7 +199,7 @@ BEGIN
       CREATE OR REPLACE TABLE `{S}.gks_vcv_layer2_tier_agg` AS
       WITH statement_base AS (
           SELECT
-            variation_id, full_vcv_id, statement_group, prop_type, submission_level,
+            variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             ARRAY_AGG(STRUCT(
               tier_priority, prop_display_order, actual_agg_classif_label,
               agg_label_conflicting_explanation, unique_traits, full_scv_ids, id, tier_grouping
@@ -228,8 +229,8 @@ BEGIN
       )
       SELECT
         FORMAT('%s-%s-%s-%s', full_vcv_id, statement_group, UPPER(prop_type), submission_level) AS id,
-        FORMAT('%s.%s.%s.%s', variation_id, statement_group, UPPER(prop_type), submission_level) AS prop_id,
-        variation_id, full_vcv_id, statement_group, prop_type, submission_level,
+        FORMAT('%s-%s-%s-%s', vcv_accession, statement_group, UPPER(prop_type), submission_level) AS prop_id,
+        variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
         agg_label, agg_label_conflicting_explanation,
         top_unique_traits as unique_traits,
         contributing_tier_ids as contributing_statement_ids,
@@ -247,14 +248,14 @@ BEGIN
       CREATE OR REPLACE TABLE `{S}.gks_vcv_layer3_prop_agg` AS
       WITH unified_input AS (
           SELECT
-            id as source_id, variation_id, full_vcv_id, statement_group, prop_type, submission_level,
+            id as source_id, variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             agg_label, agg_label_conflicting_explanation, prop_display_order,
             pgep_strength, aggregate_review_status
           FROM `{S}.gks_vcv_layer2_tier_agg`
           LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `{S}.gks_vcv_layer1_base_agg` GROUP BY 1) ON prop_type = pt
           UNION ALL
           SELECT
-            id as source_id, variation_id, full_vcv_id, statement_group, prop_type, submission_level,
+            id as source_id, variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             actual_agg_classif_label as agg_label, agg_label_conflicting_explanation, prop_display_order,
             pgep_strength, aggregate_review_status
           FROM `{S}.gks_vcv_layer1_base_agg`
@@ -280,8 +281,8 @@ BEGIN
       )
       SELECT
         FORMAT('%s-%s-%s', w.full_vcv_id, w.statement_group, UPPER(w.prop_type)) AS id,
-        FORMAT('%s.%s.%s', w.variation_id, w.statement_group, UPPER(w.prop_type)) AS prop_id,
-        w.variation_id, w.full_vcv_id, w.statement_group, w.prop_type,
+        FORMAT('%s-%s-%s', w.vcv_accession, w.statement_group, UPPER(w.prop_type)) AS prop_id,
+        w.variation_id, w.vcv_accession, w.full_vcv_id, w.statement_group, w.prop_type,
         w.source_id as contributing_layer_id,
         w.submission_level as contributing_submission_level,
         w.agg_label, w.agg_label_conflicting_explanation,
@@ -307,7 +308,7 @@ BEGIN
           WHERE rp.statement_group = 'G'
       ),
       contributing_props AS (
-          SELECT variation_id, full_vcv_id, statement_group,
+          SELECT variation_id, vcv_accession, full_vcv_id, statement_group,
             ARRAY_AGG(id) as contributing_layer3_ids,
             ARRAY_TO_STRING(ARRAY_AGG(agg_label ORDER BY prop_display_order ASC), '; ') as agg_label,
             NULLIF(ARRAY_TO_STRING(ARRAY_AGG(agg_label_conflicting_explanation IGNORE NULLS ORDER BY prop_display_order ASC), '; '), '') as agg_label_conflicting_explanation,
@@ -315,7 +316,7 @@ BEGIN
             ANY_VALUE(aggregate_review_status) AS aggregate_review_status
           FROM ranked_props
           WHERE grp_rnk = 1
-          GROUP BY 1, 2, 3
+          GROUP BY 1, 2, 3, 4
       ),
       non_contributing_props AS (
           SELECT variation_id, statement_group,
@@ -326,7 +327,7 @@ BEGIN
       )
       SELECT
         FORMAT('%s-%s', c.full_vcv_id, c.statement_group) AS id,
-        FORMAT('%s.%s', c.variation_id, c.statement_group) AS prop_id,
+        FORMAT('%s-%s', c.vcv_accession, c.statement_group) AS prop_id,
         c.variation_id, c.full_vcv_id, c.statement_group,
         c.agg_label, c.agg_label_conflicting_explanation,
         c.contributing_layer3_ids,
