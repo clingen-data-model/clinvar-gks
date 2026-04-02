@@ -92,7 +92,8 @@ nav:
     - Examples: data-access/examples.md
   - Under Construction:
     - drafts/index.md
-    - ACMGv4 Variant Pathogenicity: drafts/acmgv4-variant-pathogenicity.md
+    - ACMGv4 Variant Pathogenicity:
+      - drafts/acmgv4-variant-pathogenicity/index.md
   - Reference:
     - reference/gks-standards.md
     - Known Issues: reference/known-issues.md
