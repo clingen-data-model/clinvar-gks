@@ -90,6 +90,8 @@ nav:
     - data-access/index.md
     - Output Files: data-access/output-files.md
     - Examples: data-access/examples.md
+  - Under Construction:
+    - drafts/index.md
   - Reference:
     - reference/gks-standards.md
     - Known Issues: reference/known-issues.md
