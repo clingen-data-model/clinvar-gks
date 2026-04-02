@@ -82,7 +82,7 @@ BEGIN
             ARRAY_AGG(DISTINCT original_submission_level) as contributing_submission_levels,
             COUNT(DISTINCT submitter_id) as unique_submitter_count
           FROM `{P}.temp_vcv_base_data`
-          GROUP BY 1, 2, 3, 4, 5, 6
+          GROUP BY 1, 2, 3, 4, 5, 6, 7
       ),
       label_counts AS (
           SELECT variation_id, statement_group, prop_type, submission_level,
