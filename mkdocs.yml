@@ -69,14 +69,17 @@ nav:
       - SCV Records: pipeline/scv-statements/scv-records.md
       - Propositions: pipeline/scv-statements/propositions.md
       - Final Statements: pipeline/scv-statements/final-statements.md
+      - SCV Extensions: pipeline/scv-statements/scv-extensions.md
     - VCV Statements:
       - pipeline/vcv-statements/index.md
       - Aggregation Rules: pipeline/vcv-statements/vcv-aggregation-rules.md
       - VCV Procedures: pipeline/vcv-statements/vcv-proc.md
+      - VCV Extensions: pipeline/vcv-statements/vcv-extensions.md
   - Output Reference:
     - output-reference/index.md
     - Categorical Variants: output-reference/cat-vrs.md
     - SCV Statements: output-reference/scv-statements.md
+    - VCV Statements: output-reference/vcv-statements.md
     - ID References: output-reference/id-references.md
   - Profiles:
     - profiles/index.md
