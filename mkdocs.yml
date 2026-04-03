@@ -90,6 +90,7 @@ nav:
   - Data Access:
     - data-access/index.md
     - Output Files: data-access/output-files.md
+    - Downloads: data-access/download.md
     - Examples: data-access/examples.md
   - Under Construction:
     - drafts/index.md
