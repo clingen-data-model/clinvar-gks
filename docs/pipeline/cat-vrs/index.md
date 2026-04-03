@@ -124,3 +124,9 @@ Converts the structured records from `gks_catvar_pre` into JSON format using `TO
 - **Source Tables**: `gks_vrs`, `variation_loc`, `variation_hgvs`, `variation_identity`, `variation_xref`, `gene_association`, `gene`
 - **Upstream Procedures**: `variation_identity_proc`, VRS Python processing
 - **Downstream Consumers**: `gks_scv_statement_proc`, export pipeline
+
+---
+
+## Examples
+
+See [Cat-VRS examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/cat-vrs) in the repository for annotated JSONC examples of the output records.

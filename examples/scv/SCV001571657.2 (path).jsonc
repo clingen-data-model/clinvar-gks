@@ -1,0 +1,670 @@
+{
+  "classification": {
+    "extensions": [
+      {
+        "name": "description",
+        "value": "for Acute myeloid leukemia\nClassification is based on the no assertion criteria provided submission\nMar 2018 by Hematopathology, The University of Texas M.D. Anderson Cancer Center"
+      }
+    ],
+    "name": "Pathogenic",
+    "primaryCoding": {
+      "code": "pathogenic",
+      "system": "ACMG Guidelines, 2015"
+    }
+  },
+  "contributions": [
+    {
+      "activityType": "submitted",
+      "contributor": {
+        "id": "clinvar.submitter:508027",
+        "name": "Hematopathology, The University of Texas M.D. Anderson Cancer Center",
+        "type": "Agent"
+      },
+      "date": "2025-04-13",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "created",
+      "contributor": {
+        "id": "clinvar.submitter:508027",
+        "name": "Hematopathology, The University of Texas M.D. Anderson Cancer Center",
+        "type": "Agent"
+      },
+      "date": "2021-04-24",
+      "type": "Contribution"
+    },
+    {
+      "activityType": "evaluated",
+      "contributor": {
+        "id": "clinvar.submitter:508027",
+        "name": "Hematopathology, The University of Texas M.D. Anderson Cancer Center",
+        "type": "Agent"
+      },
+      "date": "2018-03-30",
+      "type": "Contribution"
+    }
+  ],
+  "direction": "supports",
+  "extensions": [
+    {
+      "name": "clinvarScvId",
+      "value": "SCV001571657"
+    },
+    {
+      "name": "clinvarScvVersion",
+      "value": "2"
+    },
+    {
+      "name": "clinvarScvReviewStatus",
+      "value": "no assertion criteria provided"
+    },
+    {
+      "name": "submittedScvLocalKey",
+      "value": "NM_004985.5:c.35G>A|Acute myeloid leukemia"
+    },
+    {
+      "name": "submissionLevel",
+      "value": "NOCP"
+    }
+  ],
+  "id": "clinvar.submission:SCV001571657.2",
+  "proposition": {
+    "geneContextQualifier": {
+      "conceptType": "gene",
+      "mappings": [
+        {
+          "coding": {
+            "code": "6407",
+            "iris": [
+              "https://identifiers.org/hgnc:6407",
+              "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/6407"
+            ],
+            "system": "https://www.genenames.org"
+          },
+          "relation": "exactMatch"
+        }
+      ],
+      "name": "KRAS",
+      "primaryCoding": {
+        "code": "3845",
+        "iris": [
+          "https://identifiers.org/ncbigene:3845",
+          "https://www.ncbi.nlm.nih.gov/gene/3845"
+        ],
+        "name": "KRAS",
+        "system": "https://www.ncbi.nlm.nih.gov/gene/"
+      }
+    },
+    "id": "clinvar.submission:SCV001571657",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "clinvarTraitId",
+          "value": "15736"
+        },
+        {
+          "name": "clinvarTraitType",
+          "value": "Disease"
+        },
+        {
+          "name": "aliases",
+          "value": "Leukemia, acute myeloid, somatic, Leukemia, acute myelogenous, somatic, Acute myeloid leukemia, adult, AML adult, Acute non-lymphocytic leukemia, Acute granulocytic leukemia"
+        },
+        {
+          "name": "submittedScvTraitAssignment",
+          "value": "scv trait: preferred name 'acute myeloid leukemia'"
+        },
+        {
+          "name": "clinvarScvTraitAssignment",
+          "value": "rcv-tm medgen id"
+        },
+        {
+          "name": "clinvarScvTraitMappingType:ref(val)",
+          "value": "name:preferred(acute myeloid leukemia)"
+        },
+        {
+          "name": "clinvarTraitSetType",
+          "value": "Disease"
+        },
+        {
+          "name": "clinvarTraitSetId",
+          "value": "6288"
+        }
+      ],
+      "id": "SCV001571657.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "519",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "name"
+              }
+            ],
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_519",
+              "http://www.orpha.net/ORDO/Orphanet_519"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "D015470",
+            "iris": [
+              "https://identifiers.org/mesh:D015470",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D015470"
+            ],
+            "system": "MeSH"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0018874",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "name"
+              }
+            ],
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0018874",
+              "https://identifiers.org/mondo:0018874"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "601626",
+            "extensions": [
+              {
+                "name": "mappingType",
+                "value": "MIM"
+              },
+              {
+                "name": "mappingRefFields",
+                "value": "symbol"
+              }
+            ],
+            "iris": [
+              "https://www.omim.org/entry/601626",
+              "https://identifiers.org/mim:601626"
+            ],
+            "system": "OMIM"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0004808",
+            "extensions": [
+              {
+                "name": "mappingType",
+                "value": "primary"
+              }
+            ],
+            "iris": [
+              "https://identifiers.org/HP:0004808",
+              "https://hpo.jax.org/browse/term/HP:0004808"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0001914",
+            "extensions": [
+              {
+                "name": "mappingType",
+                "value": "secondary"
+              }
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0004843",
+            "extensions": [
+              {
+                "name": "mappingType",
+                "value": "secondary"
+              }
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0005516",
+            "extensions": [
+              {
+                "name": "mappingType",
+                "value": "secondary"
+              }
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0006724",
+            "extensions": [
+              {
+                "name": "mappingType",
+                "value": "secondary"
+              }
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0006728",
+            "extensions": [
+              {
+                "name": "mappingType",
+                "value": "secondary"
+              }
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0004808",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "name"
+              }
+            ],
+            "iris": [
+              "https://identifiers.org/HP:0004808",
+              "https://hpo.jax.org/browse/term/HP:0004808"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "17788007",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "name"
+              }
+            ],
+            "iris": [
+              "https://identifiers.org/snomedct:17788007"
+            ],
+            "system": "SNOMED CT"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "12757",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "gard_id"
+              }
+            ],
+            "system": "Office of Rare Diseases"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Acute myeloid leukemia",
+      "primaryCoding": {
+        "code": "C0023467",
+        "iris": [
+          "https://identifiers.org/medgen:C0023467",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0023467"
+        ],
+        "name": "Acute myeloid leukemia",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isCausalFor",
+    "subjectVariant": {
+      "constraints": [
+        {
+          "allele": "2/members/0/",
+          "relations": [
+            {
+              "primaryCoding": {
+                "code": "liftover_to",
+                "system": "ga4gh-gks-term:allele-relation"
+              }
+            },
+            {
+              "primaryCoding": {
+                "code": "transcribed_to",
+                "iris": [
+                  "http://www.sequenceontology.org/browser/current_release/term/transcribed_to"
+                ],
+                "system": "http://www.sequenceontology.org"
+              }
+            }
+          ],
+          "type": "DefiningAlleleConstraint"
+        }
+      ],
+      "extensions": [
+        {
+          "name": "clinvarGeneList",
+          "value": [
+            {
+              "entrez_gene_id": "3845",
+              "hgnc_id": "HGNC:6407",
+              "iris": [
+                "https://identifiers.org/hgnc:6407",
+                "https://identifiers.org/ncbigene:3845",
+                "https://www.ncbi.nlm.nih.gov/gene/3845"
+              ],
+              "relationship_type": "within single gene",
+              "source": "submitted",
+              "symbol": "KRAS"
+            }
+          ]
+        },
+        {
+          "name": "categoricalVariationType",
+          "value": "CanonicalAllele"
+        },
+        {
+          "name": "definingVrsVariationType",
+          "value": "Allele"
+        },
+        {
+          "name": "clinvarCytogeneticLocation",
+          "value": "12p12.1"
+        },
+        {
+          "name": "clinvarSubclassType",
+          "value": "SimpleAllele"
+        },
+        {
+          "name": "clinvarVariationType",
+          "value": "single nucleotide variant"
+        },
+        {
+          "name": "clinvarHgvsList",
+          "value": [
+            {
+              "maneSelect": true,
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_004985.5:c.35G>A"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_004976.2:p.Gly12Asp"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_344t2:c.35G>A"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_344p2:p.Gly12Asp"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000012.12:g.25245350C>T"
+              },
+              "nucleotideType": "genomic, top-level"
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "LRG_344:g.10654G>A"
+              },
+              "nucleotideType": "genomic"
+            },
+            {
+              "manePlus": true,
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_033360.4:c.35G>A"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_203524.1:p.Gly12Asp"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000012.11:g.25398284C>T"
+              },
+              "nucleotideType": "genomic, top-level"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001369787.1:c.35G>A"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001356716.1:p.Gly12Asp"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_344t1:c.35G>A"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "LRG_344p1:p.Gly12Asp"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NG_007524.2:g.10654G>A"
+              },
+              "nucleotideType": "genomic"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001369786.1:c.35G>A"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001356715.1:p.Gly12Asp"
+              }
+            }
+          ]
+        }
+      ],
+      "id": "clinvar:12582",
+      "mappings": [
+        {
+          "coding": {
+            "code": "12582",
+            "iris": [
+              "https://identifiers.org/clinvar:12582"
+            ],
+            "system": "ClinVar"
+          },
+          "relation": "exactMatch"
+        },
+        {
+          "coding": {
+            "code": "190070.0005",
+            "iris": [
+              "http://www.omim.org/entry/190070#0005"
+            ],
+            "system": "OMIM"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "CA122538",
+            "iris": [
+              "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid=CA122538"
+            ],
+            "system": "ClinGen"
+          },
+          "relation": "closeMatch"
+        },
+        {
+          "coding": {
+            "code": "121913529",
+            "iris": [
+              "https://identifiers.org/dbsnp:rs121913529"
+            ],
+            "system": "dbSNP"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "190070.0025",
+            "iris": [
+              "http://www.omim.org/entry/190070#0025"
+            ],
+            "system": "OMIM"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "P01116#VAR_016026",
+            "iris": [
+              "https://www.uniprot.org/uniprot/P01116#VAR_016026"
+            ],
+            "system": "UniProtKB"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "members": [
+        {
+          "digest": "LDaqvF3c3y1IG8wF4mORiRfB--9Jjfzp",
+          "expressions": [
+            {
+              "syntax": "spdi",
+              "value": "NC_000012.12:25245349:C:T"
+            },
+            {
+              "syntax": "hgvs.g",
+              "value": "NC_000012.12:g.25245350C>T"
+            },
+            {
+              "syntax": "gnomad",
+              "value": "12-25245350-C-T"
+            }
+          ],
+          "id": "ga4gh:VA.LDaqvF3c3y1IG8wF4mORiRfB--9Jjfzp",
+          "location": {
+            "digest": "qaHcVvdl8j0lpLRt49hE-bFI81128Mk9",
+            "end": 25245350,
+            "id": "ga4gh:SL.qaHcVvdl8j0lpLRt49hE-bFI81128Mk9",
+            "sequenceReference": {
+              "extensions": [
+                {
+                  "name": "assembly",
+                  "value": "GRCh38"
+                }
+              ],
+              "moleculeType": "genomic",
+              "name": "NC_000012.12",
+              "refgetAccession": "SQ.6wlJpONE3oNb4D69ULmEXhqyDZ4vwNfl",
+              "residueAlphabet": "na",
+              "type": "SequenceReference"
+            },
+            "start": 25245349,
+            "type": "SequenceLocation"
+          },
+          "name": "NC_000012.12:g.25245350C>T",
+          "state": {
+            "sequence": "T",
+            "type": "LiteralSequenceExpression"
+          },
+          "type": "Allele"
+        }
+      ],
+      "name": "NM_004985.5(KRAS):c.35G>A (p.Gly12Asp)",
+      "type": "CategoricalVariant"
+    },
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": {
+    "name": "Definitive",
+    "primaryCoding": {
+      "code": "definitive",
+      "system": "ACMG Guidelines, 2015"
+    }
+  },
+  "type": "Statement"
+}

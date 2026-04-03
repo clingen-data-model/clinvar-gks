@@ -81,3 +81,11 @@ The `proposition` describes the clinical claim being made. Its `type` determines
 For the full mapping between ClinVar assertion types and GKS statement/proposition types, see [Statement Types](../profiles/statement-types.md).
 
 For classification value mappings, see [Classifications](../profiles/classifications.md).
+
+---
+
+## Examples
+
+Annotated JSONC examples of SCV statement records are available in the repository:
+
+- [SCV statement examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/scv) — pathogenicity, oncogenicity, somatic clinical impact, therapeutic response, and other statement types

@@ -1,18 +1,43 @@
 {
   // Hypothetical PGEP VCV statement example (Layer 1 - Base Aggregator)
-  // Demonstrates aggregate_classification_array for combined PG+EP submissions
-  "aggregate_classification_array": [
-    {
-      "conceptType": "AggregateClassification",
-      "name": "Pathogenic",
-      "description": "for Breast cancer\nClassification is based on the expert panel submission\nMar 2024 by GeneDx"
-    },
-    {
-      "conceptType": "AggregateClassification",
-      "name": "Pathogenic",
-      "description": "for Hereditary cancer\nClassification is based on the practice guideline submission\nJan 2023 by NCCN"
-    }
-  ],
+  // Demonstrates classification_conceptSetSet for combined PG+EP submissions with 2 classifications
+  // Each inner ConceptSet is an AND-group of (Classification, Condition, SubmissionLevel) with a description extension
+  "classification_conceptSetSet": {
+    "type": "ConceptSet",
+    "concepts": [
+      {
+        "type": "ConceptSet",
+        "concepts": [
+          {"conceptType": "Classification", "name": "Pathogenic"},
+          {"conceptType": "Condition", "name": "Breast cancer"},
+          {"conceptType": "SubmissionLevel", "name": "expert panel"}
+        ],
+        "membershipOperator": "AND",
+        "extensions": [
+          {
+            "name": "description",
+            "value": "for Breast cancer\nClassification is based on the expert panel submission\nMar 2024 by GeneDx"
+          }
+        ]
+      },
+      {
+        "type": "ConceptSet",
+        "concepts": [
+          {"conceptType": "Classification", "name": "Pathogenic"},
+          {"conceptType": "Condition", "name": "Hereditary cancer"},
+          {"conceptType": "SubmissionLevel", "name": "practice guideline"}
+        ],
+        "membershipOperator": "AND",
+        "extensions": [
+          {
+            "name": "description",
+            "value": "for Hereditary cancer\nClassification is based on the practice guideline submission\nJan 2023 by NCCN"
+          }
+        ]
+      }
+    ],
+    "membershipOperator": "AND"
+  },
   "direction": "supports",
   "extensions": [
     {"name": "clinvarReviewStatus", "value": "practice guideline and expert panel mix"}
@@ -33,27 +58,34 @@
     "aggregateQualifiers": [
       {"name": "AssertionGroup", "value": "Germline"},
       {"name": "PropositionType", "value": "Pathogenicity"},
-      {"name": "SubmissionLevel", "value": "practice guideline and expert panel"}
+      {"name": "SubmissionLevel", "value": "practice guideline and expert panel mix"}
     ],
-    "id": "999999999.G.PATH.PGEP",
-    "objectClassification_conceptSet": {
+    // objectClassification_conceptSetSet: same structure as classification but without extensions, deduplicated
+    "objectClassification_conceptSetSet": {
       "type": "ConceptSet",
       "concepts": [
         {
-          "conceptType": "Classification",
-          "name": "Pathogenic",
-          "condition": "Breast cancer",
-          "submissionLevel": "expert panel"
+          "type": "ConceptSet",
+          "concepts": [
+            {"conceptType": "Classification", "name": "Pathogenic"},
+            {"conceptType": "Condition", "name": "Breast cancer"},
+            {"conceptType": "SubmissionLevel", "name": "expert panel"}
+          ],
+          "membershipOperator": "AND"
         },
         {
-          "conceptType": "Classification",
-          "name": "Pathogenic",
-          "condition": "Hereditary cancer",
-          "submissionLevel": "practice guideline"
+          "type": "ConceptSet",
+          "concepts": [
+            {"conceptType": "Classification", "name": "Pathogenic"},
+            {"conceptType": "Condition", "name": "Hereditary cancer"},
+            {"conceptType": "SubmissionLevel", "name": "practice guideline"}
+          ],
+          "membershipOperator": "AND"
         }
       ],
-      "membershipOperator": "OR"
+      "membershipOperator": "AND"
     },
+    "id": "VCV999999999-G-PATH-PGEP",
     "predicate": "hasAggregateClassification",
     "subjectVariant": "clinvar:999999999",
     "type": "VariantAggregateClassificationProposition"

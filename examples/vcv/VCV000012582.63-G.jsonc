@@ -1,73 +1,99 @@
 {
   // Top-level VCV statement (Layer 4 - Group Aggregator)
   // This is a CP-level variant, so uses aggregate_classification_single (not array)
-  "aggregate_classification_single": {
-    "conceptType": "AggregateClassification",
-    "name": "Pathogenic/Likely pathogenic"
-  },
   "direction": "supports",
-  "extensions": [
-    {"name": "clinvarReviewStatus", "value": "criteria provided, multiple submitters, no conflicts"}
-  ],
   "evidenceLines": [
     {
       "directionOfEvidenceProvided": "supports",
       "evidenceItems": [
         {
-          // Layer 3 - Submission Level Aggregator (pathogenicity)
-          "aggregate_classification_single": {
-            "conceptType": "AggregateClassification",
+          "classification": {
+            "conceptType": "Classification",
             "name": "Pathogenic/Likely pathogenic"
           },
           "direction": "supports",
-          "extensions": [
-            {"name": "clinvarReviewStatus", "value": "criteria provided, multiple submitters, no conflicts"}
-          ],
           "evidenceLines": [
             {
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  // Layer 1 - Base Aggregator (CP level)
-                  "aggregate_classification_single": {
-                    "conceptType": "AggregateClassification",
+                  "classification": {
+                    "conceptType": "Classification",
                     "name": "Pathogenic/Likely pathogenic"
                   },
                   "direction": "supports",
-                  "extensions": [
-                    {"name": "clinvarReviewStatus", "value": "criteria provided, multiple submitters, no conflicts"}
-                  ],
                   "evidenceLines": [
                     {
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
-                        {"id": "clinvar.submission:SCV001736991.1"},
-                        {"id": "clinvar.submission:SCV002525678.1"},
-                        {"id": "clinvar.submission:SCV005044128.1"},
-                        {"id": "clinvar.submission:SCV005634967.1"},
-                        {"id": "clinvar.submission:SCV000329383.7"},
-                        {"id": "clinvar.submission:SCV006304919.1"},
-                        {"id": "clinvar.submission:SCV004176950.1"},
-                        {"id": "clinvar.submission:SCV002821689.24"},
-                        {"id": "clinvar.submission:SCV002318898.3"},
-                        {"id": "clinvar.submission:SCV002601600.1"},
-                        {"id": "clinvar.submission:SCV000659085.3"},
-                        {"id": "clinvar.submission:SCV005414064.1"},
-                        {"id": "clinvar.submission:SCV005023563.1"}
+                        {
+                          "id": "clinvar.submission:SCV002601600.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV005634967.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV005023563.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV002525678.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV001736991.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV002821689.24"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000659085.3"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV006304919.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV004176950.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV002318898.3"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000329383.7"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV005044128.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV005414064.1"
+                        }
                       ],
                       "strengthOfEvidenceProvided": "contributing",
                       "type": "EvidenceLine"
                     }
                   ],
+                  "extensions": [
+                    {
+                      "name": "clinvarReviewStatus",
+                      "value": "criteria provided, multiple submitters, no conflicts"
+                    }
+                  ],
                   "id": "VCV000012582.63-G-PATH-CP",
                   "proposition": {
                     "aggregateQualifiers": [
-                      {"name": "AssertionGroup", "value": "Germline"},
-                      {"name": "PropositionType", "value": "Pathogenicity"},
-                      {"name": "SubmissionLevel", "value": "criteria provided"}
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Germline"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Pathogenicity"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "criteria provided"
+                      }
                     ],
-                    "id": "12582.G.PATH.CP",
-                    "objectClassification_mappableConcept": {
+                    "id": "VCV000012582-G-PATH-CP",
+                    "objectClassification": {
                       "conceptType": "Classification",
                       "name": "Pathogenic/Likely pathogenic"
                     },
@@ -86,53 +112,104 @@
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  // Layer 1 - Base Aggregator (NOCP level)
-                  "aggregate_classification_single": {
-                    "conceptType": "AggregateClassification",
+                  "classification": {
+                    "conceptType": "Classification",
                     "name": "Pathogenic/Likely pathogenic"
                   },
                   "direction": "supports",
-                  "extensions": [
-                    {"name": "clinvarReviewStatus", "value": "no assertion criteria provided"}
-                  ],
                   "evidenceLines": [
                     {
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
-                        {"id": "clinvar.submission:SCV000033659.5"},
-                        {"id": "clinvar.submission:SCV000033658.5"},
-                        {"id": "clinvar.submission:SCV001739511.1"},
-                        {"id": "clinvar.submission:SCV000198480.2"},
-                        {"id": "clinvar.submission:SCV000198479.2"},
-                        {"id": "clinvar.submission:SCV000191996.4"},
-                        {"id": "clinvar.submission:SCV000784594.1"},
-                        {"id": "clinvar.submission:SCV000044088.5"},
-                        {"id": "clinvar.submission:SCV000693723.1"},
-                        {"id": "clinvar.submission:SCV000882686.2"},
-                        {"id": "clinvar.submission:SCV000999192.1"},
-                        {"id": "clinvar.submission:SCV001571657.2"},
-                        {"id": "clinvar.submission:SCV000051861.5"},
-                        {"id": "clinvar.submission:SCV000051860.5"},
-                        {"id": "clinvar.submission:SCV000992585.2"},
-                        {"id": "clinvar.submission:SCV001550138.2"},
-                        {"id": "clinvar.submission:SCV000191997.4"},
-                        {"id": "clinvar.submission:SCV000611562.1"},
-                        {"id": "clinvar.submission:SCV000882700.3"},
-                        {"id": "clinvar.submission:SCV000198478.2"}
+                        {
+                          "id": "clinvar.submission:SCV000882700.3"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000611562.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000044088.5"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000191997.4"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000191996.4"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV001739511.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000033659.5"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000051861.5"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000198480.2"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000198478.2"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000051860.5"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000784594.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000882686.2"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000992585.2"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000999192.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000033658.5"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000198479.2"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV001571657.2"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV000693723.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV001550138.2"
+                        }
                       ],
                       "strengthOfEvidenceProvided": "contributing",
                       "type": "EvidenceLine"
                     }
                   ],
+                  "extensions": [
+                    {
+                      "name": "clinvarReviewStatus",
+                      "value": "no assertion criteria provided"
+                    }
+                  ],
                   "id": "VCV000012582.63-G-PATH-NOCP",
                   "proposition": {
                     "aggregateQualifiers": [
-                      {"name": "AssertionGroup", "value": "Germline"},
-                      {"name": "PropositionType", "value": "Pathogenicity"},
-                      {"name": "SubmissionLevel", "value": "no assertion criteria provided"}
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Germline"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Pathogenicity"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "no assertion criteria provided"
+                      }
                     ],
-                    "id": "12582.G.PATH.NOCP",
-                    "objectClassification_mappableConcept": {
+                    "id": "VCV000012582-G-PATH-NOCP",
+                    "objectClassification": {
                       "conceptType": "Classification",
                       "name": "Pathogenic/Likely pathogenic"
                     },
@@ -148,14 +225,26 @@
               "type": "EvidenceLine"
             }
           ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "criteria provided, multiple submitters, no conflicts"
+            }
+          ],
           "id": "VCV000012582.63-G-PATH",
           "proposition": {
             "aggregateQualifiers": [
-              {"name": "AssertionGroup", "value": "Germline"},
-              {"name": "PropositionType", "value": "Pathogenicity"}
+              {
+                "name": "AssertionGroup",
+                "value": "Germline"
+              },
+              {
+                "name": "PropositionType",
+                "value": "Pathogenicity"
+              }
             ],
-            "id": "12582.G.PATH",
-            "objectClassification_mappableConcept": {
+            "id": "VCV000012582-G-PATH",
+            "objectClassification": {
               "conceptType": "Classification",
               "name": "Pathogenic/Likely pathogenic"
             },
@@ -165,49 +254,66 @@
           },
           "strength": "definitive",
           "type": "Statement"
-        },
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    },
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
         {
-          // Layer 3 - Submission Level Aggregator (association)
-          "aggregate_classification_single": {
-            "conceptType": "AggregateClassification",
+          "classification": {
+            "conceptType": "Classification",
             "name": "association"
           },
           "direction": "supports",
-          "extensions": [
-            {"name": "clinvarReviewStatus", "value": "no assertion criteria provided"}
-          ],
           "evidenceLines": [
             {
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "aggregate_classification_single": {
-                    "conceptType": "AggregateClassification",
+                  "classification": {
+                    "conceptType": "Classification",
                     "name": "association"
                   },
                   "direction": "supports",
-                  "extensions": [
-                    {"name": "clinvarReviewStatus", "value": "no assertion criteria provided"}
-                  ],
                   "evidenceLines": [
                     {
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
-                        {"id": "clinvar.submission:SCV004035006.2"}
+                        {
+                          "id": "clinvar.submission:SCV004035006.2"
+                        }
                       ],
                       "strengthOfEvidenceProvided": "contributing",
                       "type": "EvidenceLine"
                     }
                   ],
+                  "extensions": [
+                    {
+                      "name": "clinvarReviewStatus",
+                      "value": "no assertion criteria provided"
+                    }
+                  ],
                   "id": "VCV000012582.63-G-ASSOC-NOCP",
                   "proposition": {
                     "aggregateQualifiers": [
-                      {"name": "AssertionGroup", "value": "Germline"},
-                      {"name": "PropositionType", "value": "Association"},
-                      {"name": "SubmissionLevel", "value": "no assertion criteria provided"}
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Germline"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Association"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "no assertion criteria provided"
+                      }
                     ],
-                    "id": "12582.G.ASSOC.NOCP",
-                    "objectClassification_mappableConcept": {
+                    "id": "VCV000012582-G-ASSOC-NOCP",
+                    "objectClassification": {
                       "conceptType": "Classification",
                       "name": "association"
                     },
@@ -223,14 +329,26 @@
               "type": "EvidenceLine"
             }
           ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "no assertion criteria provided"
+            }
+          ],
           "id": "VCV000012582.63-G-ASSOC",
           "proposition": {
             "aggregateQualifiers": [
-              {"name": "AssertionGroup", "value": "Germline"},
-              {"name": "PropositionType", "value": "Association"}
+              {
+                "name": "AssertionGroup",
+                "value": "Germline"
+              },
+              {
+                "name": "PropositionType",
+                "value": "Association"
+              }
             ],
-            "id": "12582.G.ASSOC",
-            "objectClassification_mappableConcept": {
+            "id": "VCV000012582-G-ASSOC",
+            "objectClassification": {
               "conceptType": "Classification",
               "name": "association"
             },
@@ -242,47 +360,57 @@
           "type": "Statement"
         },
         {
-          // Layer 3 - Submission Level Aggregator (not provided)
-          "aggregate_classification_single": {
-            "conceptType": "AggregateClassification",
+          "classification": {
+            "conceptType": "Classification",
             "name": "not provided"
           },
           "direction": "supports",
-          "extensions": [
-            {"name": "clinvarReviewStatus", "value": "no classification provided"}
-          ],
           "evidenceLines": [
             {
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "aggregate_classification_single": {
-                    "conceptType": "AggregateClassification",
+                  "classification": {
+                    "conceptType": "Classification",
                     "name": "not provided"
                   },
                   "direction": "supports",
-                  "extensions": [
-                    {"name": "clinvarReviewStatus", "value": "no classification provided"}
-                  ],
                   "evidenceLines": [
                     {
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
-                        {"id": "clinvar.submission:SCV002099547.2"}
+                        {
+                          "id": "clinvar.submission:SCV002099547.2"
+                        }
                       ],
                       "strengthOfEvidenceProvided": "contributing",
                       "type": "EvidenceLine"
                     }
                   ],
+                  "extensions": [
+                    {
+                      "name": "clinvarReviewStatus",
+                      "value": "no classification provided"
+                    }
+                  ],
                   "id": "VCV000012582.63-G-NP-NOCL",
                   "proposition": {
                     "aggregateQualifiers": [
-                      {"name": "AssertionGroup", "value": "Germline"},
-                      {"name": "PropositionType", "value": "Not Provided"},
-                      {"name": "SubmissionLevel", "value": "no classification"}
+                      {
+                        "name": "AssertionGroup",
+                        "value": "Germline"
+                      },
+                      {
+                        "name": "PropositionType",
+                        "value": "Not Provided"
+                      },
+                      {
+                        "name": "SubmissionLevel",
+                        "value": "no classification"
+                      }
                     ],
-                    "id": "12582.G.NP.NOCL",
-                    "objectClassification_mappableConcept": {
+                    "id": "VCV000012582-G-NP-NOCL",
+                    "objectClassification": {
                       "conceptType": "Classification",
                       "name": "not provided"
                     },
@@ -298,14 +426,26 @@
               "type": "EvidenceLine"
             }
           ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "no classification provided"
+            }
+          ],
           "id": "VCV000012582.63-G-NP",
           "proposition": {
             "aggregateQualifiers": [
-              {"name": "AssertionGroup", "value": "Germline"},
-              {"name": "PropositionType", "value": "Not Provided"}
+              {
+                "name": "AssertionGroup",
+                "value": "Germline"
+              },
+              {
+                "name": "PropositionType",
+                "value": "Not Provided"
+              }
             ],
-            "id": "12582.G.NP",
-            "objectClassification_mappableConcept": {
+            "id": "VCV000012582-G-NP",
+            "objectClassification": {
               "conceptType": "Classification",
               "name": "not provided"
             },
@@ -321,16 +461,21 @@
       "type": "EvidenceLine"
     }
   ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "criteria provided, multiple submitters, no conflicts"
+    }
+  ],
   "id": "VCV000012582.63-G",
   "proposition": {
     "aggregateQualifiers": [
-      {"name": "AssertionGroup", "value": "Germline"}
+      {
+        "name": "AssertionGroup",
+        "value": "Germline"
+      }
     ],
-    "id": "12582.G",
-    "objectClassification_mappableConcept": {
-      "conceptType": "Classification",
-      "name": "Pathogenic/Likely pathogenic"
-    },
+    "id": "VCV000012582-G",
     "predicate": "hasAggregateClassification",
     "subjectVariant": "clinvar:12582",
     "type": "VariantAggregateClassificationProposition"

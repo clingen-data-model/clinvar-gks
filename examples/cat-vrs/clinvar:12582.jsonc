@@ -1,0 +1,316 @@
+{
+  "constraints": [
+    {
+      "allele": "2/members/0/",
+      "relations": [
+        {
+          "primaryCoding": {
+            "code": "liftover_to",
+            "system": "ga4gh-gks-term:allele-relation"
+          }
+        },
+        {
+          "primaryCoding": {
+            "code": "transcribed_to",
+            "iris": [
+              "http://www.sequenceontology.org/browser/current_release/term/transcribed_to"
+            ],
+            "system": "http://www.sequenceontology.org"
+          }
+        }
+      ],
+      "type": "DefiningAlleleConstraint"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarGeneList",
+      "value": [
+        {
+          "entrez_gene_id": "3845",
+          "hgnc_id": "HGNC:6407",
+          "iris": [
+            "https://identifiers.org/hgnc:6407",
+            "https://identifiers.org/ncbigene:3845",
+            "https://www.ncbi.nlm.nih.gov/gene/3845"
+          ],
+          "relationship_type": "within single gene",
+          "source": "submitted",
+          "symbol": "KRAS"
+        }
+      ]
+    },
+    {
+      "name": "categoricalVariationType",
+      "value": "CanonicalAllele"
+    },
+    {
+      "name": "definingVrsVariationType",
+      "value": "Allele"
+    },
+    {
+      "name": "clinvarCytogeneticLocation",
+      "value": "12p12.1"
+    },
+    {
+      "name": "clinvarSubclassType",
+      "value": "SimpleAllele"
+    },
+    {
+      "name": "clinvarVariationType",
+      "value": "single nucleotide variant"
+    },
+    {
+      "name": "clinvarHgvsList",
+      "value": [
+        {
+          "maneSelect": true,
+          "molecularConsequence": [
+            {
+              "code": "SO:0001583",
+              "iris": [
+                "https://identifiers.org/SO:0001583"
+              ],
+              "name": "missense_variant",
+              "system": "http://www.sequenceontology.org/"
+            }
+          ],
+          "nucleotideExpression": {
+            "syntax": "hgvs.c",
+            "value": "NM_004985.5:c.35G>A"
+          },
+          "nucleotideType": "coding",
+          "proteinExpression": {
+            "syntax": "hgvs.p",
+            "value": "NP_004976.2:p.Gly12Asp"
+          }
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.c",
+            "value": "LRG_344t2:c.35G>A"
+          },
+          "nucleotideType": "coding",
+          "proteinExpression": {
+            "syntax": "hgvs.p",
+            "value": "LRG_344p2:p.Gly12Asp"
+          }
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.g",
+            "value": "NC_000012.12:g.25245350C>T"
+          },
+          "nucleotideType": "genomic, top-level"
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.g",
+            "value": "LRG_344:g.10654G>A"
+          },
+          "nucleotideType": "genomic"
+        },
+        {
+          "manePlus": true,
+          "molecularConsequence": [
+            {
+              "code": "SO:0001583",
+              "iris": [
+                "https://identifiers.org/SO:0001583"
+              ],
+              "name": "missense_variant",
+              "system": "http://www.sequenceontology.org/"
+            }
+          ],
+          "nucleotideExpression": {
+            "syntax": "hgvs.c",
+            "value": "NM_033360.4:c.35G>A"
+          },
+          "nucleotideType": "coding",
+          "proteinExpression": {
+            "syntax": "hgvs.p",
+            "value": "NP_203524.1:p.Gly12Asp"
+          }
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.g",
+            "value": "NC_000012.11:g.25398284C>T"
+          },
+          "nucleotideType": "genomic, top-level"
+        },
+        {
+          "molecularConsequence": [
+            {
+              "code": "SO:0001583",
+              "iris": [
+                "https://identifiers.org/SO:0001583"
+              ],
+              "name": "missense_variant",
+              "system": "http://www.sequenceontology.org/"
+            }
+          ],
+          "nucleotideExpression": {
+            "syntax": "hgvs.c",
+            "value": "NM_001369787.1:c.35G>A"
+          },
+          "nucleotideType": "coding",
+          "proteinExpression": {
+            "syntax": "hgvs.p",
+            "value": "NP_001356716.1:p.Gly12Asp"
+          }
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.c",
+            "value": "LRG_344t1:c.35G>A"
+          },
+          "nucleotideType": "coding",
+          "proteinExpression": {
+            "syntax": "hgvs.p",
+            "value": "LRG_344p1:p.Gly12Asp"
+          }
+        },
+        {
+          "nucleotideExpression": {
+            "syntax": "hgvs.g",
+            "value": "NG_007524.2:g.10654G>A"
+          },
+          "nucleotideType": "genomic"
+        },
+        {
+          "molecularConsequence": [
+            {
+              "code": "SO:0001583",
+              "iris": [
+                "https://identifiers.org/SO:0001583"
+              ],
+              "name": "missense_variant",
+              "system": "http://www.sequenceontology.org/"
+            }
+          ],
+          "nucleotideExpression": {
+            "syntax": "hgvs.c",
+            "value": "NM_001369786.1:c.35G>A"
+          },
+          "nucleotideType": "coding",
+          "proteinExpression": {
+            "syntax": "hgvs.p",
+            "value": "NP_001356715.1:p.Gly12Asp"
+          }
+        }
+      ]
+    }
+  ],
+  "id": "clinvar:12582",
+  "mappings": [
+    {
+      "coding": {
+        "code": "12582",
+        "iris": [
+          "https://identifiers.org/clinvar:12582"
+        ],
+        "system": "ClinVar"
+      },
+      "relation": "exactMatch"
+    },
+    {
+      "coding": {
+        "code": "190070.0005",
+        "iris": [
+          "http://www.omim.org/entry/190070#0005"
+        ],
+        "system": "OMIM"
+      },
+      "relation": "relatedMatch"
+    },
+    {
+      "coding": {
+        "code": "CA122538",
+        "iris": [
+          "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid=CA122538"
+        ],
+        "system": "ClinGen"
+      },
+      "relation": "closeMatch"
+    },
+    {
+      "coding": {
+        "code": "121913529",
+        "iris": [
+          "https://identifiers.org/dbsnp:rs121913529"
+        ],
+        "system": "dbSNP"
+      },
+      "relation": "relatedMatch"
+    },
+    {
+      "coding": {
+        "code": "190070.0025",
+        "iris": [
+          "http://www.omim.org/entry/190070#0025"
+        ],
+        "system": "OMIM"
+      },
+      "relation": "relatedMatch"
+    },
+    {
+      "coding": {
+        "code": "P01116#VAR_016026",
+        "iris": [
+          "https://www.uniprot.org/uniprot/P01116#VAR_016026"
+        ],
+        "system": "UniProtKB"
+      },
+      "relation": "relatedMatch"
+    }
+  ],
+  "members": [
+    {
+      "digest": "LDaqvF3c3y1IG8wF4mORiRfB--9Jjfzp",
+      "expressions": [
+        {
+          "syntax": "spdi",
+          "value": "NC_000012.12:25245349:C:T"
+        },
+        {
+          "syntax": "hgvs.g",
+          "value": "NC_000012.12:g.25245350C>T"
+        },
+        {
+          "syntax": "gnomad",
+          "value": "12-25245350-C-T"
+        }
+      ],
+      "id": "ga4gh:VA.LDaqvF3c3y1IG8wF4mORiRfB--9Jjfzp",
+      "location": {
+        "digest": "qaHcVvdl8j0lpLRt49hE-bFI81128Mk9",
+        "end": 25245350,
+        "id": "ga4gh:SL.qaHcVvdl8j0lpLRt49hE-bFI81128Mk9",
+        "sequenceReference": {
+          "extensions": [
+            {
+              "name": "assembly",
+              "value": "GRCh38"
+            }
+          ],
+          "moleculeType": "genomic",
+          "name": "NC_000012.12",
+          "refgetAccession": "SQ.6wlJpONE3oNb4D69ULmEXhqyDZ4vwNfl",
+          "residueAlphabet": "na",
+          "type": "SequenceReference"
+        },
+        "start": 25245349,
+        "type": "SequenceLocation"
+      },
+      "name": "NC_000012.12:g.25245350C>T",
+      "state": {
+        "sequence": "T",
+        "type": "LiteralSequenceExpression"
+      },
+      "type": "Allele"
+    }
+  ],
+  "name": "NM_004985.5(KRAS):c.35G>A (p.Gly12Asp)",
+  "type": "CategoricalVariant"
+}
