@@ -90,3 +90,9 @@ Final assembly of VA-Spec Statement records. Joins SCV records with propositions
 - [SCV Records](scv-records.md) — foundational SCV record extraction (Step 1)
 - [Propositions](propositions.md) — qualifier assembly and proposition construction (Steps 2-6)
 - [Final Statements](final-statements.md) — complete statement assembly (Step 7)
+
+---
+
+## Examples
+
+See [SCV statement examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/scv) in the repository for annotated JSONC examples covering pathogenicity, oncogenicity, somatic clinical impact, and therapeutic response statement types.

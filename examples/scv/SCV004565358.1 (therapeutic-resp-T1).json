@@ -1,6 +1,12 @@
 {
   "classification": {
-    "name": "Tier I",
+    "extensions": [
+      {
+        "name": "description",
+        "value": "for Non-small cell lung carcinoma\nClassification is based on the criteria provided submission\nFeb 2018 by CIViC knowledgebase, Washington University School of Medicine"
+      }
+    ],
+    "name": "Tier I - Strong",
     "primaryCoding": {
       "code": "tier 1",
       "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017"
@@ -54,8 +60,16 @@
       "value": "criteria provided, single submitter"
     },
     {
+      "name": "submittedScvClassification",
+      "value": "Tier I - Strong"
+    },
+    {
       "name": "submittedScvLocalKey",
       "value": "civic.AID:5"
+    },
+    {
+      "name": "submissionLevel",
+      "value": "CP"
     }
   ],
   "hasEvidenceLines": [
@@ -118,9 +132,15 @@
             {
               "coding": {
                 "code": "MONDO:0005233",
+                "extensions": [
+                  {
+                    "name": "mappingRefFields",
+                    "value": "name"
+                  }
+                ],
                 "iris": [
-                  "https://identifiers.org/mondo:0005233",
-                  "http://purl.obolibrary.org/obo/MONDO_0005233"
+                  "http://purl.obolibrary.org/obo/MONDO_0005233",
+                  "https://identifiers.org/mondo:0005233"
                 ],
                 "system": "MONDO"
               },
@@ -129,11 +149,146 @@
             {
               "coding": {
                 "code": "HP:0030358",
+                "extensions": [
+                  {
+                    "name": "mappingType",
+                    "value": "primary"
+                  }
+                ],
                 "iris": [
                   "https://identifiers.org/HP:0030358",
                   "https://hpo.jax.org/browse/term/HP:0030358"
                 ],
                 "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0030358",
+                "extensions": [
+                  {
+                    "name": "mappingRefFields",
+                    "value": "name, alternate_names"
+                  }
+                ],
+                "iris": [
+                  "https://identifiers.org/HP:0030358",
+                  "https://hpo.jax.org/browse/term/HP:0030358"
+                ],
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "254637007",
+                "extensions": [
+                  {
+                    "name": "mappingRefFields",
+                    "value": "alternate_names"
+                  }
+                ],
+                "iris": [
+                  "https://identifiers.org/snomedct:254637007"
+                ],
+                "system": "SNOMED CT"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "GTR000592350",
+                "extensions": [
+                  {
+                    "name": "mappingRefFields",
+                    "value": "disease_mechanism"
+                  }
+                ],
+                "iris": [
+                  "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000592350"
+                ],
+                "system": "Genetic Testing Registry (GTR)"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "GTR000596970",
+                "extensions": [
+                  {
+                    "name": "mappingRefFields",
+                    "value": "disease_mechanism"
+                  }
+                ],
+                "iris": [
+                  "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000596970"
+                ],
+                "system": "Genetic Testing Registry (GTR)"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "GTR000571363",
+                "extensions": [
+                  {
+                    "name": "mappingRefFields",
+                    "value": "disease_mechanism"
+                  }
+                ],
+                "iris": [
+                  "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000571363"
+                ],
+                "system": "Genetic Testing Registry (GTR)"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "GTR000569877",
+                "extensions": [
+                  {
+                    "name": "mappingRefFields",
+                    "value": "disease_mechanism"
+                  }
+                ],
+                "iris": [
+                  "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000569877"
+                ],
+                "system": "Genetic Testing Registry (GTR)"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "GTR000596971",
+                "extensions": [
+                  {
+                    "name": "mappingRefFields",
+                    "value": "disease_mechanism"
+                  }
+                ],
+                "iris": [
+                  "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000596971"
+                ],
+                "system": "Genetic Testing Registry (GTR)"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "GTR000597429",
+                "extensions": [
+                  {
+                    "name": "mappingRefFields",
+                    "value": "disease_mechanism"
+                  }
+                ],
+                "iris": [
+                  "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000597429"
+                ],
+                "system": "Genetic Testing Registry (GTR)"
               },
               "relation": "relatedMatch"
             }
@@ -284,9 +439,15 @@
         {
           "coding": {
             "code": "MONDO:0005233",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "name"
+              }
+            ],
             "iris": [
-              "https://identifiers.org/mondo:0005233",
-              "http://purl.obolibrary.org/obo/MONDO_0005233"
+              "http://purl.obolibrary.org/obo/MONDO_0005233",
+              "https://identifiers.org/mondo:0005233"
             ],
             "system": "MONDO"
           },
@@ -295,11 +456,146 @@
         {
           "coding": {
             "code": "HP:0030358",
+            "extensions": [
+              {
+                "name": "mappingType",
+                "value": "primary"
+              }
+            ],
             "iris": [
               "https://identifiers.org/HP:0030358",
               "https://hpo.jax.org/browse/term/HP:0030358"
             ],
             "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0030358",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "name, alternate_names"
+              }
+            ],
+            "iris": [
+              "https://identifiers.org/HP:0030358",
+              "https://hpo.jax.org/browse/term/HP:0030358"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "254637007",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "alternate_names"
+              }
+            ],
+            "iris": [
+              "https://identifiers.org/snomedct:254637007"
+            ],
+            "system": "SNOMED CT"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "GTR000592350",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "disease_mechanism"
+              }
+            ],
+            "iris": [
+              "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000592350"
+            ],
+            "system": "Genetic Testing Registry (GTR)"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "GTR000596970",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "disease_mechanism"
+              }
+            ],
+            "iris": [
+              "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000596970"
+            ],
+            "system": "Genetic Testing Registry (GTR)"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "GTR000571363",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "disease_mechanism"
+              }
+            ],
+            "iris": [
+              "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000571363"
+            ],
+            "system": "Genetic Testing Registry (GTR)"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "GTR000569877",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "disease_mechanism"
+              }
+            ],
+            "iris": [
+              "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000569877"
+            ],
+            "system": "Genetic Testing Registry (GTR)"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "GTR000596971",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "disease_mechanism"
+              }
+            ],
+            "iris": [
+              "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000596971"
+            ],
+            "system": "Genetic Testing Registry (GTR)"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "GTR000597429",
+            "extensions": [
+              {
+                "name": "mappingRefFields",
+                "value": "disease_mechanism"
+              }
+            ],
+            "iris": [
+              "https://www.ncbi.nlm.nih.gov/gtr/tests/GTR000597429"
+            ],
+            "system": "Genetic Testing Registry (GTR)"
           },
           "relation": "relatedMatch"
         }
@@ -342,6 +638,22 @@
       ],
       "extensions": [
         {
+          "name": "clinvarCytogeneticLocation",
+          "value": "7p11.2"
+        },
+        {
+          "name": "categoricalVariationType",
+          "value": "CanonicalAllele"
+        },
+        {
+          "name": "clinvarSubclassType",
+          "value": "SimpleAllele"
+        },
+        {
+          "name": "clinvarVariationType",
+          "value": "single nucleotide variant"
+        },
+        {
           "name": "clinvarGeneList",
           "value": [
             {
@@ -363,116 +675,8 @@
           "value": "Allele"
         },
         {
-          "name": "categoricalVariationType",
-          "value": "CanonicalAllele"
-        },
-        {
-          "name": "clinvarVariationType",
-          "value": "single nucleotide variant"
-        },
-        {
-          "name": "clinvarSubclassType",
-          "value": "SimpleAllele"
-        },
-        {
-          "name": "clinvarCytogeneticLocation",
-          "value": "7p11.2"
-        },
-        {
           "name": "clinvarHgvsList",
           "value": [
-            {
-              "maneSelect": true,
-              "molecularConsequence": [
-                {
-                  "code": "SO:0001583",
-                  "iris": [
-                    "https://identifiers.org/SO:0001583"
-                  ],
-                  "name": "missense_variant",
-                  "system": "http://www.sequenceontology.org/"
-                }
-              ],
-              "nucleotideExpression": {
-                "syntax": "hgvs.c",
-                "value": "NM_005228.5:c.2573T>G"
-              },
-              "nucleotideType": "coding",
-              "proteinExpression": {
-                "syntax": "hgvs.p",
-                "value": "NP_005219.2:p.Leu858Arg"
-              }
-            },
-            {
-              "molecularConsequence": [
-                {
-                  "code": "SO:0001583",
-                  "iris": [
-                    "https://identifiers.org/SO:0001583"
-                  ],
-                  "name": "missense_variant",
-                  "system": "http://www.sequenceontology.org/"
-                }
-              ],
-              "nucleotideExpression": {
-                "syntax": "hgvs.c",
-                "value": "NM_001346899.2:c.2438T>G"
-              },
-              "nucleotideType": "coding",
-              "proteinExpression": {
-                "syntax": "hgvs.p",
-                "value": "NP_001333828.1:p.Leu813Arg"
-              }
-            },
-            {
-              "nucleotideExpression": {
-                "syntax": "hgvs.g",
-                "value": "NG_007726.3:g.177791T>G"
-              },
-              "nucleotideType": "genomic"
-            },
-            {
-              "nucleotideExpression": {
-                "syntax": "hgvs.g",
-                "value": "NC_000007.14:g.55191822T>G"
-              },
-              "nucleotideType": "genomic, top-level"
-            },
-            {
-              "nucleotideExpression": {
-                "syntax": "hgvs.g",
-                "value": "NC_000007.13:g.55259515T>G"
-              },
-              "nucleotideType": "genomic, top-level"
-            },
-            {
-              "nucleotideExpression": {
-                "syntax": "hgvs.g",
-                "value": "LRG_304:g.177791T>G"
-              },
-              "nucleotideType": "genomic"
-            },
-            {
-              "molecularConsequence": [
-                {
-                  "code": "SO:0001583",
-                  "iris": [
-                    "https://identifiers.org/SO:0001583"
-                  ],
-                  "name": "missense_variant",
-                  "system": "http://www.sequenceontology.org/"
-                }
-              ],
-              "nucleotideExpression": {
-                "syntax": "hgvs.c",
-                "value": "NM_001346897.2:c.2438T>G"
-              },
-              "nucleotideType": "coding",
-              "proteinExpression": {
-                "syntax": "hgvs.p",
-                "value": "NP_001333826.1:p.Leu813Arg"
-              }
-            },
             {
               "molecularConsequence": [
                 {
@@ -507,20 +711,20 @@
               ],
               "nucleotideExpression": {
                 "syntax": "hgvs.c",
-                "value": "NM_001346900.2:c.2414T>G"
+                "value": "NM_001346899.2:c.2438T>G"
               },
               "nucleotideType": "coding",
               "proteinExpression": {
                 "syntax": "hgvs.p",
-                "value": "NP_001333829.1:p.Leu805Arg"
+                "value": "NP_001333828.1:p.Leu813Arg"
               }
             },
             {
               "nucleotideExpression": {
-                "syntax": "hgvs.c",
-                "value": "LRG_304t1:c.2573T>G"
+                "syntax": "hgvs.g",
+                "value": "NG_007726.3:g.177791T>G"
               },
-              "nucleotideType": "coding"
+              "nucleotideType": "genomic"
             },
             {
               "molecularConsequence": [
@@ -542,22 +746,104 @@
                 "syntax": "hgvs.p",
                 "value": "NP_001333870.1:p.Leu591Arg"
               }
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001346897.2:c.2438T>G"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001333826.1:p.Leu813Arg"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000007.13:g.55259515T>G"
+              },
+              "nucleotideType": "genomic, top-level"
+            },
+            {
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_001346900.2:c.2414T>G"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_001333829.1:p.Leu805Arg"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "LRG_304:g.177791T>G"
+              },
+              "nucleotideType": "genomic"
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "LRG_304t1:c.2573T>G"
+              },
+              "nucleotideType": "coding"
+            },
+            {
+              "maneSelect": true,
+              "molecularConsequence": [
+                {
+                  "code": "SO:0001583",
+                  "iris": [
+                    "https://identifiers.org/SO:0001583"
+                  ],
+                  "name": "missense_variant",
+                  "system": "http://www.sequenceontology.org/"
+                }
+              ],
+              "nucleotideExpression": {
+                "syntax": "hgvs.c",
+                "value": "NM_005228.5:c.2573T>G"
+              },
+              "nucleotideType": "coding",
+              "proteinExpression": {
+                "syntax": "hgvs.p",
+                "value": "NP_005219.2:p.Leu858Arg"
+              }
+            },
+            {
+              "nucleotideExpression": {
+                "syntax": "hgvs.g",
+                "value": "NC_000007.14:g.55191822T>G"
+              },
+              "nucleotideType": "genomic, top-level"
             }
           ]
         }
       ],
       "id": "clinvar:16609",
       "mappings": [
-        {
-          "coding": {
-            "code": "981475838",
-            "iris": [
-              "https://www.pharmgkb.org/clinicalAnnotation/981475838"
-            ],
-            "system": "PharmGKB Clinical Annotation"
-          },
-          "relation": "relatedMatch"
-        },
         {
           "coding": {
             "code": "16609",
@@ -570,11 +856,11 @@
         },
         {
           "coding": {
-            "code": "121434568",
+            "code": "P00533#VAR_019298",
             "iris": [
-              "https://identifiers.org/dbsnp:rs121434568"
+              "https://www.uniprot.org/uniprot/P00533#VAR_019298"
             ],
-            "system": "dbSNP"
+            "system": "UniProtKB"
           },
           "relation": "relatedMatch"
         },
@@ -590,11 +876,25 @@
         },
         {
           "coding": {
-            "code": "981475880",
+            "code": "121434568",
             "iris": [
-              "https://www.pharmgkb.org/clinicalAnnotation/981475880"
+              "https://identifiers.org/dbsnp:rs121434568"
             ],
-            "system": "PharmGKB Clinical Annotation"
+            "system": "dbSNP"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "981475880",
+            "system": "ClinPGx Clinical Annotation"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "981420042",
+            "system": "ClinPGx Clinical Annotation"
           },
           "relation": "relatedMatch"
         },
@@ -610,21 +910,8 @@
         },
         {
           "coding": {
-            "code": "981420042",
-            "iris": [
-              "https://www.pharmgkb.org/clinicalAnnotation/981420042"
-            ],
-            "system": "PharmGKB Clinical Annotation"
-          },
-          "relation": "relatedMatch"
-        },
-        {
-          "coding": {
-            "code": "P00533#VAR_019298",
-            "iris": [
-              "https://www.uniprot.org/uniprot/P00533#VAR_019298"
-            ],
-            "system": "UniProtKB"
+            "code": "981475838",
+            "system": "ClinPGx Clinical Annotation"
           },
           "relation": "relatedMatch"
         }

@@ -1,5 +1,6 @@
 {
   "classification": {
+    "conceptType": "Classification",
     "name": "Oncogenic"
   },
   "direction": "supports",
@@ -9,6 +10,7 @@
       "evidenceItems": [
         {
           "classification": {
+            "conceptType": "Classification",
             "name": "Oncogenic"
           },
           "direction": "supports",
@@ -24,9 +26,15 @@
               "type": "EvidenceLine"
             }
           ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "criteria provided, single submitter"
+            }
+          ],
           "id": "VCV000012582.63-S-ONCO-CP",
           "proposition": {
-            "aggregateQualifier": [
+            "aggregateQualifiers": [
               {
                 "name": "AssertionGroup",
                 "value": "Somatic"
@@ -40,10 +48,14 @@
                 "value": "criteria provided"
               }
             ],
-            "id": "12582.S.ONCO.CP",
+            "id": "VCV000012582-S-ONCO-CP",
+            "objectClassification": {
+              "conceptType": "Classification",
+              "name": "Oncogenic"
+            },
             "predicate": "hasAggregateClassification",
             "subjectVariant": "clinvar:12582",
-            "type": "AggregateStatementProposition"
+            "type": "VariantAggregateClassificationProposition"
           },
           "strength": "definitive",
           "type": "Statement"
@@ -53,9 +65,15 @@
       "type": "EvidenceLine"
     }
   ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "criteria provided, single submitter"
+    }
+  ],
   "id": "VCV000012582.63-S-ONCO",
   "proposition": {
-    "aggregateQualifier": [
+    "aggregateQualifiers": [
       {
         "name": "AssertionGroup",
         "value": "Somatic"
@@ -65,10 +83,14 @@
         "value": "Oncogenicity"
       }
     ],
-    "id": "12582.S.ONCO",
+    "id": "VCV000012582-S-ONCO",
+    "objectClassification": {
+      "conceptType": "Classification",
+      "name": "Oncogenic"
+    },
     "predicate": "hasAggregateClassification",
     "subjectVariant": "clinvar:12582",
-    "type": "AggregateStatementProposition"
+    "type": "VariantAggregateClassificationProposition"
   },
   "strength": "definitive",
   "type": "Statement"

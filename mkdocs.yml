@@ -23,7 +23,6 @@ theme:
         name: Switch to light mode
   features:
     - navigation.sections
-    - navigation.expand
     - navigation.indexes
     - search.suggest
     - search.highlight
@@ -74,7 +73,6 @@ nav:
       - pipeline/vcv-statements/index.md
       - Aggregation Rules: pipeline/vcv-statements/vcv-aggregation-rules.md
       - VCV Procedures: pipeline/vcv-statements/vcv-proc.md
-    - Export: pipeline/export.md
   - Output Reference:
     - output-reference/index.md
     - Categorical Variants: output-reference/cat-vrs.md
@@ -90,6 +88,12 @@ nav:
     - data-access/index.md
     - Output Files: data-access/output-files.md
     - Examples: data-access/examples.md
+  - Under Construction:
+    - drafts/index.md
+    - ACMGv4 Variant Pathogenicity:
+      - drafts/acmgv4-variant-pathogenicity/index.md
+      - Case Data Model (Notes): drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM.md
+      - Case Schema & Matrix: drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM-Schema.md
   - Reference:
     - reference/gks-standards.md
     - Known Issues: reference/known-issues.md
