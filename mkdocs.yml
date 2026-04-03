@@ -90,6 +90,7 @@ nav:
   - Data Access:
     - data-access/index.md
     - Output Files: data-access/output-files.md
+    - Downloads: data-access/download.md
     - Examples: data-access/examples.md
   - Under Construction:
     - drafts/index.md
@@ -101,4 +102,3 @@ nav:
     - reference/gks-standards.md
     - Known Issues: reference/known-issues.md
     - Glossary: reference/glossary.md
-  - Schema Registry: schema-registry.md

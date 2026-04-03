@@ -24,15 +24,12 @@ See the [Pipeline Overview](pipeline/index.md) for the full workflow, or jump to
 
 ## Output Datasets
 
-Each pipeline run produces JSONL files distributed via Google Cloud Storage:
+Each pipeline run produces gzip-compressed JSONL files distributed via Cloudflare R2:
 
 | File | Description |
 | --- | --- |
 | `variation` | Cat-VRS categorical variant representations for all ClinVar variations |
 | `scv_by_ref` | VA-Spec SCV statements with variations referenced by ID |
-| `scv_inline` | VA-Spec SCV statements with full variation objects inline |
-| `vcv_by_ref` | VA-Spec VCV aggregate statements with variations referenced by ID |
-| `vcv_inline` | VA-Spec VCV aggregate statements with full variation objects inline |
 
 See [Data Access](data-access/index.md) for download URLs and format details.
 
