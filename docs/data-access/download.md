@@ -16,9 +16,9 @@ The `current/` directory always contains the most recent weekly release with sta
 
 | Dataset | URL |
 | --- | --- |
-| Categorical Variants | `https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/current/clinvar_gks_variation.jsonl.gz` |
-| SCV Statements | `https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/current/clinvar_gks_scv_by_ref.jsonl.gz` |
-| Release Manifest | `https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/current/manifest.json` |
+| Categorical Variants | `https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar_gks_variation.jsonl.gz` |
+| SCV Statements | `https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar_gks_scv_by_ref.jsonl.gz` |
+| Release Manifest | `https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/manifest.json` |
 
 The `manifest.json` file contains metadata about the current release — release date, schema version, and the list of published files.
 
@@ -26,13 +26,13 @@ The `manifest.json` file contains metadata about the current release — release
 
 ```bash
 # Download latest categorical variants
-curl -O https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/current/clinvar_gks_variation.jsonl.gz
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar_gks_variation.jsonl.gz
 
 # Download latest SCV statements
-curl -O https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/current/clinvar_gks_scv_by_ref.jsonl.gz
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar_gks_scv_by_ref.jsonl.gz
 
 # Check which release is current
-curl -s https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/current/manifest.json | python3 -m json.tool
+curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/manifest.json | python3 -m json.tool
 ```
 
 ### Download with Python
@@ -40,7 +40,7 @@ curl -s https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/current/mani
 ```python
 import urllib.request, json
 
-BASE = "https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev"
+BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev"
 
 # Check current release metadata
 with urllib.request.urlopen(f"{BASE}/current/manifest.json") as r:
@@ -56,34 +56,187 @@ urllib.request.urlretrieve(
 
 ---
 
-## Archived Releases
+## Browse All Releases
 
-Weekly releases are organized by year and month:
+The file browser below is populated from the release index and updated automatically with each weekly upload.
 
-```text
-https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/
-  {YYYY}/
-    {YYYY-MM}/
-      {YYYY-MM-DD}/
-        clinvar_gks_variation_{YYYY_MM_DD}_{version}.jsonl.gz
-        clinvar_gks_scv_by_ref_{YYYY_MM_DD}_{version}.jsonl.gz
-        manifest.json
-```
+<div id="r2-browser" markdown>
 
-### Example: Accessing a Specific Release
+<noscript>
+
+JavaScript is required to browse releases interactively. Use the release index directly:
 
 ```bash
-# Download the 2026-03-15 variation file
-curl -O https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/2026/2026-03/2026-03-15/clinvar_gks_variation_2026_03_15_v2_4_3.jsonl.gz
+curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3 -m json.tool
 ```
 
-### Release Index
+</noscript>
 
-A root `index.json` file lists all available releases:
+<p id="r2-loading" style="color: var(--md-default-fg-color--light); font-style: italic;">Loading release index...</p>
+<div id="r2-error" style="display: none; padding: 0.8rem; border-left: 3px solid var(--md-accent-fg-color); margin: 1rem 0;"></div>
+<div id="r2-tree" style="display: none;"></div>
 
-```bash
-curl -s https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/index.json | python3 -m json.tool
-```
+</div>
+
+<style>
+#r2-tree { font-family: var(--md-code-font-family); font-size: 0.82rem; line-height: 1.6; }
+.r2-year, .r2-month { margin: 0; padding: 0; }
+.r2-year > summary, .r2-month > summary {
+  cursor: pointer; font-weight: 600; padding: 0.15rem 0;
+  color: var(--md-default-fg-color);
+  list-style: none;
+}
+.r2-year > summary::before, .r2-month > summary::before {
+  content: "▸ "; color: var(--md-default-fg-color--light);
+}
+.r2-year[open] > summary::before, .r2-month[open] > summary::before {
+  content: "▾ ";
+}
+.r2-release { padding: 0.2rem 0 0.2rem 1.2rem; border-left: 1px solid var(--md-default-fg-color--lightest); margin-left: 0.4rem; }
+.r2-release-header { font-weight: 600; color: var(--md-default-fg-color); margin-bottom: 0.15rem; }
+.r2-file { padding-left: 1.2rem; }
+.r2-file a { text-decoration: none; color: var(--md-typeset-a-color); }
+.r2-file a:hover { text-decoration: underline; }
+.r2-badge {
+  display: inline-block; font-size: 0.7rem; padding: 0.05rem 0.35rem;
+  border-radius: 3px; margin-left: 0.4rem; vertical-align: middle;
+  background: var(--md-accent-fg-color); color: var(--md-accent-bg-color);
+}
+.r2-current { margin-bottom: 1.5rem; padding: 0.8rem; border: 1px solid var(--md-accent-fg-color); border-radius: 4px; }
+.r2-current-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem; }
+</style>
+
+<script>
+(function() {
+  var INDEX_URL = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json";
+
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function(k) {
+      if (k === "text") e.textContent = attrs[k];
+      else if (k === "html") e.innerHTML = attrs[k];
+      else if (k === "className") e.className = attrs[k];
+      else if (k === "style") Object.assign(e.style, attrs[k]);
+      else e.setAttribute(k, attrs[k]);
+    });
+    if (children) children.forEach(function(c) { if (c) e.appendChild(c); });
+    return e;
+  }
+
+  function renderFile(baseUrl, path, filename) {
+    var url = baseUrl + "/" + path + filename;
+    var div = el("div", {className: "r2-file"});
+    div.appendChild(el("a", {href: url, text: filename}));
+    return div;
+  }
+
+  function renderRelease(baseUrl, release, isCurrent) {
+    var div = el("div", {className: "r2-release"});
+    var header = el("div", {className: "r2-release-header"});
+    header.appendChild(el("span", {text: release.date}));
+    header.appendChild(el("span", {
+      text: release.version,
+      style: {marginLeft: "0.6rem", fontWeight: "normal", color: "var(--md-default-fg-color--light)"}
+    }));
+    if (isCurrent) header.appendChild(el("span", {className: "r2-badge", text: "latest"}));
+    div.appendChild(header);
+
+    var files = release.files || [];
+    files.forEach(function(f) { div.appendChild(renderFile(baseUrl, release.path, f)); });
+    div.appendChild(renderFile(baseUrl, release.path, "manifest.json"));
+    return div;
+  }
+
+  function buildTree(data) {
+    var container = document.getElementById("r2-tree");
+    var releases = data.releases || [];
+    var baseUrl = data.base_url || "";
+
+    if (releases.length === 0) {
+      container.innerHTML = "<p>No releases found.</p>";
+      container.style.display = "block";
+      return;
+    }
+
+    // Current release highlight
+    var latest = releases[releases.length - 1];
+    var currentDiv = el("div", {className: "r2-current"});
+    currentDiv.appendChild(el("div", {className: "r2-current-title", html: "Current Release <span class='r2-badge'>latest</span>"}));
+    var stableFiles = ["clinvar_gks_variation.jsonl.gz", "clinvar_gks_scv_by_ref.jsonl.gz", "manifest.json"];
+    stableFiles.forEach(function(f) {
+      var url = baseUrl + "/current/" + f;
+      var row = el("div", {className: "r2-file"});
+      row.appendChild(el("a", {href: url, text: f}));
+      currentDiv.appendChild(row);
+    });
+    currentDiv.appendChild(el("div", {
+      style: {marginTop: "0.3rem", fontSize: "0.78rem", color: "var(--md-default-fg-color--light)"},
+      text: "Release " + latest.date + " (" + latest.version + ") \u2014 stable URLs, always the most recent data"
+    }));
+    container.appendChild(currentDiv);
+
+    // Group by year and month
+    var years = {};
+    releases.forEach(function(r) {
+      var y = r.date.substring(0, 4);
+      var m = r.date.substring(0, 7);
+      if (!years[y]) years[y] = {};
+      if (!years[y][m]) years[y][m] = [];
+      years[y][m].push(r);
+    });
+
+    // Archive heading
+    container.appendChild(el("div", {
+      style: {fontWeight: "700", fontSize: "0.95rem", marginBottom: "0.4rem"},
+      text: "Archived Releases"
+    }));
+
+    // Render years in reverse order, most recent month open
+    var sortedYears = Object.keys(years).sort().reverse();
+    var firstYear = true;
+    sortedYears.forEach(function(y) {
+      var yearDetails = el("details", {className: "r2-year"});
+      if (firstYear) yearDetails.setAttribute("open", "");
+      yearDetails.appendChild(el("summary", {text: y}));
+
+      var sortedMonths = Object.keys(years[y]).sort().reverse();
+      var firstMonth = true;
+      sortedMonths.forEach(function(m) {
+        var monthDetails = el("details", {className: "r2-month"});
+        if (firstYear && firstMonth) monthDetails.setAttribute("open", "");
+        monthDetails.appendChild(el("summary", {text: m}));
+
+        var monthReleases = years[y][m].sort(function(a, b) { return b.date.localeCompare(a.date); });
+        monthReleases.forEach(function(r) {
+          monthDetails.appendChild(renderRelease(baseUrl, r, r === latest));
+        });
+        yearDetails.appendChild(monthDetails);
+        firstMonth = false;
+      });
+      container.appendChild(yearDetails);
+      firstYear = false;
+    });
+
+    container.style.display = "block";
+  }
+
+  fetch(INDEX_URL)
+    .then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      document.getElementById("r2-loading").style.display = "none";
+      buildTree(data);
+    })
+    .catch(function(err) {
+      document.getElementById("r2-loading").style.display = "none";
+      var errDiv = document.getElementById("r2-error");
+      errDiv.style.display = "block";
+      errDiv.textContent = "Unable to load release index. Use the curl command above to access index.json directly. (" + err.message + ")";
+    });
+})();
+</script>
 
 ---
 
@@ -115,6 +268,12 @@ The storage endpoint is S3-compatible. Tools that support custom S3 endpoints ca
 aws s3 ls s3://clinvar-gks/current/ \
   --endpoint-url https://09208aa33790838db213a21f630c33e7.r2.cloudflarestorage.com \
   --no-sign-request
+```
+
+The release index can be fetched programmatically to discover all available releases:
+
+```bash
+curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3 -m json.tool
 ```
 
 ---
