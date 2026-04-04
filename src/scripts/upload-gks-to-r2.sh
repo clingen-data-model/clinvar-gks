@@ -116,6 +116,65 @@ generate_manifest() {
 MANIFEST
 }
 
+# Build index.json from all manifests currently in R2.
+# Lists every release by scanning for manifest.json files in the archive paths.
+update_root_index() {
+  echo "Updating root index.json..."
+  local index_tmp="/tmp/r2_index.json"
+
+  # List all manifest.json files in the bucket (excluding current/)
+  local manifests
+  manifests=$(aws s3 ls "s3://${R2_BUCKET}/" --recursive --endpoint-url "${R2_ENDPOINT}" --profile "${R2_PROFILE}" \
+    | grep 'manifest.json' | grep -v 'current/' | awk '{print $4}' | sort)
+
+  if [ -z "$manifests" ]; then
+    echo "  No release manifests found in R2."
+    return
+  fi
+
+  # Build releases array by downloading each manifest
+  local releases_json="["
+  local first=true
+  while read -r manifest_key; do
+    # Extract path components: YYYY/YYYY-MM/YYYY-MM-DD/manifest.json
+    local release_path
+    release_path=$(dirname "$manifest_key")
+    local release_date
+    release_date=$(basename "$release_path")
+
+    # Fetch the manifest to get version and file list
+    local manifest_content
+    manifest_content=$(aws s3 cp "s3://${R2_BUCKET}/${manifest_key}" - \
+      --endpoint-url "${R2_ENDPOINT}" --profile "${R2_PROFILE}" 2>/dev/null)
+
+    local version
+    version=$(echo "$manifest_content" | python3 -c "import sys,json; print(json.load(sys.stdin)['schema_version'])" 2>/dev/null || echo "unknown")
+
+    local files_array
+    files_array=$(echo "$manifest_content" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)['files']))" 2>/dev/null || echo "[]")
+
+    if ! $first; then releases_json+=","; fi
+    first=false
+    releases_json+=$(printf '\n    {"date": "%s", "version": "%s", "path": "%s/", "files": %s}' \
+      "$release_date" "$version" "$release_path" "$files_array")
+  done <<< "$manifests"
+
+  releases_json+=$'\n  ]'
+
+  cat > "$index_tmp" <<INDEX
+{
+  "description": "ClinVar-GKS weekly data releases",
+  "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "base_url": "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev",
+  "releases": ${releases_json}
+}
+INDEX
+
+  r2_upload_json "$index_tmp" "index.json"
+  rm -f "$index_tmp"
+  echo "  Root index.json updated."
+}
+
 upload_single_release() {
   local export_date="$1" dataset_version="$2"
   local date_suffix="${export_date//-/_}"
@@ -211,41 +270,18 @@ if $BACKFILL; then
     upload_single_release "$export_date" "$version"
   done
 
-  # Generate and upload the root index
-  echo "Generating root index.json..."
-  index_tmp="/tmp/r2_index.json"
-  echo "{" > "$index_tmp"
-  echo "  \"description\": \"ClinVar-GKS weekly data releases\"," >> "$index_tmp"
-  echo "  \"updated_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"," >> "$index_tmp"
-  echo "  \"releases\": [" >> "$index_tmp"
-
-  first=true
-  echo "$release_dates" | while read -r date_part version; do
-    export_date="${date_part//_/-}"
-    year="${export_date:0:4}"
-    month="${export_date:0:7}"
-    if $first; then first=false; else echo "," >> "$index_tmp"; fi
-    printf '    {"date": "%s", "version": "%s", "path": "%s/%s/%s/"}' \
-      "$export_date" "$version" "$year" "$month" "$export_date" >> "$index_tmp"
-  done
-
-  echo "" >> "$index_tmp"
-  echo "  ]" >> "$index_tmp"
-  echo "}" >> "$index_tmp"
-
-  r2_upload_json "$index_tmp" "index.json"
-  rm -f "$index_tmp"
-
+  update_root_index
   echo "Backfill complete."
   exit 0
 fi
 
 # --- Normal mode: upload a single release ---
 upload_single_release "$EXPORT_DATE" "$DATASET_VERSION"
+update_root_index
 
 echo "Upload complete."
 echo "  Archive: s3://${R2_BUCKET}/${YEAR}/${MONTH}/${EXPORT_DATE}/"
 if ! $SKIP_CURRENT; then
   echo "  Current: s3://${R2_BUCKET}/current/"
 fi
-echo "  Public:  https://clinvar-gks.${R2_ACCOUNT_ID}.r2.dev/current/"
+echo "  Public:  https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/"
