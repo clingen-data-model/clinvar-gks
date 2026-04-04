@@ -30,10 +30,10 @@ Download the latest release files directly:
 
 ```bash
 # Latest categorical variants
-curl -O https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/current/clinvar_gks_variation.jsonl.gz
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar_gks_variation.jsonl.gz
 
 # Latest SCV statements (by reference)
-curl -O https://clinvar-gks.09208aa33790838db213a21f630c33e7.r2.dev/current/clinvar_gks_scv_by_ref.jsonl.gz
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar_gks_scv_by_ref.jsonl.gz
 ```
 
 See [Downloads](download.md) for the full URL structure, archived releases, and programmatic access patterns.
