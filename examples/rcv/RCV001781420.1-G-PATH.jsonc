@@ -1,0 +1,90 @@
+{
+  // RCV Layer 4 (Terminal for germline) - Germline group aggregation
+  // The proposition uses objectConditionClassification with 3 concept fields:
+  //   - condition (MappableConcept) OR conditionSet (ConceptSet) -- only one populated
+  //   - classification (MappableConcept)
+  // In the _pre table, these are separate fields. The JSON proc assembles them
+  // into a ConceptSet with 2 concepts: condition + classification.
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          // Layer 3 - Pathogenicity proposition
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Conflicting classifications of pathogenicity"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  // Layer 1 - CP submission level
+                  "id": "RCV001781420.1-G-PATH-CP"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "RCV001781420.1-G-PATH",
+          "proposition": {
+            "aggregateQualifiers": [
+              { "name": "AssertionGroup", "value": "Germline" },
+              { "name": "PropositionType", "value": "Pathogenicity" }
+            ],
+            "id": "RCV001781420-G-PATH",
+            "objectConditionClassification_condition": {
+              "conceptType": "Disease",
+              "id": "12345",
+              "name": "Hereditary breast and ovarian cancer syndrome",
+              "primaryCoding": { "code": "C0677776", "system": "MedGen" }
+            },
+            "objectConditionClassification_classification": {
+              "conceptType": "Classification",
+              "name": "Conflicting classifications of pathogenicity"
+            },
+            "predicate": "hasConditionClassification",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantAggregateConditionClassificationProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "criteria provided, conflicting classifications"
+    }
+  ],
+  "id": "RCV001781420.1-G",
+  "proposition": {
+    "aggregateQualifiers": [
+      { "name": "AssertionGroup", "value": "Germline" }
+    ],
+    "id": "RCV001781420-G",
+    "objectConditionClassification_condition": {
+      "conceptType": "Disease",
+      "id": "12345",
+      "name": "Hereditary breast and ovarian cancer syndrome",
+      "primaryCoding": { "code": "C0677776", "system": "MedGen" }
+    },
+    "objectConditionClassification_classification": {
+      "conceptType": "Classification",
+      "name": "Conflicting classifications of pathogenicity"
+    },
+    "predicate": "hasConditionClassification",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantAggregateConditionClassificationProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

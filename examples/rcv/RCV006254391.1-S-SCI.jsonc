@@ -1,0 +1,89 @@
+{
+  // RCV Layer 3 (Terminal for somatic) - Somatic Clinical Impact
+  // SCI classification label format: "<tier> - <assertion_type> - <significance> (<count>)"
+  // Condition is in objectConditionClassification_condition, NOT in the classification label.
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          // Layer 2 (tier aggregator) - CP submission level
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Tier I - Strong - diagnostic - supports diagnosis (1)"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  // Layer 1 - CP + TIER I - STRONG (uppercased in ID)
+                  "id": "RCV006254391.1-S-SCI-CP-TIER I - STRONG"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "RCV006254391.1-S-SCI-CP",
+          "proposition": {
+            "aggregateQualifiers": [
+              { "name": "AssertionGroup", "value": "Somatic" },
+              { "name": "PropositionType", "value": "Somatic Clinical Impact" },
+              { "name": "SubmissionLevel", "value": "criteria provided" }
+            ],
+            "id": "RCV006254391-S-SCI-CP",
+            "objectConditionClassification_condition": {
+              "conceptType": "Disease",
+              "id": "67890",
+              "name": "Papillary thyroid carcinoma",
+              "primaryCoding": { "code": "C0238463", "system": "MedGen" }
+            },
+            "objectConditionClassification_classification": {
+              "conceptType": "Classification",
+              "name": "Tier I - Strong - diagnostic - supports diagnosis (1)"
+            },
+            "predicate": "hasConditionClassification",
+            "subjectVariant": "clinvar:2441498",
+            "type": "VariantAggregateConditionClassificationProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "criteria provided, single submitter"
+    }
+  ],
+  "id": "RCV006254391.1-S-SCI",
+  "proposition": {
+    "aggregateQualifiers": [
+      { "name": "AssertionGroup", "value": "Somatic" },
+      { "name": "PropositionType", "value": "Somatic Clinical Impact" }
+    ],
+    "id": "RCV006254391-S-SCI",
+    "objectConditionClassification_condition": {
+      "conceptType": "Disease",
+      "id": "67890",
+      "name": "Papillary thyroid carcinoma",
+      "primaryCoding": { "code": "C0238463", "system": "MedGen" }
+    },
+    "objectConditionClassification_classification": {
+      "conceptType": "Classification",
+      "name": "Tier I - Strong - diagnostic - supports diagnosis (1)"
+    },
+    "predicate": "hasConditionClassification",
+    "subjectVariant": "clinvar:2441498",
+    "type": "VariantAggregateConditionClassificationProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}
