@@ -1,6 +1,6 @@
 # Output Reference
 
-The ClinVar-GKS pipeline produces three JSONL files distributed via a public Google Cloud Storage bucket. Each file contains one JSON record per line, compressed with gzip.
+The ClinVar-GKS pipeline produces several JSONL files distributed via a public Google Cloud Storage bucket. Each file contains one JSON record per line, compressed with gzip.
 
 This section documents the JSON output from a **consumer perspective** — what each file contains, the structure of its records, and how to interpret the fields. For details on how these files are built, see the [Pipeline](../pipeline/index.md) documentation.
 
@@ -14,6 +14,7 @@ This section documents the JSON output from a **consumer perspective** — what 
 | `scv_by_ref.jsonl.gz` | [SCV Statements (by reference)](scv-statements.md#by-reference-format) | One per submitted clinical assertion | `gks_scv_statement_by_ref` table via [SCV Statements](../pipeline/scv-statements/index.md) |
 | `scv_inline.jsonl.gz` | [SCV Statements (inline)](scv-statements.md#inline-format) | One per submitted clinical assertion | `gks_scv_statement_inline` table via [SCV Statements](../pipeline/scv-statements/index.md) |
 | `vcv.jsonl.gz` | [VCV Statements](vcv-statements.md) | One per variant-level aggregate classification | `gks_vcv_statement` table via [VCV Statements](../pipeline/vcv-statements/index.md) |
+| `rcv.jsonl.gz` | [RCV Statements](rcv-statements.md) | One per condition-level aggregate classification | `gks_rcv_statement` table via [RCV Statements](../pipeline/rcv-statements/index.md) |
 
 ---
 
@@ -31,7 +32,7 @@ All output files share these conventions:
 
 ## Cross-File References
 
-Records in different output files reference each other by ID. For example, a VCV statement's leaf-level evidence items contain `{"id": "clinvar.submission:SCV000123.1"}` references that resolve to full SCV records in `scv_by_ref.jsonl.gz`, and `proposition.subjectVariant` references resolve to categorical variants in `variation.jsonl.gz`.
+Records in different output files reference each other by ID. For example, a VCV or RCV statement's leaf-level evidence items contain `{"id": "clinvar.submission:SCV000123.1"}` references that resolve to full SCV records in `scv_by_ref.jsonl.gz`, and `proposition.subjectVariant` references resolve to categorical variants in `variation.jsonl.gz`.
 
 See [ID References and Cross-File Resolution](id-references.md) for the complete reference resolution guide, identifier formats, and code examples.
 
