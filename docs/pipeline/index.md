@@ -45,13 +45,20 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 7. JSON Output               │  gks_json_proc
-│    Convert pre-tables to     │  → gks_catvar, gks_scv_statement
-│    final JSON artifacts      │    _by_ref, _inline, gks_vcv_statement
+│ 7. RCV Statements            │  gks_rcv_proc +
+│    Aggregate SCVs into       │  gks_rcv_statement_proc
+│    condition-level statements│  → gks_rcv_statement_pre table
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 8. Export                    │  export-gks-files-to-gcs.sh
+│ 8. JSON Output               │  gks_json_proc
+│    Convert pre-tables to     │  → gks_catvar, gks_scv_statement
+│    final JSON artifacts      │    _by_ref, _inline, gks_vcv_statement,
+│                              │    gks_rcv_statement
+└──────────────┬───────────────┘
+               │
+┌──────────────▼───────────────┐
+│ 9. Export                    │  export-gks-files-to-gcs.sh
 │     Export to GCS &          │  → public bucket
 │     public bucket            │
 └──────────────────────────────┘
@@ -71,7 +78,7 @@ CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE(), FALSE);
 
 Export, process externally with vrs-python, and load back. See [VRS Processing](vrs-processing.md).
 
-### Step 3: Cat-VRS through VCV Statements
+### Step 3: Cat-VRS through RCV Statements
 
 From the BigQuery console:
 
@@ -81,6 +88,8 @@ CALL `clinvar_ingest.gks_scv_condition_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_scv_statement_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_vcv_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_vcv_statement_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_rcv_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_rcv_statement_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all', FALSE);
 ```
 
@@ -110,5 +119,6 @@ Each pipeline step has its own documentation page:
 - [Cat-VRS](cat-vrs/index.md) — categorical variant generation
 - [Conditions & Traits](conditions-and-traits/index.md) — condition mapping, traits, condition sets
 - [SCV Statements](scv-statements/index.md) — SCV records, propositions, final statements
-- [VCV Statements](vcv-statements/index.md) — aggregate VCV/RCV statements (in progress)
+- [VCV Statements](vcv-statements/index.md) — aggregate variant-level VCV statements
+- [RCV Statements](rcv-statements/index.md) — aggregate condition-level RCV statements
 - [Export](export.md) — export to Google Cloud Storage
