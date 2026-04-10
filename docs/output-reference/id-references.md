@@ -17,7 +17,7 @@ All ClinVar-GKS identifiers use a prefix namespace to indicate the type of resou
 | `clinvar.submitter:` | Submitter organization | `clinvar.submitter:{submitter_id}` | `clinvar.submitter:508027` |
 | `ga4gh:` | VRS identity | `ga4gh:{type}.{digest}` | `ga4gh:VA.xXBYkzzu1AH0oyMKlbBtP2` |
 
-VCV aggregate statement IDs use a hierarchical format without a namespace prefix — see [VCV Statement IDs](#vcv-statement-ids).
+VCV and RCV aggregate statement IDs use a hierarchical format without a namespace prefix — see [VCV Statement IDs](#vcv-statement-ids) and [RCV Statement IDs](#rcv-statement-ids).
 
 ---
 
@@ -32,6 +32,8 @@ When a field contains an ID-only reference (rather than a full embedded object),
 | `proposition.subjectVariant` | SCV statements (by-ref) | `clinvar:{variation_id}` | Categorical Variant record | `variation.jsonl.gz` |
 | `proposition.subjectVariant` | VCV statements | `clinvar:{variation_id}` | Categorical Variant record | `variation.jsonl.gz` |
 | `evidenceItems[].id` (leaf) | VCV statements | `clinvar.submission:SCV{id}.{ver}` | SCV Statement record | `scv_by_ref.jsonl.gz` |
+| `proposition.subjectVariant` | RCV statements | `clinvar:{variation_id}` | Categorical Variant record | `variation.jsonl.gz` |
+| `evidenceItems[].id` (leaf) | RCV statements | `clinvar.submission:SCV{id}.{ver}` | SCV Statement record | `scv_by_ref.jsonl.gz` |
 | `contributor.id` | SCV statements | `clinvar.submitter:{id}` | Submitter organization | Not exported as standalone — embedded in SCV records |
 | `constraints[].definingContext.id` | Categorical Variants | `ga4gh:{type}.{digest}` | VRS allele/copy number | Embedded within the same record |
 
@@ -84,7 +86,7 @@ variant = catvar_index.get(statement["proposition"]["subjectVariant"])
 
 ## VCV Statement IDs
 
-VCV aggregate statements use a hierarchical ID format that reflects the aggregation layer. Each layer's ID is built by progressively stripping components from right to left:
+VCV aggregate statements use a hierarchical ID format that reflects the aggregation layer. RCV statements follow the same patterns with an RCV accession -- see [RCV Statement IDs](#rcv-statement-ids). Each layer's ID is built by progressively stripping components from right to left:
 
 | Layer | Format | Example |
 | --- | --- | --- |
@@ -104,7 +106,35 @@ Within a VCV statement's nested evidence lines, each evidence item references th
 
 ---
 
-## Proposition IDs
+## RCV Statement IDs
+
+RCV aggregate statements use the same hierarchical ID format as VCV, but with an RCV accession instead of a VCV accession:
+
+| Layer | Format | Example |
+| --- | --- | --- |
+| L1 (Base) | `{RCV}.{ver}-{group}-{prop}-{level}[-{tier}]` | `RCV000012345.10-G-path-CP` |
+| L2 (Tier) | `{RCV}.{ver}-{group}-{prop}-{level}` | `RCV000012345.10-G-sci-CP` |
+| L3 (Submission Level) | `{RCV}.{ver}-{group}-{prop}` | `RCV000012345.10-G-path` |
+| L4 (Statement Group) | `{RCV}.{ver}-{group}` | `RCV000012345.10-G` |
+
+The component abbreviations (group, prop, level, tier) are the same as those defined in [VCV Statement IDs](#vcv-statement-ids).
+
+### RCV Proposition IDs
+
+RCV proposition IDs use the RCV accession (without version) in a hyphen-separated format:
+
+| Layer | Format | Example |
+| --- | --- | --- |
+| L1 | `{rcv_accession}-{group}-{prop}[-{level}][-{tier}]` | `RCV000012345-G-path-CP` |
+| L2 | `{rcv_accession}-{group}-{prop}-{level}` | `RCV000012345-G-sci-CP` |
+| L3 | `{rcv_accession}-{group}-{prop}` | `RCV000012345-G-path` |
+| L4 | `{rcv_accession}-{group}` | `RCV000012345-G` |
+
+RCV proposition IDs are internal to the statement structure and not used for cross-file resolution.
+
+---
+
+## VCV Proposition IDs
 
 Each VCV statement's `proposition.id` uses a dot-separated format parallel to the statement ID:
 

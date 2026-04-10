@@ -5,6 +5,7 @@ BEGIN
   DECLARE query_statement_scv_by_ref STRING;
   DECLARE query_statement_scv_inline STRING;
   DECLARE query_statement_vcv STRING;
+  DECLARE query_statement_rcv STRING;
 
   FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
   DO
@@ -128,6 +129,32 @@ BEGIN
         FROM json_draft
       """, '{S}', rec.schema_name);
       EXECUTE IMMEDIATE query_statement_vcv;
+
+    END IF;
+
+    -------------------------------------------------------------------------
+    -- RCV statement JSON output
+    -------------------------------------------------------------------------
+    IF output_type IN ('rcv', 'all') THEN
+
+      SET query_statement_rcv = REPLACE("""
+        CREATE OR REPLACE TABLE `{S}.gks_rcv_statement`
+        AS
+        WITH json_draft AS (
+          SELECT
+            tv.id,
+            JSON_STRIP_NULLS(
+              TO_JSON(tv),
+            remove_empty => TRUE
+            ) AS rec
+          FROM `{S}.gks_rcv_statement_pre` AS tv
+        )
+        SELECT
+          json_draft.id,
+          `clinvar_ingest.normalizeAndKeyById`(json_draft.rec, true) as rec
+        FROM json_draft
+      """, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_statement_rcv;
 
     END IF;
 

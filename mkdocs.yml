@@ -75,11 +75,16 @@ nav:
       - Aggregation Rules: pipeline/vcv-statements/vcv-aggregation-rules.md
       - VCV Procedures: pipeline/vcv-statements/vcv-proc.md
       - VCV Extensions: pipeline/vcv-statements/vcv-extensions.md
+    - RCV Statements:
+      - pipeline/rcv-statements/index.md
+      - RCV Procedures: pipeline/rcv-statements/rcv-proc.md
+      - RCV Extensions: pipeline/rcv-statements/rcv-extensions.md
   - Output Reference:
     - output-reference/index.md
     - Categorical Variants: output-reference/cat-vrs.md
     - SCV Statements: output-reference/scv-statements.md
     - VCV Statements: output-reference/vcv-statements.md
+    - RCV Statements: output-reference/rcv-statements.md
     - ID References: output-reference/id-references.md
   - Profiles:
     - profiles/index.md
