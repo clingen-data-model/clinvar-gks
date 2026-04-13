@@ -35,4 +35,4 @@ These proposition types are used in aggregate (VCV and RCV) statements.
 | Aggregation Level | Proposition Type | Predicate |
 | --- | --- | --- |
 | Variant (VCV) | VariantAggregateClassificationProposition | hasAggregateClassification |
-| Variant + Condition (RCV) | VariantAggregateConditionClassificationProposition | hasConditionClassification |
+| Variant + Condition (RCV) | VariantAggregateConditionClassificationProposition | hasAggregateConditionClassification |

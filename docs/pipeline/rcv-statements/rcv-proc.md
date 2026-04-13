@@ -29,7 +29,7 @@ Key derivations:
 - **full_rcv_id** -- formatted as `{rcv_accession}.{version}` from `rcv_accession`
 - **trait_set_id** -- the condition grouping key from `rcv_mapping`, used in all downstream GROUP BY clauses
 - **original_submission_level** -- raw code from the `submission_level` lookup table
-- **submission_level** -- remaps PG and EP to `PGEP`; all other codes pass through unchanged
+- **submission_level** -- passes through unchanged; PG and EP are independent submission levels
 - **submission_level_label** -- human-readable label from the lookup table
 - **statement_group** -- category code from `clinvar_statement_types` (G for germline, S for somatic)
 - **prop_type** -- proposition type code from `clinvar_proposition_types`
@@ -53,7 +53,8 @@ The step uses four CTEs:
 
 The `final_prep` CTE applies submission-level-specific logic:
 
-- **PGEP** -- no conflict detection; `actual_agg_classif_label` is NULL (PGEP uses the array format, not a single label); `pgep_strength` derived from contributing levels (PG, EP, or PGEP)
+- **PG** -- no conflict detection; fixed aggregate review status `practice guideline`
+- **EP** -- no conflict detection; fixed aggregate review status `reviewed by expert panel`
 - **CP** -- conflict detection with review status upgrades: single submitter, multiple submitters with no conflicts, or conflicting classifications
 - **FLAG** -- fixed label: "no classifications from unflagged records"
 - **NOCL** -- passthrough label: "not provided"
@@ -67,7 +68,7 @@ ID format: `{RCV}.{ver}-{group}-{prop}-{level}[-{tier}]`
 
 ### Step 3: Build gks_rcv_layer2_tier_agg
 
-Aggregates Layer 1 records by tier within each submission level. This layer applies only to somatic clinical impact (sci) propositions where `tier_grouping IS NOT NULL`. PGEP never appears at this layer because PGEP is germline-only.
+Aggregates Layer 1 records by tier within each submission level. This layer applies only to somatic clinical impact (sci) propositions where `tier_grouping IS NOT NULL`.
 
 The step ranks tiers by `tier_priority` (ascending) and SCV count (descending), then designates:
 
@@ -87,7 +88,7 @@ ID format: `{RCV}.{ver}-{group}-{prop}-{level}`
 
 Submission-level aggregator using winner-takes-all ranking. Takes a unified input of Layer 2 output (tiered records) combined with non-tiered Layer 1 records (`tier_grouping IS NULL`).
 
-Records are ranked by submission level within each `(rcv_accession, trait_set_id, statement_group, prop_type)` group, with PGEP receiving rank 5 (above PG's rank of 4). The highest-ranked submission level becomes the contributing result; all others become non-contributing.
+Records are ranked by submission level within each `(rcv_accession, trait_set_id, statement_group, prop_type)` group using the explicit ordering `PG=6, EP=5, CP=4, NOCP=3, NOCL=2, FLAG=1`. The highest-ranked submission level becomes the contributing result; all others become non-contributing.
 
 A key difference from VCV: the winner-takes-all partition is by `rcv_accession` (not `variation_id`), since each RCV accession already represents a unique (variation, condition) pair.
 
@@ -116,7 +117,9 @@ ID format: `{RCV}.{ver}-{group}`
 
 ## gks_rcv_statement_proc (Statement Generation)
 
-This procedure transforms the aggregation tables produced by `gks_rcv_proc` into GKS-formatted RCV statements. It resolves condition data, generates statement structures at each layer (BASE), inlines evidence items and populates PGEP classification fields (PRE), then combines the results into a final output table.
+This procedure transforms the aggregation tables produced by `gks_rcv_proc` into GKS-formatted RCV statements. It resolves condition data, generates statement structures at each layer (BASE), inlines evidence items into nested structures (PRE), then combines the results into a final output table.
+
+PG and EP are independent submission levels. Each produces a single aggregate label and a single `objectConditionClassification` ConceptSet at every layer, using the same structure as every other submission level.
 
 The procedure executes 10 sections: condition data resolution, four BASE layers, four PRE layers, and one FINAL union.
 
@@ -124,9 +127,9 @@ The procedure executes 10 sections: condition data resolution, four BASE layers,
 
 ### Condition Data Resolution
 
-Before building statement structures, the procedure materializes `temp_rcv_condition_data` by joining `rcv_mapping` (unnesting `scv_accessions`) with `gks_scv_condition_sets`. This table provides the condition name and condition concept data needed to populate `objectConditionClassification` ConceptSets in the proposition.
+Before building statement structures, the procedure materializes `temp_rcv_condition_data` by joining `rcv_mapping` (unnesting `scv_accessions`) with `gks_scv_condition_sets` and selecting one representative SCV per RCV. This table provides the full condition concept (a `Condition` MappableConcept or a `ConditionSet` ConceptSet, with extensions excluded) needed to populate `objectConditionClassification` in the proposition.
 
-**Output:** `temp_rcv_condition_data` -- condition data per RCV accession. <span class="role-badge badge-internal">Internal</span>
+**Output:** `temp_rcv_condition_data` -- condition concept per RCV accession. <span class="role-badge badge-internal">Internal</span>
 
 ---
 
@@ -136,22 +139,22 @@ Each BASE section reads from the corresponding aggregation table and produces a 
 
 | Field | Description |
 |---|---|
-| `classification_mappableConcept` | For non-PGEP: a simple Classification concept with `name` and optional `conflictingExplanation` extension |
-| `classification_conceptSet` | NULL placeholder -- populated in the PRE layer for PGEP with a single classification group |
-| `classification_conceptSetSet` | NULL placeholder -- populated in the PRE layer for PGEP with multiple classification groups |
-| `proposition` | Contains `objectConditionClassification` (a ConceptSet combining condition + classification as 2 concepts), `aggregateQualifiers`, `subjectVariant` reference, type `VariantAggregateConditionClassificationProposition`, and predicate `hasConditionClassification` |
+| `classification_mappableConcept` | A Classification concept with `name` (the aggregate label) and optional `conflictingExplanation` extension. Used at every layer for every submission level |
+| `proposition` | Contains `objectConditionClassification` (a ConceptSet with exactly 2 concepts: the SCV's actual condition or conditionSet plus the aggregate Classification), `aggregateQualifiers`, `subjectVariant` reference, type `VariantAggregateConditionClassificationProposition`, and predicate `hasAggregateConditionClassification` |
 | `extensions` | Array with `clinvarReviewStatus` value |
 | `evidenceLines` | References to child layer IDs (SCV IDs for L1, contributing/non-contributing statement IDs for L2--L4) |
 
-The `objectConditionClassification` ConceptSet is built by joining condition data from `temp_rcv_condition_data` with the aggregate classification label, producing a two-concept AND-group:
+The `objectConditionClassification` ConceptSet is built by combining the SCV's condition (from `temp_rcv_condition_data`) with the aggregate classification label as a two-concept AND-group:
 
-1. A Disease/condition concept (from condition data)
+1. The SCV's actual condition -- either a `Condition` MappableConcept or a `ConditionSet` ConceptSet of conditions (extensions excluded)
 2. A Classification concept (from the aggregate label)
+
+This same structure is produced at every layer with no recombination.
 
 Layer-specific differences:
 
 - **Layer 1 BASE** -- references SCV IDs directly in evidence lines; includes `ClassificationTier` qualifier for tiered records
-- **Layer 2 BASE** -- references Layer 1 IDs; somatic only, never PGEP; includes contributing and non-contributing evidence lines
+- **Layer 2 BASE** -- references Layer 1 IDs; somatic only; includes contributing and non-contributing evidence lines
 - **Layer 3 BASE** -- references a single contributing child (from L2 or L1) plus non-contributing details; `aggregateQualifiers` omit `SubmissionLevel` (since this layer aggregates across levels)
 - **Layer 4 BASE** -- references Layer 3 IDs; germline only; `aggregateQualifiers` contain only `AssertionGroup`
 
@@ -161,19 +164,7 @@ Layer-specific differences:
 
 ### Layer 1 PRE
 
-Inlines SCV evidence items from `gks_scv_statement_pre` and populates the PGEP classification and objectConditionClassification fields.
-
-For PGEP records, the step:
-
-1. Joins each contributing SCV to `gks_scv_statement_pre`, `scv_summary`, `gks_scv_condition_sets`, and `submission_level` to extract per-SCV classification, condition, and submission level data
-2. Builds ConceptSet AND-groups for **classification** -- each group contains three concepts (Classification, Condition, SubmissionLevel) plus a `description` extension
-3. Builds ConceptSet AND-groups for **objectConditionClassification** -- same structure but deduplicated across submitters and without extensions
-4. Populates `classification_conceptSet` (single classification) or `classification_conceptSetSet` (multiple classifications) based on SCV count
-5. Applies the same conceptSet/conceptSetSet logic to objectConditionClassification, using `objectConditionClassification_conceptSetSet` for the multiple case
-
-For non-PGEP records, the existing `classification_mappableConcept` and `objectConditionClassification` are carried forward unchanged.
-
-Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format.
+Inlines SCV evidence items from `gks_scv_statement_pre`. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification_mappableConcept` and `proposition` fields are carried forward unchanged from the BASE.
 
 **Output:** `temp_rcv_layer1_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -181,9 +172,7 @@ Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id
 
 ### Layer 2 PRE
 
-Inlines Layer 1 PRE evidence items into Layer 2 statements. This layer is somatic only and never contains PGEP, so classification and objectConditionClassification are passed through without modification.
-
-Contributing and non-contributing evidence lines are rebuilt with the full inlined Layer 1 PRE statement structures.
+Inlines Layer 1 PRE evidence items into Layer 2 statements (somatic only). The `classification_mappableConcept` and `proposition` fields are passed through unchanged. Contributing and non-contributing evidence lines are rebuilt with the full inlined Layer 1 PRE statement structures.
 
 **Output:** `temp_rcv_layer2_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -191,13 +180,7 @@ Contributing and non-contributing evidence lines are rebuilt with the full inlin
 
 ### Layer 3 PRE
 
-Inlines evidence items from either Layer 2 PRE or Layer 1 PRE (using COALESCE to check L2 first, then L1). Additionally propagates classification and objectConditionClassification from the single contributing child:
-
-- `classification_conceptSet` and `classification_conceptSetSet` are copied from the contributing child when present
-- `objectConditionClassification_conceptSet` and `objectConditionClassification_conceptSetSet` are likewise propagated
-- `objectConditionClassification` (mappable ConceptSet) is propagated when the child has one
-
-This propagation ensures that PGEP concept structures flow upward through the layer hierarchy.
+Inlines evidence items from either Layer 2 PRE or Layer 1 PRE (using COALESCE to check L2 first, then L1). The `classification_mappableConcept` and `proposition` fields are passed through unchanged from the BASE -- RCV uses a single ConceptSet form at every layer.
 
 **Output:** `temp_rcv_layer3_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -205,13 +188,7 @@ This propagation ensures that PGEP concept structures flow upward through the la
 
 ### Layer 4 PRE
 
-Inlines Layer 3 PRE evidence items into Layer 4 statements. For PGEP-type records where contributing children have conceptSet or conceptSetSet data, this step combines the inner AND-groups from all contributing Layer 3 children:
-
-- Collects all inner concept groups from contributing children's `classification_conceptSet` and `classification_conceptSetSet`
-- Re-counts the combined groups: 1 group produces a `classification_conceptSet`, 2+ groups produce a `classification_conceptSetSet`
-- Applies the same logic to objectConditionClassification
-
-Children that only have `mappableConcept` (non-PGEP) are excluded from this recombination -- their classification stays as `mappableConcept` on the Layer 4 BASE.
+Inlines Layer 3 PRE evidence items into Layer 4 statements (germline only). The `classification_mappableConcept` and `proposition` fields are passed through unchanged. Contributing and non-contributing evidence lines are rebuilt with the full inlined Layer 3 PRE statement structures.
 
 **Output:** `temp_rcv_layer4_pre` <span class="role-badge badge-internal">Internal</span>
 

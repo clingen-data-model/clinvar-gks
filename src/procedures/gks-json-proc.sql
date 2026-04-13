@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_json_proc`(on_date DATE, output_type STRING, debug BOOL)
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_json_proc`(on_date DATE, output_type STRING)
 BEGIN
 
   DECLARE gks_catvar_query STRING;

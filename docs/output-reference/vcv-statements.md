@@ -20,9 +20,7 @@ Each record is a `Statement` with the following top-level fields:
 | `type` | string | Always `Statement` |
 | `direction` | string | Always `supports` |
 | `strength` | string | Always `definitive` |
-| `classification_mappableConcept` | object | Single aggregate classification label for non-PGEP. See [Classification](#classification) |
-| `classification_conceptSet` | object | Single PGEP classification tuple as ConceptSet. See [Classification](#classification) |
-| `classification_conceptSetSet` | object | Multiple PGEP classification tuples as nested ConceptSets. See [Classification](#classification) |
+| `classification_mappableConcept` | object | Aggregate classification label. See [Classification](#classification) |
 | `proposition` | object | The aggregate proposition with variant, objectClassification, and qualifiers. See [Proposition](#proposition) |
 | `extensions` | array | Aggregate metadata — `clinvarReviewStatus`. See [Extensions](#extensions) |
 | `evidenceLines` | array | Contributing and non-contributing evidence from lower aggregation layers. See [Evidence Lines](#evidence-lines) |
@@ -33,11 +31,11 @@ Each record is a `Statement` with the following top-level fields:
 
 ## Classification
 
-VCV statements use three mutually exclusive classification attributes. Exactly one is populated; the others are null (omitted from JSON output via null stripping).
+All VCV statements use a single `classification_mappableConcept` attribute for the aggregate classification.
 
 ### classification_mappableConcept
 
-Used for non-PGEP submission levels (CP, NOCP, NOCL, FLAG). Contains a single aggregate label with an optional `conflictingExplanation` extension when the classification is conflicting.
+Used by all submission levels (PG, EP, CP, NOCP, NOCL, FLAG). Contains a single aggregate label with an optional `conflictingExplanation` extension when the classification is conflicting.
 
 ```json
 {
@@ -51,67 +49,11 @@ Used for non-PGEP submission levels (CP, NOCP, NOCL, FLAG). Contains a single ag
 }
 ```
 
-### classification_conceptSet
-
-Used for PGEP submissions with a single classification tuple. An AND-group of Classification, Condition, and SubmissionLevel concepts with a `description` extension.
-
-```json
-{
-  "classification_conceptSet": {
-    "type": "ConceptSet",
-    "concepts": [
-      {"conceptType": "Classification", "name": "Likely Benign"},
-      {"conceptType": "Condition", "name": "Immunodeficiency 14"},
-      {"conceptType": "SubmissionLevel", "name": "expert panel"}
-    ],
-    "membershipOperator": "AND",
-    "extensions": [
-      {"name": "description", "value": "for Immunodeficiency 14\nClassification is based on the expert panel submission\nMar 2024 by GeneDx"}
-    ]
-  }
-}
-```
-
-### classification_conceptSetSet
-
-Used for PGEP submissions with two or more classification tuples. Nested ConceptSets, each inner group carrying its own `description` extension.
-
-```json
-{
-  "classification_conceptSetSet": {
-    "type": "ConceptSet",
-    "concepts": [
-      {
-        "type": "ConceptSet",
-        "concepts": [
-          {"conceptType": "Classification", "name": "drug response"},
-          {"conceptType": "Condition", "name": "ivacaftor response - Efficacy"},
-          {"conceptType": "SubmissionLevel", "name": "expert panel"}
-        ],
-        "membershipOperator": "AND",
-        "extensions": [{"name": "description", "value": "..."}]
-      },
-      {
-        "type": "ConceptSet",
-        "concepts": [
-          {"conceptType": "Classification", "name": "drug response"},
-          {"conceptType": "Condition", "name": "tezacaftor response - Efficacy"},
-          {"conceptType": "SubmissionLevel", "name": "expert panel"}
-        ],
-        "membershipOperator": "AND",
-        "extensions": [{"name": "description", "value": "..."}]
-      }
-    ],
-    "membershipOperator": "AND"
-  }
-}
-```
-
 ---
 
 ## Proposition
 
-The `proposition` describes the aggregate classification claim. It uses the same 3-way `objectClassification` split as the classification, but **without extensions** and **deduplicated** across submitters.
+The `proposition` describes the aggregate classification claim. It uses a single `objectClassification` MappableConcept mirroring the statement-level classification (without the `conflictingExplanation` extension).
 
 <div class="field-table" markdown>
 
@@ -121,12 +63,13 @@ The `proposition` describes the aggregate classification claim. It uses the same
 | `id` | string | Proposition ID — VCV accession without version, dash-separated (e.g., `VCV000012582-G-PATH-CP`) |
 | `subjectVariant` | string | Reference to the categorical variant — `clinvar:{variation_id}` |
 | `predicate` | string | Always `hasAggregateClassification` |
-| `objectClassification_mappableConcept` | object | Single classification concept for non-PGEP |
-| `objectClassification_conceptSet` | object | Single PGEP classification ConceptSet (no extensions, deduplicated) |
-| `objectClassification_conceptSetSet` | object | Multiple PGEP classification ConceptSets (no extensions, deduplicated) |
+| `objectClassification` | object | A MappableConcept matching the statement-level classification (no `conflictingExplanation` extension) |
 | `aggregateQualifiers` | array | Context qualifiers — AssertionGroup, PropositionType, SubmissionLevel, ClassificationTier |
 
 </div>
+
+!!! note
+    PG and EP are separate submission levels; PG outranks EP at Layer 3 winner-takes-all.
 
 ---
 
@@ -170,8 +113,8 @@ VCV statements are built through a 4-layer aggregation hierarchy. The top-level 
 | L4 (Group) | `VCV000012582.63-G` | Statement group | Germline only |
 | L3 (Submission Level) | `VCV000012582.63-G-PATH` | Proposition type | All |
 | L2 (Tier) | `VCV000012582.63-G-SCI-CP` | Submission level | Somatic only |
-| L1 (Base) | `VCV000012582.63-G-PATH-CP` | Submission level + tier | All |
+| L1 (Base) | `VCV000012582.63-G-SCI-CP-PATHOGENIC` | Submission level + tier | All |
 
-Germline VCV statements use Layer 4 as the top level. Somatic VCV statements use Layer 3 as the top level (no Layer 4 for somatic).
+Germline VCV statements use Layer 4 as the top level. Somatic VCV statements use Layer 3 as the top level (no Layer 4 for somatic). Layer 1 tier components are uppercase (e.g., `PATHOGENIC`). Submission level ranking at Layer 3 is `PG > EP > CP > NOCP > NOCL > FLAG`, with only matching submission levels aggregating together at Layer 1.
 
 See [Aggregation Rules](../pipeline/vcv-statements/vcv-aggregation-rules.md) for detailed submission level logic and [VCV Procedures](../pipeline/vcv-statements/vcv-proc.md) for implementation details.
