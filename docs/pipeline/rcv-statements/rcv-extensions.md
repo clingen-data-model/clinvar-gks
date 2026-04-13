@@ -2,11 +2,11 @@
 
 ## Overview
 
-RCV aggregate statement records contain `extensions` arrays at two structural levels -- on the top-level `Statement` and on classification objects (`classification_mappableConcept` and `classification_conceptSet` / `classification_conceptSetSet`). Extensions carry aggregate review status information and classification context that are not part of the GA4GH VA-Spec statement model but are essential for interpreting the aggregation outcome.
+RCV aggregate statement records contain `extensions` arrays at two structural levels -- on the top-level `Statement` and on the `classification_mappableConcept` object. Extensions carry aggregate review status information and classification context that are not part of the GA4GH VA-Spec statement model but are essential for interpreting the aggregation outcome.
 
 RCV statement extensions use `value` (not `value_string`) for extension values, following the convention for aggregate-level metadata.
 
-A key structural difference from VCV: RCV propositions use `objectConditionClassification`, a `ConceptSet` that combines the condition and classification as two AND-joined concepts. This is a core proposition field, not an extension.
+A key structural difference from VCV: RCV propositions use a single `objectConditionClassification` field, a `ConceptSet` with exactly two concepts -- the SCV's condition (or conditionSet) and the aggregate classification -- joined with an AND operator. PG and EP are independent submission levels.
 
 ---
 
@@ -27,9 +27,8 @@ Extensions on the top-level RCV `Statement` record, built in the [RCV Statement 
       <td>The aggregate review status derived from the submission level and aggregation outcome. This reflects the overall confidence level for the aggregate classification. The same value set as VCV review status applies.<br><br>
       Values include:
       <ul>
-        <li><code>practice guideline</code> -- PGEP with PG-only SCVs</li>
-        <li><code>reviewed by expert panel</code> -- PGEP with EP-only SCVs</li>
-        <li><code>practice guideline and expert panel mix</code> -- PGEP with both PG and EP SCVs</li>
+        <li><code>practice guideline</code> -- PG</li>
+        <li><code>reviewed by expert panel</code> -- EP</li>
         <li><code>criteria provided, single submitter</code> -- CP with one submitter</li>
         <li><code>criteria provided, multiple submitters, no conflicts</code> -- CP concordant</li>
         <li><code>criteria provided, conflicting classifications</code> -- CP conflicting</li>
@@ -51,7 +50,7 @@ Extensions on the top-level RCV `Statement` record, built in the [RCV Statement 
 
 ### classification_mappableConcept Extensions
 
-Extensions on the `classification_mappableConcept` object, used for non-PGEP submission levels (CP, NOCP, NOCL, FLAG).
+Extensions on the `classification_mappableConcept` object. RCV uses `classification_mappableConcept` at every layer for every submission level.
 
 <table>
   <thead>
@@ -71,37 +70,11 @@ Extensions on the `classification_mappableConcept` object, used for non-PGEP sub
   </tbody>
 </table>
 
-### classification_conceptSet Extensions
-
-Extensions on the `classification_conceptSet` object, used for PGEP submissions with a single classification tuple.
-
-<table>
-  <thead>
-    <tr>
-      <th style="white-space: nowrap; width: 30%;">Extension (section, type)</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>description</code><br><em>classification_conceptSet</em><br>string</td>
-      <td>A formatted multi-line description for the PGEP classification, using the same template as the SCV classification description. Derived from the contributing SCV's classification description extension. Template:<br><code>for &lt;condition_name&gt;\nClassification is based on the &lt;submission_level_label&gt; submission\n&lt;evaluated_date&gt; by &lt;submitter_name&gt;</code><br>Always present on PGEP classification ConceptSets.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "description", "value": "for Breast cancer\nClassification is based on the expert panel submission\nMar 2024 by GeneDx" }</code></pre></td>
-    </tr>
-  </tbody>
-</table>
-
-### classification_conceptSetSet Extensions
-
-For `classification_conceptSetSet` (PGEP with 2+ classification tuples), each inner ConceptSet AND-group carries the same `description` extension as described above. The outer ConceptSet wrapper has no extensions.
-
 ---
 
 ## objectConditionClassification
 
-The `objectConditionClassification` field on RCV propositions is not an extension -- it is a core proposition field of type `ConceptSet`. It combines the condition and aggregate classification as two concepts joined with an AND operator:
+The `objectConditionClassification` field on RCV propositions is not an extension -- it is a core proposition field of type `ConceptSet`. It always contains exactly two concepts joined with an AND operator: the SCV's actual condition (sourced from `gks_scv_condition_sets`) and the aggregate classification.
 
 ```json
 {
@@ -110,7 +83,9 @@ The `objectConditionClassification` field on RCV propositions is not an extensio
     "concepts": [
       {
         "conceptType": "Disease",
-        "name": "Hereditary breast and ovarian cancer syndrome"
+        "id": "12345",
+        "name": "Hereditary breast and ovarian cancer syndrome",
+        "primaryCoding": {"code": "C0677776", "system": "MedGen"}
       },
       {
         "conceptType": "Classification",
@@ -122,7 +97,9 @@ The `objectConditionClassification` field on RCV propositions is not an extensio
 }
 ```
 
-For PGEP records with multiple classification groups, the proposition uses `objectConditionClassification_conceptSetSet` instead, which wraps the individual AND-groups into an outer OR-joined ConceptSet.
+When the underlying SCV uses a multi-condition `conditionSet` instead of a single `condition`, the first concept is itself a nested ConceptSet of conditions. Extensions on the source condition are excluded.
+
+This same structure is used at all four layers without modification -- no per-SCV expansion or recombination is performed.
 
 ---
 
@@ -154,7 +131,7 @@ RCV proposition `aggregateQualifiers` are not technically extensions -- they are
     </tr>
     <tr>
       <td><code>SubmissionLevel</code><br><em>aggregateQualifiers</em><br>string</td>
-      <td>The submission level label for this aggregation. For PGEP, uses the derived label (<code>practice guideline</code>, <code>expert panel</code>, or <code>practice guideline and expert panel mix</code>). For others, uses the standard label from the submission level lookup table. Present at Layers 1--2.</td>
+      <td>The submission level label for this aggregation, taken from the standard label in the submission level lookup table. Present at Layers 1--2.</td>
     </tr>
     <tr>
       <td colspan="2"><pre><code>{ "name": "SubmissionLevel", "value": "criteria provided" }</code></pre></td>
@@ -175,7 +152,7 @@ RCV proposition `aggregateQualifiers` are not technically extensions -- they are
 
 For somatic clinical impact (SCI) propositions, the RCV aggregate classification label format differs from VCV. The RCV SCI label format is:
 
-```
+```text
 <tier_label> - <assertion_type> - <clinical_significance> (<scv_count>)
 ```
 

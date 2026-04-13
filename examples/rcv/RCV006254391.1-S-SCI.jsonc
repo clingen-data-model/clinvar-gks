@@ -1,7 +1,12 @@
 {
   // RCV Layer 3 (Terminal for somatic) - Somatic Clinical Impact
   // SCI classification label format: "<tier> - <assertion_type> - <significance> (<count>)"
-  // Condition is in objectConditionClassification_condition, NOT in the classification label.
+  // The proposition's objectConditionClassification ConceptSet always has 2 concepts:
+  // the SCV's actual condition and the aggregate Classification.
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Tier I - Strong - diagnostic - supports diagnosis (1)"
+  },
   "direction": "supports",
   "evidenceLines": [
     {
@@ -35,17 +40,23 @@
               { "name": "SubmissionLevel", "value": "criteria provided" }
             ],
             "id": "RCV006254391-S-SCI-CP",
-            "objectConditionClassification_condition": {
-              "conceptType": "Disease",
-              "id": "67890",
-              "name": "Papillary thyroid carcinoma",
-              "primaryCoding": { "code": "C0238463", "system": "MedGen" }
+            "objectConditionClassification": {
+              "type": "ConceptSet",
+              "concepts": [
+                {
+                  "conceptType": "Disease",
+                  "id": "67890",
+                  "name": "Papillary thyroid carcinoma",
+                  "primaryCoding": { "code": "C0238463", "system": "MedGen" }
+                },
+                {
+                  "conceptType": "Classification",
+                  "name": "Tier I - Strong - diagnostic - supports diagnosis (1)"
+                }
+              ],
+              "membershipOperator": "AND"
             },
-            "objectConditionClassification_classification": {
-              "conceptType": "Classification",
-              "name": "Tier I - Strong - diagnostic - supports diagnosis (1)"
-            },
-            "predicate": "hasConditionClassification",
+            "predicate": "hasAggregateConditionClassification",
             "subjectVariant": "clinvar:2441498",
             "type": "VariantAggregateConditionClassificationProposition"
           },
@@ -70,17 +81,23 @@
       { "name": "PropositionType", "value": "Somatic Clinical Impact" }
     ],
     "id": "RCV006254391-S-SCI",
-    "objectConditionClassification_condition": {
-      "conceptType": "Disease",
-      "id": "67890",
-      "name": "Papillary thyroid carcinoma",
-      "primaryCoding": { "code": "C0238463", "system": "MedGen" }
+    "objectConditionClassification": {
+      "type": "ConceptSet",
+      "concepts": [
+        {
+          "conceptType": "Disease",
+          "id": "67890",
+          "name": "Papillary thyroid carcinoma",
+          "primaryCoding": { "code": "C0238463", "system": "MedGen" }
+        },
+        {
+          "conceptType": "Classification",
+          "name": "Tier I - Strong - diagnostic - supports diagnosis (1)"
+        }
+      ],
+      "membershipOperator": "AND"
     },
-    "objectConditionClassification_classification": {
-      "conceptType": "Classification",
-      "name": "Tier I - Strong - diagnostic - supports diagnosis (1)"
-    },
-    "predicate": "hasConditionClassification",
+    "predicate": "hasAggregateConditionClassification",
     "subjectVariant": "clinvar:2441498",
     "type": "VariantAggregateConditionClassificationProposition"
   },
