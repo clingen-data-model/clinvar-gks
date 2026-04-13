@@ -16,7 +16,7 @@ The pipeline is implemented across two stored procedures plus a JSON serializati
 
 - **Submission levels** — PG, EP, CP, NOCP, NOCL, and FLAG — determine how classifications are combined and whether conflicts are detected. Each submission level aggregates independently; only matching levels can combine. Submission levels are ranked `PG > EP > CP > NOCP > NOCL > FLAG`, with PG always winning at the top
 - **Four-layer hierarchy** — L1 (base) through L4 (group) progressively aggregate from individual SCVs to variant-level summaries
-- **Single classification format** — all VCV statements use `classification_mappableConcept` as the aggregate classification attribute, with an optional `conflictingExplanation` extension when contributing SCVs disagree. The same single-attribute pattern applies to `objectClassification` within the proposition
+- **Single classification format** — all VCV statements use `classification` as the aggregate classification attribute, with an optional `conflictingExplanation` extension when contributing SCVs disagree. The same single-attribute pattern applies to `objectClassification` within the proposition
 
 ---
 

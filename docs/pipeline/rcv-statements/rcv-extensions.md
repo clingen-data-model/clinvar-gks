@@ -2,7 +2,7 @@
 
 ## Overview
 
-RCV aggregate statement records contain `extensions` arrays at two structural levels -- on the top-level `Statement` and on the `classification_mappableConcept` object. Extensions carry aggregate review status information and classification context that are not part of the GA4GH VA-Spec statement model but are essential for interpreting the aggregation outcome.
+RCV aggregate statement records contain `extensions` arrays at two structural levels -- on the top-level `Statement` and on the `classification` object. Extensions carry aggregate review status information and classification context that are not part of the GA4GH VA-Spec statement model but are essential for interpreting the aggregation outcome.
 
 RCV statement extensions use `value` (not `value_string`) for extension values, following the convention for aggregate-level metadata.
 
@@ -48,9 +48,9 @@ Extensions on the top-level RCV `Statement` record, built in the [RCV Statement 
 
 ## Classification Extensions
 
-### classification_mappableConcept Extensions
+### classification Extensions
 
-Extensions on the `classification_mappableConcept` object. RCV uses `classification_mappableConcept` at every layer for every submission level.
+Extensions on the `classification` object. RCV uses `classification` at every layer for every submission level.
 
 <table>
   <thead>
@@ -61,7 +61,7 @@ Extensions on the `classification_mappableConcept` object. RCV uses `classificat
   </thead>
   <tbody>
     <tr>
-      <td><code>conflictingExplanation</code><br><em>classification_mappableConcept</em><br>string</td>
+      <td><code>conflictingExplanation</code><br><em>classification</em><br>string</td>
       <td>A formatted breakdown of the conflicting classification counts when multiple distinct significance values exist for a conflict-detectable proposition type. Format: <code>Pathogenic(3); Likely pathogenic(2)</code>. Present only when the classification is conflicting (i.e., when the classification name starts with "Conflicting classifications of").</td>
     </tr>
     <tr>
