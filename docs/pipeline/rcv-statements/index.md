@@ -19,7 +19,7 @@ The pipeline is implemented across two stored procedures plus a JSON serializati
 - **Four-layer hierarchy** -- L1 (base) through L4 (group) progressively aggregate from individual SCVs to RCV-level summaries, following the same layer structure as VCV
 - **objectConditionClassification** -- RCV propositions use a single `objectConditionClassification` ConceptSet that always contains exactly **2 concepts**: the SCV's actual condition (or conditionSet) and the aggregate Classification. The same structure is used at every layer for every submission level
 - **Proposition type** -- `VariantAggregateConditionClassificationProposition` with predicate `hasAggregateConditionClassification`
-- **Single classification form** -- RCV uses only `classification_mappableConcept` at every layer, consistent with VCV
+- **Single classification form** -- RCV uses only `classification` at every layer, consistent with VCV
 
 ---
 

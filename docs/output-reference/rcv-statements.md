@@ -25,20 +25,20 @@ Each record is a `Statement` with the following top-level fields:
 | `type` | string | Always `Statement` |
 | `direction` | string | Always `supports` |
 | `strength` | string | Always `definitive` |
-| `classification_mappableConcept` | object | Aggregate classification label as MappableConcept. See [Classification](#classification) |
+| `classification` | object | Aggregate classification label as MappableConcept. See [Classification](#classification) |
 | `proposition` | object | The aggregate proposition with variant, objectConditionClassification, and qualifiers. See [Proposition](#proposition) |
 | `extensions` | array | Aggregate metadata — `clinvarReviewStatus` |
 | `evidenceLines` | array | Contributing and non-contributing evidence from lower aggregation layers |
 
 </div>
 
-Like VCV, RCV statements use only `classification_mappableConcept` at every layer. PG and EP are independent submission levels.
+Like VCV, RCV statements use only `classification` at every layer. PG and EP are independent submission levels.
 
 ---
 
 ## Classification
 
-RCV statements always use a single `classification_mappableConcept` containing the aggregate classification label. The label format depends on the proposition type and submission level.
+RCV statements always use a single `classification` containing the aggregate classification label. The label format depends on the proposition type and submission level.
 
 ### Standard format
 
@@ -46,7 +46,7 @@ For most proposition types (pathogenicity, oncogenicity, association, etc.), the
 
 ```json
 {
-  "classification_mappableConcept": {
+  "classification": {
     "conceptType": "Classification",
     "name": "Pathogenic/Likely pathogenic",
     "extension": [
@@ -99,7 +99,7 @@ The `proposition` describes the condition-specific aggregate classification clai
     - A full `Condition` MappableConcept (id, name, conceptType, primaryCoding, mappings)
     - Or a full `ConditionSet` ConceptSet of conditions (id, conditions array, membershipOperator) — for SCVs with multiple conditions
    Extensions are excluded.
-2. **Classification** — the aggregate Classification (matching `classification_mappableConcept.name`).
+2. **Classification** — the aggregate Classification (matching `classification.name`).
 
 Single condition example:
 
