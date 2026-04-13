@@ -15,11 +15,11 @@ The pipeline is implemented across two stored procedures plus a JSON serializati
 ## Key Concepts
 
 - **Condition-specific aggregation** -- RCV groups SCVs by (variation, condition) pair via `trait_set_id`, producing one aggregate statement per RCV accession rather than one per variation
-- **Submission levels** -- PG, EP, CP, NOCP, NOCL, and FLAG -- same as VCV. PG and EP are combined into a single PGEP grouping for aggregation
+- **Submission levels** -- PG, EP, CP, NOCP, NOCL, and FLAG -- same as VCV. PG and EP are separate top-tier submission levels with PG outranking EP at Layer 3 winner-takes-all
 - **Four-layer hierarchy** -- L1 (base) through L4 (group) progressively aggregate from individual SCVs to RCV-level summaries, following the same layer structure as VCV
-- **objectConditionClassification** -- RCV propositions use `objectConditionClassification`, a `ConceptSet` that combines the condition and classification as two concepts joined with an AND operator. This replaces the separate `objectCondition` and `objectClassification` fields used in SCV statements
-- **Proposition type** -- `VariantAggregateConditionClassificationProposition` with predicate `hasConditionClassification`
-- **Three classification formats** -- `classification_mappableConcept` for standard single-label aggregation, `classification_conceptSet` for a single PGEP classification tuple, and `classification_conceptSetSet` for multiple PGEP classification tuples. For PGEP multiple, the corresponding proposition field is `objectConditionClassification_conceptSetSet`
+- **objectConditionClassification** -- RCV propositions use a single `objectConditionClassification` ConceptSet that always contains exactly **2 concepts**: the SCV's actual condition (or conditionSet) and the aggregate Classification. The same structure is used at every layer for every submission level
+- **Proposition type** -- `VariantAggregateConditionClassificationProposition` with predicate `hasAggregateConditionClassification`
+- **Single classification form** -- RCV uses only `classification_mappableConcept` at every layer, consistent with VCV
 
 ---
 
@@ -46,8 +46,8 @@ SCV Statements (gks_scv_statement_pre)
 |    via rcv_mapping +            |    rcv_mapping + gks_scv_condition_sets
 |    gks_scv_condition_sets       |
 |  L1-L4 BASE statements         |  Build statement structures from agg tables
-|  L1 PRE: inline SCVs           |  Populate PGEP ConceptSet classification
-|  L2-L4 PRE: inline             |  Propagate classification through layers
+|  L1 PRE: inline SCVs           |  Reference SCV IDs in evidence lines
+|  L2-L4 PRE: inline             |  Inline lower layers as evidence items
 |  FINAL: union                   |  Combine germline L4 + somatic L3
 +--------------+------------------+
                |

@@ -12,16 +12,16 @@ The aggregation process is governed by **submission levels** — categories that
 
 Every SCV is assigned a submission level based on its ClinVar review status:
 
-| Code | Label | Stars | Description |
-| --- | --- | --- | --- |
-| PG | practice guideline | 4 | Published practice guidelines from authoritative bodies |
-| EP | expert panel | 3 | Classifications reviewed and approved by expert panels |
-| CP | assertion criteria provided | 1 | Submitter provided criteria for their classification |
-| NOCP | no assertion criteria provided | 0 | Classification submitted without documented criteria |
-| NOCL | no classification provided | -1 | Submission present but no classification given |
-| FLAG | flagged submission | -3 | Submission flagged by ClinVar for quality concerns |
+| Code | Label | Rank | Stars | Description |
+| --- | --- | --- | --- | --- |
+| PG | practice guideline | 6 | 4 | Published practice guidelines from authoritative bodies |
+| EP | expert panel | 5 | 3 | Classifications reviewed and approved by expert panels |
+| CP | assertion criteria provided | 4 | 1 | Submitter provided criteria for their classification |
+| NOCP | no assertion criteria provided | 3 | 0 | Classification submitted without documented criteria |
+| NOCL | no classification provided | 2 | -1 | Submission present but no classification given |
+| FLAG | flagged submission | 1 | -3 | Submission flagged by ClinVar for quality concerns |
 
-During aggregation, PG and EP are combined into a single **PGEP** grouping. All other levels are aggregated independently.
+Every submission level is aggregated independently — only SCVs with the same submission level can aggregate together. At Layer 3, submission levels are ranked `PG > EP > CP > NOCP > NOCL > FLAG` and the highest-ranked level becomes the winner-takes-all contributing result.
 
 ---
 
@@ -42,19 +42,25 @@ Where:
 - **evaluated_date** — formatted as `Mon YYYY`, or `(-)` if not provided
 - **submitter_name** — the submitting organization name
 
-This description is carried forward into the VCV `classification_conceptSet` or `classification_conceptSetSet` extensions for PGEP submissions.
+This description is carried on the SCV classification and is not propagated onto VCV aggregate statements.
 
 ---
 
 ## Aggregation by Submission Level
 
-### PGEP (Practice Guideline + Expert Panel)
+### PG (Practice Guideline)
 
-PG and EP submissions are combined into a single group. There is **no conflict detection** — each contributing SCV's classification is preserved individually.
+Practice guideline submissions are aggregated independently. Like CP, concordance and conflict detection produce a single aggregate label.
 
-- **Output attribute:** `classification_conceptSet` (single classification) or `classification_conceptSetSet` (multiple classifications) — AND-groups of Classification, Condition, and SubmissionLevel concepts with description extensions
-- **Proposition:** Uses `objectClassification_conceptSet` or `objectClassification_conceptSetSet` with the same ConceptSet structure but without extensions, deduplicated across submitters
-- **Strength derivation:** "PG" if only practice guideline SCVs contribute, "EP" if only expert panel, "PGEP" if both
+- **Output attribute:** `classification_mappableConcept`
+- **Review status:** always `practice guideline`
+
+### EP (Expert Panel)
+
+Expert panel submissions are aggregated independently. Like CP, concordance and conflict detection produce a single aggregate label.
+
+- **Output attribute:** `classification_mappableConcept`
+- **Review status:** always `reviewed by expert panel`
 
 ### CP (Assertion Criteria Provided)
 
@@ -91,11 +97,11 @@ Passthrough with no aggregation logic.
 
 ## Classification Output
 
-VCV statements use three mutually exclusive attributes for classification. Exactly one is populated on any given statement; the others are null (omitted from JSON output). The same 3-way split applies to `objectClassification` within the proposition.
+Every VCV statement uses a single `classification_mappableConcept` attribute to represent its aggregate classification. The proposition uses a matching single `objectClassification` field.
 
 ### `classification_mappableConcept`
 
-Used by CP, NOCP, NOCL, and FLAG submission levels. Contains a single aggregate label with an optional conflicting explanation extension.
+Used by all submission levels (PG, EP, CP, NOCP, NOCL, and FLAG). Contains a single aggregate label with an optional `conflictingExplanation` extension when contributing SCVs disagree.
 
 ```json
 {
@@ -111,69 +117,9 @@ Used by CP, NOCP, NOCL, and FLAG submission levels. Contains a single aggregate 
 
 The `extension` array is only present when the classification is conflicting.
 
-### `classification_conceptSet`
-
-Used for PGEP submissions with a single classification tuple. Contains an AND-group of Classification, Condition, and SubmissionLevel concepts with a description extension.
-
-```json
-{
-  "classification_conceptSet": {
-    "type": "ConceptSet",
-    "concepts": [
-      {"conceptType": "Classification", "name": "Likely Benign"},
-      {"conceptType": "Condition", "name": "Immunodeficiency 14"},
-      {"conceptType": "SubmissionLevel", "name": "expert panel"}
-    ],
-    "membershipOperator": "AND",
-    "extensions": [
-      {"name": "description", "value": "for Immunodeficiency 14\nClassification is based on the expert panel submission\nMar 2024 by GeneDx"}
-    ]
-  }
-}
-```
-
-### `classification_conceptSetSet`
-
-Used for PGEP submissions with two or more classification tuples. Contains nested AND-groups, each with its own description extension.
-
-```json
-{
-  "classification_conceptSetSet": {
-    "type": "ConceptSet",
-    "concepts": [
-      {
-        "type": "ConceptSet",
-        "concepts": [
-          {"conceptType": "Classification", "name": "drug response"},
-          {"conceptType": "Condition", "name": "ivacaftor / lumacaftor response - Efficacy"},
-          {"conceptType": "SubmissionLevel", "name": "expert panel"}
-        ],
-        "membershipOperator": "AND",
-        "extensions": [
-          {"name": "description", "value": "for ivacaftor / lumacaftor response - Efficacy\nClassification is based on the expert panel submission\nJan 2023 by CPIC"}
-        ]
-      },
-      {
-        "type": "ConceptSet",
-        "concepts": [
-          {"conceptType": "Classification", "name": "drug response"},
-          {"conceptType": "Condition", "name": "ivacaftor / tezacaftor response - Efficacy"},
-          {"conceptType": "SubmissionLevel", "name": "expert panel"}
-        ],
-        "membershipOperator": "AND",
-        "extensions": [
-          {"name": "description", "value": "for ivacaftor / tezacaftor response - Efficacy\nClassification is based on the expert panel submission\nJan 2023 by CPIC"}
-        ]
-      }
-    ],
-    "membershipOperator": "AND"
-  }
-}
-```
-
 ### Proposition `objectClassification`
 
-The proposition uses the same 3-way split (`objectClassification_mappableConcept`, `objectClassification_conceptSet`, `objectClassification_conceptSetSet`) with the same ConceptSet structure but **without extensions**. The objectClassification concepts are also **deduplicated** — if multiple submitters have the same (classification, condition, submissionLevel) tuple, it appears only once
+The proposition contains an `objectClassification` MappableConcept with the same name as the statement-level `classification_mappableConcept` but without the `conflictingExplanation` extension.
 
 ---
 
@@ -183,9 +129,8 @@ Every VCV statement includes a `clinvarReviewStatus` extension indicating the ag
 
 | Submission Level | Condition | Review Status |
 | --- | --- | --- |
-| PGEP (mixed PG + EP) | Both PG and EP contribute | `practice guideline and expert panel mix` |
-| PGEP (PG only) | Only PG SCVs contribute | `practice guideline` |
-| PGEP (EP only) | Only EP SCVs contribute | `reviewed by expert panel` |
+| PG | Any | `practice guideline` |
+| EP | Any | `reviewed by expert panel` |
 | CP | Single submitter | `criteria provided, single submitter` |
 | CP | Multiple submitters, concordant | `criteria provided, multiple submitters, no conflicts` |
 | CP | Multiple submitters, conflicting | `criteria provided, conflicting classifications` |
@@ -218,7 +163,7 @@ VCV aggregation builds statements through a four-layer hierarchy. Each layer agg
 
 Key behaviors:
 
-- **PGEP bypasses Layer 2** — PGEP is germline-only and has no tier grouping, so it flows directly from L1 to L3
+- **Layer 2 applies only to somatic tiered records** — non-tiered records (all germline and non-sci somatic) flow directly from L1 to L3
 - **Somatic statements stop at Layer 3** — somatic classifications do not participate in Layer 4 group aggregation
-- **Winner-takes-all** at Layers 3 and 4 — the highest-ranked submission level (or proposition type) becomes the "contributing" result; others become "non-contributing" evidence
+- **Winner-takes-all** at Layers 3 and 4 — the highest-ranked submission level (or proposition type) becomes the "contributing" result; others become "non-contributing" evidence. Submission-level ranking at Layer 3 is `PG > EP > CP > NOCP > NOCL > FLAG`
 - Each layer's output includes `evidenceLines` that reference the layer below, creating a fully nested structure in the final JSON output

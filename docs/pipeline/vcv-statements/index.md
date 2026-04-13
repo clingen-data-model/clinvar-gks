@@ -14,9 +14,9 @@ The pipeline is implemented across two stored procedures plus a JSON serializati
 
 ## Key Concepts
 
-- **Submission levels** — PG, EP, CP, NOCP, NOCL, and FLAG — determine how classifications are combined and whether conflicts are detected. PG and EP are combined into a single PGEP grouping for aggregation
+- **Submission levels** — PG, EP, CP, NOCP, NOCL, and FLAG — determine how classifications are combined and whether conflicts are detected. Each submission level aggregates independently; only matching levels can combine. Submission levels are ranked `PG > EP > CP > NOCP > NOCL > FLAG`, with PG always winning at the top
 - **Four-layer hierarchy** — L1 (base) through L4 (group) progressively aggregate from individual SCVs to variant-level summaries
-- **Three classification formats** — `classification_mappableConcept` for standard single-label aggregation, `classification_conceptSet` for a single PGEP classification tuple, and `classification_conceptSetSet` for multiple PGEP classification tuples. The same 3-way split applies to `objectClassification` within the proposition
+- **Single classification format** — all VCV statements use `classification_mappableConcept` as the aggregate classification attribute, with an optional `conflictingExplanation` extension when contributing SCVs disagree. The same single-attribute pattern applies to `objectClassification` within the proposition
 
 ---
 
@@ -38,8 +38,8 @@ SCV Statements (gks_scv_statement_pre)
 ┌─────────────────────────┐
 │  gks_vcv_statement_proc │
 │  L1–L4 BASE statements  │  Build statement structures from agg tables
-│  L1 PRE: inline SCVs    │  Populate PGEP ConceptSet classification
-│  L2–L4 PRE: inline      │  Propagate classification through layers
+│  L1 PRE: inline SCVs    │  Inline SCV evidence references
+│  L2–L4 PRE: inline      │  Propagate evidence through layers
 │  FINAL: union            │  Combine germline L4 + somatic L3
 └────────────┬────────────┘
              │
@@ -58,4 +58,4 @@ SCV Statements (gks_scv_statement_pre)
 
 ## Examples
 
-See [VCV statement examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/vcv) in the repository for annotated JSONC examples of germline, somatic, and PGEP aggregate classification statements.
+See [VCV statement examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/vcv) in the repository for annotated JSONC examples of germline and somatic aggregate classification statements.

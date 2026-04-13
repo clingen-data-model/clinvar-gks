@@ -1,0 +1,41 @@
+{
+  // Hypothetical PG (practice guideline) VCV statement example - Layer 1 Base
+  // PG and EP are now treated as separate submission levels (no PGEP grouping).
+  // PG always wins at Layer 3 over EP, CP, NOCP, NOCL, FLAG.
+  "classification_mappableConcept": {
+    "conceptType": "Classification",
+    "name": "Pathogenic"
+  },
+  "direction": "supports",
+  "extensions": [
+    {"name": "clinvarReviewStatus", "value": "practice guideline"}
+  ],
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {"id": "clinvar.submission:SCV000000001.1"}
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "id": "VCV999999999.1-G-PATH-PG",
+  "proposition": {
+    "aggregateQualifiers": [
+      {"name": "AssertionGroup", "value": "Germline"},
+      {"name": "PropositionType", "value": "Pathogenicity"},
+      {"name": "SubmissionLevel", "value": "practice guideline"}
+    ],
+    "id": "VCV999999999-G-PATH-PG",
+    "objectClassification": {
+      "conceptType": "Classification",
+      "name": "Pathogenic"
+    },
+    "predicate": "hasAggregateClassification",
+    "subjectVariant": "clinvar:999999999",
+    "type": "VariantAggregateClassificationProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

@@ -32,11 +32,15 @@ TABLE_NAMES=(
   "gks_catvar"
   "gks_scv_statement_by_ref"
   "gks_scv_statement_inline"
+  "gks_vcv_statement"
+  "gks_rcv_statement"
 )
 OUTPUT_NAMES=(
   "variation"
   "scv_by_ref"
   "scv_inline"
+  "vcv"
+  "rcv"
 )
 
 # --- Helper Functions for dynamic console output ---
@@ -75,6 +79,12 @@ for i in "${!TABLE_NAMES[@]}"; do
     SELECT_FIELDS=$(cat <<-SQL
   rec.aliases, rec.constraints, rec.description, rec.extensions, rec.id,
   rec.mappings, rec.members, rec.name, rec.type
+SQL
+)
+  elif [[ "${TABLE}" == "gks_vcv_statement" || "${TABLE}" == "gks_rcv_statement" ]]; then
+    SELECT_FIELDS=$(cat <<-SQL
+  rec.classification, rec.direction, rec.evidenceLines,
+  rec.extensions, rec.id, rec.proposition, rec.strength, rec.type
 SQL
 )
   else

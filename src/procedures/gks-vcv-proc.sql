@@ -25,6 +25,7 @@ BEGIN
 
     -------------------------------------------------------------------------
     -- LAYER 1: MATERIALIZE BASE DATA (Metadata Driven)
+    -- PG and EP are kept as separate submission levels (no PGEP grouping).
     -------------------------------------------------------------------------
     SET query_base = REPLACE("""
       {CT} `{P}.temp_vcv_base_data`
@@ -43,18 +44,16 @@ BEGIN
           cct.label AS classif_label,
           cct.code as classif_type,
           cct.original_description_order as classif_type_order,
-          cct.significance, -- 1. ADDED SIGNIFICANCE HERE
+          cct.significance,
           cpt.conflict_detectable,
           cpt.code as prop_type,
           cpt.label as prop_label,
           cpt.display_order as prop_display_order,
-          sl.code AS original_submission_level,
-          sl.label AS submission_level_label,
-          CASE WHEN sl.code IN ('PG', 'EP') THEN 'PGEP' ELSE sl.code END AS submission_level
+          sl.code AS submission_level,
+          sl.label AS submission_level_label
       FROM `{S}.scv_summary` AS ss
       JOIN `{S}.variation_archive` AS va ON ss.variation_id = va.variation_id
 
-      -- PLURALS RESTORED & JOINS LEFT UNTOUCHED
       JOIN `clinvar_ingest.clinvar_statement_types` AS cst ON cst.code = ss.statement_type
       JOIN `clinvar_ingest.clinvar_clinsig_types` AS cct ON cct.code = ss.classif_type AND cct.statement_type = ss.statement_type
       JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON cpt.code = ss.original_proposition_type
@@ -66,6 +65,8 @@ BEGIN
 
     -------------------------------------------------------------------------
     -- LAYER 1: BASE AGGREGATION
+    -- Only matching submission_levels aggregate together (PG with PG,
+    -- EP with EP, CP with CP, etc.). No PGEP grouping.
     -------------------------------------------------------------------------
     SET query_layer1 = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_vcv_layer1_base_agg` AS
@@ -79,7 +80,6 @@ BEGIN
             MIN(classif_type_order) as tier_priority,
             MIN(prop_display_order) as prop_display_order,
             ARRAY_AGG(DISTINCT full_scv_id) as full_scv_ids,
-            ARRAY_AGG(DISTINCT original_submission_level) as contributing_submission_levels,
             COUNT(DISTINCT submitter_id) as unique_submitter_count
           FROM `{P}.temp_vcv_base_data`
           GROUP BY 1, 2, 3, 4, 5, 6, 7
@@ -88,19 +88,16 @@ BEGIN
           SELECT variation_id, statement_group, prop_type, submission_level,
                  IF(prop_type = 'sci', classif_type, CAST(NULL AS STRING)) as tier_grouping,
                  classif_label, classif_type_order,
-                 significance, -- Passed through
+                 significance,
                  COUNT(full_scv_id) as scv_count
           FROM `{P}.temp_vcv_base_data`
-          GROUP BY 1, 2, 3, 4, 5, 6, 7, 8 -- Added 8th group
+          GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
       ),
       conflict_strings AS (
           SELECT variation_id, statement_group, prop_type, submission_level, tier_grouping,
                  STRING_AGG(classif_label, '/' ORDER BY classif_type_order) as agg_classif_label,
                  STRING_AGG(FORMAT('%s(%d)', classif_label, scv_count), '; ' ORDER BY classif_type_order) as agg_string,
-
-                 -- 2. CHANGED TO COUNT DISTINCT SIGNIFICANCE
                  COUNT(DISTINCT significance) as significance_count
-
           FROM label_counts
           GROUP BY 1, 2, 3, 4, 5
       ),
@@ -118,17 +115,16 @@ BEGIN
             c.submission_level, c.tier_grouping, c.full_scv_ids,
             c.tier_priority, c.prop_display_order, COALESCE(sc.unique_traits, []) as unique_traits,
 
-            -- Conflict explanation: suppressed for PGEP and FLAG
+            -- Conflict explanation: suppressed for PG, EP, and FLAG (single-source levels)
             CASE
-              WHEN c.submission_level IN ('PGEP', 'FLAG') THEN NULL
+              WHEN c.submission_level IN ('PG', 'EP', 'FLAG') THEN NULL
               ELSE IF(cs.significance_count > 1 AND c.conflict_detectable, cs.agg_string, CAST(NULL AS STRING))
             END AS agg_label_conflicting_explanation,
 
             -- Aggregate classification label: submission-level-specific logic
             CASE
-              WHEN c.submission_level = 'PGEP' THEN NULL  -- PGEP uses array, not single label
               WHEN c.submission_level = 'FLAG' THEN 'no classifications from unflagged records'
-              WHEN cs.significance_count > 1 AND c.conflict_detectable AND c.prop_type != 'sci' THEN
+              WHEN cs.significance_count > 1 AND c.conflict_detectable AND c.prop_type != 'sci' AND c.submission_level NOT IN ('PG', 'EP') THEN
                 FORMAT('Conflicting classifications of %s', LOWER(c.prop_label))
               WHEN c.prop_type = 'sci' THEN
                 CASE
@@ -139,25 +135,10 @@ BEGIN
               ELSE cs.agg_classif_label
             END AS actual_agg_classif_label,
 
-            -- PGEP strength derivation
-            CASE
-              WHEN c.submission_level = 'PGEP' THEN
-                CASE
-                  WHEN ARRAY_LENGTH(c.contributing_submission_levels) = 1 AND c.contributing_submission_levels[OFFSET(0)] = 'PG' THEN 'PG'
-                  WHEN ARRAY_LENGTH(c.contributing_submission_levels) = 1 AND c.contributing_submission_levels[OFFSET(0)] = 'EP' THEN 'EP'
-                  ELSE 'PGEP'
-                END
-              ELSE c.submission_level
-            END AS pgep_strength,
-
             -- Aggregate review status for all submission levels
             CASE
-              WHEN c.submission_level = 'PGEP' THEN
-                CASE
-                  WHEN ARRAY_LENGTH(c.contributing_submission_levels) = 1 AND c.contributing_submission_levels[OFFSET(0)] = 'PG' THEN 'practice guideline'
-                  WHEN ARRAY_LENGTH(c.contributing_submission_levels) = 1 AND c.contributing_submission_levels[OFFSET(0)] = 'EP' THEN 'reviewed by expert panel'
-                  ELSE 'practice guideline and expert panel mix'
-                END
+              WHEN c.submission_level = 'PG' THEN 'practice guideline'
+              WHEN c.submission_level = 'EP' THEN 'reviewed by expert panel'
               WHEN c.submission_level = 'CP' AND c.unique_submitter_count = 1 THEN 'criteria provided, single submitter'
               WHEN c.submission_level = 'CP' AND cs.significance_count <= 1 THEN 'criteria provided, multiple submitters, no conflicts'
               WHEN c.submission_level = 'CP' AND cs.significance_count > 1 AND c.conflict_detectable THEN 'criteria provided, conflicting classifications'
@@ -166,9 +147,7 @@ BEGIN
               WHEN c.submission_level = 'NOCL' THEN 'no classification provided'
               WHEN c.submission_level = 'FLAG' THEN 'flagged submission'
               ELSE NULL
-            END AS aggregate_review_status,
-
-            c.contributing_submission_levels
+            END AS aggregate_review_status
           FROM core_agg c
           LEFT JOIN conflict_strings cs
             ON c.variation_id = cs.variation_id AND c.statement_group = cs.statement_group AND c.prop_type = cs.prop_type
@@ -179,11 +158,11 @@ BEGIN
       )
       SELECT
         CASE
-          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s-%s-%s-%s-%s', full_vcv_id, statement_group, UPPER(prop_type), submission_level, LOWER(tier_grouping))
+          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s-%s-%s-%s-%s', full_vcv_id, statement_group, UPPER(prop_type), submission_level, UPPER(tier_grouping))
           ELSE FORMAT('%s-%s-%s-%s', full_vcv_id, statement_group, UPPER(prop_type), submission_level)
         END AS id,
         CASE
-          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s-%s-%s-%s-%s', vcv_accession, statement_group, UPPER(prop_type), submission_level, LOWER(tier_grouping))
+          WHEN tier_grouping IS NOT NULL THEN FORMAT('%s-%s-%s-%s-%s', vcv_accession, statement_group, UPPER(prop_type), submission_level, UPPER(tier_grouping))
           ELSE FORMAT('%s-%s-%s-%s', vcv_accession, statement_group, UPPER(prop_type), submission_level)
         END AS prop_id,
         *
@@ -193,7 +172,7 @@ BEGIN
     EXECUTE IMMEDIATE query_layer1;
 
     -------------------------------------------------------------------------
-    -- LAYER 2: TIER AGGREGATOR
+    -- LAYER 2: TIER AGGREGATOR (Somatic only)
     -------------------------------------------------------------------------
     SET query_layer2 = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_vcv_layer2_tier_agg` AS
@@ -235,7 +214,6 @@ BEGIN
         top_unique_traits as unique_traits,
         contributing_tier_ids as contributing_statement_ids,
         non_contributing_tier_ids as non_contributing_statement_ids,
-        CAST(NULL AS STRING) AS pgep_strength,
         CAST(NULL AS STRING) AS aggregate_review_status
       FROM final_state_prep
     """, '{S}', rec.schema_name);
@@ -243,6 +221,7 @@ BEGIN
 
     -------------------------------------------------------------------------
     -- LAYER 3: SUBMISSION LEVEL AGGREGATOR
+    -- Winner-takes-all ranking: PG > EP > CP > NOCP > NOCL > FLAG
     -------------------------------------------------------------------------
     SET query_layer3 = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_vcv_layer3_prop_agg` AS
@@ -250,23 +229,30 @@ BEGIN
           SELECT
             id as source_id, variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             agg_label, agg_label_conflicting_explanation, prop_display_order,
-            pgep_strength, aggregate_review_status
+            aggregate_review_status
           FROM `{S}.gks_vcv_layer2_tier_agg`
           LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `{S}.gks_vcv_layer1_base_agg` GROUP BY 1) ON prop_type = pt
           UNION ALL
           SELECT
             id as source_id, variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             actual_agg_classif_label as agg_label, agg_label_conflicting_explanation, prop_display_order,
-            pgep_strength, aggregate_review_status
+            aggregate_review_status
           FROM `{S}.gks_vcv_layer1_base_agg`
           WHERE tier_grouping IS NULL
       ),
       ranked_levels AS (
           SELECT ui.*,
             ROW_NUMBER() OVER(PARTITION BY ui.variation_id, ui.statement_group, ui.prop_type
-              ORDER BY CASE WHEN ui.submission_level = 'PGEP' THEN 5 ELSE sl.rank END DESC) as rnk
+              ORDER BY CASE ui.submission_level
+                WHEN 'PG' THEN 6
+                WHEN 'EP' THEN 5
+                WHEN 'CP' THEN 4
+                WHEN 'NOCP' THEN 3
+                WHEN 'NOCL' THEN 2
+                WHEN 'FLAG' THEN 1
+                ELSE 0
+              END DESC) as rnk
           FROM unified_input ui
-          LEFT JOIN `clinvar_ingest.submission_level` sl ON ui.submission_level = sl.code
       ),
       winner_takes_all AS (
           SELECT * FROM ranked_levels WHERE rnk = 1
@@ -287,7 +273,7 @@ BEGIN
         w.submission_level as contributing_submission_level,
         w.agg_label, w.agg_label_conflicting_explanation,
         w.prop_display_order,
-        w.pgep_strength, w.aggregate_review_status,
+        w.aggregate_review_status,
         COALESCE(nc.non_contributing_details, []) as non_contributing_details
       FROM winner_takes_all w
       LEFT JOIN non_contributing nc USING (variation_id, statement_group, prop_type)
@@ -295,16 +281,23 @@ BEGIN
     EXECUTE IMMEDIATE query_layer3;
 
     -------------------------------------------------------------------------
-    -- LAYER 4: FINAL GROUP AGGREGATOR
+    -- LAYER 4: FINAL GROUP AGGREGATOR (Germline only)
     -------------------------------------------------------------------------
     SET query_layer4 = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_vcv_layer4_group_agg` AS
       WITH ranked_props AS (
           SELECT rp.*,
             RANK() OVER(PARTITION BY rp.variation_id, rp.statement_group
-              ORDER BY CASE WHEN rp.contributing_submission_level = 'PGEP' THEN 5 ELSE sl.rank END DESC) as grp_rnk
+              ORDER BY CASE rp.contributing_submission_level
+                WHEN 'PG' THEN 6
+                WHEN 'EP' THEN 5
+                WHEN 'CP' THEN 4
+                WHEN 'NOCP' THEN 3
+                WHEN 'NOCL' THEN 2
+                WHEN 'FLAG' THEN 1
+                ELSE 0
+              END DESC) as grp_rnk
           FROM `{S}.gks_vcv_layer3_prop_agg` rp
-          LEFT JOIN `clinvar_ingest.submission_level` sl ON rp.contributing_submission_level = sl.code
           WHERE rp.statement_group = 'G'
       ),
       contributing_props AS (
@@ -312,7 +305,6 @@ BEGIN
             ARRAY_AGG(id) as contributing_layer3_ids,
             ARRAY_TO_STRING(ARRAY_AGG(agg_label ORDER BY prop_display_order ASC), '; ') as agg_label,
             NULLIF(ARRAY_TO_STRING(ARRAY_AGG(agg_label_conflicting_explanation IGNORE NULLS ORDER BY prop_display_order ASC), '; '), '') as agg_label_conflicting_explanation,
-            ANY_VALUE(pgep_strength) AS pgep_strength,
             ANY_VALUE(aggregate_review_status) AS aggregate_review_status
           FROM ranked_props
           WHERE grp_rnk = 1
@@ -331,7 +323,7 @@ BEGIN
         c.variation_id, c.full_vcv_id, c.statement_group,
         c.agg_label, c.agg_label_conflicting_explanation,
         c.contributing_layer3_ids,
-        c.pgep_strength, c.aggregate_review_status,
+        c.aggregate_review_status,
         COALESCE(nc.non_contributing_details, []) as non_contributing_details
       FROM contributing_props c
       LEFT JOIN non_contributing_props nc USING (variation_id, statement_group)

@@ -4,7 +4,10 @@
 
 The RCV statement output contains one JSON record per condition-level aggregate classification. Each record is a `Statement` that aggregates individual SCV submissions for the same variant **and condition** into a hierarchical summary — combining classifications across submission levels to produce a single condition-specific result.
 
-RCV statements differ from VCV statements in that each RCV is scoped to a specific condition (identified by `trait_set_id`), whereas VCV statements aggregate across all conditions for a variant. The proposition uses `objectConditionClassification` — a ConceptSet that combines the condition and classification as its two member concepts.
+RCV statements differ from VCV statements in two important ways:
+
+1. **Condition-scoped aggregation** — each RCV is scoped to a specific condition (identified by `trait_set_id`), whereas VCV statements aggregate across all conditions for a variant.
+2. **Simplified proposition structure** — the proposition uses a single `objectConditionClassification` ConceptSet that always contains exactly **2 concepts**: the condition (sourced directly from the SCV's actual condition or conditionSet) and the aggregate Classification. PG and EP are independent submission levels in RCV.
 
 RCV statements are produced by the [RCV Procedures](../pipeline/rcv-statements/rcv-proc.md) and serialized via the JSON proc. The output table is `gks_rcv_statement`.
 
@@ -22,28 +25,42 @@ Each record is a `Statement` with the following top-level fields:
 | `type` | string | Always `Statement` |
 | `direction` | string | Always `supports` |
 | `strength` | string | Always `definitive` |
-| `classification_mappableConcept` | object | Single aggregate classification label for non-PGEP. See [Classification](#classification) |
-| `classification_conceptSet` | object | Single PGEP classification tuple as ConceptSet. See [Classification](#classification) |
-| `classification_conceptSetSet` | object | Multiple PGEP classification tuples as nested ConceptSets. See [Classification](#classification) |
+| `classification_mappableConcept` | object | Aggregate classification label as MappableConcept. See [Classification](#classification) |
 | `proposition` | object | The aggregate proposition with variant, objectConditionClassification, and qualifiers. See [Proposition](#proposition) |
-| `extensions` | array | Aggregate metadata — `clinvarReviewStatus`. See [Extensions](#extensions) |
-| `evidenceLines` | array | Contributing and non-contributing evidence from lower aggregation layers. See [Evidence Lines](#evidence-lines) |
+| `extensions` | array | Aggregate metadata — `clinvarReviewStatus` |
+| `evidenceLines` | array | Contributing and non-contributing evidence from lower aggregation layers |
 
 </div>
+
+Like VCV, RCV statements use only `classification_mappableConcept` at every layer. PG and EP are independent submission levels.
 
 ---
 
 ## Classification
 
-RCV statements use the same three mutually exclusive classification attributes as VCV. Exactly one is populated; the others are null (omitted from JSON output via null stripping).
+RCV statements always use a single `classification_mappableConcept` containing the aggregate classification label. The label format depends on the proposition type and submission level.
 
-The classification formats (`classification_mappableConcept`, `classification_conceptSet`, `classification_conceptSetSet`) work identically to VCV — see [VCV Classification](vcv-statements.md#classification) for format details.
+### Standard format
 
-### Somatic Clinical Impact Labels
+For most proposition types (pathogenicity, oncogenicity, association, etc.), the label is the aggregated label from contributing SCVs (e.g., `Pathogenic/Likely pathogenic`, `Conflicting classifications of pathogenicity`).
 
-For somatic clinical impact (SCI) propositions, the RCV classification label differs from VCV. The RCV label includes the clinical impact assertion type and significance instead of the condition/tumor name:
-
+```json
+{
+  "classification_mappableConcept": {
+    "conceptType": "Classification",
+    "name": "Pathogenic/Likely pathogenic",
+    "extension": [
+      {"name": "conflictingExplanation", "value": "Pathogenic(3); Likely pathogenic(2)"}
+    ]
+  }
+}
 ```
+
+### Somatic Clinical Impact format
+
+For somatic clinical impact (SCI) propositions, the RCV label includes the clinical impact assertion type and significance instead of the condition/tumor name:
+
+```text
 <tier_label> - <assertion_type> - <clinical_significance> (<scv_count>)
 ```
 
@@ -59,7 +76,7 @@ The condition/tumor name is not included in the classification label because it 
 
 ## Proposition
 
-The `proposition` describes the condition-specific aggregate classification claim. Unlike VCV's separate `objectClassification` fields, RCV uses a unified `objectConditionClassification` that combines the condition and classification into a single ConceptSet.
+The `proposition` describes the condition-specific aggregate classification claim. RCV uses a single `objectConditionClassification` ConceptSet that combines the condition and classification as its two member concepts.
 
 <div class="field-table" markdown>
 
@@ -68,35 +85,73 @@ The `proposition` describes the condition-specific aggregate classification clai
 | `type` | string | Always `VariantAggregateConditionClassificationProposition` |
 | `id` | string | Proposition ID — RCV accession without version, dash-separated (e.g., `RCV001781420-G-PATH-CP`) |
 | `subjectVariant` | string | Reference to the categorical variant — `clinvar:{variation_id}` |
-| `predicate` | string | Always `hasConditionClassification` |
-| `objectConditionClassification` | object | ConceptSet combining condition + classification. See [objectConditionClassification](#objectconditionclassification) |
-| `objectConditionClassification_conceptSetSet` | object | Multiple PGEP classification ConceptSets (deduplicated). See [objectConditionClassification](#objectconditionclassification) |
+| `predicate` | string | Always `hasAggregateConditionClassification` |
+| `objectConditionClassification` | object | ConceptSet with exactly 2 concepts: the SCV's condition (or conditionSet) and the classification. See [objectConditionClassification](#objectconditionclassification) |
 | `aggregateQualifiers` | array | Context qualifiers — AssertionGroup, PropositionType, SubmissionLevel, ClassificationTier |
 
 </div>
 
 ### objectConditionClassification
 
-For non-PGEP submission levels, `objectConditionClassification` is a ConceptSet with two member concepts: the condition (Disease) and the classification:
+`objectConditionClassification` is always a ConceptSet with exactly 2 concepts in this order:
+
+1. **Condition** — the actual SCV condition, sourced from `gks_scv_condition_sets`. May be either:
+    - A full `Condition` MappableConcept (id, name, conceptType, primaryCoding, mappings)
+    - Or a full `ConditionSet` ConceptSet of conditions (id, conditions array, membershipOperator) — for SCVs with multiple conditions
+   Extensions are excluded.
+2. **Classification** — the aggregate Classification (matching `classification_mappableConcept.name`).
+
+Single condition example:
 
 ```json
 {
   "objectConditionClassification": {
     "type": "ConceptSet",
     "concepts": [
-      {"conceptType": "Disease", "name": "Hereditary breast and ovarian cancer syndrome"},
-      {"conceptType": "Classification", "name": "Pathogenic/Likely pathogenic"}
+      {
+        "conceptType": "Disease",
+        "id": "12345",
+        "name": "Hereditary breast and ovarian cancer syndrome",
+        "primaryCoding": {"code": "C0677776", "system": "MedGen"},
+        "mappings": [...]
+      },
+      {
+        "conceptType": "Classification",
+        "name": "Pathogenic/Likely pathogenic"
+      }
     ],
     "membershipOperator": "AND"
   }
 }
 ```
 
-For multi-condition RCVs, the concepts array includes one entry per condition plus the classification.
+Multi-condition example (when the SCV uses a conditionSet):
 
-For PGEP submissions with a single classification, `objectConditionClassification` is a ConceptSet with Classification, Condition, and SubmissionLevel concepts (same as VCV's PGEP pattern).
+```json
+{
+  "objectConditionClassification": {
+    "type": "ConceptSet",
+    "concepts": [
+      {
+        "type": "ConceptSet",
+        "id": "tsid_999",
+        "conditions": [
+          {"conceptType": "Disease", "id": "1", "name": "Condition A", "primaryCoding": {...}},
+          {"conceptType": "Disease", "id": "2", "name": "Condition B", "primaryCoding": {...}}
+        ],
+        "membershipOperator": "AND"
+      },
+      {
+        "conceptType": "Classification",
+        "name": "Pathogenic"
+      }
+    ],
+    "membershipOperator": "AND"
+  }
+}
+```
 
-For PGEP submissions with multiple classifications, `objectConditionClassification_conceptSetSet` contains nested ConceptSets, each with Classification, Condition, and SubmissionLevel concepts.
+This structure is consistent across all 4 layers — RCV uses the same ConceptSet form at every layer regardless of submission level.
 
 ---
 
@@ -125,7 +180,7 @@ RCV statements use the same 4-layer aggregation hierarchy as VCV, with condition
 | L4 (Group) | `RCV001781420.1-G` | Statement group | Germline only |
 | L3 (Submission Level) | `RCV001781420.1-G-PATH` | Proposition type | All |
 | L2 (Tier) | `RCV006254391.1-S-SCI-CP` | Submission level | Somatic only |
-| L1 (Base) | `RCV006254391.1-S-SCI-CP-tier i - strong` | Submission level + tier | All |
+| L1 (Base) | `RCV006254391.1-S-SCI-CP-TIER I - STRONG` | Submission level + tier | All |
 
 Germline RCV statements use Layer 4 as the top level. Somatic RCV statements use Layer 3 as the top level.
 
