@@ -41,9 +41,8 @@ When individual submissions are aggregated into VCV-level statements, the result
 
 | Submission Level | Condition | Aggregate Review Status |
 | --- | --- | --- |
-| PGEP (mixed) | Both PG and EP contribute | `practice guideline and expert panel mix` |
-| PGEP (PG only) | Only PG SCVs contribute | `practice guideline` |
-| PGEP (EP only) | Only EP SCVs contribute | `reviewed by expert panel` |
+| PG | Any | `practice guideline` |
+| EP | Any | `reviewed by expert panel` |
 | CP | Single submitter | `criteria provided, single submitter` |
 | CP | Multiple submitters, concordant | `criteria provided, multiple submitters, no conflicts` |
 | CP | Multiple submitters, conflicting | `criteria provided, conflicting classifications` |

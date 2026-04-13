@@ -87,7 +87,7 @@ CALL `clinvar_ingest.gks_scv_condition_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_scv_statement_proc`(CURRENT_DATE(), FALSE);
 
 -- generate final JSON output for all artifact types
-CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all', FALSE);
+CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all');
 
 ```
 

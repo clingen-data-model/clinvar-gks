@@ -62,7 +62,6 @@ Examples of aggregate classification `Statement` records produced by rolling up 
 | File | VCV | Prop Types | Submission Levels | Description |
 | --- | --- | --- | --- | --- |
 | [VCV000012582.63-G.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-G.jsonc) | VCV000012582 | Pathogenicity, Association, Not Provided | CP, NOCP, NOCL | Full 4-layer germline hierarchy (L4→L3→L1). CP pathogenicity with 13 contributing SCVs concordant. NOCP non-contributing. Association and Not Provided as non-contributing prop types |
-| [VCV000007105.202.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000007105.202.jsonc) | VCV000007105 | Pathogenicity, Drug Response, Risk Factor, Not Provided | PGEP, CP, NOCP, NOCL | Complex germline with PGEP classification (expert panel + practice guideline), ConceptSet objectClassification, multiple prop types at L3, winner-takes-all ranking |
 
 ### Somatic
 
@@ -71,10 +70,13 @@ Examples of aggregate classification `Statement` records produced by rolling up 
 | [VCV000012582.63-S-sci.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-sci.jsonc) | VCV000012582 | Somatic Clinical Impact | Tier I, Tier II | 3-layer somatic hierarchy (L3→L2→L1). Layer 2 tier aggregation combining Tier I and Tier II. CP contributing, NOCP non-contributing |
 | [VCV000012582.63-S-onco.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-onco.jsonc) | VCV000012582 | Oncogenicity | N/A | Somatic oncogenicity aggregate (L3→L1). Single CP submission, no tier grouping |
 
-### PGEP
+### PG and EP (single-submission levels)
+
+PG (practice guideline) and EP (reviewed by expert panel) submissions are aggregated as separate top-tier submission levels. PG outranks EP in the Layer 3 winner-takes-all selection, followed by CP, NOCP, NOCL, and FLAG.
 
 | File | VCV | Submission Level | Description |
 | --- | --- | --- | --- |
-| [VCV-PGEP-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-PGEP-example.jsonc) | VCV999999999 (hypothetical) | PGEP | Demonstrates `classification_conceptSetSet` with 2 nested AND-groups (Classification + Condition + SubmissionLevel), `objectClassification_conceptSetSet` without extensions, and "practice guideline and expert panel mix" review status |
+| [VCV-PG-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-PG-example.jsonc) | VCV999999999 (hypothetical) | PG | Layer 1 base statement for a practice guideline submission. Uses standard `classification_mappableConcept` and `objectClassification` |
+| [VCV-EP-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-EP-example.jsonc) | VCV999999999 (hypothetical) | EP | Layer 1 base statement for an expert panel submission. Same form as PG; only the submission level qualifier and review status differ |
 
 See [VCV Statements output reference](../output-reference/vcv-statements.md) for field documentation.

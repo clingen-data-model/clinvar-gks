@@ -65,9 +65,6 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 **EP** (Expert Panel)
 :   Submission level rank 3 (3 stars). Classifications reviewed and approved by expert panels.
 
-**PGEP**
-:   Combined grouping of PG and EP submissions for aggregation. No conflict detection — each submitter's classification is preserved individually using ConceptSet format.
-
 **CP** (Criteria Provided)
 :   Submission level rank 1 (1 star). Submitter provided documented criteria for their classification.
 
@@ -97,10 +94,10 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   Higher-level grouping that associates a ClinVar variation with its resolved VRS representation. Types: CanonicalAllele, CategoricalCnvChange, CategoricalCnvCount.
 
 **MappableConcept**
-:   A single concept with `conceptType`, `name`, and optional `extension` array. Used for non-PGEP classifications and objectClassification.
+:   A single concept with `conceptType`, `name`, and optional `extension` array. Used for single-label classifications and objectClassification.
 
 **ConceptSet**
-:   A structured group of concepts with `membershipOperator` (AND). Used for PGEP classifications, where each AND-group contains Classification, Condition, and SubmissionLevel concepts.
+:   A structured group of concepts with `membershipOperator` (AND). Used for multi-concept classifications such as RCV's `objectConditionClassification` (combining condition and classification).
 
 **Constraint** (Cat-VRS)
 :   Defining relationship between a categorical variant and its VRS representation. Types: DefiningAlleleConstraint, DefiningLocationConstraint, CopyChangeConstraint, CopyCountConstraint.
@@ -210,16 +207,10 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 ## Classification Attributes (VCV)
 
 **classification_mappableConcept**
-:   VCV classification attribute for non-PGEP submission levels. Contains a single aggregate label with optional `conflictingExplanation` extension.
+:   VCV/RCV classification attribute. Contains a single aggregate label with optional `conflictingExplanation` extension.
 
-**classification_conceptSet**
-:   VCV classification attribute for PGEP with a single classification tuple. An AND-group of Classification, Condition, and SubmissionLevel concepts with a `description` extension.
-
-**classification_conceptSetSet**
-:   VCV classification attribute for PGEP with two or more classification tuples. Nested ConceptSets, each inner AND-group carrying its own `description` extension.
-
-**objectClassification_mappableConcept** / **objectClassification_conceptSet** / **objectClassification_conceptSetSet**
-:   Same 3-way split as classification attributes, but on the proposition. No extensions. Deduplicated across submitters.
+**objectClassification**
+:   VCV proposition classification attribute. A MappableConcept matching the statement classification, without extensions.
 
 ---
 
