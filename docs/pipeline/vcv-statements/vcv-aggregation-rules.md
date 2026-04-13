@@ -52,21 +52,21 @@ This description is carried on the SCV classification and is not propagated onto
 
 Practice guideline submissions are aggregated independently. Like CP, concordance and conflict detection produce a single aggregate label.
 
-- **Output attribute:** `classification_mappableConcept`
+- **Output attribute:** `classification`
 - **Review status:** always `practice guideline`
 
 ### EP (Expert Panel)
 
 Expert panel submissions are aggregated independently. Like CP, concordance and conflict detection produce a single aggregate label.
 
-- **Output attribute:** `classification_mappableConcept`
+- **Output attribute:** `classification`
 - **Review status:** always `reviewed by expert panel`
 
 ### CP (Assertion Criteria Provided)
 
 Standard aggregation with concordance and conflict detection.
 
-- **Output attribute:** `classification_mappableConcept` — a single aggregate label
+- **Output attribute:** `classification` — a single aggregate label
 - **Concordant** — all contributing SCVs share the same classification: the label is the shared classification name
 - **Conflicting** — contributing SCVs have different classifications: the label becomes "Conflicting classifications of `<proposition_type>`" with a `conflictingExplanation` extension showing the breakdown (e.g., "Pathogenic(3); Likely pathogenic(2)")
 - **Review status upgrades:** CP submissions may receive upgraded review status based on submitter count and concordance (see [Aggregate Review Status](#aggregate-review-status))
@@ -75,14 +75,14 @@ Standard aggregation with concordance and conflict detection.
 
 Same aggregation logic as CP — concordance/conflict detection produces a single label.
 
-- **Output attribute:** `classification_mappableConcept`
+- **Output attribute:** `classification`
 - **No review status upgrade** — always "no assertion criteria provided" regardless of submitter count or concordance
 
 ### FLAG (Flagged Submissions)
 
 No aggregation logic. Flagged submissions always produce a fixed result.
 
-- **Output attribute:** `classification_mappableConcept`
+- **Output attribute:** `classification`
 - **Label:** always "no classifications from unflagged records"
 - **No conflict detection**
 
@@ -90,22 +90,22 @@ No aggregation logic. Flagged submissions always produce a fixed result.
 
 Passthrough with no aggregation logic.
 
-- **Output attribute:** `classification_mappableConcept`
+- **Output attribute:** `classification`
 - **Label:** always "not provided"
 
 ---
 
 ## Classification Output
 
-Every VCV statement uses a single `classification_mappableConcept` attribute to represent its aggregate classification. The proposition uses a matching single `objectClassification` field.
+Every VCV statement uses a single `classification` attribute to represent its aggregate classification. The proposition uses a matching single `objectClassification` field.
 
-### `classification_mappableConcept`
+### `classification`
 
 Used by all submission levels (PG, EP, CP, NOCP, NOCL, and FLAG). Contains a single aggregate label with an optional `conflictingExplanation` extension when contributing SCVs disagree.
 
 ```json
 {
-  "classification_mappableConcept": {
+  "classification": {
     "conceptType": "Classification",
     "name": "Pathogenic/Likely pathogenic",
     "extension": [
@@ -119,7 +119,7 @@ The `extension` array is only present when the classification is conflicting.
 
 ### Proposition `objectClassification`
 
-The proposition contains an `objectClassification` MappableConcept with the same name as the statement-level `classification_mappableConcept` but without the `conflictingExplanation` extension.
+The proposition contains an `objectClassification` MappableConcept with the same name as the statement-level `classification` but without the `conflictingExplanation` extension.
 
 ---
 
