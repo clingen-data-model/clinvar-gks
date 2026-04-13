@@ -148,7 +148,7 @@ execute_bq_procedures() {
   done
 
   echo "  - Calling procedure: clinvar_ingest.gks_json_proc..."
-  if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false "CALL \`clinvar_ingest.gks_json_proc\`('$release_date', 'all', FALSE)" > /dev/null; then
+  if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false "CALL \`clinvar_ingest.gks_json_proc\`('$release_date', 'all')" > /dev/null; then
     echo "❌ Procedure call FAILED for: clinvar_ingest.gks_json_proc"; return 1;
   fi
   echo "    ✅ Success."

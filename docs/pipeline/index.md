@@ -90,7 +90,7 @@ CALL `clinvar_ingest.gks_vcv_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_vcv_statement_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_rcv_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_rcv_statement_proc`(CURRENT_DATE(), FALSE);
-CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all', FALSE);
+CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all');
 ```
 
 ### Step 4: Export

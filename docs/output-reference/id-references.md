@@ -99,8 +99,8 @@ Components:
 
 - **group** — statement group: `G` (Germline), `S` (Somatic)
 - **prop** — proposition type: `path` (Pathogenicity), `onco` (Oncogenicity), `sci` (Somatic Clinical Impact), `dr` (Drug Response), `np` (Not Provided), `assoc` (Association), `other` (Other)
-- **level** — submission level: `PG`, `EP`, `PGEP`, `CP`, `NOCP`, `NOCL`, `FLAG`
-- **tier** — classification tier (somatic only): `tier 1`, `tier 2`, etc.
+- **level** — submission level: `PG`, `EP`, `CP`, `NOCP`, `NOCL`, `FLAG`
+- **tier** — classification tier (somatic only), uppercase: `TIER 1`, `TIER 2`, etc.
 
 Within a VCV statement's nested evidence lines, each evidence item references the next lower layer by its ID. The top-level L4 statement references L3 statements, which reference L2 or L1 statements, which reference individual SCVs.
 
