@@ -74,41 +74,11 @@ BEGIN
                 FROM `clinvar_ingest.gks_xref_iri_templates` iri
                 WHERE iri.db = xref.db
                   AND iri.type = IFNULL(xref.type, 'primary')
-              ) as iris,
-              ARRAY_CONCAT(
-                IF(
-                  xref.type IS NOT NULL,
-                  [STRUCT('mappingType' as name, xref.type as value)],
-                  []
-                ),
-                IF(
-                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.status IGNORE NULLS))>0,
-                  [STRUCT(
-                    'mappingStatuses' as name,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.status IGNORE NULLS), ', ') as value
-                  )],
-                  []
-                ),
-                IF(
-                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.url IGNORE NULLS))>0,
-                  [STRUCT(
-                    'mappingUrls' as name,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.url IGNORE NULLS), ', ') as value
-                  )],
-                  []
-                ),
-                IF(
-                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.ref_field IGNORE NULLS))>0,
-                  [STRUCT(
-                    'mappingRefFields' as name,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.ref_field IGNORE NULLS), ', ') as value
-                  )],
-                  []
-                )
-              ) as extensions
+              ) as iris
             ) as mapping
           from traits t
           CROSS JOIN UNNEST(t.xrefs) as xref
+          where xref.db IN ('MedGen','MONDO','OMIM','Orphanet','Human Phenotype Ontology','MeSH','EFO: The Experimental Factor Ontology') AND (xref.ref_field IS NULL OR xref.ref_field IN ('MIM','primary')) 
           GROUP BY
             t.id,
             t.name,

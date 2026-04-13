@@ -1,0 +1,275 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/gk-pilot/1.x/clinvar-gks/clinvar-scv-stmt-source.yaml"
+title: ClinGen's Clinvar SCV statement profiles
+type: object
+
+imports:
+  cat-vrs: ../../cat-vrs/cat-vrs-source.yaml
+  vrs: ../../vrs/vrs-source.yaml
+  gks-core: ../../gks-core/gks-core-source.yaml
+
+# imports:
+#   cv-gks.variant: ./clinvar-variant-source.yaml
+#   va.varpath: ../profiles/var-path-stmt-source.yaml
+#   gks.core-im: ../core-im/core-im-source.yaml
+#   gks.data-types: ../data-types/data-types-source.yaml
+#   gks.domain-entities: ../domain-entities/domain-entities-source.yaml
+#   vrs: ../vrs/vrs-source.yaml
+#   cat-vrs: ../cat-vrs/cat-vrs-source.yaml
+
+$defs:
+  #***********************************************
+  # Extension types for any Clinvar SCV statements
+  #***********************************************
+
+  # submitted classification extension for Clinvar SCV statements
+  ExtensionSubmittedClassification:
+    description: >-
+      An extension to the entity that provides the submitted classification of the SCV.
+    protectedClassOf: ClinvarScvProperties
+    type: object
+    maturity: draft
+    properties:
+      name:
+        type: string
+        const: submittedClassification
+        description: >-
+          The name of the extension item, which must be 'submittedClassification'.
+      value:
+        type: string
+        description: >-
+          The submitted classification of the SCV.
+
+  # allele origin extension for Clinvar SCV statements
+  ExtensionAlleleOrigin:
+    description: >-
+      An extension to the entity that provides the allele origin of the SCV.
+    protectedClassOf: ClinvarScvProperties
+    type: object
+    maturity: draft
+    properties:
+      name:
+        type: string
+        const: alleleOrigin
+        description: >-
+          The name of the extension item, which must be 'alleleOrigin'.
+      value:
+        type: string
+        description: >-
+          The allele origin of the SCV.
+
+  # method category extension for Clinvar SCV statements
+  ExtensionMethodCategory:
+    description: >-
+      An extension to the entity that provides the method category of the SCV.
+    protectedClassOf: ClinvarScvProperties
+    type: object
+    maturity: draft
+    properties:
+      name:
+        type: string
+        const: methodCategory
+        description: >-
+          The name of the extension item, which must be 'methodCategory'.
+      value:
+        type: string
+        description: >-
+          The method category of the SCV.
+
+  # reviewStatus extension for Clinvar SCV statements
+  ExtensionReviewStatus:
+    description: >-
+      An extension to the entity that provides the review status of the SCV.
+    protectedClassOf: ClinvarScvProperties
+    type: object
+    maturity: draft
+    properties:
+      name:
+        type: string
+        const: reviewStatus
+        description: >-
+          The name of the extension item, which must be 'reviewStatus'.
+      value:
+        type: string
+        enum:
+          - review_status
+          - "criteria provided, single submitter"
+          - flagged submission
+          - no assertion criteria provided
+          - no assertion provided
+          - practice guideline
+          - reviewed by expert panel
+        description: >-
+          The review status of the SCV.
+
+  # localKey extension for Clinvar SCV statements
+  ExtensionLocalKey:
+    description: >-
+      An extension to the entity that provides the local-key submitted with the SCV, if available.
+    protectedClassOf: ClinvarScvProperties
+    type: object
+    maturity: draft
+    properties:
+      name:
+        type: string
+        const: localKey
+        description: >-
+          The name of the extension item, which must be 'localKey'.
+      value:
+        type: string
+        description: >-
+          The subclass type of the variant as provided by Clinvar. It must be one of the following:
+          'Genotype', 'Haplotype', or 'SimpleAllele'.
+
+  # method category extension for Clinvar SCV statements
+  ExtensionModeOfInheritance:
+    description: >-
+      An extension to the entity that provides the mode of inheritance of the SCV.
+    protectedClassOf: ClinvarScvProperties
+    type: object
+    maturity: draft
+    properties:
+      name:
+        type: string
+        const: modeOfInheritance
+        description: >-
+          The name of the extension item, which must be 'modeOfInheritance'.
+      value:
+        type: string
+        description: >-
+          The mode of inheritance as submitted to clinvar.
+      
+  ClinvarScvProperties:
+    description: >-
+      Clinvar specific properties for Clinvar submitted statements (aka SCVs).
+    protectedClassOf: ClinvarScvStatement
+    type: object
+    maturity: draft
+    properties:
+      subjectVariant:
+        oneOf:
+        - $ref: "/ga4gh/schema/gk-pilot/1.x/clinvar-gks/json/ClinvarCategoricalVariation"
+        - $ref: "/ga4gh/schema/gks-common/1.x/data-types/json/IRI"
+        description: A ClinVar-GKS categorical variant that is the subject of the Statement.
+      extensions:
+        type: array
+        ordered: false
+        items:
+          oneOf:
+            - $ref: "#/$defs/ExtensionSubmittedClassification"
+            - $ref: "#/$defs/ExtensionAlleleOrigin"
+            - $ref: "#/$defs/ExtensionMethodCategory"
+            - $ref: "#/$defs/ExtensionReviewStatus"
+            - $ref: "#/$defs/ExtensionLocalKey"
+            - $ref: "#/$defs/ExtensionModeOfInheritance"
+        description: >-
+          A list of extensions to the clinvar scv statements. Extensions are not expected to be natively understood,
+          but may be used for pre-negotiated exchange of message attributes between systems.
+    additionalProperties: true
+
+  #***********************************************
+  # Clinvar Variant Pathogenicity Statement SCV
+  #***********************************************
+
+  ClinvarVariantPathogenicityStatement:
+    maturity: draft
+    description: >
+      The GA4GH Variant Pathogenicity submission statement profile specific to Clinvar.
+    allOf:
+      - $ref: "/ga4gh/schema/va-spec/1.x/profiles/json/VariantPathogenicityStatement"
+      - properties:
+          subjectVariant:
+            oneOf:
+              - $ref: "/ga4gh/schema/gk-pilot/1.x/clinvar-gks/json/ClinvarCategoricalVariation"
+              - $ref: "/ga4gh/schema/gks-common/1.x/data-types/json/IRI"
+            description: A Clinvar-GKS categorical variant that is the subject of the Statement.
+        
+  #***********************************************
+  # Clinvar Variant Drug Response Statement SCV
+  #***********************************************
+
+  # Create a baseline Variant Drug Response Statement
+  ClinvarVariantDrugResponseStatement:
+    type: object
+    maturity: draft
+    inherits: gks.core-im:Statement
+    description: >-
+      A Clinvar specific assertion type describing the role of a variant in causing a
+      drug response in a condition.
+    properties:
+      type:
+        extends: type
+        const: "ClinvarVariantDrugResponseStatement"
+        default: "ClinvarVariantDrugResponseStatement"
+        description: MUST be "ClinvarVariantDrugResponseStatement".
+      subjectVariant:
+        extends: subject
+        oneOf:
+        - $ref: "/ga4gh/schema/gk-pilot/1.x/clinvar-gks/json/ClinvarCategoricalVariation"
+        - $ref: "/ga4gh/schema/gks-common/1.x/data-types/json/IRI"
+        description: A Clinvar-GKS categorical variant that is the subject of the Statement.
+      predicate:
+        extends: predicate
+        const: isClinvarDrugResponseFor
+      objectCondition:
+        extends: object
+        oneOf:
+        - $ref: "/ga4gh/schema/gks-common/1.x/domain-entities/json/Condition"
+        - $ref: "/ga4gh/schema/gks-common/1.x/data-types/json/IRI"
+        description: The :ref:`Condition` for which the variant impact is stated.
+    required:
+    - subjectVariant
+    - predicate
+    - objectCondition
+
+  #***********************************************
+  # Clinvar Variant No Assertion Statement SCV
+  #***********************************************
+
+  # Create a baseline Variant No Assertion Statement
+  ClinvarVariantNoAssertionStatement:
+    type: object
+    maturity: draft
+    inherits: gks.core-im:Statement
+    description: >-
+      A 'no assertion' variant-condition submission statement profile specific to Clinvar.
+    properties:
+      type:
+        extends: type
+        const: "ClinvarVarianNoAssertionStatement"
+        default: "ClinvarVarianNoAssertionStatement"
+        description: MUST be "ClinvarVarianNoAssertionStatement".
+      subjectVariant:
+        extends: subject
+        oneOf:
+        - $ref: "/ga4gh/schema/gk-pilot/1.x/clinvar-gks/json/ClinvarCategoricalVariation"
+        - $ref: "/ga4gh/schema/gks-common/1.x/data-types/json/IRI"
+        description: A Clinvar-GKS categorical variant that is the subject of the Statement.
+      predicate:
+        extends: predicate
+        const: isDrugResponseFor
+      objectCondition:
+        extends: object
+        oneOf:
+        - $ref: "/ga4gh/schema/gks-common/1.x/domain-entities/json/Condition"
+        - $ref: "/ga4gh/schema/gks-common/1.x/data-types/json/IRI"
+        description: The :ref:`Condition` for which the variant impact is stated.
+    required:
+    - subjectVariant
+    - predicate
+    - objectCondition
+
+  #***********************************************
+  # Clinvar SCV Statement
+  #***********************************************
+
+  ClinvarScvStatement:
+    maturity: draft
+    description: >-
+      Any form of a Clinvar submitted variant statement.
+    allOf:
+      - $ref: "#/$defs/ClinvarScvProperties"
+      - oneOf:
+        - $ref: "#/$defs/ClinvarVariantPathogenicityStatement"
+        - $ref: "#/$defs/ClinvarVariantDrugResponseStatement"
+        - $ref: "#/$defs/ClinvarVariantNoAssertionStatement"
