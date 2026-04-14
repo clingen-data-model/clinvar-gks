@@ -176,7 +176,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   Process of combining multiple SCV submissions into higher-order VCV statements following submission-level-specific logic.
 
 **Winner-Takes-All**
-:   Aggregation strategy at Layer 3 where the highest-ranked submission level's classification becomes the aggregate result. Lower-ranked levels become non-contributing.
+:   Aggregation strategy at the Aggregate Contribution Layer where the highest-ranked submission level's classification becomes the aggregate result. Lower-ranked levels become non-contributing.
 
 **Contributing Submission**
 :   Submission whose review status is highest-ranked within an aggregation group. Directly reflected in the aggregate classification.
@@ -184,20 +184,17 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 **Non-Contributing Submission**
 :   Submission ranked lower than the contributing submission. Preserved in the evidence structure but not reflected in the aggregate label.
 
-**Layer 1** (Base)
-:   First aggregation layer. Groups by variation + statement group + proposition type + submission level [+ tier]. Produces base-level aggregate classifications.
+**Grouping Layer**
+:   First conceptual aggregation layer. Consists of Base Grouping and Tier Grouping steps. Produces initial aggregation of SCVs into groups by submission level.
 
-**Layer 2** (Tier)
-:   Second aggregation layer (somatic only). Aggregates tier-level groups within each submission level.
+**Base Grouping** (Grouping Layer)
+:   First step of the Grouping Layer. Groups SCVs by variation + statement group + proposition type + submission level [+ tier]. Applies submission-level-specific classification and conflict detection logic.
 
-**Layer 3** (Submission Level)
-:   Third aggregation layer. Applies winner-takes-all ranking across submission levels. Top-level output for somatic VCV statements.
+**Tier Grouping** (Grouping Layer)
+:   Second step of the Grouping Layer (somatic sci only). Aggregates tier-level groups within each submission level.
 
-**Layer 4** (Statement Group)
-:   Fourth aggregation layer (germline only). Aggregates proposition types within the germline statement group. Top-level output for germline VCV statements.
-
-**Tier Grouping**
-:   Grouping of somatic clinical impact submissions by their classification tier for Layer 1/Layer 2 aggregation.
+**Aggregate Contribution Layer**
+:   Second and final aggregation layer. Applies winner-takes-all ranking across submission levels. Terminal layer for both germline and somatic statements.
 
 **Aggregate Review Status**
 :   Final review status of a VCV statement derived from submission level and aggregation outcome. See [Aggregate Review Status](../pipeline/vcv-statements/vcv-aggregation-rules.md#aggregate-review-status).
