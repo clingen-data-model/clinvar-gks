@@ -21,7 +21,7 @@ Every SCV is assigned a submission level based on its ClinVar review status:
 | NOCL | no classification provided | 2 | -1 | Submission present but no classification given |
 | FLAG | flagged submission | 1 | -3 | Submission flagged by ClinVar for quality concerns |
 
-Every submission level is aggregated independently — only SCVs with the same submission level can aggregate together. At Layer 3, submission levels are ranked `PG > EP > CP > NOCP > NOCL > FLAG` and the highest-ranked level becomes the winner-takes-all contributing result.
+Every submission level is aggregated independently — only SCVs with the same submission level can aggregate together. At the Aggregate Contribution Layer, submission levels are ranked `PG > EP > CP > NOCP > NOCL > FLAG` and the highest-ranked level becomes the winner-takes-all contributing result.
 
 ---
 
@@ -150,20 +150,27 @@ The review status appears in the statement-level `extensions` array:
 
 ---
 
-## Layer Hierarchy
+## Aggregation Hierarchy
 
-VCV aggregation builds statements through a four-layer hierarchy. Each layer aggregates the results of the layer below it.
+VCV aggregation builds statements through a two-layer hierarchy. Each layer may consist of multiple SQL steps, but conceptually there are two aggregation layers.
 
-| Layer | Name | Aggregates By | Description |
+### Grouping Layer
+
+The Grouping Layer produces the initial aggregation of individual SCVs into groups. It consists of two steps that run as separate SQL operations but form a single conceptual layer:
+
+| Step | Name | Aggregates By | Description |
 | --- | --- | --- | --- |
-| L1 | Base Aggregator | Variation + Statement Group + Proposition Type + Submission Level (+ Tier) | Lowest-level aggregation of individual SCVs |
-| L2 | Tier Aggregator | Variation + Statement Group + Proposition Type + Submission Level | Combines tier-level groups (somatic only) |
-| L3 | Submission Level Aggregator | Variation + Statement Group + Proposition Type | Winner-takes-all across submission levels |
-| L4 | Group Aggregator | Variation + Statement Group | Winner-takes-all across proposition types (germline only) |
+| Base Grouping | `gks_vcv_grouping_base_agg` | Variation + Statement Group + Proposition Type + Submission Level (+ Tier) | Lowest-level aggregation of individual SCVs. Applies submission-level-specific classification and conflict detection logic |
+| Tier Grouping | `gks_vcv_grouping_tier_agg` | Variation + Statement Group + Proposition Type + Submission Level | Combines tier-level groups (somatic sci only). Ranks tiers by priority, designates top tier as contributing |
 
-Key behaviors:
+Tier Grouping applies only to somatic tiered records (`tier_grouping IS NOT NULL`). Non-tiered records (all germline and non-sci somatic) flow directly from Base Grouping to the Aggregate Contribution Layer.
 
-- **Layer 2 applies only to somatic tiered records** — non-tiered records (all germline and non-sci somatic) flow directly from L1 to L3
-- **Somatic statements stop at Layer 3** — somatic classifications do not participate in Layer 4 group aggregation
-- **Winner-takes-all** at Layers 3 and 4 — the highest-ranked submission level (or proposition type) becomes the "contributing" result; others become "non-contributing" evidence. Submission-level ranking at Layer 3 is `PG > EP > CP > NOCP > NOCL > FLAG`
-- Each layer's output includes `evidenceLines` that reference the layer below, creating a fully nested structure in the final JSON output
+### Aggregate Contribution Layer
+
+| Step | Name | Aggregates By | Description |
+| --- | --- | --- | --- |
+| Aggregate Contribution | `gks_vcv_aggregate_contribution` | Variation + Statement Group + Proposition Type | Winner-takes-all across submission levels. This is the terminal layer for both germline and somatic statements |
+
+Submission levels are ranked `PG > EP > CP > NOCP > NOCL > FLAG`. The highest-ranked submission level becomes the "contributing" result; all others become "non-contributing" evidence.
+
+Each layer's output includes `evidenceLines` that reference the layer below, creating a nested structure in the final JSON output.
