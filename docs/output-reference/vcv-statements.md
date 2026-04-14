@@ -20,7 +20,7 @@ Each record is a `Statement` with the following top-level fields:
 | `type` | string | Always `Statement` |
 | `direction` | string | Always `supports` |
 | `strength` | string | Always `definitive` |
-| `classification_mappableConcept` | object | Aggregate classification label. See [Classification](#classification) |
+| `classification` | object | Aggregate classification label. See [Classification](#classification) |
 | `proposition` | object | The aggregate proposition with variant, objectClassification, and qualifiers. See [Proposition](#proposition) |
 | `extensions` | array | Aggregate metadata — `clinvarReviewStatus`. See [Extensions](#extensions) |
 | `evidenceLines` | array | Contributing and non-contributing evidence from lower aggregation layers. See [Evidence Lines](#evidence-lines) |
@@ -31,15 +31,15 @@ Each record is a `Statement` with the following top-level fields:
 
 ## Classification
 
-All VCV statements use a single `classification_mappableConcept` attribute for the aggregate classification.
+All VCV statements use a single `classification` attribute for the aggregate classification.
 
-### classification_mappableConcept
+### classification
 
 Used by all submission levels (PG, EP, CP, NOCP, NOCL, FLAG). Contains a single aggregate label with an optional `conflictingExplanation` extension when the classification is conflicting.
 
 ```json
 {
-  "classification_mappableConcept": {
+  "classification": {
     "conceptType": "Classification",
     "name": "Pathogenic/Likely pathogenic",
     "extension": [

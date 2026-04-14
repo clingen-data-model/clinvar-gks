@@ -139,7 +139,7 @@ Each BASE section reads from the corresponding aggregation table and produces a 
 
 | Field | Description |
 |---|---|
-| `classification_mappableConcept` | A Classification concept with `name` (the aggregate label) and optional `conflictingExplanation` extension. Used at every layer for every submission level |
+| `classification` | A Classification concept with `name` (the aggregate label) and optional `conflictingExplanation` extension. Used at every layer for every submission level |
 | `proposition` | Contains `objectConditionClassification` (a ConceptSet with exactly 2 concepts: the SCV's actual condition or conditionSet plus the aggregate Classification), `aggregateQualifiers`, `subjectVariant` reference, type `VariantAggregateConditionClassificationProposition`, and predicate `hasAggregateConditionClassification` |
 | `extensions` | Array with `clinvarReviewStatus` value |
 | `evidenceLines` | References to child layer IDs (SCV IDs for L1, contributing/non-contributing statement IDs for L2--L4) |
@@ -164,7 +164,7 @@ Layer-specific differences:
 
 ### Layer 1 PRE
 
-Inlines SCV evidence items from `gks_scv_statement_pre`. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification_mappableConcept` and `proposition` fields are carried forward unchanged from the BASE.
+Inlines SCV evidence items from `gks_scv_statement_pre`. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification` and `proposition` fields are carried forward unchanged from the BASE.
 
 **Output:** `temp_rcv_layer1_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -172,7 +172,7 @@ Inlines SCV evidence items from `gks_scv_statement_pre`. Evidence lines are rewr
 
 ### Layer 2 PRE
 
-Inlines Layer 1 PRE evidence items into Layer 2 statements (somatic only). The `classification_mappableConcept` and `proposition` fields are passed through unchanged. Contributing and non-contributing evidence lines are rebuilt with the full inlined Layer 1 PRE statement structures.
+Inlines Layer 1 PRE evidence items into Layer 2 statements (somatic only). The `classification` and `proposition` fields are passed through unchanged. Contributing and non-contributing evidence lines are rebuilt with the full inlined Layer 1 PRE statement structures.
 
 **Output:** `temp_rcv_layer2_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -180,7 +180,7 @@ Inlines Layer 1 PRE evidence items into Layer 2 statements (somatic only). The `
 
 ### Layer 3 PRE
 
-Inlines evidence items from either Layer 2 PRE or Layer 1 PRE (using COALESCE to check L2 first, then L1). The `classification_mappableConcept` and `proposition` fields are passed through unchanged from the BASE -- RCV uses a single ConceptSet form at every layer.
+Inlines evidence items from either Layer 2 PRE or Layer 1 PRE (using COALESCE to check L2 first, then L1). The `classification` and `proposition` fields are passed through unchanged from the BASE -- RCV uses a single ConceptSet form at every layer.
 
 **Output:** `temp_rcv_layer3_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -188,7 +188,7 @@ Inlines evidence items from either Layer 2 PRE or Layer 1 PRE (using COALESCE to
 
 ### Layer 4 PRE
 
-Inlines Layer 3 PRE evidence items into Layer 4 statements (germline only). The `classification_mappableConcept` and `proposition` fields are passed through unchanged. Contributing and non-contributing evidence lines are rebuilt with the full inlined Layer 3 PRE statement structures.
+Inlines Layer 3 PRE evidence items into Layer 4 statements (germline only). The `classification` and `proposition` fields are passed through unchanged. Contributing and non-contributing evidence lines are rebuilt with the full inlined Layer 3 PRE statement structures.
 
 **Output:** `temp_rcv_layer4_pre` <span class="role-badge badge-internal">Internal</span>
 

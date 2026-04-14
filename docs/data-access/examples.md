@@ -76,7 +76,7 @@ PG (practice guideline) and EP (reviewed by expert panel) submissions are aggreg
 
 | File | VCV | Submission Level | Description |
 | --- | --- | --- | --- |
-| [VCV-PG-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-PG-example.jsonc) | VCV999999999 (hypothetical) | PG | Layer 1 base statement for a practice guideline submission. Uses standard `classification_mappableConcept` and `objectClassification` |
+| [VCV-PG-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-PG-example.jsonc) | VCV999999999 (hypothetical) | PG | Layer 1 base statement for a practice guideline submission. Uses standard `classification` and `objectClassification` |
 | [VCV-EP-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-EP-example.jsonc) | VCV999999999 (hypothetical) | EP | Layer 1 base statement for an expert panel submission. Same form as PG; only the submission level qualifier and review status differ |
 
 See [VCV Statements output reference](../output-reference/vcv-statements.md) for field documentation.

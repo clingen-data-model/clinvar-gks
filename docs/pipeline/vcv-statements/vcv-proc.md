@@ -123,7 +123,7 @@ Each BASE section reads from the corresponding aggregation table and produces a 
 
 | Field | Description |
 |---|---|
-| `classification_mappableConcept` | A simple Classification concept with `name` and optional `conflictingExplanation` extension |
+| `classification` | A simple Classification concept with `name` and optional `conflictingExplanation` extension |
 | `proposition` | Contains `objectClassification` (a MappableConcept matching the statement classification), `aggregateQualifiers` (assertion group, proposition type, submission level, and optional tier), and `subjectVariant` reference |
 | `extensions` | Array with `clinvarReviewStatus` value |
 | `evidenceLines` | References to child layer IDs (SCV IDs for L1, contributing/non-contributing statement IDs for L2--L4) |
@@ -141,7 +141,7 @@ Layer-specific differences:
 
 ### Layer 1 PRE
 
-Inlines SCV evidence items into each Layer 1 BASE statement. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification_mappableConcept` and `proposition` fields are carried forward from the BASE statement unchanged.
+Inlines SCV evidence items into each Layer 1 BASE statement. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification` and `proposition` fields are carried forward from the BASE statement unchanged.
 
 **Output:** `temp_vcv_layer1_pre` <span class="role-badge badge-internal">Internal</span>
 
