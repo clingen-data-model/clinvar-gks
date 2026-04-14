@@ -34,7 +34,7 @@ YEAR="${EXPORT_DATE:0:4}"
 MONTH="${EXPORT_DATE:0:7}"
 
 # --- All output types ---
-ALL_OUTPUT_NAMES=("variation" "scv_by_ref" "scv_inline")
+ALL_OUTPUT_NAMES=("variation" "scv_by_ref" "scv_inline" "vcv" "rcv")
 
 # --- Parse flags and arguments ---
 DRY_RUN=false
