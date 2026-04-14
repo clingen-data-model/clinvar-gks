@@ -151,7 +151,7 @@ Multi-condition example (when the SCV uses a conditionSet):
 }
 ```
 
-This structure is consistent across all 4 layers — RCV uses the same ConceptSet form at every layer regardless of submission level.
+This structure is consistent across all aggregation steps — RCV uses the same ConceptSet form at every level regardless of submission level.
 
 ---
 

@@ -321,7 +321,7 @@ BEGIN
     EXECUTE IMMEDIATE query_agg_contribution;
 
     -------------------------------------------------------------------------
-    -- GROUPING BASE PRE: L1 statements with inlined SCV evidence items
+    -- GROUPING BASE PRE: Base Grouping statements with inlined SCV evidence items
     -- All submission levels (PG, EP, CP, NOCP, NOCL, FLAG) use the same flow.
     -------------------------------------------------------------------------
     SET query_grouping_base_pre = REPLACE("""
@@ -350,7 +350,7 @@ BEGIN
     EXECUTE IMMEDIATE query_grouping_base_pre;
 
     -------------------------------------------------------------------------
-    -- GROUPING TIER PRE: L2 statements with inlined L1 evidence items
+    -- GROUPING TIER PRE: Tier Grouping statements with inlined Base Grouping evidence items
     -------------------------------------------------------------------------
     SET query_grouping_tier_pre = REPLACE("""
       {CT} `{P}.temp_rcv_grouping_tier_pre` AS
@@ -405,7 +405,7 @@ BEGIN
     EXECUTE IMMEDIATE query_grouping_tier_pre;
 
     -------------------------------------------------------------------------
-    -- AGGREGATE CONTRIBUTION PRE: L3 statements with inlined L2/L1 evidence items
+    -- AGGREGATE CONTRIBUTION PRE: Aggregate Contribution statements with inlined Tier Grouping/Base Grouping evidence items
     -------------------------------------------------------------------------
     SET query_agg_contribution_pre = REPLACE("""
       {CT} `{P}.temp_rcv_agg_contribution_pre` AS

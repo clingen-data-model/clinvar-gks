@@ -69,7 +69,7 @@ The `proposition` describes the aggregate classification claim. It uses a single
 </div>
 
 !!! note
-    PG and EP are separate submission levels; PG outranks EP at Layer 3 winner-takes-all.
+    PG and EP are separate submission levels; PG outranks EP at the Aggregate Contribution Layer winner-takes-all.
 
 ---
 
