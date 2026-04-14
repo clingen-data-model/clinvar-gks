@@ -1,5 +1,5 @@
 {
-  // Hypothetical EP (expert panel) VCV statement example - Layer 1 Base
+  // Hypothetical EP (expert panel) VCV statement example - Grouping Layer — Base Grouping
   // EP submissions aggregate only with other EP submissions; they do not
   // combine with PG submissions. EP outranks CP, NOCP, NOCL, and FLAG.
   "classification_mappableConcept": {
