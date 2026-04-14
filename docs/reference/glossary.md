@@ -206,7 +206,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 
 ## Classification Attributes (VCV)
 
-**classification_mappableConcept**
+**classification**
 :   VCV/RCV classification attribute. Contains a single aggregate label with optional `conflictingExplanation` extension.
 
 **objectClassification**
