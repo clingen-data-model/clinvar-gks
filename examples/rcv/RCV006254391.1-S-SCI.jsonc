@@ -1,5 +1,5 @@
 {
-  // RCV Layer 3 (Terminal for somatic) - Somatic Clinical Impact
+  // Aggregate Contribution Layer — Somatic Clinical Impact
   // SCI classification label format: "<tier> - <assertion_type> - <significance> (<count>)"
   // The proposition's objectConditionClassification ConceptSet always has 2 concepts:
   // the SCV's actual condition and the aggregate Classification.
@@ -13,7 +13,7 @@
       "directionOfEvidenceProvided": "supports",
       "evidenceItems": [
         {
-          // Layer 2 (tier aggregator) - CP submission level
+          // Grouping Layer — Tier Grouping - CP submission level
           "classification": {
             "conceptType": "Classification",
             "name": "Tier I - Strong - diagnostic - supports diagnosis (1)"
@@ -24,7 +24,7 @@
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  // Layer 1 - CP + TIER I - STRONG (uppercased in ID)
+                  // Grouping Layer — Base Grouping - CP + TIER I - STRONG (uppercased in ID)
                   "id": "RCV006254391.1-S-SCI-CP-TIER I - STRONG"
                 }
               ],

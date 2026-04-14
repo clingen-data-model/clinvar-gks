@@ -1,5 +1,5 @@
 {
-  // RCV Layer 4 (Terminal for germline) - Germline group aggregation
+  // Aggregate Contribution Layer — Germline Pathogenicity
   // The proposition has a single objectConditionClassification ConceptSet
   // with exactly 2 concepts: the SCV's actual condition (or conditionSet)
   // and the aggregate Classification.
@@ -12,70 +12,19 @@
     {
       "directionOfEvidenceProvided": "supports",
       "evidenceItems": [
-        {
-          // Layer 3 - Pathogenicity proposition
-          "classification": {
-            "conceptType": "Classification",
-            "name": "Conflicting classifications of pathogenicity"
-          },
-          "direction": "supports",
-          "evidenceLines": [
-            {
-              "directionOfEvidenceProvided": "supports",
-              "evidenceItems": [
-                { "id": "RCV001781420.1-G-PATH-CP" }
-              ],
-              "strengthOfEvidenceProvided": "contributing",
-              "type": "EvidenceLine"
-            }
-          ],
-          "id": "RCV001781420.1-G-PATH",
-          "proposition": {
-            "aggregateQualifiers": [
-              { "name": "AssertionGroup", "value": "Germline" },
-              { "name": "PropositionType", "value": "Pathogenicity" }
-            ],
-            "id": "RCV001781420-G-PATH",
-            "objectConditionClassification": {
-              "type": "ConceptSet",
-              "concepts": [
-                {
-                  "conceptType": "Disease",
-                  "id": "12345",
-                  "name": "Hereditary breast and ovarian cancer syndrome",
-                  "primaryCoding": { "code": "C0677776", "system": "MedGen" }
-                },
-                {
-                  "conceptType": "Classification",
-                  "name": "Conflicting classifications of pathogenicity"
-                }
-              ],
-              "membershipOperator": "AND"
-            },
-            "predicate": "hasAggregateConditionClassification",
-            "subjectVariant": "clinvar:12582",
-            "type": "VariantAggregateConditionClassificationProposition"
-          },
-          "strength": "definitive",
-          "type": "Statement"
-        }
+        { "id": "RCV001781420.1-G-PATH-CP" }
       ],
       "strengthOfEvidenceProvided": "contributing",
       "type": "EvidenceLine"
     }
   ],
-  "extensions": [
-    {
-      "name": "clinvarReviewStatus",
-      "value": "criteria provided, conflicting classifications"
-    }
-  ],
-  "id": "RCV001781420.1-G",
+  "id": "RCV001781420.1-G-PATH",
   "proposition": {
     "aggregateQualifiers": [
-      { "name": "AssertionGroup", "value": "Germline" }
+      { "name": "AssertionGroup", "value": "Germline" },
+      { "name": "PropositionType", "value": "Pathogenicity" }
     ],
-    "id": "RCV001781420-G",
+    "id": "RCV001781420-G-PATH",
     "objectConditionClassification": {
       "type": "ConceptSet",
       "concepts": [
