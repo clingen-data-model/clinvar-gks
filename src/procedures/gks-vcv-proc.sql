@@ -1,10 +1,9 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_vcv_proc`(on_date DATE, debug BOOL)
 BEGIN
   DECLARE query_base STRING;
-  DECLARE query_layer1 STRING;
-  DECLARE query_layer2 STRING;
-  DECLARE query_layer3 STRING;
-  DECLARE query_layer4 STRING;
+  DECLARE query_grouping_base STRING;
+  DECLARE query_grouping_tier STRING;
+  DECLARE query_agg_contribution STRING;
   DECLARE temp_create STRING;
 
   IF debug THEN
@@ -24,7 +23,7 @@ BEGIN
     END IF;
 
     -------------------------------------------------------------------------
-    -- LAYER 1: MATERIALIZE BASE DATA (Metadata Driven)
+    -- GROUPING LAYER: MATERIALIZE BASE DATA (Metadata Driven)
     -- PG and EP are kept as separate submission levels (no PGEP grouping).
     -------------------------------------------------------------------------
     SET query_base = REPLACE("""
@@ -64,12 +63,12 @@ BEGIN
     EXECUTE IMMEDIATE query_base;
 
     -------------------------------------------------------------------------
-    -- LAYER 1: BASE AGGREGATION
+    -- GROUPING LAYER: BASE GROUPING
     -- Only matching submission_levels aggregate together (PG with PG,
     -- EP with EP, CP with CP, etc.). No PGEP grouping.
     -------------------------------------------------------------------------
-    SET query_layer1 = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_vcv_layer1_base_agg` AS
+    SET query_grouping_base = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_vcv_grouping_base_agg` AS
       WITH
       core_agg AS (
           SELECT
@@ -168,14 +167,14 @@ BEGIN
         *
       FROM final_prep
     """, '{S}', rec.schema_name);
-    SET query_layer1 = REPLACE(query_layer1, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_layer1;
+    SET query_grouping_base = REPLACE(query_grouping_base, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_grouping_base;
 
     -------------------------------------------------------------------------
-    -- LAYER 2: TIER AGGREGATOR (Somatic only)
+    -- GROUPING LAYER: TIER GROUPING (Somatic only)
     -------------------------------------------------------------------------
-    SET query_layer2 = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_vcv_layer2_tier_agg` AS
+    SET query_grouping_tier = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_vcv_grouping_tier_agg` AS
       WITH statement_base AS (
           SELECT
             variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
@@ -183,7 +182,7 @@ BEGIN
               tier_priority, prop_display_order, actual_agg_classif_label,
               agg_label_conflicting_explanation, unique_traits, full_scv_ids, id, tier_grouping
             ) ORDER BY tier_priority ASC, ARRAY_LENGTH(full_scv_ids) DESC) as findings
-          FROM `{S}.gks_vcv_layer1_base_agg`
+          FROM `{S}.gks_vcv_grouping_base_agg`
           WHERE tier_grouping IS NOT NULL
           GROUP BY 1, 2, 3, 4, 5, 6
       ),
@@ -217,27 +216,27 @@ BEGIN
         CAST(NULL AS STRING) AS aggregate_review_status
       FROM final_state_prep
     """, '{S}', rec.schema_name);
-    EXECUTE IMMEDIATE query_layer2;
+    EXECUTE IMMEDIATE query_grouping_tier;
 
     -------------------------------------------------------------------------
-    -- LAYER 3: SUBMISSION LEVEL AGGREGATOR
+    -- AGGREGATE CONTRIBUTION LAYER
     -- Winner-takes-all ranking: PG > EP > CP > NOCP > NOCL > FLAG
     -------------------------------------------------------------------------
-    SET query_layer3 = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_vcv_layer3_prop_agg` AS
+    SET query_agg_contribution = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_vcv_aggregate_contribution` AS
       WITH unified_input AS (
           SELECT
             id as source_id, variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             agg_label, agg_label_conflicting_explanation, prop_display_order,
             aggregate_review_status
-          FROM `{S}.gks_vcv_layer2_tier_agg`
-          LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `{S}.gks_vcv_layer1_base_agg` GROUP BY 1) ON prop_type = pt
+          FROM `{S}.gks_vcv_grouping_tier_agg`
+          LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `{S}.gks_vcv_grouping_base_agg` GROUP BY 1) ON prop_type = pt
           UNION ALL
           SELECT
             id as source_id, variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             actual_agg_classif_label as agg_label, agg_label_conflicting_explanation, prop_display_order,
             aggregate_review_status
-          FROM `{S}.gks_vcv_layer1_base_agg`
+          FROM `{S}.gks_vcv_grouping_base_agg`
           WHERE tier_grouping IS NULL
       ),
       ranked_levels AS (
@@ -278,57 +277,7 @@ BEGIN
       FROM winner_takes_all w
       LEFT JOIN non_contributing nc USING (variation_id, statement_group, prop_type)
     """, '{S}', rec.schema_name);
-    EXECUTE IMMEDIATE query_layer3;
-
-    -------------------------------------------------------------------------
-    -- LAYER 4: FINAL GROUP AGGREGATOR (Germline only)
-    -------------------------------------------------------------------------
-    SET query_layer4 = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_vcv_layer4_group_agg` AS
-      WITH ranked_props AS (
-          SELECT rp.*,
-            RANK() OVER(PARTITION BY rp.variation_id, rp.statement_group
-              ORDER BY CASE rp.contributing_submission_level
-                WHEN 'PG' THEN 6
-                WHEN 'EP' THEN 5
-                WHEN 'CP' THEN 4
-                WHEN 'NOCP' THEN 3
-                WHEN 'NOCL' THEN 2
-                WHEN 'FLAG' THEN 1
-                ELSE 0
-              END DESC) as grp_rnk
-          FROM `{S}.gks_vcv_layer3_prop_agg` rp
-          WHERE rp.statement_group = 'G'
-      ),
-      contributing_props AS (
-          SELECT variation_id, vcv_accession, full_vcv_id, statement_group,
-            ARRAY_AGG(id) as contributing_layer3_ids,
-            ARRAY_TO_STRING(ARRAY_AGG(agg_label ORDER BY prop_display_order ASC), '; ') as agg_label,
-            NULLIF(ARRAY_TO_STRING(ARRAY_AGG(agg_label_conflicting_explanation IGNORE NULLS ORDER BY prop_display_order ASC), '; '), '') as agg_label_conflicting_explanation,
-            ANY_VALUE(aggregate_review_status) AS aggregate_review_status
-          FROM ranked_props
-          WHERE grp_rnk = 1
-          GROUP BY 1, 2, 3, 4
-      ),
-      non_contributing_props AS (
-          SELECT variation_id, statement_group,
-            ARRAY_AGG(STRUCT(id as layer_id, contributing_submission_level as submission_level, agg_label, agg_label_conflicting_explanation)) as non_contributing_details
-          FROM ranked_props
-          WHERE grp_rnk > 1
-          GROUP BY 1, 2
-      )
-      SELECT
-        FORMAT('%s-%s', c.full_vcv_id, c.statement_group) AS id,
-        FORMAT('%s-%s', c.vcv_accession, c.statement_group) AS prop_id,
-        c.variation_id, c.full_vcv_id, c.statement_group,
-        c.agg_label, c.agg_label_conflicting_explanation,
-        c.contributing_layer3_ids,
-        c.aggregate_review_status,
-        COALESCE(nc.non_contributing_details, []) as non_contributing_details
-      FROM contributing_props c
-      LEFT JOIN non_contributing_props nc USING (variation_id, statement_group)
-    """, '{S}', rec.schema_name);
-    EXECUTE IMMEDIATE query_layer4;
+    EXECUTE IMMEDIATE query_agg_contribution;
 
     IF NOT debug THEN
       DROP TABLE _SESSION.temp_vcv_base_data;
