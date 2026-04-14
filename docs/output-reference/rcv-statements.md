@@ -173,15 +173,14 @@ Evidence lines work identically to VCV — see [VCV Evidence Lines](vcv-statemen
 
 ## Layer Hierarchy
 
-RCV statements use the same 4-layer aggregation hierarchy as VCV, with condition (`trait_set_id`) as an additional grouping dimension at every layer.
+RCV statements use the same 2-layer aggregation hierarchy as VCV, with condition (`trait_set_id`) as an additional grouping dimension at every layer.
 
 | Layer | ID Format | Aggregates By | Scope |
 | --- | --- | --- | --- |
-| L4 (Group) | `RCV001781420.1-G` | Statement group | Germline only |
-| L3 (Submission Level) | `RCV001781420.1-G-PATH` | Proposition type | All |
-| L2 (Tier) | `RCV006254391.1-S-SCI-CP` | Submission level | Somatic only |
-| L1 (Base) | `RCV006254391.1-S-SCI-CP-TIER I - STRONG` | Submission level + tier | All |
+| Aggregate Contribution | `RCV001781420.1-G-PATH` | Proposition type | All |
+| Tier Grouping | `RCV006254391.1-S-SCI-CP` | Submission level | Somatic only |
+| Base Grouping | `RCV006254391.1-S-SCI-CP-TIER I - STRONG` | Submission level + tier | All |
 
-Germline RCV statements use Layer 4 as the top level. Somatic RCV statements use Layer 3 as the top level.
+Both germline and somatic RCV statements use the Aggregate Contribution Layer as the top level.
 
 See [RCV Procedures](../pipeline/rcv-statements/rcv-proc.md) for implementation details.

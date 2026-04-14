@@ -94,7 +94,7 @@ Each VCV statement contains `evidenceLines` — an array of evidence line object
 | `strengthOfEvidenceProvided` | string | `contributing` or `non-contributing` — indicates whether this evidence contributed to the aggregate classification |
 | `evidenceItems` | array | Array of referenced statements from the layer below — either full inlined sub-statements or leaf-level SCV ID references |
 
-At the top layer (L4 for germline, L3 for somatic), evidence items contain fully inlined sub-statements with their own classification, proposition, extensions, and nested evidence lines. At the bottom layer (L1), evidence items are ID-only references to individual SCV submissions:
+At the top layer (the Aggregate Contribution Layer for both germline and somatic), evidence items contain fully inlined sub-statements with their own classification, proposition, extensions, and nested evidence lines. At the bottom layer (Base Grouping), evidence items are ID-only references to individual SCV submissions:
 
 ```json
 {"id": "clinvar.submission:SCV001571657.2"}
@@ -106,15 +106,14 @@ These references resolve to full SCV records in `scv_by_ref.jsonl.gz`. See [ID R
 
 ## Layer Hierarchy
 
-VCV statements are built through a 4-layer aggregation hierarchy. The top-level record is the outermost layer; each nested evidence item is one layer deeper.
+VCV statements are built through a 2-layer aggregation hierarchy. The top-level record is the outermost layer; each nested evidence item is one layer deeper.
 
 | Layer | ID Format | Aggregates By | Scope |
 | --- | --- | --- | --- |
-| L4 (Group) | `VCV000012582.63-G` | Statement group | Germline only |
-| L3 (Submission Level) | `VCV000012582.63-G-PATH` | Proposition type | All |
-| L2 (Tier) | `VCV000012582.63-G-SCI-CP` | Submission level | Somatic only |
-| L1 (Base) | `VCV000012582.63-G-SCI-CP-PATHOGENIC` | Submission level + tier | All |
+| Aggregate Contribution | `VCV000012582.63-G-PATH` | Proposition type | All |
+| Tier Grouping | `VCV000012582.63-G-SCI-CP` | Submission level | Somatic only |
+| Base Grouping | `VCV000012582.63-G-SCI-CP-PATHOGENIC` | Submission level + tier | All |
 
-Germline VCV statements use Layer 4 as the top level. Somatic VCV statements use Layer 3 as the top level (no Layer 4 for somatic). Layer 1 tier components are uppercase (e.g., `PATHOGENIC`). Submission level ranking at Layer 3 is `PG > EP > CP > NOCP > NOCL > FLAG`, with only matching submission levels aggregating together at Layer 1.
+Both germline and somatic VCV statements use the Aggregate Contribution Layer as the top level. Tier Grouping tier components are uppercase (e.g., `PATHOGENIC`). Submission level ranking at the Aggregate Contribution Layer is `PG > EP > CP > NOCP > NOCL > FLAG`, with only matching submission levels aggregating together at Base Grouping.
 
 See [Aggregation Rules](../pipeline/vcv-statements/vcv-aggregation-rules.md) for detailed submission level logic and [VCV Procedures](../pipeline/vcv-statements/vcv-proc.md) for implementation details.
