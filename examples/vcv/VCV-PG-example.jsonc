@@ -1,7 +1,7 @@
 {
-  // Hypothetical PG (practice guideline) VCV statement example - Layer 1 Base
+  // Hypothetical PG (practice guideline) VCV statement example - Grouping Layer — Base Grouping
   // PG and EP are now treated as separate submission levels (no PGEP grouping).
-  // PG always wins at Layer 3 over EP, CP, NOCP, NOCL, FLAG.
+  // PG always wins at Aggregate Contribution Layer over EP, CP, NOCP, NOCL, FLAG.
   "classification_mappableConcept": {
     "conceptType": "Classification",
     "name": "Pathogenic"
