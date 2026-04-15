@@ -56,9 +56,13 @@ No change. RCV is already scoped to a single condition per accession. The existi
   - Aggregate Contribution: winning submission level's label — requires a new join to `submission_level` on `agg.contributing_submission_level = sl.code` (not currently present in Aggregate Contribution statement queries)
 - Non-contributing evidence lines carry confidence from their own layer — each layer sets its own confidence at the BASE step, and the PRE inlining carries it forward automatically
 
-### Direction and Strength Mapping
+### Single-SCV Passthrough Rule
 
-The `direction` and `strength` values are derived from the aggregate classification label (the `agg_label` / `actual_agg_classif_label` value). This mapping is applied at every aggregate layer.
+When a Base Grouping contains exactly one contributing SCV, the aggregate statement inherits the SCV's `direction`, `strength`, and full `proposition` structure identically. The `confidence` is still set to the submission level label. The direction/strength mapping table below only applies when multiple SCVs are aggregated.
+
+### Direction and Strength Mapping (Multiple SCVs)
+
+When multiple SCVs are aggregated, the `direction` and `strength` values are derived from the aggregate classification label (the `agg_label` / `actual_agg_classif_label` value). This mapping is applied at every aggregate layer.
 
 | Classification Label | direction | strength |
 | --- | --- | --- |
@@ -73,6 +77,12 @@ The `direction` and `strength` values are derived from the aggregate classificat
 | All others | supports | definitive |
 
 Null strength values are omitted from JSON output by `JSON_STRIP_NULLS`.
+
+### SCV Statement Changes
+
+SCV statements also gain the `confidence` attribute. The submission level value currently stored in the `clinvarReviewStatus` extension moves to `confidence` on the SCV statement. This ensures a consistent `confidence` attribute across SCV and aggregate statements.
+
+**Note:** This is a change to `gks_scv_statement_proc`, not the aggregate procedures. The SCV `direction` and `strength` values remain unchanged (they are already derived from the classification at the SCV level).
 
 ## Proposition Type and Predicate Mapping
 
@@ -254,8 +264,9 @@ Note: `direction` is `"supports"` and `strength` is `"definitive"` because "Path
 - `clinvar_proposition_types` — add `gks_type` and `gks_predicate` columns
 
 ### SQL Procedures
+- `src/procedures/gks-scv-statement-proc.sql` — add `confidence` attribute (submission level label); remove submission level from `clinvarReviewStatus` extension
 - `src/procedures/gks-vcv-proc.sql` — add condition collection to base data and Base Grouping; carry conditions through Tier Grouping and Aggregate Contribution
-- `src/procedures/gks-vcv-statement-proc.sql` — replace proposition structure at all layers (type, predicate, objectCondition); change strength to submission level label; remove aggregateQualifiers
+- `src/procedures/gks-vcv-statement-proc.sql` — replace proposition structure at all layers (type, predicate, objectCondition); add confidence; derive direction/strength from classification (with single-SCV passthrough); remove aggregateQualifiers
 - `src/procedures/gks-rcv-proc.sql` — no structural changes needed (conditions already scoped by RCV)
 - `src/procedures/gks-rcv-statement-proc.sql` — replace proposition structure at all layers (type, predicate, objectCondition from existing condition data); change strength to submission level label; remove aggregateQualifiers and objectConditionClassification
 - `src/procedures/gks-json-proc.sql` — no changes needed (operates on generic JSON serialization via `JSON_STRIP_NULLS(TO_JSON(...))`)
