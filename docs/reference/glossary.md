@@ -94,10 +94,10 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   Higher-level grouping that associates a ClinVar variation with its resolved VRS representation. Types: CanonicalAllele, CategoricalCnvChange, CategoricalCnvCount.
 
 **MappableConcept**
-:   A single concept with `conceptType`, `name`, and optional `extension` array. Used for single-label classifications and objectClassification.
+:   A single concept with `conceptType`, `name`, and optional `extension` array. Used for single-label classifications and single-condition `objectCondition` values.
 
 **ConceptSet**
-:   A structured group of concepts with `membershipOperator` (AND). Used for multi-concept classifications such as RCV's `objectConditionClassification` (combining condition and classification).
+:   A structured group of concepts with `membershipOperator`. Used for multi-condition `objectCondition` values (OR operator for VCV with multiple distinct conditions; AND operator for RCV conditionSets).
 
 **Constraint** (Cat-VRS)
 :   Defining relationship between a categorical variant and its VRS representation. Types: DefiningAlleleConstraint, DefiningLocationConstraint, CopyChangeConstraint, CopyCountConstraint.
@@ -127,9 +127,6 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 **VariantPrognosticProposition**
 :   Proposition type for prognostic assertions. Statement type S.14.
 
-**VariantAggregateClassificationProposition**
-:   Proposition type used in VCV aggregate statements. Predicate: `hasAggregateClassification`.
-
 **ClinVar\*Proposition**
 :   Custom proposition types for non-standard ClinVar statement types (G.02-G.09): Drug Response, Risk Factor, Protective, Affects, Association, Confers Sensitivity, Other, Not Provided.
 
@@ -137,11 +134,14 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 
 ## Classification Terms
 
+**Confidence**
+:   Statement-level attribute indicating the submission level label for the contributing submission (e.g., `"expert panel"`, `"assertion criteria provided"`). Present on both SCV and aggregate (VCV/RCV) statements.
+
 **Direction**
-:   Whether evidence supports or disputes a proposition. Values: `supports`, `disputes`, `neutral`.
+:   Whether evidence supports or disputes a proposition. Values: `supports`, `disputes`, `neutral`. On aggregate statements, derived from the classification label (multi-SCV) or passed through from the contributing SCV (single-SCV).
 
 **Strength**
-:   Evidence strength level. Values: `definitive`, `likely`, `strong`, `potential`. Omitted (null) when not applicable.
+:   Evidence strength level. Values: `definitive`, `likely`, `strong`, `potential`. Omitted (null) when not applicable. On aggregate statements, derived from the classification label (multi-SCV) or passed through from the contributing SCV (single-SCV).
 
 **Tier I** / **Tier II** / **Tier III** / **Tier IV**
 :   Somatic clinical impact classification levels. Tier I (Strong) and Tier II (Potential) require paired sub-statements. Tier III (Unknown) and Tier IV (Benign/Likely benign) do not.
@@ -164,9 +164,6 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 
 **Penetrance Qualifier**
 :   Proposition qualifier indicating penetrance level for pathogenic or risk allele classifications. Values: `low`, `risk`.
-
-**Aggregate Qualifiers**
-:   Array on VCV propositions containing context qualifiers: AssertionGroup, PropositionType, SubmissionLevel, ClassificationTier.
 
 ---
 
@@ -201,13 +198,13 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 
 ---
 
-## Classification Attributes (VCV)
+## Classification Attributes (VCV/RCV)
 
 **classification**
-:   VCV/RCV classification attribute. Contains a single aggregate label with optional `conflictingExplanation` extension.
+:   VCV/RCV statement-level classification attribute. Contains a single aggregate label with optional `conflictingExplanation` extension. The classification lives only on the statement, not on the proposition.
 
-**objectClassification**
-:   VCV proposition classification attribute. A MappableConcept matching the statement classification, without extensions.
+**objectCondition**
+:   VCV/RCV proposition attribute. Contains the unique condition(s) associated with the aggregate statement. For VCV, this is a single MappableConcept or an OR ConceptSet of distinct conditions from contributing SCVs. For RCV, this is the condition sourced from `gks_scv_condition_sets` — either a `Condition` MappableConcept or a `ConditionSet` ConceptSet. Extensions excluded.
 
 ---
 

@@ -109,15 +109,18 @@ Each BASE section reads from the corresponding aggregation table and produces a 
 | Field | Description |
 |---|---|
 | `classification` | A simple Classification concept with `name` and optional `conflictingExplanation` extension |
-| `proposition` | Contains `objectClassification` (a MappableConcept matching the statement classification), `aggregateQualifiers` (assertion group, proposition type, submission level, and optional tier), and `subjectVariant` reference |
+| `confidence` | The submission level label (e.g., `"expert panel"`, `"assertion criteria provided"`) |
+| `direction` | Derived from the classification label; passed through from the contributing SCV for single-SCV aggregations |
+| `strength` | Derived from the classification label; passed through from the contributing SCV for single-SCV aggregations |
+| `proposition` | Contains `objectCondition` (the unique conditions from contributing SCVs — a single MappableConcept or an OR ConceptSet), the SCV-matching proposition type from `clinvar_proposition_types.gks_type`, the SCV-matching predicate from `clinvar_proposition_types.gks_predicate`, and `subjectVariant` reference |
 | `extensions` | Array with `clinvarReviewStatus` value |
 | `evidenceLines` | References to child layer IDs (SCV IDs for Base Grouping, contributing/non-contributing statement IDs for Tier Grouping and Aggregate Contribution) |
 
 Step-specific differences:
 
-- **Base Grouping BASE** -- references SCV IDs directly in evidence lines; includes `ClassificationTier` qualifier for tiered records
+- **Base Grouping BASE** -- references SCV IDs directly in evidence lines; includes tier info in the proposition for tiered records
 - **Tier Grouping BASE** -- references Base Grouping IDs; somatic only; includes contributing and non-contributing evidence lines
-- **Aggregate Contribution BASE** -- references a single contributing child (from Tier Grouping or Base Grouping) plus non-contributing details; `aggregateQualifiers` omit `SubmissionLevel` (since this step aggregates across levels)
+- **Aggregate Contribution BASE** -- references a single contributing child (from Tier Grouping or Base Grouping) plus non-contributing details
 
 **Output:** `temp_vcv_grouping_base_statements`, `temp_vcv_grouping_tier_statements`, `temp_vcv_agg_contribution_statements` -- one per step. <span class="role-badge badge-internal">Internal</span>
 
@@ -125,7 +128,7 @@ Step-specific differences:
 
 ### Grouping Base PRE
 
-Inlines SCV evidence items into each Base Grouping BASE statement. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification` and `proposition` fields are carried forward from the BASE statement unchanged.
+Inlines SCV evidence items into each Base Grouping BASE statement. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification`, `confidence`, `direction`, `strength`, and `proposition` fields are carried forward from the BASE statement unchanged.
 
 **Output:** `temp_vcv_grouping_base_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -133,7 +136,7 @@ Inlines SCV evidence items into each Base Grouping BASE statement. Evidence line
 
 ### Grouping Tier PRE
 
-Inlines Grouping Base PRE evidence items into Tier Grouping statements. This step is somatic only. Classification and objectClassification are passed through without modification.
+Inlines Grouping Base PRE evidence items into Tier Grouping statements. This step is somatic only. Classification, confidence, direction, strength, and proposition are passed through without modification.
 
 Contributing and non-contributing evidence lines are rebuilt with the full inlined Grouping Base PRE statement structures.
 
@@ -143,7 +146,7 @@ Contributing and non-contributing evidence lines are rebuilt with the full inlin
 
 ### Aggregate Contribution PRE
 
-Inlines evidence items from either Grouping Tier PRE or Grouping Base PRE (using COALESCE to check Tier Grouping first, then Base Grouping). Classification and objectClassification on the Aggregate Contribution statement are taken directly from the Aggregate Contribution BASE row and are not modified at the PRE step.
+Inlines evidence items from either Grouping Tier PRE or Grouping Base PRE (using COALESCE to check Tier Grouping first, then Base Grouping). Classification, confidence, direction, strength, and proposition on the Aggregate Contribution statement are taken directly from the Aggregate Contribution BASE row and are not modified at the PRE step.
 
 **Output:** `temp_vcv_agg_contribution_pre` <span class="role-badge badge-internal">Internal</span>
 

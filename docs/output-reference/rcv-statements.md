@@ -7,7 +7,7 @@ The RCV statement output contains one JSON record per condition-level aggregate 
 RCV statements differ from VCV statements in two important ways:
 
 1. **Condition-scoped aggregation** — each RCV is scoped to a specific condition (identified by `trait_set_id`), whereas VCV statements aggregate across all conditions for a variant.
-2. **Simplified proposition structure** — the proposition uses a single `objectConditionClassification` ConceptSet that always contains exactly **2 concepts**: the condition (sourced directly from the SCV's actual condition or conditionSet) and the aggregate Classification. PG and EP are independent submission levels in RCV.
+2. **Condition-only proposition object** — the proposition uses `objectCondition` containing just the condition (sourced directly from the SCV's actual condition or conditionSet), without a classification wrapped alongside it. PG and EP are independent submission levels in RCV.
 
 RCV statements are produced by the [RCV Procedures](../pipeline/rcv-statements/rcv-proc.md) and serialized via the JSON proc. The output table is `gks_rcv_statement`.
 
@@ -23,10 +23,11 @@ Each record is a `Statement` with the following top-level fields:
 | --- | --- | --- |
 | `id` | string | RCV accession with version and aggregation path — e.g., `RCV001781420.1-G-PATH` |
 | `type` | string | Always `Statement` |
-| `direction` | string | Always `supports` |
-| `strength` | string | Always `definitive` |
+| `confidence` | string | The submission level label (e.g., `"expert panel"`, `"assertion criteria provided"`) |
+| `direction` | string | Derived from the aggregate classification label; passed through from the contributing SCV for single-SCV aggregations |
+| `strength` | string | Derived from the aggregate classification label; passed through from the contributing SCV for single-SCV aggregations |
 | `classification` | object | Aggregate classification label as MappableConcept. See [Classification](#classification) |
-| `proposition` | object | The aggregate proposition with variant, objectConditionClassification, and qualifiers. See [Proposition](#proposition) |
+| `proposition` | object | The aggregate proposition with variant, objectCondition, and SCV-matching type/predicate. See [Proposition](#proposition) |
 | `extensions` | array | Aggregate metadata — `clinvarReviewStatus` |
 | `evidenceLines` | array | Contributing and non-contributing evidence from lower aggregation layers |
 
@@ -70,57 +71,45 @@ Examples:
 - `Tier I - Strong - therapeutic - sensitivity/response (2)`
 - `Tier II - Potential - prognostic - poor outcome (1)`
 
-The condition/tumor name is not included in the classification label because it is already represented in the `objectConditionClassification` ConceptSet within the proposition.
+The condition/tumor name is not included in the classification label because it is already represented in the `objectCondition` field within the proposition.
 
 ---
 
 ## Proposition
 
-The `proposition` describes the condition-specific aggregate classification claim. RCV uses a single `objectConditionClassification` ConceptSet that combines the condition and classification as its two member concepts.
+The `proposition` describes the condition-specific aggregate classification claim. It uses an SCV-matching proposition `type` and `predicate` (from `clinvar_proposition_types`) and carries an `objectCondition` containing just the condition.
 
 <div class="field-table" markdown>
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `type` | string | Always `VariantAggregateConditionClassificationProposition` |
+| `type` | string | SCV-matching proposition type from `clinvar_proposition_types.gks_type` — e.g., `VariantPathogenicityProposition` |
 | `id` | string | Proposition ID — RCV accession without version, dash-separated (e.g., `RCV001781420-G-PATH-CP`) |
 | `subjectVariant` | string | Reference to the categorical variant — `clinvar:{variation_id}` |
-| `predicate` | string | Always `hasAggregateConditionClassification` |
-| `objectConditionClassification` | object | ConceptSet with exactly 2 concepts: the SCV's condition (or conditionSet) and the classification. See [objectConditionClassification](#objectconditionclassification) |
-| `aggregateQualifiers` | array | Context qualifiers — AssertionGroup, PropositionType, SubmissionLevel, ClassificationTier |
+| `predicate` | string | SCV-matching predicate from `clinvar_proposition_types.gks_predicate` — e.g., `isCausalFor` |
+| `objectCondition` | object | The condition for this RCV, sourced from `gks_scv_condition_sets`. See [objectCondition](#objectcondition) |
 
 </div>
 
-### objectConditionClassification
+### objectCondition
 
-`objectConditionClassification` is always a ConceptSet with exactly 2 concepts in this order:
+`objectCondition` is the actual SCV condition, sourced from `gks_scv_condition_sets`. It may be either:
 
-1. **Condition** — the actual SCV condition, sourced from `gks_scv_condition_sets`. May be either:
-    - A full `Condition` MappableConcept (id, name, conceptType, primaryCoding, mappings)
-    - Or a full `ConditionSet` ConceptSet of conditions (id, conditions array, membershipOperator) — for SCVs with multiple conditions
-   Extensions are excluded.
-2. **Classification** — the aggregate Classification (matching `classification.name`).
+- A full `Condition` MappableConcept (id, name, conceptType, primaryCoding, mappings) — for SCVs with a single condition
+- A full `ConditionSet` ConceptSet of conditions (id, conditions array, membershipOperator) — for SCVs with multiple conditions
+
+Extensions are excluded. The classification is **not** included in `objectCondition` — it lives on the statement-level `classification` field.
 
 Single condition example:
 
 ```json
 {
-  "objectConditionClassification": {
-    "type": "ConceptSet",
-    "concepts": [
-      {
-        "conceptType": "Disease",
-        "id": "12345",
-        "name": "Hereditary breast and ovarian cancer syndrome",
-        "primaryCoding": {"code": "C0677776", "system": "MedGen"},
-        "mappings": [...]
-      },
-      {
-        "conceptType": "Classification",
-        "name": "Pathogenic/Likely pathogenic"
-      }
-    ],
-    "membershipOperator": "AND"
+  "objectCondition": {
+    "conceptType": "Disease",
+    "id": "12345",
+    "name": "Hereditary breast and ovarian cancer syndrome",
+    "primaryCoding": {"code": "C0677776", "system": "MedGen"},
+    "mappings": [...]
   }
 }
 ```
@@ -129,29 +118,19 @@ Multi-condition example (when the SCV uses a conditionSet):
 
 ```json
 {
-  "objectConditionClassification": {
+  "objectCondition": {
     "type": "ConceptSet",
-    "concepts": [
-      {
-        "type": "ConceptSet",
-        "id": "tsid_999",
-        "conditions": [
-          {"conceptType": "Disease", "id": "1", "name": "Condition A", "primaryCoding": {...}},
-          {"conceptType": "Disease", "id": "2", "name": "Condition B", "primaryCoding": {...}}
-        ],
-        "membershipOperator": "AND"
-      },
-      {
-        "conceptType": "Classification",
-        "name": "Pathogenic"
-      }
+    "id": "tsid_999",
+    "conditions": [
+      {"conceptType": "Disease", "id": "1", "name": "Condition A", "primaryCoding": {...}},
+      {"conceptType": "Disease", "id": "2", "name": "Condition B", "primaryCoding": {...}}
     ],
     "membershipOperator": "AND"
   }
 }
 ```
 
-This structure is consistent across all aggregation steps — RCV uses the same ConceptSet form at every level regardless of submission level.
+This structure is consistent across all aggregation steps — RCV uses the same condition-only form at every level regardless of submission level.
 
 ---
 

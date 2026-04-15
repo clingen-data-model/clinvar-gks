@@ -97,7 +97,7 @@ Passthrough with no aggregation logic.
 
 ## Classification Output
 
-Every VCV statement uses a single `classification` attribute to represent its aggregate classification. The proposition uses a matching single `objectClassification` field.
+Every VCV statement uses a single `classification` attribute to represent its aggregate classification. The classification lives only on the statement — the proposition does not carry a copy of the classification value.
 
 ### `classification`
 
@@ -117,9 +117,13 @@ Used by all submission levels (PG, EP, CP, NOCP, NOCL, and FLAG). Contains a sin
 
 The `extension` array is only present when the classification is conflicting.
 
-### Proposition `objectClassification`
+### `confidence`, `direction`, and `strength`
 
-The proposition contains an `objectClassification` MappableConcept with the same name as the statement-level `classification` but without the `conflictingExplanation` extension.
+These statement-level fields are derived from the aggregate classification label:
+
+- **`confidence`** — the submission level label (e.g., `"expert panel"`, `"assertion criteria provided"`). Set on every VCV statement.
+- **`direction`** — derived from the classification label. For single-SCV aggregations, passed through directly from the contributing SCV. For multi-SCV aggregations, derived from the winning label.
+- **`strength`** — derived from the classification label. For single-SCV aggregations, passed through directly from the contributing SCV. For multi-SCV aggregations, derived from the winning label. No hardcoded `"definitive"` value.
 
 ---
 

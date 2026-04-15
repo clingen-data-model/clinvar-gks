@@ -104,7 +104,7 @@ ID format: `{RCV}.{ver}-{group}-{prop}`
 
 This procedure transforms the aggregation tables produced by `gks_rcv_proc` into GKS-formatted RCV statements. It resolves condition data, generates statement structures at each layer (BASE), inlines evidence items into nested structures (PRE), then combines the results into a final output table.
 
-PG and EP are independent submission levels. Each produces a single aggregate label and a single `objectConditionClassification` ConceptSet at every layer, using the same structure as every other submission level.
+PG and EP are independent submission levels. Each produces a single aggregate label and a single `objectCondition` value at every layer, using the same structure as every other submission level.
 
 The procedure executes 8 sections: condition data resolution, three BASE steps, three PRE steps, and one FINAL section.
 
@@ -112,7 +112,7 @@ The procedure executes 8 sections: condition data resolution, three BASE steps, 
 
 ### Condition Data Resolution
 
-Before building statement structures, the procedure materializes `temp_rcv_condition_data` by joining `rcv_mapping` (unnesting `scv_accessions`) with `gks_scv_condition_sets` and selecting one representative SCV per RCV. This table provides the full condition concept (a `Condition` MappableConcept or a `ConditionSet` ConceptSet, with extensions excluded) needed to populate `objectConditionClassification` in the proposition.
+Before building statement structures, the procedure materializes `temp_rcv_condition_data` by joining `rcv_mapping` (unnesting `scv_accessions`) with `gks_scv_condition_sets` and selecting one representative SCV per RCV. This table provides the full condition concept (a `Condition` MappableConcept or a `ConditionSet` ConceptSet, with extensions excluded) needed to populate `objectCondition` in the proposition.
 
 **Output:** `temp_rcv_condition_data` -- condition concept per RCV accession. <span class="role-badge badge-internal">Internal</span>
 
@@ -125,22 +125,20 @@ Each BASE section reads from the corresponding aggregation table and produces a 
 | Field | Description |
 |---|---|
 | `classification` | A Classification concept with `name` (the aggregate label) and optional `conflictingExplanation` extension. Used at every layer for every submission level |
-| `proposition` | Contains `objectConditionClassification` (a ConceptSet with exactly 2 concepts: the SCV's actual condition or conditionSet plus the aggregate Classification), `aggregateQualifiers`, `subjectVariant` reference, type `VariantAggregateConditionClassificationProposition`, and predicate `hasAggregateConditionClassification` |
+| `confidence` | The submission level label (e.g., `"expert panel"`, `"assertion criteria provided"`) |
+| `direction` | Derived from the classification label; passed through from the contributing SCV for single-SCV aggregations |
+| `strength` | Derived from the classification label; passed through from the contributing SCV for single-SCV aggregations |
+| `proposition` | Contains `objectCondition` (the condition from `temp_rcv_condition_data` -- either a `Condition` MappableConcept or a `ConditionSet` ConceptSet, extensions excluded), the SCV-matching proposition type from `clinvar_proposition_types.gks_type`, the SCV-matching predicate from `clinvar_proposition_types.gks_predicate`, and `subjectVariant` reference |
 | `extensions` | Array with `clinvarReviewStatus` value |
 | `evidenceLines` | References to child IDs (SCV IDs for Base Grouping, contributing/non-contributing statement IDs for Tier Grouping and Aggregate Contribution) |
 
-The `objectConditionClassification` ConceptSet is built by combining the SCV's condition (from `temp_rcv_condition_data`) with the aggregate classification label as a two-concept AND-group:
-
-1. The SCV's actual condition -- either a `Condition` MappableConcept or a `ConditionSet` ConceptSet of conditions (extensions excluded)
-2. A Classification concept (from the aggregate label)
-
-This same structure is produced at every step with no recombination.
+The `objectCondition` value is the SCV's condition sourced from `temp_rcv_condition_data` -- just the condition itself, not wrapped with a classification. This same structure is produced at every step with no recombination.
 
 Step-specific differences:
 
-- **Base Grouping BASE** -- references SCV IDs directly in evidence lines; includes `ClassificationTier` qualifier for tiered records
+- **Base Grouping BASE** -- references SCV IDs directly in evidence lines; includes tier info in the proposition for tiered records
 - **Tier Grouping BASE** -- references Base Grouping IDs; somatic only; includes contributing and non-contributing evidence lines
-- **Aggregate Contribution BASE** -- references a single contributing child (from Tier Grouping or Base Grouping) plus non-contributing details; `aggregateQualifiers` omit `SubmissionLevel` (since this step aggregates across levels)
+- **Aggregate Contribution BASE** -- references a single contributing child (from Tier Grouping or Base Grouping) plus non-contributing details
 
 **Output:** `temp_rcv_grouping_base_statements`, `temp_rcv_grouping_tier_statements`, `temp_rcv_agg_contribution_statements` -- one per step. <span class="role-badge badge-internal">Internal</span>
 
@@ -148,7 +146,7 @@ Step-specific differences:
 
 ### Base Grouping PRE
 
-Inlines SCV evidence items from `gks_scv_statement_pre`. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification` and `proposition` fields are carried forward unchanged from the BASE.
+Inlines SCV evidence items from `gks_scv_statement_pre`. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification`, `confidence`, `direction`, `strength`, and `proposition` fields are carried forward unchanged from the BASE.
 
 **Output:** `temp_rcv_grouping_base_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -156,7 +154,7 @@ Inlines SCV evidence items from `gks_scv_statement_pre`. Evidence lines are rewr
 
 ### Tier Grouping PRE
 
-Inlines Base Grouping PRE evidence items into Tier Grouping statements (somatic only). The `classification` and `proposition` fields are passed through unchanged. Contributing and non-contributing evidence lines are rebuilt with the full inlined Base Grouping PRE statement structures.
+Inlines Base Grouping PRE evidence items into Tier Grouping statements (somatic only). The `classification`, `confidence`, `direction`, `strength`, and `proposition` fields are passed through unchanged. Contributing and non-contributing evidence lines are rebuilt with the full inlined Base Grouping PRE statement structures.
 
 **Output:** `temp_rcv_grouping_tier_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -164,7 +162,7 @@ Inlines Base Grouping PRE evidence items into Tier Grouping statements (somatic 
 
 ### Aggregate Contribution PRE
 
-Inlines evidence items from either Tier Grouping PRE or Base Grouping PRE (using COALESCE to check Tier Grouping first, then Base Grouping). The `classification` and `proposition` fields are passed through unchanged from the BASE -- RCV uses a single ConceptSet form at every step.
+Inlines evidence items from either Tier Grouping PRE or Base Grouping PRE (using COALESCE to check Tier Grouping first, then Base Grouping). The `classification`, `confidence`, `direction`, `strength`, and `proposition` fields are passed through unchanged from the BASE.
 
 **Output:** `temp_rcv_agg_contribution_pre` <span class="role-badge badge-internal">Internal</span>
 
