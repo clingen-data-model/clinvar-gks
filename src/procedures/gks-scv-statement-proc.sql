@@ -584,6 +584,7 @@ BEGIN
           ) as primaryCoding
         ) as strength,
         scv.direction,
+        scv.submission_level_label as confidence,
         scv.classification_comment as description,
         [
           STRUCT(
