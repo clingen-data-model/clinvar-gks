@@ -1,6 +1,4 @@
 {
-  // Aggregate Contribution Layer — Germline Pathogenicity
-  // This is a CP-level variant with contributing (criteria provided) and non-contributing (no assertion criteria) evidence
   "classification": {
     "conceptType": "Classification",
     "name": "Pathogenic/Likely pathogenic"
@@ -8,7 +6,6 @@
   "direction": "supports",
   "evidenceLines": [
     {
-      // Base Grouping — criteria provided, contributing
       "directionOfEvidenceProvided": "supports",
       "evidenceItems": [
         {
@@ -16,22 +13,26 @@
             "conceptType": "Classification",
             "name": "Pathogenic/Likely pathogenic"
           },
+          "confidence": "criteria provided",
           "direction": "supports",
           "evidenceLines": [
             {
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "id": "clinvar.submission:SCV002601600.1"
-                },
-                {
-                  "id": "clinvar.submission:SCV005634967.1"
-                },
-                {
-                  "id": "clinvar.submission:SCV005023563.1"
-                },
-                {
                   "id": "clinvar.submission:SCV002525678.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004176950.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000659085.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV005044128.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002318898.3"
                 },
                 {
                   "id": "clinvar.submission:SCV001736991.1"
@@ -40,25 +41,22 @@
                   "id": "clinvar.submission:SCV002821689.24"
                 },
                 {
-                  "id": "clinvar.submission:SCV000659085.3"
+                  "id": "clinvar.submission:SCV002601600.1"
                 },
                 {
-                  "id": "clinvar.submission:SCV006304919.1"
+                  "id": "clinvar.submission:SCV005414064.1"
                 },
                 {
-                  "id": "clinvar.submission:SCV004176950.1"
-                },
-                {
-                  "id": "clinvar.submission:SCV002318898.3"
+                  "id": "clinvar.submission:SCV005634967.1"
                 },
                 {
                   "id": "clinvar.submission:SCV000329383.7"
                 },
                 {
-                  "id": "clinvar.submission:SCV005044128.1"
+                  "id": "clinvar.submission:SCV005023563.1"
                 },
                 {
-                  "id": "clinvar.submission:SCV005414064.1"
+                  "id": "clinvar.submission:SCV006304919.1"
                 }
               ],
               "strengthOfEvidenceProvided": "contributing",
@@ -73,30 +71,12 @@
           ],
           "id": "VCV000012582.63-G-PATH-CP",
           "proposition": {
-            "aggregateQualifiers": [
-              {
-                "name": "AssertionGroup",
-                "value": "Germline"
-              },
-              {
-                "name": "PropositionType",
-                "value": "Pathogenicity"
-              },
-              {
-                "name": "SubmissionLevel",
-                "value": "criteria provided"
-              }
-            ],
             "id": "VCV000012582-G-PATH-CP",
-            "objectClassification": {
-              "conceptType": "Classification",
-              "name": "Pathogenic/Likely pathogenic"
-            },
-            "predicate": "hasAggregateClassification",
+            "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+            "predicate": "isCausalFor",
             "subjectVariant": "clinvar:12582",
-            "type": "VariantAggregateClassificationProposition"
+            "type": "VariantPathogenicityProposition"
           },
-          "strength": "definitive",
           "type": "Statement"
         }
       ],
@@ -104,7 +84,6 @@
       "type": "EvidenceLine"
     },
     {
-      // Base Grouping — no assertion criteria provided, non-contributing
       "directionOfEvidenceProvided": "supports",
       "evidenceItems": [
         {
@@ -112,28 +91,26 @@
             "conceptType": "Classification",
             "name": "Pathogenic/Likely pathogenic"
           },
+          "confidence": "no assertion criteria provided",
           "direction": "supports",
           "evidenceLines": [
             {
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "id": "clinvar.submission:SCV000882700.3"
+                  "id": "clinvar.submission:SCV000051860.5"
                 },
                 {
-                  "id": "clinvar.submission:SCV000611562.1"
+                  "id": "clinvar.submission:SCV000882686.2"
                 },
                 {
-                  "id": "clinvar.submission:SCV000044088.5"
+                  "id": "clinvar.submission:SCV000198479.2"
                 },
                 {
-                  "id": "clinvar.submission:SCV000191997.4"
+                  "id": "clinvar.submission:SCV000992585.2"
                 },
                 {
                   "id": "clinvar.submission:SCV000191996.4"
-                },
-                {
-                  "id": "clinvar.submission:SCV001739511.1"
                 },
                 {
                   "id": "clinvar.submission:SCV000033659.5"
@@ -142,40 +119,43 @@
                   "id": "clinvar.submission:SCV000051861.5"
                 },
                 {
-                  "id": "clinvar.submission:SCV000198480.2"
+                  "id": "clinvar.submission:SCV000044088.5"
                 },
                 {
                   "id": "clinvar.submission:SCV000198478.2"
                 },
                 {
-                  "id": "clinvar.submission:SCV000051860.5"
-                },
-                {
-                  "id": "clinvar.submission:SCV000784594.1"
-                },
-                {
-                  "id": "clinvar.submission:SCV000882686.2"
-                },
-                {
-                  "id": "clinvar.submission:SCV000992585.2"
-                },
-                {
-                  "id": "clinvar.submission:SCV000999192.1"
-                },
-                {
-                  "id": "clinvar.submission:SCV000033658.5"
-                },
-                {
-                  "id": "clinvar.submission:SCV000198479.2"
+                  "id": "clinvar.submission:SCV000882700.3"
                 },
                 {
                   "id": "clinvar.submission:SCV001571657.2"
                 },
                 {
-                  "id": "clinvar.submission:SCV000693723.1"
+                  "id": "clinvar.submission:SCV000784594.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000198480.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV000611562.1"
                 },
                 {
                   "id": "clinvar.submission:SCV001550138.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV000693723.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000999192.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001739511.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000033658.5"
+                },
+                {
+                  "id": "clinvar.submission:SCV000191997.4"
                 }
               ],
               "strengthOfEvidenceProvided": "contributing",
@@ -190,30 +170,12 @@
           ],
           "id": "VCV000012582.63-G-PATH-NOCP",
           "proposition": {
-            "aggregateQualifiers": [
-              {
-                "name": "AssertionGroup",
-                "value": "Germline"
-              },
-              {
-                "name": "PropositionType",
-                "value": "Pathogenicity"
-              },
-              {
-                "name": "SubmissionLevel",
-                "value": "no assertion criteria provided"
-              }
-            ],
             "id": "VCV000012582-G-PATH-NOCP",
-            "objectClassification": {
-              "conceptType": "Classification",
-              "name": "Pathogenic/Likely pathogenic"
-            },
-            "predicate": "hasAggregateClassification",
+            "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+            "predicate": "isCausalFor",
             "subjectVariant": "clinvar:12582",
-            "type": "VariantAggregateClassificationProposition"
+            "type": "VariantPathogenicityProposition"
           },
-          "strength": "definitive",
           "type": "Statement"
         }
       ],
@@ -229,25 +191,11 @@
   ],
   "id": "VCV000012582.63-G-PATH",
   "proposition": {
-    "aggregateQualifiers": [
-      {
-        "name": "AssertionGroup",
-        "value": "Germline"
-      },
-      {
-        "name": "PropositionType",
-        "value": "Pathogenicity"
-      }
-    ],
     "id": "VCV000012582-G-PATH",
-    "objectClassification": {
-      "conceptType": "Classification",
-      "name": "Pathogenic/Likely pathogenic"
-    },
-    "predicate": "hasAggregateClassification",
+    "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+    "predicate": "isCausalFor",
     "subjectVariant": "clinvar:12582",
-    "type": "VariantAggregateClassificationProposition"
+    "type": "VariantPathogenicityProposition"
   },
-  "strength": "definitive",
   "type": "Statement"
 }

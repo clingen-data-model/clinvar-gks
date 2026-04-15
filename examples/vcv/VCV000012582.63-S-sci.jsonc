@@ -13,6 +13,7 @@
             "conceptType": "Classification",
             "name": "Tier I (Strong) for 7 tumor types\n+lower levels of evidence for 3 other tumor types"
           },
+          "confidence": "criteria provided",
           "direction": "supports",
           "evidenceLines": [
             {
@@ -23,31 +24,32 @@
                     "conceptType": "Classification",
                     "name": "Tier I (Strong) for 7 tumor types"
                   },
+                  "confidence": "criteria provided",
                   "direction": "supports",
                   "evidenceLines": [
                     {
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
                         {
-                          "id": "clinvar.submission:SCV007105409.1"
+                          "id": "clinvar.submission:SCV007105432.1"
                         },
                         {
                           "id": "clinvar.submission:SCV007105405.1"
                         },
                         {
-                          "id": "clinvar.submission:SCV007105520.1"
+                          "id": "clinvar.submission:SCV007105409.1"
                         },
                         {
                           "id": "clinvar.submission:SCV007105415.1"
                         },
                         {
-                          "id": "clinvar.submission:SCV007105406.1"
-                        },
-                        {
-                          "id": "clinvar.submission:SCV007105432.1"
+                          "id": "clinvar.submission:SCV007105520.1"
                         },
                         {
                           "id": "clinvar.submission:SCV007105422.1"
+                        },
+                        {
+                          "id": "clinvar.submission:SCV007105406.1"
                         }
                       ],
                       "strengthOfEvidenceProvided": "contributing",
@@ -60,34 +62,13 @@
                       "value": "criteria provided, single submitter"
                     }
                   ],
-                  "id": "VCV000012582.63-S-SCI-CP-t1",
+                  "id": "VCV000012582.63-S-SCI-CP-T1",
                   "proposition": {
-                    "aggregateQualifiers": [
-                      {
-                        "name": "AssertionGroup",
-                        "value": "Somatic"
-                      },
-                      {
-                        "name": "PropositionType",
-                        "value": "Somatic Clinical Impact"
-                      },
-                      {
-                        "name": "SubmissionLevel",
-                        "value": "criteria provided"
-                      },
-                      {
-                        "name": "ClassificationTier",
-                        "value": "Tier I (Strong)"
-                      }
-                    ],
-                    "id": "VCV000012582-S-SCI-CP-t1",
-                    "objectClassification": {
-                      "conceptType": "Classification",
-                      "name": "Tier I (Strong) for 7 tumor types"
-                    },
-                    "predicate": "hasAggregateClassification",
+                    "id": "VCV000012582-S-SCI-CP-T1",
+                    "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+                    "predicate": "isClinicallySignificantFor",
                     "subjectVariant": "clinvar:12582",
-                    "type": "VariantAggregateClassificationProposition"
+                    "type": "VariantClinicalSignificanceProposition"
                   },
                   "strength": "definitive",
                   "type": "Statement"
@@ -104,6 +85,7 @@
                     "conceptType": "Classification",
                     "name": "Tier II (Potential) for 3 tumor types"
                   },
+                  "confidence": "criteria provided",
                   "direction": "supports",
                   "evidenceLines": [
                     {
@@ -113,10 +95,10 @@
                           "id": "clinvar.submission:SCV007105434.1"
                         },
                         {
-                          "id": "clinvar.submission:SCV007105418.1"
+                          "id": "clinvar.submission:SCV007105413.1"
                         },
                         {
-                          "id": "clinvar.submission:SCV007105413.1"
+                          "id": "clinvar.submission:SCV007105418.1"
                         }
                       ],
                       "strengthOfEvidenceProvided": "contributing",
@@ -129,34 +111,13 @@
                       "value": "criteria provided, single submitter"
                     }
                   ],
-                  "id": "VCV000012582.63-S-SCI-CP-t2",
+                  "id": "VCV000012582.63-S-SCI-CP-T2",
                   "proposition": {
-                    "aggregateQualifiers": [
-                      {
-                        "name": "AssertionGroup",
-                        "value": "Somatic"
-                      },
-                      {
-                        "name": "PropositionType",
-                        "value": "Somatic Clinical Impact"
-                      },
-                      {
-                        "name": "SubmissionLevel",
-                        "value": "criteria provided"
-                      },
-                      {
-                        "name": "ClassificationTier",
-                        "value": "Tier II (Potential)"
-                      }
-                    ],
-                    "id": "VCV000012582-S-SCI-CP-t2",
-                    "objectClassification": {
-                      "conceptType": "Classification",
-                      "name": "Tier II (Potential) for 3 tumor types"
-                    },
-                    "predicate": "hasAggregateClassification",
+                    "id": "VCV000012582-S-SCI-CP-T2",
+                    "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+                    "predicate": "isClinicallySignificantFor",
                     "subjectVariant": "clinvar:12582",
-                    "type": "VariantAggregateClassificationProposition"
+                    "type": "VariantClinicalSignificanceProposition"
                   },
                   "strength": "definitive",
                   "type": "Statement"
@@ -168,28 +129,11 @@
           ],
           "id": "VCV000012582.63-S-SCI-CP",
           "proposition": {
-            "aggregateQualifiers": [
-              {
-                "name": "AssertionGroup",
-                "value": "Somatic"
-              },
-              {
-                "name": "PropositionType",
-                "value": "Somatic Clinical Impact"
-              },
-              {
-                "name": "SubmissionLevel",
-                "value": "criteria provided"
-              }
-            ],
             "id": "VCV000012582-S-SCI-CP",
-            "objectClassification": {
-              "conceptType": "Classification",
-              "name": "Tier I (Strong) for 7 tumor types\n+lower levels of evidence for 3 other tumor types"
-            },
-            "predicate": "hasAggregateClassification",
+            "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+            "predicate": "isClinicallySignificantFor",
             "subjectVariant": "clinvar:12582",
-            "type": "VariantAggregateClassificationProposition"
+            "type": "VariantClinicalSignificanceProposition"
           },
           "strength": "definitive",
           "type": "Statement"
@@ -206,6 +150,7 @@
             "conceptType": "Classification",
             "name": "Tier I (Strong) for Colorectal cancer"
           },
+          "confidence": "no assertion criteria provided",
           "direction": "supports",
           "evidenceLines": [
             {
@@ -216,6 +161,7 @@
                     "conceptType": "Classification",
                     "name": "Tier I (Strong) for Colorectal cancer"
                   },
+                  "confidence": "no assertion criteria provided",
                   "direction": "supports",
                   "evidenceLines": [
                     {
@@ -235,34 +181,13 @@
                       "value": "no assertion criteria provided"
                     }
                   ],
-                  "id": "VCV000012582.63-S-SCI-NOCP-t1",
+                  "id": "VCV000012582.63-S-SCI-NOCP-T1",
                   "proposition": {
-                    "aggregateQualifiers": [
-                      {
-                        "name": "AssertionGroup",
-                        "value": "Somatic"
-                      },
-                      {
-                        "name": "PropositionType",
-                        "value": "Somatic Clinical Impact"
-                      },
-                      {
-                        "name": "SubmissionLevel",
-                        "value": "no assertion criteria provided"
-                      },
-                      {
-                        "name": "ClassificationTier",
-                        "value": "Tier I (Strong)"
-                      }
-                    ],
-                    "id": "VCV000012582-S-SCI-NOCP-t1",
-                    "objectClassification": {
-                      "conceptType": "Classification",
-                      "name": "Tier I (Strong) for Colorectal cancer"
-                    },
-                    "predicate": "hasAggregateClassification",
+                    "id": "VCV000012582-S-SCI-NOCP-T1",
+                    "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+                    "predicate": "isClinicallySignificantFor",
                     "subjectVariant": "clinvar:12582",
-                    "type": "VariantAggregateClassificationProposition"
+                    "type": "VariantClinicalSignificanceProposition"
                   },
                   "strength": "definitive",
                   "type": "Statement"
@@ -274,28 +199,11 @@
           ],
           "id": "VCV000012582.63-S-SCI-NOCP",
           "proposition": {
-            "aggregateQualifiers": [
-              {
-                "name": "AssertionGroup",
-                "value": "Somatic"
-              },
-              {
-                "name": "PropositionType",
-                "value": "Somatic Clinical Impact"
-              },
-              {
-                "name": "SubmissionLevel",
-                "value": "no assertion criteria provided"
-              }
-            ],
             "id": "VCV000012582-S-SCI-NOCP",
-            "objectClassification": {
-              "conceptType": "Classification",
-              "name": "Tier I (Strong) for Colorectal cancer"
-            },
-            "predicate": "hasAggregateClassification",
+            "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+            "predicate": "isClinicallySignificantFor",
             "subjectVariant": "clinvar:12582",
-            "type": "VariantAggregateClassificationProposition"
+            "type": "VariantClinicalSignificanceProposition"
           },
           "strength": "definitive",
           "type": "Statement"
@@ -307,24 +215,11 @@
   ],
   "id": "VCV000012582.63-S-SCI",
   "proposition": {
-    "aggregateQualifiers": [
-      {
-        "name": "AssertionGroup",
-        "value": "Somatic"
-      },
-      {
-        "name": "PropositionType",
-        "value": "Somatic Clinical Impact"
-      }
-    ],
     "id": "VCV000012582-S-SCI",
-    "objectClassification": {
-      "conceptType": "Classification",
-      "name": "Tier I (Strong) for 7 tumor types\n+lower levels of evidence for 3 other tumor types"
-    },
-    "predicate": "hasAggregateClassification",
+    "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+    "predicate": "isClinicallySignificantFor",
     "subjectVariant": "clinvar:12582",
-    "type": "VariantAggregateClassificationProposition"
+    "type": "VariantClinicalSignificanceProposition"
   },
   "strength": "definitive",
   "type": "Statement"
