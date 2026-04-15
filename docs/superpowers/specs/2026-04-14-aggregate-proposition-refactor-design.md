@@ -48,12 +48,31 @@ No change. RCV is already scoped to a single condition per accession. The existi
 ### Statement-Level Changes
 
 - **`classification`** — unchanged (already present as a Classification MappableConcept with optional conflictingExplanation extension)
-- **`direction`** — unchanged (remains `"supports"` for all aggregate statements)
-- **`strength`** — changes from hardcoded `"definitive"` to the submission level label:
+- **`direction`** — derived from the aggregate classification label:
+- **`strength`** — derived from the aggregate classification label:
+- **`confidence`** — NEW attribute. Reflects the submission level label at each aggregate layer:
   - Base Grouping: submission level label from `submission_level.label` (e.g., `"criteria provided"`, `"practice guideline"`)
   - Tier Grouping: carried from contributing Base Grouping record
   - Aggregate Contribution: winning submission level's label — requires a new join to `submission_level` on `agg.contributing_submission_level = sl.code` (not currently present in Aggregate Contribution statement queries)
-- Non-contributing evidence lines carry strength from their own layer — each layer sets its own strength at the BASE step, and the PRE inlining carries it forward automatically
+- Non-contributing evidence lines carry confidence from their own layer — each layer sets its own confidence at the BASE step, and the PRE inlining carries it forward automatically
+
+### Direction and Strength Mapping
+
+The `direction` and `strength` values are derived from the aggregate classification label (the `agg_label` / `actual_agg_classif_label` value). This mapping is applied at every aggregate layer.
+
+| Classification Label | direction | strength |
+| --- | --- | --- |
+| Pathogenic | supports | definitive |
+| Likely pathogenic | supports | likely |
+| Uncertain significance | neutral | _(null)_ |
+| Likely benign | disputes | likely |
+| Benign | disputes | definitive |
+| Pathogenic/Likely pathogenic | supports | _(null)_ |
+| Benign/Likely benign | disputes | _(null)_ |
+| Conflicting classifications of... | neutral | _(null)_ |
+| All others | supports | definitive |
+
+Null strength values are omitted from JSON output by `JSON_STRIP_NULLS`.
 
 ## Proposition Type and Predicate Mapping
 
@@ -114,7 +133,8 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
 - `objectClassification` from VCV propositions
 - `objectConditionClassification` from RCV propositions
 - `aggregateQualifiers` from all propositions
-- Hardcoded `"definitive"` strength value
+- Hardcoded `"definitive"` strength and `"supports"` direction — replaced with classification-derived values
+- **Added**: `confidence` attribute on all aggregate statements (carrying submission level label)
 
 ## Example: VCV Germline Pathogenicity (Before → After)
 
@@ -146,7 +166,7 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
   "type": "Statement",
   "direction": "supports",
   "classification": { "conceptType": "Classification", "name": "Pathogenic/Likely pathogenic" },
-  "strength": "criteria provided",
+  "confidence": "criteria provided",
   "proposition": {
     "type": "VariantPathogenicityProposition",
     "predicate": "isCausalFor",
@@ -155,6 +175,8 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
   }
 }
 ```
+
+Note: `strength` is omitted because "Pathogenic/Likely pathogenic" maps to null strength. `direction` is `"supports"` per the mapping table.
 
 ### After (multiple conditions)
 
@@ -212,8 +234,9 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
 {
   "type": "Statement",
   "direction": "supports",
+  "strength": "definitive",
   "classification": { "conceptType": "Classification", "name": "Pathogenic" },
-  "strength": "criteria provided",
+  "confidence": "criteria provided",
   "proposition": {
     "type": "VariantPathogenicityProposition",
     "predicate": "isCausalFor",
@@ -222,6 +245,8 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
   }
 }
 ```
+
+Note: `direction` is `"supports"` and `strength` is `"definitive"` because "Pathogenic" maps to supports/definitive.
 
 ## Files Affected
 
