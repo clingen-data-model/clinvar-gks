@@ -113,11 +113,31 @@ BEGIN
           WHERE b.prop_type = 'sci'
           GROUP BY 1, 2, 3, 4, 5
       ),
+      vcv_conditions AS (
+          SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level,
+                 IF(b.prop_type = 'sci', b.classif_type, CAST(NULL AS STRING)) as tier_grouping,
+                 ARRAY_AGG(DISTINCT condition_json) as unique_conditions
+          FROM `{P}.temp_vcv_base_data` b
+          JOIN `{S}.gks_scv_condition_sets` scs ON b.scv_id = scs.scv_id
+          CROSS JOIN UNNEST(
+            IF(scs.condition IS NOT NULL,
+              [TO_JSON(STRUCT(
+                scs.condition.id, scs.condition.name, scs.condition.conceptType,
+                scs.condition.primaryCoding, scs.condition.mappings
+              ))],
+              ARRAY(SELECT TO_JSON(STRUCT(
+                c.id, c.name, c.conceptType, c.primaryCoding, c.mappings
+              )) FROM UNNEST(scs.conditionSet.conditions) c)
+            )
+          ) as condition_json
+          GROUP BY 1, 2, 3, 4, 5
+      ),
       final_prep AS (
           SELECT
             c.variation_id, c.vcv_accession, c.full_vcv_id, c.statement_group, c.prop_type,
             c.submission_level, c.submission_level_label, c.tier_grouping, c.full_scv_ids,
             c.tier_priority, c.prop_display_order, COALESCE(sc.unique_traits, []) as unique_traits,
+            COALESCE(vc.unique_conditions, CAST([] AS ARRAY<JSON>)) as unique_conditions,
             c.scv_direction, c.scv_strength_name,
 
             -- Conflict explanation: suppressed for PG, EP, and FLAG (single-source levels)
@@ -160,6 +180,9 @@ BEGIN
           LEFT JOIN somatic_conditions sc
             ON c.variation_id = sc.variation_id AND c.statement_group = sc.statement_group AND c.prop_type = sc.prop_type
             AND c.submission_level = sc.submission_level AND IFNULL(c.tier_grouping, '') = IFNULL(sc.tier_grouping, '')
+          LEFT JOIN vcv_conditions vc
+            ON c.variation_id = vc.variation_id AND c.statement_group = vc.statement_group AND c.prop_type = vc.prop_type
+            AND c.submission_level = vc.submission_level AND IFNULL(c.tier_grouping, '') = IFNULL(vc.tier_grouping, '')
       )
       SELECT
         CASE
@@ -187,7 +210,7 @@ BEGIN
             ANY_VALUE(submission_level_label) as submission_level_label,
             ARRAY_AGG(STRUCT(
               tier_priority, prop_display_order, actual_agg_classif_label,
-              agg_label_conflicting_explanation, unique_traits, full_scv_ids, id, tier_grouping
+              agg_label_conflicting_explanation, unique_traits, unique_conditions, full_scv_ids, id, tier_grouping
             ) ORDER BY tier_priority ASC, ARRAY_LENGTH(full_scv_ids) DESC) as findings
           FROM `{S}.gks_vcv_grouping_base_agg`
           WHERE tier_grouping IS NOT NULL
@@ -199,6 +222,7 @@ BEGIN
             sb.findings[OFFSET(0)].actual_agg_classif_label as top_label,
             sb.findings[OFFSET(0)].agg_label_conflicting_explanation as agg_label_conflicting_explanation,
             sb.findings[OFFSET(0)].unique_traits as top_unique_traits,
+            sb.findings[OFFSET(0)].unique_conditions as unique_conditions,
             ARRAY(SELECT DISTINCT f.id FROM UNNEST(sb.findings) f WITH OFFSET i WHERE i = 0) as contributing_tier_ids,
             ARRAY(SELECT DISTINCT f.id FROM UNNEST(sb.findings) f WITH OFFSET i WHERE i > 0) as non_contributing_tier_ids,
             ARRAY(
@@ -219,6 +243,7 @@ BEGIN
         submission_level_label,
         agg_label, agg_label_conflicting_explanation,
         top_unique_traits as unique_traits,
+        unique_conditions,
         contributing_tier_ids as contributing_statement_ids,
         non_contributing_tier_ids as non_contributing_statement_ids,
         CAST(NULL AS STRING) AS aggregate_review_status
@@ -237,7 +262,7 @@ BEGIN
             id as source_id, variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             submission_level_label,
             agg_label, agg_label_conflicting_explanation, prop_display_order,
-            aggregate_review_status
+            aggregate_review_status, unique_conditions
           FROM `{S}.gks_vcv_grouping_tier_agg`
           LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `{S}.gks_vcv_grouping_base_agg` GROUP BY 1) ON prop_type = pt
           UNION ALL
@@ -245,7 +270,7 @@ BEGIN
             id as source_id, variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             submission_level_label,
             actual_agg_classif_label as agg_label, agg_label_conflicting_explanation, prop_display_order,
-            aggregate_review_status
+            aggregate_review_status, unique_conditions
           FROM `{S}.gks_vcv_grouping_base_agg`
           WHERE tier_grouping IS NULL
       ),
@@ -284,6 +309,7 @@ BEGIN
         w.agg_label, w.agg_label_conflicting_explanation,
         w.prop_display_order,
         w.aggregate_review_status,
+        w.unique_conditions,
         COALESCE(nc.non_contributing_details, []) as non_contributing_details
       FROM winner_takes_all w
       LEFT JOIN non_contributing nc USING (variation_id, statement_group, prop_type)
