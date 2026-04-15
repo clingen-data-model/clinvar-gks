@@ -1,0 +1,291 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Pathogenic"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV004176950.1"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "criteria provided, single submitter"
+            }
+          ],
+          "id": "RCV000585796.12-G-PATH-CP",
+          "proposition": {
+            "id": "RCV000585796-G-PATH-CP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV000693723.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "46724",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_46724",
+                      "http://www.orpha.net/ORDO/Orphanet_46724"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0007154",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0007154",
+                      "https://identifiers.org/mondo:0007154"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "108010",
+                    "iris": [
+                      "https://www.omim.org/entry/108010",
+                      "https://identifiers.org/mim:108010"
+                    ],
+                    "system": "OMIM"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "HP:0002408",
+                    "iris": [
+                      "https://identifiers.org/HP:0002408",
+                      "https://hpo.jax.org/browse/term/HP:0002408"
+                    ],
+                    "system": "Human Phenotype Ontology"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "ARTERIOVENOUS MALFORMATION OF THE BRAIN, SOMATIC",
+              "primaryCoding": {
+                "code": "C0917804",
+                "iris": [
+                  "https://identifiers.org/medgen:C0917804",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0917804"
+                ],
+                "name": "Cerebral arteriovenous malformation",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    },
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "no assertion criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV000992585.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV000693723.1"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "no assertion criteria provided"
+            }
+          ],
+          "id": "RCV000585796.12-G-PATH-NOCP",
+          "proposition": {
+            "id": "RCV000585796-G-PATH-NOCP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV000693723.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "46724",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_46724",
+                      "http://www.orpha.net/ORDO/Orphanet_46724"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0007154",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0007154",
+                      "https://identifiers.org/mondo:0007154"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "108010",
+                    "iris": [
+                      "https://www.omim.org/entry/108010",
+                      "https://identifiers.org/mim:108010"
+                    ],
+                    "system": "OMIM"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "HP:0002408",
+                    "iris": [
+                      "https://identifiers.org/HP:0002408",
+                      "https://hpo.jax.org/browse/term/HP:0002408"
+                    ],
+                    "system": "Human Phenotype Ontology"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "ARTERIOVENOUS MALFORMATION OF THE BRAIN, SOMATIC",
+              "primaryCoding": {
+                "code": "C0917804",
+                "iris": [
+                  "https://identifiers.org/medgen:C0917804",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0917804"
+                ],
+                "name": "Cerebral arteriovenous malformation",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "non-contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "criteria provided, single submitter"
+    }
+  ],
+  "id": "RCV000585796.12-G-PATH",
+  "proposition": {
+    "id": "RCV000585796-G-PATH",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "id": "SCV000693723.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "46724",
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_46724",
+              "http://www.orpha.net/ORDO/Orphanet_46724"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0007154",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0007154",
+              "https://identifiers.org/mondo:0007154"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "108010",
+            "iris": [
+              "https://www.omim.org/entry/108010",
+              "https://identifiers.org/mim:108010"
+            ],
+            "system": "OMIM"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0002408",
+            "iris": [
+              "https://identifiers.org/HP:0002408",
+              "https://hpo.jax.org/browse/term/HP:0002408"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "ARTERIOVENOUS MALFORMATION OF THE BRAIN, SOMATIC",
+      "primaryCoding": {
+        "code": "C0917804",
+        "iris": [
+          "https://identifiers.org/medgen:C0917804",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0917804"
+        ],
+        "name": "Cerebral arteriovenous malformation",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isCausalFor",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

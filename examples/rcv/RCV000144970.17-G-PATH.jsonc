@@ -1,0 +1,255 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Pathogenic"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV002318898.3"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "criteria provided, single submitter"
+            }
+          ],
+          "id": "RCV000144970.17-G-PATH-CP",
+          "proposition": {
+            "id": "RCV000144970-G-PATH-CP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV000191997.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "268114",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_268114",
+                      "http://www.orpha.net/ORDO/Orphanet_268114"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0013767",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0013767",
+                      "https://identifiers.org/mondo:0013767"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "614470",
+                    "iris": [
+                      "https://www.omim.org/entry/614470",
+                      "https://identifiers.org/mim:614470"
+                    ],
+                    "system": "OMIM"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "Autoimmune lymphoproliferative syndrome type 4",
+              "primaryCoding": {
+                "code": "C2674723",
+                "iris": [
+                  "https://identifiers.org/medgen:C2674723",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C2674723"
+                ],
+                "name": "Autoimmune lymphoproliferative syndrome type 4",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    },
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "no assertion criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV000191997.4"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "no assertion criteria provided"
+            }
+          ],
+          "id": "RCV000144970.17-G-PATH-NOCP",
+          "proposition": {
+            "id": "RCV000144970-G-PATH-NOCP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV000191997.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "268114",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_268114",
+                      "http://www.orpha.net/ORDO/Orphanet_268114"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0013767",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0013767",
+                      "https://identifiers.org/mondo:0013767"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "614470",
+                    "iris": [
+                      "https://www.omim.org/entry/614470",
+                      "https://identifiers.org/mim:614470"
+                    ],
+                    "system": "OMIM"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "Autoimmune lymphoproliferative syndrome type 4",
+              "primaryCoding": {
+                "code": "C2674723",
+                "iris": [
+                  "https://identifiers.org/medgen:C2674723",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C2674723"
+                ],
+                "name": "Autoimmune lymphoproliferative syndrome type 4",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "non-contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "criteria provided, single submitter"
+    }
+  ],
+  "id": "RCV000144970.17-G-PATH",
+  "proposition": {
+    "id": "RCV000144970-G-PATH",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "id": "SCV000191997.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "268114",
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_268114",
+              "http://www.orpha.net/ORDO/Orphanet_268114"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0013767",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0013767",
+              "https://identifiers.org/mondo:0013767"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "614470",
+            "iris": [
+              "https://www.omim.org/entry/614470",
+              "https://identifiers.org/mim:614470"
+            ],
+            "system": "OMIM"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Autoimmune lymphoproliferative syndrome type 4",
+      "primaryCoding": {
+        "code": "C2674723",
+        "iris": [
+          "https://identifiers.org/medgen:C2674723",
+          "https://www.ncbi.nlm.nih.gov/medgen/C2674723"
+        ],
+        "name": "Autoimmune lymphoproliferative syndrome type 4",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isCausalFor",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}
