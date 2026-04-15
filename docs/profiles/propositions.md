@@ -28,11 +28,6 @@ These custom propositions are defined specifically for the ClinVar-GKS dataset t
 | Association | ClinVarAssociationProposition |
 | Confers Sensitivity | ClinVarConfersSensitivityProposition |
 
-## Aggregate Proposition Types
+## Aggregate Propositions
 
-These proposition types are used in aggregate (VCV and RCV) statements.
-
-| Aggregation Level | Proposition Type | Predicate |
-| --- | --- | --- |
-| Variant (VCV) | VariantAggregateClassificationProposition | hasAggregateClassification |
-| Variant + Condition (RCV) | VariantAggregateConditionClassificationProposition | hasAggregateConditionClassification |
+Aggregate (VCV and RCV) statements use the same proposition types and predicates as their underlying SCV submissions. For example, a VCV pathogenicity aggregate uses `VariantPathogenicityProposition` with `isCausalFor`, matching the SCVs it aggregates.
