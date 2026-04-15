@@ -18,10 +18,11 @@ Each record is a `Statement` with the following top-level fields:
 | --- | --- | --- |
 | `id` | string | VCV accession with version and aggregation path — e.g., `VCV000012582.63-G` |
 | `type` | string | Always `Statement` |
-| `direction` | string | Always `supports` |
-| `strength` | string | Always `definitive` |
+| `confidence` | string | The submission level label (e.g., `"expert panel"`, `"assertion criteria provided"`) |
+| `direction` | string | Derived from the aggregate classification label; passed through from the contributing SCV for single-SCV aggregations |
+| `strength` | string | Derived from the aggregate classification label; passed through from the contributing SCV for single-SCV aggregations |
 | `classification` | object | Aggregate classification label. See [Classification](#classification) |
-| `proposition` | object | The aggregate proposition with variant, objectClassification, and qualifiers. See [Proposition](#proposition) |
+| `proposition` | object | The aggregate proposition with variant, objectCondition, and SCV-matching type/predicate. See [Proposition](#proposition) |
 | `extensions` | array | Aggregate metadata — `clinvarReviewStatus`. See [Extensions](#extensions) |
 | `evidenceLines` | array | Contributing and non-contributing evidence from lower aggregation layers. See [Evidence Lines](#evidence-lines) |
 
@@ -53,18 +54,17 @@ Used by all submission levels (PG, EP, CP, NOCP, NOCL, FLAG). Contains a single 
 
 ## Proposition
 
-The `proposition` describes the aggregate classification claim. It uses a single `objectClassification` MappableConcept mirroring the statement-level classification (without the `conflictingExplanation` extension).
+The `proposition` describes the aggregate classification claim. It uses an SCV-matching proposition `type` and `predicate` (from `clinvar_proposition_types`) and carries an `objectCondition` representing the unique conditions from contributing SCVs.
 
 <div class="field-table" markdown>
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `type` | string | Always `VariantAggregateClassificationProposition` |
+| `type` | string | SCV-matching proposition type from `clinvar_proposition_types.gks_type` — e.g., `VariantPathogenicityProposition` |
 | `id` | string | Proposition ID — VCV accession without version, dash-separated (e.g., `VCV000012582-G-PATH-CP`) |
 | `subjectVariant` | string | Reference to the categorical variant — `clinvar:{variation_id}` |
-| `predicate` | string | Always `hasAggregateClassification` |
-| `objectClassification` | object | A MappableConcept matching the statement-level classification (no `conflictingExplanation` extension) |
-| `aggregateQualifiers` | array | Context qualifiers — AssertionGroup, PropositionType, SubmissionLevel, ClassificationTier |
+| `predicate` | string | SCV-matching predicate from `clinvar_proposition_types.gks_predicate` — e.g., `isCausalFor` |
+| `objectCondition` | object | The unique conditions from contributing SCVs — a single MappableConcept when there is one condition, or an OR ConceptSet when there are multiple distinct conditions |
 
 </div>
 
