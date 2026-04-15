@@ -1,0 +1,440 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Pathogenic"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "practice guideline",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV000071392.3"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "practice guideline"
+            }
+          ],
+          "id": "VCV000007105.202-G-PATH-PG",
+          "proposition": {
+            "id": "VCV000007105-G-PATH-PG",
+            "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    },
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "reviewed by expert panel",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV000071493.4"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "reviewed by expert panel"
+            }
+          ],
+          "id": "VCV000007105.202-G-PATH-EP",
+          "proposition": {
+            "id": "VCV000007105-G-PATH-EP",
+            "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        },
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic/Likely pathogenic"
+          },
+          "confidence": "criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV001244997.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002009133.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV006554384.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001810348.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV000886152.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV000330918.5"
+                },
+                {
+                  "id": "clinvar.submission:SCV004805438.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV004698102.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV002507372.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002048630.9"
+                },
+                {
+                  "id": "clinvar.submission:SCV000511517.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002502414.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004100881.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002810876.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV001251746.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001860325.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV005197698.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004037030.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV004176446.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV006109277.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000329246.6"
+                },
+                {
+                  "id": "clinvar.submission:SCV000074347.16"
+                },
+                {
+                  "id": "clinvar.submission:SCV000538017.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001246813.36"
+                },
+                {
+                  "id": "clinvar.submission:SCV001193905.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV004101520.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV002503785.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV002061800.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV001713417.5"
+                },
+                {
+                  "id": "clinvar.submission:SCV000928113.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001169465.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV006561073.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002579737.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV000891676.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV003925476.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002529678.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000889288.5"
+                },
+                {
+                  "id": "clinvar.submission:SCV006555683.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004242533.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV000747396.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002053836.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001251533.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000864219.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004101389.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV004211619.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV001163504.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002761398.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV004046363.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV000584079.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001368335.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV004171185.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV005051724.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004042777.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000221179.6"
+                },
+                {
+                  "id": "clinvar.submission:SCV000883108.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001527339.4"
+                },
+                {
+                  "id": "clinvar.submission:SCV002019253.4"
+                },
+                {
+                  "id": "clinvar.submission:SCV002759371.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002564582.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000741228.6"
+                },
+                {
+                  "id": "clinvar.submission:SCV002523540.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001149705.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV005397656.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002543782.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001161676.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV002512246.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000594089.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV003841941.4"
+                },
+                {
+                  "id": "clinvar.submission:SCV007329966.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000747395.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002072562.5"
+                },
+                {
+                  "id": "clinvar.submission:SCV001424387.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001450105.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV007448776.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002818128.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV002097285.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV006554430.1"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "criteria provided, multiple submitters, no conflicts"
+            }
+          ],
+          "id": "VCV000007105.202-G-PATH-CP",
+          "proposition": {
+            "id": "VCV000007105-G-PATH-CP",
+            "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "type": "Statement"
+        },
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "no assertion criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV002035293.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000536740.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001929598.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004105952.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV001553614.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001744105.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV002507456.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000027724.10"
+                },
+                {
+                  "id": "clinvar.submission:SCV004024086.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004101106.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002080609.1"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "no assertion criteria provided"
+            }
+          ],
+          "id": "VCV000007105.202-G-PATH-NOCP",
+          "proposition": {
+            "id": "VCV000007105-G-PATH-NOCP",
+            "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "non-contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "practice guideline"
+    }
+  ],
+  "id": "VCV000007105.202-G-PATH",
+  "proposition": {
+    "id": "VCV000007105-G-PATH",
+    "objectCondition": {"conceptType": "Disease", "name": "some condition"},
+    "predicate": "isCausalFor",
+    "subjectVariant": "clinvar:7105",
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

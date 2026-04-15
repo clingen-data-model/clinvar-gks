@@ -1,7 +1,7 @@
 {
   "classification": {
     "conceptType": "Classification",
-    "name": "Oncogenic"
+    "name": "not provided"
   },
   "direction": "supports",
   "evidenceLines": [
@@ -11,16 +11,16 @@
         {
           "classification": {
             "conceptType": "Classification",
-            "name": "Oncogenic"
+            "name": "not provided"
           },
-          "confidence": "criteria provided",
+          "confidence": "no classification provided",
           "direction": "supports",
           "evidenceLines": [
             {
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "id": "clinvar.submission:SCV005094257.2"
+                  "id": "clinvar.submission:SCV002099547.2"
                 }
               ],
               "strengthOfEvidenceProvided": "contributing",
@@ -30,16 +30,16 @@
           "extensions": [
             {
               "name": "clinvarReviewStatus",
-              "value": "criteria provided, single submitter"
+              "value": "no classification provided"
             }
           ],
-          "id": "VCV000012582.63-S-ONCO-CP",
+          "id": "VCV000012582.63-G-NP-NOCL",
           "proposition": {
-            "id": "VCV000012582-S-ONCO-CP",
+            "id": "VCV000012582-G-NP-NOCL",
             "objectCondition": {"conceptType": "Disease", "name": "some condition"},
-            "predicate": "isOncogenicFor",
+            "predicate": "isClinvarNotProvidedFor",
             "subjectVariant": "clinvar:12582",
-            "type": "VariantOncogenicityProposition"
+            "type": "ClinVarNotProvidedProposition"
           },
           "strength": "definitive",
           "type": "Statement"
@@ -52,16 +52,16 @@
   "extensions": [
     {
       "name": "clinvarReviewStatus",
-      "value": "criteria provided, single submitter"
+      "value": "no classification provided"
     }
   ],
-  "id": "VCV000012582.63-S-ONCO",
+  "id": "VCV000012582.63-G-NP",
   "proposition": {
-    "id": "VCV000012582-S-ONCO",
+    "id": "VCV000012582-G-NP",
     "objectCondition": {"conceptType": "Disease", "name": "some condition"},
-    "predicate": "isOncogenicFor",
+    "predicate": "isClinvarNotProvidedFor",
     "subjectVariant": "clinvar:12582",
-    "type": "VariantOncogenicityProposition"
+    "type": "ClinVarNotProvidedProposition"
   },
   "strength": "definitive",
   "type": "Statement"
