@@ -48,11 +48,12 @@ No change. RCV is already scoped to a single condition per accession. The existi
 ### Statement-Level Changes
 
 - **`classification`** — unchanged (already present as a Classification MappableConcept with optional conflictingExplanation extension)
+- **`direction`** — unchanged (remains `"supports"` for all aggregate statements)
 - **`strength`** — changes from hardcoded `"definitive"` to the submission level label:
   - Base Grouping: submission level label from `submission_level.label` (e.g., `"criteria provided"`, `"practice guideline"`)
   - Tier Grouping: carried from contributing Base Grouping record
-  - Aggregate Contribution: winning submission level's label
-- Non-contributing evidence lines also carry strength reflecting their respective submission level
+  - Aggregate Contribution: winning submission level's label — requires a new join to `submission_level` on `agg.contributing_submission_level = sl.code` (not currently present in Aggregate Contribution statement queries)
+- Non-contributing evidence lines carry strength from their own layer — each layer sets its own strength at the BASE step, and the PRE inlining carries it forward automatically
 
 ## Proposition Type and Predicate Mapping
 
@@ -86,18 +87,23 @@ The VCV aggregation proc (`gks_vcv_proc`) needs to:
 2. Collect unique condition concepts per aggregation group (keyed by condition `id` to deduplicate)
 3. Store the collected conditions array on `gks_vcv_grouping_base_agg`
 
+**Handling compound conditionSets:** Individual SCVs may have either a single `condition` or a `conditionSet` (multiple conditions). When collecting unique conditions across SCVs in a group, individual conditions within a `conditionSet` should be flattened and merged into the unique set — each condition is treated independently, not as an atomic group.
+
+**Pipeline ordering dependency:** `gks_scv_condition_proc` must run before `gks_vcv_proc` (this is already the case in the pipeline, but the dependency is now explicit for VCV).
+
 ### Statement Proc Changes
 
 The VCV statement proc (`gks_vcv_statement_proc`) builds the objectCondition:
 
 - **Single condition in array** → output as the MappableConcept directly
 - **Multiple conditions in array** → wrap in ConceptSet with `"OR"` membershipOperator
+- **No conditions found** → `objectCondition` is NULL, omitted from output by `JSON_STRIP_NULLS`
 
 At each layer, the objectCondition is carried forward from the contributing child (same as classification is today).
 
 ### RCV Condition Data Flow
 
-The existing `temp_rcv_condition_data` resolution remains, but the output moves from `objectConditionClassification` (a ConceptSet of condition + classification) to `objectCondition` (just the condition, without the classification).
+The existing `temp_rcv_condition_data` resolution remains, but the output moves from `objectConditionClassification` (a ConceptSet of condition + classification) to `objectCondition` (just the condition, without the classification). When no condition data exists for an RCV (the `LEFT JOIN` yields NULL), `objectCondition` will be NULL and omitted from output by `JSON_STRIP_NULLS`.
 
 ## What Gets Removed
 
@@ -117,6 +123,7 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
 ```json
 {
   "type": "Statement",
+  "direction": "supports",
   "classification": { "conceptType": "Classification", "name": "Pathogenic/Likely pathogenic" },
   "strength": "definitive",
   "proposition": {
@@ -137,6 +144,7 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
 ```json
 {
   "type": "Statement",
+  "direction": "supports",
   "classification": { "conceptType": "Classification", "name": "Pathogenic/Likely pathogenic" },
   "strength": "criteria provided",
   "proposition": {
@@ -175,6 +183,7 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
 ```json
 {
   "type": "Statement",
+  "direction": "supports",
   "classification": { "conceptType": "Classification", "name": "Pathogenic" },
   "strength": "definitive",
   "proposition": {
@@ -202,6 +211,7 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
 ```json
 {
   "type": "Statement",
+  "direction": "supports",
   "classification": { "conceptType": "Classification", "name": "Pathogenic" },
   "strength": "criteria provided",
   "proposition": {
@@ -223,7 +233,7 @@ The existing `temp_rcv_condition_data` resolution remains, but the output moves 
 - `src/procedures/gks-vcv-statement-proc.sql` — replace proposition structure at all layers (type, predicate, objectCondition); change strength to submission level label; remove aggregateQualifiers
 - `src/procedures/gks-rcv-proc.sql` — no structural changes needed (conditions already scoped by RCV)
 - `src/procedures/gks-rcv-statement-proc.sql` — replace proposition structure at all layers (type, predicate, objectCondition from existing condition data); change strength to submission level label; remove aggregateQualifiers and objectConditionClassification
-- `src/procedures/gks-json-proc.sql` — may need updates if it references removed fields
+- `src/procedures/gks-json-proc.sql` — no changes needed (operates on generic JSON serialization via `JSON_STRIP_NULLS(TO_JSON(...))`)
 
 ### Documentation
 - `docs/profiles/propositions.md` — remove Aggregate Proposition Types section
