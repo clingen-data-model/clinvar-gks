@@ -39,8 +39,28 @@ BEGIN
         agg.id,
 
         'Statement' AS type,
-        'supports' AS direction,
-        'definitive' AS strength,
+
+        IF(ARRAY_LENGTH(agg.full_scv_ids) = 1,
+          agg.scv_direction,
+          CASE
+            WHEN agg.actual_agg_classif_label IN ('Pathogenic', 'Likely pathogenic', 'Pathogenic/Likely pathogenic') THEN 'supports'
+            WHEN agg.actual_agg_classif_label IN ('Benign', 'Likely benign', 'Benign/Likely benign') THEN 'disputes'
+            WHEN agg.actual_agg_classif_label = 'Uncertain significance' THEN 'neutral'
+            WHEN agg.actual_agg_classif_label LIKE 'Conflicting%%' THEN 'neutral'
+            ELSE 'supports'
+          END
+        ) AS direction,
+
+        IF(ARRAY_LENGTH(agg.full_scv_ids) = 1,
+          agg.scv_strength_name,
+          CASE
+            WHEN agg.actual_agg_classif_label IN ('Pathogenic', 'Benign') THEN 'definitive'
+            WHEN agg.actual_agg_classif_label IN ('Likely pathogenic', 'Likely benign') THEN 'likely'
+            ELSE CAST(NULL AS STRING)
+          END
+        ) AS strength,
+
+        sl.label AS confidence,
 
         STRUCT(
           'Classification' AS conceptType,
@@ -53,22 +73,21 @@ BEGIN
         ) AS classification_mappableConcept,
 
         STRUCT(
-          'VariantAggregateClassificationProposition' AS type,
+          cpt.gks_type AS type,
           agg.prop_id AS id,
           FORMAT('clinvar:%s', agg.variation_id) AS subjectVariant,
-          'hasAggregateClassification' AS predicate,
-
-          STRUCT('Classification' AS conceptType, agg.actual_agg_classif_label AS name) AS objectClassification,
-
-          [
-            STRUCT('AssertionGroup' AS name, CAST(csc.label AS STRING) AS value),
-            STRUCT('PropositionType' AS name, CAST(cpt.label AS STRING) AS value),
-            STRUCT('SubmissionLevel' AS name, CAST(sl.label AS STRING) AS value)
-          ] || IF(
-            agg.tier_grouping IS NOT NULL,
-            [STRUCT('ClassificationTier' AS name, CAST(cct.label AS STRING) AS value)],
-            CAST([] AS ARRAY<STRUCT<name STRING, value STRING>>)
-          ) AS aggregateQualifiers
+          cpt.gks_predicate AS predicate,
+          IF(ARRAY_LENGTH(agg.unique_conditions) = 1,
+            agg.unique_conditions[OFFSET(0)],
+            IF(ARRAY_LENGTH(agg.unique_conditions) > 1,
+              TO_JSON(STRUCT(
+                'ConceptSet' AS type,
+                agg.unique_conditions AS concepts,
+                'OR' AS membershipOperator
+              )),
+              CAST(NULL AS JSON)
+            )
+          ) AS objectCondition
         ) AS proposition,
 
         IF(
@@ -90,10 +109,8 @@ BEGIN
         ] AS evidenceLines
 
       FROM `{S}.gks_vcv_grouping_base_agg` agg
-      LEFT JOIN `clinvar_ingest.clinvar_statement_categories` csc ON agg.statement_group = csc.code
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
-      LEFT JOIN `clinvar_ingest.clinvar_clinsig_types` cct ON agg.tier_grouping = cct.code
     """, '{S}', rec.schema_name);
     SET query_grouping_base = REPLACE(query_grouping_base, '{CT}', temp_create);
     SET query_grouping_base = REPLACE(query_grouping_base, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -109,8 +126,22 @@ BEGIN
         agg.id,
 
         'Statement' AS type,
-        'supports' AS direction,
-        'definitive' AS strength,
+
+        CASE
+          WHEN agg.agg_label IN ('Pathogenic', 'Likely pathogenic', 'Pathogenic/Likely pathogenic') THEN 'supports'
+          WHEN agg.agg_label IN ('Benign', 'Likely benign', 'Benign/Likely benign') THEN 'disputes'
+          WHEN agg.agg_label = 'Uncertain significance' THEN 'neutral'
+          WHEN agg.agg_label LIKE 'Conflicting%%' THEN 'neutral'
+          ELSE 'supports'
+        END AS direction,
+
+        CASE
+          WHEN agg.agg_label IN ('Pathogenic', 'Benign') THEN 'definitive'
+          WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign') THEN 'likely'
+          ELSE CAST(NULL AS STRING)
+        END AS strength,
+
+        sl.label AS confidence,
 
         STRUCT(
           'Classification' AS conceptType,
@@ -123,18 +154,21 @@ BEGIN
         ) AS classification_mappableConcept,
 
         STRUCT(
-          'VariantAggregateClassificationProposition' AS type,
+          cpt.gks_type AS type,
           agg.prop_id AS id,
           FORMAT('clinvar:%s', agg.variation_id) AS subjectVariant,
-          'hasAggregateClassification' AS predicate,
-
-          STRUCT('Classification' AS conceptType, agg.agg_label AS name) AS objectClassification,
-
-          [
-            STRUCT('AssertionGroup' AS name, CAST(csc.label AS STRING) AS value),
-            STRUCT('PropositionType' AS name, CAST(cpt.label AS STRING) AS value),
-            STRUCT('SubmissionLevel' AS name, CAST(sl.label AS STRING) AS value)
-          ] AS aggregateQualifiers
+          cpt.gks_predicate AS predicate,
+          IF(ARRAY_LENGTH(agg.unique_conditions) = 1,
+            agg.unique_conditions[OFFSET(0)],
+            IF(ARRAY_LENGTH(agg.unique_conditions) > 1,
+              TO_JSON(STRUCT(
+                'ConceptSet' AS type,
+                agg.unique_conditions AS concepts,
+                'OR' AS membershipOperator
+              )),
+              CAST(NULL AS JSON)
+            )
+          ) AS objectCondition
         ) AS proposition,
 
         IF(
@@ -169,7 +203,6 @@ BEGIN
         ) AS evidenceLines
 
       FROM `{S}.gks_vcv_grouping_tier_agg` agg
-      LEFT JOIN `clinvar_ingest.clinvar_statement_categories` csc ON agg.statement_group = csc.code
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
@@ -186,8 +219,22 @@ BEGIN
         agg.id,
 
         'Statement' AS type,
-        'supports' AS direction,
-        'definitive' AS strength,
+
+        CASE
+          WHEN agg.agg_label IN ('Pathogenic', 'Likely pathogenic', 'Pathogenic/Likely pathogenic') THEN 'supports'
+          WHEN agg.agg_label IN ('Benign', 'Likely benign', 'Benign/Likely benign') THEN 'disputes'
+          WHEN agg.agg_label = 'Uncertain significance' THEN 'neutral'
+          WHEN agg.agg_label LIKE 'Conflicting%%' THEN 'neutral'
+          ELSE 'supports'
+        END AS direction,
+
+        CASE
+          WHEN agg.agg_label IN ('Pathogenic', 'Benign') THEN 'definitive'
+          WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign') THEN 'likely'
+          ELSE CAST(NULL AS STRING)
+        END AS strength,
+
+        agg.contributing_submission_level_label AS confidence,
 
         STRUCT(
           'Classification' AS conceptType,
@@ -200,17 +247,21 @@ BEGIN
         ) AS classification_mappableConcept,
 
         STRUCT(
-          'VariantAggregateClassificationProposition' AS type,
+          cpt.gks_type AS type,
           agg.prop_id AS id,
           FORMAT('clinvar:%s', agg.variation_id) AS subjectVariant,
-          'hasAggregateClassification' AS predicate,
-
-          STRUCT('Classification' AS conceptType, agg.agg_label AS name) AS objectClassification,
-
-          [
-            STRUCT('AssertionGroup' AS name, CAST(csc.label AS STRING) AS value),
-            STRUCT('PropositionType' AS name, CAST(cpt.label AS STRING) AS value)
-          ] AS aggregateQualifiers
+          cpt.gks_predicate AS predicate,
+          IF(ARRAY_LENGTH(agg.unique_conditions) = 1,
+            agg.unique_conditions[OFFSET(0)],
+            IF(ARRAY_LENGTH(agg.unique_conditions) > 1,
+              TO_JSON(STRUCT(
+                'ConceptSet' AS type,
+                agg.unique_conditions AS concepts,
+                'OR' AS membershipOperator
+              )),
+              CAST(NULL AS JSON)
+            )
+          ) AS objectCondition
         ) AS proposition,
 
         IF(
@@ -242,7 +293,6 @@ BEGIN
         ) AS evidenceLines
 
       FROM `{S}.gks_vcv_aggregate_contribution` agg
-      LEFT JOIN `clinvar_ingest.clinvar_statement_categories` csc ON agg.statement_group = csc.code
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_agg_contribution = REPLACE(query_agg_contribution, '{CT}', temp_create);
@@ -256,7 +306,7 @@ BEGIN
     SET query_grouping_base_pre = REPLACE("""
       {CT} `{P}.temp_vcv_grouping_base_pre` AS
       SELECT
-        l1.id, l1.type, l1.direction, l1.strength,
+        l1.id, l1.type, l1.direction, l1.strength, l1.confidence,
         l1.classification_mappableConcept,
         l1.proposition,
         l1.extensions,
@@ -286,7 +336,7 @@ BEGIN
       WITH
       l2_contributing AS (
         SELECT l2.id, ARRAY_AGG(TO_JSON(
-          STRUCT(l1.type, l1.id, l1.direction, l1.strength,
+          STRUCT(l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
             l1.classification_mappableConcept,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
@@ -299,7 +349,7 @@ BEGIN
       ),
       l2_non_contributing AS (
         SELECT l2.id, ARRAY_AGG(TO_JSON(
-          STRUCT(l1.type, l1.id, l1.direction, l1.strength,
+          STRUCT(l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
             l1.classification_mappableConcept,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
@@ -311,7 +361,7 @@ BEGIN
         GROUP BY l2.id
       )
       SELECT
-        l2.id, l2.type, l2.direction, l2.strength,
+        l2.id, l2.type, l2.direction, l2.strength, l2.confidence,
         l2.classification_mappableConcept,
         l2.proposition,
         l2.extensions,
@@ -342,11 +392,11 @@ BEGIN
       l3_contributing AS (
         SELECT l3.id, ARRAY_AGG(TO_JSON(
           COALESCE(
-            (SELECT AS STRUCT l2p.type, l2p.id, l2p.direction, l2p.strength,
+            (SELECT AS STRUCT l2p.type, l2p.id, l2p.direction, l2p.strength, l2p.confidence,
               l2p.classification_mappableConcept,
               l2p.proposition, l2p.extensions, l2p.evidenceLines
              FROM `{P}.temp_vcv_grouping_tier_pre` l2p WHERE l2p.id = JSON_VALUE(item, '$.id')),
-            (SELECT AS STRUCT l1.type, l1.id, l1.direction, l1.strength,
+            (SELECT AS STRUCT l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
               l1.classification_mappableConcept,
               l1.proposition, l1.extensions, l1.evidenceLines
              FROM `{P}.temp_vcv_grouping_base_pre` l1 WHERE l1.id = JSON_VALUE(item, '$.id'))
@@ -361,11 +411,11 @@ BEGIN
       l3_non_contributing AS (
         SELECT l3.id, ARRAY_AGG(TO_JSON(
           COALESCE(
-            (SELECT AS STRUCT l2p.type, l2p.id, l2p.direction, l2p.strength,
+            (SELECT AS STRUCT l2p.type, l2p.id, l2p.direction, l2p.strength, l2p.confidence,
               l2p.classification_mappableConcept,
               l2p.proposition, l2p.extensions, l2p.evidenceLines
              FROM `{P}.temp_vcv_grouping_tier_pre` l2p WHERE l2p.id = JSON_VALUE(item, '$.id')),
-            (SELECT AS STRUCT l1.type, l1.id, l1.direction, l1.strength,
+            (SELECT AS STRUCT l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
               l1.classification_mappableConcept,
               l1.proposition, l1.extensions, l1.evidenceLines
              FROM `{P}.temp_vcv_grouping_base_pre` l1 WHERE l1.id = JSON_VALUE(item, '$.id'))
@@ -378,7 +428,7 @@ BEGIN
         GROUP BY l3.id
       )
       SELECT
-        l3.id, l3.type, l3.direction, l3.strength,
+        l3.id, l3.type, l3.direction, l3.strength, l3.confidence,
         l3.classification_mappableConcept,
         l3.proposition,
         l3.extensions,
