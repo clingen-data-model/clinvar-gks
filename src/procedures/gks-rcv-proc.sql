@@ -44,6 +44,8 @@ BEGIN
           cct.code as classif_type,
           cct.original_description_order as classif_type_order,
           cct.significance,
+          cct.direction as scv_direction,
+          cct.strength_name as scv_strength_name,
           cpt.conflict_detectable,
           cpt.code as prop_type,
           cpt.label as prop_label,
@@ -84,7 +86,10 @@ BEGIN
             COUNT(DISTINCT submitter_id) as unique_submitter_count,
             COUNT(full_scv_id) as scv_count,
             ANY_VALUE(clinical_impact_assertion_type) as clinical_impact_assertion_type,
-            ANY_VALUE(clinical_impact_clinical_significance) as clinical_impact_clinical_significance
+            ANY_VALUE(clinical_impact_clinical_significance) as clinical_impact_clinical_significance,
+            ANY_VALUE(scv_direction) as scv_direction,
+            ANY_VALUE(scv_strength_name) as scv_strength_name,
+            ANY_VALUE(submission_level_label) as submission_level_label
           FROM `{P}.temp_rcv_base_data`
           GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
       ),
@@ -152,7 +157,8 @@ BEGIN
               WHEN c.submission_level = 'NOCL' THEN 'no classification provided'
               WHEN c.submission_level = 'FLAG' THEN 'flagged submission'
               ELSE NULL
-            END AS aggregate_review_status
+            END AS aggregate_review_status,
+            c.scv_direction, c.scv_strength_name, c.submission_level_label
           FROM core_agg c
           LEFT JOIN conflict_strings cs
             ON c.variation_id = cs.variation_id AND c.rcv_accession = cs.rcv_accession AND c.trait_set_id = cs.trait_set_id
@@ -186,6 +192,7 @@ BEGIN
       WITH statement_base AS (
           SELECT
             variation_id, rcv_accession, full_rcv_id, trait_set_id, statement_group, prop_type, submission_level,
+            ANY_VALUE(submission_level_label) as submission_level_label,
             ARRAY_AGG(STRUCT(
               tier_priority, prop_display_order, actual_agg_classif_label,
               agg_label_conflicting_explanation, unique_traits, full_scv_ids, id, tier_grouping
@@ -217,6 +224,7 @@ BEGIN
         FORMAT('%s-%s-%s-%s', full_rcv_id, statement_group, UPPER(prop_type), submission_level) AS id,
         FORMAT('%s-%s-%s-%s', rcv_accession, statement_group, UPPER(prop_type), submission_level) AS prop_id,
         variation_id, rcv_accession, full_rcv_id, trait_set_id, statement_group, prop_type, submission_level,
+        submission_level_label,
         agg_label, agg_label_conflicting_explanation,
         top_unique_traits as unique_traits,
         contributing_tier_ids as contributing_statement_ids,
@@ -234,6 +242,7 @@ BEGIN
       WITH unified_input AS (
           SELECT
             id as source_id, variation_id, rcv_accession, full_rcv_id, trait_set_id, statement_group, prop_type, submission_level,
+            submission_level_label,
             agg_label, agg_label_conflicting_explanation, prop_display_order,
             aggregate_review_status
           FROM `{S}.gks_rcv_grouping_tier_agg`
@@ -241,6 +250,7 @@ BEGIN
           UNION ALL
           SELECT
             id as source_id, variation_id, rcv_accession, full_rcv_id, trait_set_id, statement_group, prop_type, submission_level,
+            submission_level_label,
             actual_agg_classif_label as agg_label, agg_label_conflicting_explanation, prop_display_order,
             aggregate_review_status
           FROM `{S}.gks_rcv_grouping_base_agg`
@@ -277,6 +287,7 @@ BEGIN
         w.variation_id, w.rcv_accession, w.full_rcv_id, w.trait_set_id, w.statement_group, w.prop_type,
         w.source_id as contributing_layer_id,
         w.submission_level as contributing_submission_level,
+        w.submission_level_label as contributing_submission_level_label,
         w.agg_label, w.agg_label_conflicting_explanation,
         w.prop_display_order,
         w.aggregate_review_status,
