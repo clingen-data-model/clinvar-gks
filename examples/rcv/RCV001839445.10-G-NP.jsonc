@@ -1,13 +1,7 @@
 {
   "classification": {
     "conceptType": "Classification",
-    "extension": [
-      {
-        "name": "conflictingExplanation",
-        "value": "Uncertain significance(1); Likely benign(1)"
-      }
-    ],
-    "name": "Conflicting classifications of pathogenicity"
+    "name": "not provided"
   },
   "direction": "supports",
   "evidenceLines": [
@@ -17,25 +11,16 @@
         {
           "classification": {
             "conceptType": "Classification",
-            "extension": [
-              {
-                "name": "conflictingExplanation",
-                "value": "Uncertain significance(1); Likely benign(1)"
-              }
-            ],
-            "name": "Conflicting classifications of pathogenicity"
+            "name": "not provided"
           },
-          "confidence": "criteria provided",
+          "confidence": "no classification",
           "direction": "supports",
           "evidenceLines": [
             {
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "id": "clinvar.submission:SCV001524786.1"
-                },
-                {
-                  "id": "clinvar.submission:SCV000397270.3"
+                  "id": "clinvar.submission:SCV002099547.2"
                 }
               ],
               "strengthOfEvidenceProvided": "contributing",
@@ -45,22 +30,33 @@
           "extensions": [
             {
               "name": "clinvarReviewStatus",
-              "value": "criteria provided, conflicting classifications"
+              "value": "no classification provided"
             }
           ],
-          "id": "RCV001781420.15-G-PATH-CP",
+          "id": "RCV001839445.10-G-NP-NOCL",
           "proposition": {
-            "id": "RCV001781420-G-PATH-CP",
+            "id": "RCV001839445-G-NP-NOCL",
             "objectCondition": {
               "conceptType": "Disease",
-              "id": "SCV000397270.0",
+              "id": "SCV002099547.0",
               "mappings": [
                 {
                   "coding": {
-                    "code": "MONDO:0009960",
+                    "code": "2396",
                     "iris": [
-                      "http://purl.obolibrary.org/obo/MONDO_0009960",
-                      "https://identifiers.org/mondo:0009960"
+                      "https://identifiers.org/orphanet.ordo:Orphanet_2396",
+                      "http://www.orpha.net/ORDO/Orphanet_2396"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0013074",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0013074",
+                      "https://identifiers.org/mondo:0013074"
                     ],
                     "system": "MONDO"
                   },
@@ -68,29 +64,29 @@
                 },
                 {
                   "coding": {
-                    "code": "266600",
+                    "code": "613001",
                     "iris": [
-                      "https://www.omim.org/entry/266600",
-                      "https://identifiers.org/mim:266600"
+                      "https://www.omim.org/entry/613001",
+                      "https://identifiers.org/mim:613001"
                     ],
                     "system": "OMIM"
                   },
                   "relation": "relatedMatch"
                 }
               ],
-              "name": "Inflammatory bowel disease 1",
+              "name": "Encephalocraniocutaneous lipomatosis",
               "primaryCoding": {
-                "code": "CN260071",
+                "code": "C0406612",
                 "iris": [
-                  "https://identifiers.org/medgen:CN260071",
-                  "https://www.ncbi.nlm.nih.gov/medgen/CN260071"
+                  "https://identifiers.org/medgen:C0406612",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0406612"
                 ],
-                "name": "Inflammatory bowel disease 1",
+                "name": "Encephalocraniocutaneous lipomatosis",
                 "system": "MedGen"
               }
             },
             "predicate": "isCausalFor",
-            "subjectVariant": "clinvar:97850",
+            "subjectVariant": "clinvar:12582",
             "type": "VariantPathogenicityProposition"
           },
           "strength": "definitive",
@@ -104,22 +100,33 @@
   "extensions": [
     {
       "name": "clinvarReviewStatus",
-      "value": "criteria provided, conflicting classifications"
+      "value": "no classification provided"
     }
   ],
-  "id": "RCV001781420.15-G-PATH",
+  "id": "RCV001839445.10-G-NP",
   "proposition": {
-    "id": "RCV001781420-G-PATH",
+    "id": "RCV001839445-G-NP",
     "objectCondition": {
       "conceptType": "Disease",
-      "id": "SCV000397270.0",
+      "id": "SCV002099547.0",
       "mappings": [
         {
           "coding": {
-            "code": "MONDO:0009960",
+            "code": "2396",
             "iris": [
-              "http://purl.obolibrary.org/obo/MONDO_0009960",
-              "https://identifiers.org/mondo:0009960"
+              "https://identifiers.org/orphanet.ordo:Orphanet_2396",
+              "http://www.orpha.net/ORDO/Orphanet_2396"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0013074",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0013074",
+              "https://identifiers.org/mondo:0013074"
             ],
             "system": "MONDO"
           },
@@ -127,29 +134,29 @@
         },
         {
           "coding": {
-            "code": "266600",
+            "code": "613001",
             "iris": [
-              "https://www.omim.org/entry/266600",
-              "https://identifiers.org/mim:266600"
+              "https://www.omim.org/entry/613001",
+              "https://identifiers.org/mim:613001"
             ],
             "system": "OMIM"
           },
           "relation": "relatedMatch"
         }
       ],
-      "name": "Inflammatory bowel disease 1",
+      "name": "Encephalocraniocutaneous lipomatosis",
       "primaryCoding": {
-        "code": "CN260071",
+        "code": "C0406612",
         "iris": [
-          "https://identifiers.org/medgen:CN260071",
-          "https://www.ncbi.nlm.nih.gov/medgen/CN260071"
+          "https://identifiers.org/medgen:C0406612",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0406612"
         ],
-        "name": "Inflammatory bowel disease 1",
+        "name": "Encephalocraniocutaneous lipomatosis",
         "system": "MedGen"
       }
     },
     "predicate": "isCausalFor",
-    "subjectVariant": "clinvar:97850",
+    "subjectVariant": "clinvar:12582",
     "type": "VariantPathogenicityProposition"
   },
   "strength": "definitive",

@@ -1,0 +1,232 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Tier I (Strong) - diagnostic - supports diagnosis (1)"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Tier I (Strong) - diagnostic - supports diagnosis (1)"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "conceptType": "Classification",
+                    "name": "Tier I (Strong) - diagnostic - supports diagnosis (1)"
+                  },
+                  "confidence": "criteria provided",
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "clinvar.submission:SCV007105406.1"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "extensions": [
+                    {
+                      "name": "clinvarReviewStatus",
+                      "value": "criteria provided, single submitter"
+                    }
+                  ],
+                  "id": "RCV006253518.1-S-SCI-CP-T1",
+                  "proposition": {
+                    "id": "RCV006253518-S-SCI-CP-T1",
+                    "objectCondition": {
+                      "conceptType": "Disease",
+                      "id": "SCV007105406.0",
+                      "mappings": [
+                        {
+                          "coding": {
+                            "code": "99860",
+                            "iris": [
+                              "https://identifiers.org/orphanet.ordo:Orphanet_99860",
+                              "http://www.orpha.net/ORDO/Orphanet_99860"
+                            ],
+                            "system": "Orphanet"
+                          },
+                          "relation": "relatedMatch"
+                        },
+                        {
+                          "coding": {
+                            "code": "MONDO:0020511",
+                            "iris": [
+                              "http://purl.obolibrary.org/obo/MONDO_0020511",
+                              "https://identifiers.org/mondo:0020511"
+                            ],
+                            "system": "MONDO"
+                          },
+                          "relation": "relatedMatch"
+                        },
+                        {
+                          "coding": {
+                            "code": "HP:0004812",
+                            "iris": [
+                              "https://identifiers.org/HP:0004812",
+                              "https://hpo.jax.org/browse/term/HP:0004812"
+                            ],
+                            "system": "Human Phenotype Ontology"
+                          },
+                          "relation": "relatedMatch"
+                        }
+                      ],
+                      "name": "Precursor B-cell acute lymphoblastic leukemia",
+                      "primaryCoding": {
+                        "code": "C0349636",
+                        "iris": [
+                          "https://identifiers.org/medgen:C0349636",
+                          "https://www.ncbi.nlm.nih.gov/medgen/C0349636"
+                        ],
+                        "name": "Precursor B-cell acute lymphoblastic leukemia",
+                        "system": "MedGen"
+                      }
+                    },
+                    "predicate": "hasSignificanceFor",
+                    "subjectVariant": "clinvar:12582",
+                    "type": "VariantClinicalSignificanceProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "RCV006253518.1-S-SCI-CP",
+          "proposition": {
+            "id": "RCV006253518-S-SCI-CP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV007105406.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "99860",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_99860",
+                      "http://www.orpha.net/ORDO/Orphanet_99860"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0020511",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0020511",
+                      "https://identifiers.org/mondo:0020511"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "HP:0004812",
+                    "iris": [
+                      "https://identifiers.org/HP:0004812",
+                      "https://hpo.jax.org/browse/term/HP:0004812"
+                    ],
+                    "system": "Human Phenotype Ontology"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "Precursor B-cell acute lymphoblastic leukemia",
+              "primaryCoding": {
+                "code": "C0349636",
+                "iris": [
+                  "https://identifiers.org/medgen:C0349636",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0349636"
+                ],
+                "name": "Precursor B-cell acute lymphoblastic leukemia",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "hasSignificanceFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantClinicalSignificanceProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "id": "RCV006253518.1-S-SCI",
+  "proposition": {
+    "id": "RCV006253518-S-SCI",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "id": "SCV007105406.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "99860",
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_99860",
+              "http://www.orpha.net/ORDO/Orphanet_99860"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0020511",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0020511",
+              "https://identifiers.org/mondo:0020511"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0004812",
+            "iris": [
+              "https://identifiers.org/HP:0004812",
+              "https://hpo.jax.org/browse/term/HP:0004812"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Precursor B-cell acute lymphoblastic leukemia",
+      "primaryCoding": {
+        "code": "C0349636",
+        "iris": [
+          "https://identifiers.org/medgen:C0349636",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0349636"
+        ],
+        "name": "Precursor B-cell acute lymphoblastic leukemia",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "hasSignificanceFor",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantClinicalSignificanceProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

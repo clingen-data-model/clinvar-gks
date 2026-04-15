@@ -1,0 +1,1392 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Pathogenic"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV005634967.1"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "criteria provided, single submitter"
+            }
+          ],
+          "id": "RCV005007840.1-G-PATH-CP",
+          "proposition": {
+            "id": "RCV005007840-G-PATH-CP",
+            "objectCondition": {
+              "conditions": [
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.9",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "D013274",
+                        "iris": [
+                          "https://identifiers.org/mesh:D013274",
+                          "https://www.ncbi.nlm.nih.gov/mesh/?term=D013274"
+                        ],
+                        "system": "MeSH"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0001056",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0001056",
+                          "https://identifiers.org/mondo:0001056"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "613659",
+                        "iris": [
+                          "https://www.omim.org/entry/613659",
+                          "https://identifiers.org/mim:613659"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "HP:0012126",
+                        "iris": [
+                          "https://identifiers.org/HP:0012126",
+                          "https://hpo.jax.org/browse/term/HP:0012126"
+                        ],
+                        "system": "Human Phenotype Ontology"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Gastric cancer",
+                  "primaryCoding": {
+                    "code": "C0024623",
+                    "iris": [
+                      "https://identifiers.org/medgen:C0024623",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C0024623"
+                    ],
+                    "name": "Gastric cancer",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.7",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "519",
+                        "iris": [
+                          "https://identifiers.org/orphanet.ordo:Orphanet_519",
+                          "http://www.orpha.net/ORDO/Orphanet_519"
+                        ],
+                        "system": "Orphanet"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "D015470",
+                        "iris": [
+                          "https://identifiers.org/mesh:D015470",
+                          "https://www.ncbi.nlm.nih.gov/mesh/?term=D015470"
+                        ],
+                        "system": "MeSH"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0018874",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0018874",
+                          "https://identifiers.org/mondo:0018874"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "601626",
+                        "iris": [
+                          "https://www.omim.org/entry/601626",
+                          "https://identifiers.org/mim:601626"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "HP:0004808",
+                        "iris": [
+                          "https://identifiers.org/HP:0004808",
+                          "https://hpo.jax.org/browse/term/HP:0004808"
+                        ],
+                        "system": "Human Phenotype Ontology"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "HP:0001914",
+                        "system": "Human Phenotype Ontology"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "HP:0004843",
+                        "system": "Human Phenotype Ontology"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "HP:0005516",
+                        "system": "Human Phenotype Ontology"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "HP:0006724",
+                        "system": "Human Phenotype Ontology"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "HP:0006728",
+                        "system": "Human Phenotype Ontology"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Acute myeloid leukemia",
+                  "primaryCoding": {
+                    "code": "C0023467",
+                    "iris": [
+                      "https://identifiers.org/medgen:C0023467",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C0023467"
+                    ],
+                    "name": "Acute myeloid leukemia",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.8",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "648",
+                        "iris": [
+                          "https://identifiers.org/orphanet.ordo:Orphanet_648",
+                          "http://www.orpha.net/ORDO/Orphanet_648"
+                        ],
+                        "system": "Orphanet"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0012371",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0012371",
+                          "https://identifiers.org/mondo:0012371"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "609942",
+                        "iris": [
+                          "https://www.omim.org/entry/609942",
+                          "https://identifiers.org/mim:609942"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Noonan syndrome 3",
+                  "primaryCoding": {
+                    "code": "C1860991",
+                    "iris": [
+                      "https://identifiers.org/medgen:C1860991",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C1860991"
+                    ],
+                    "name": "Noonan syndrome 3",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.1",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "MONDO:0001187",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0001187",
+                          "https://identifiers.org/mondo:0001187"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "109800",
+                        "iris": [
+                          "https://www.omim.org/entry/109800",
+                          "https://identifiers.org/mim:109800"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Malignant tumor of urinary bladder",
+                  "primaryCoding": {
+                    "code": "C0005684",
+                    "iris": [
+                      "https://identifiers.org/medgen:C0005684",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C0005684"
+                    ],
+                    "name": "Malignant tumor of urinary bladder",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.0",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "46724",
+                        "iris": [
+                          "https://identifiers.org/orphanet.ordo:Orphanet_46724",
+                          "http://www.orpha.net/ORDO/Orphanet_46724"
+                        ],
+                        "system": "Orphanet"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0007154",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0007154",
+                          "https://identifiers.org/mondo:0007154"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "108010",
+                        "iris": [
+                          "https://www.omim.org/entry/108010",
+                          "https://identifiers.org/mim:108010"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "HP:0002408",
+                        "iris": [
+                          "https://identifiers.org/HP:0002408",
+                          "https://hpo.jax.org/browse/term/HP:0002408"
+                        ],
+                        "system": "Human Phenotype Ontology"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Cerebral arteriovenous malformation",
+                  "primaryCoding": {
+                    "code": "C0917804",
+                    "iris": [
+                      "https://identifiers.org/medgen:C0917804",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C0917804"
+                    ],
+                    "name": "Cerebral arteriovenous malformation",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.10",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "268114",
+                        "iris": [
+                          "https://identifiers.org/orphanet.ordo:Orphanet_268114",
+                          "http://www.orpha.net/ORDO/Orphanet_268114"
+                        ],
+                        "system": "Orphanet"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0013767",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0013767",
+                          "https://identifiers.org/mondo:0013767"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "614470",
+                        "iris": [
+                          "https://www.omim.org/entry/614470",
+                          "https://identifiers.org/mim:614470"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Autoimmune lymphoproliferative syndrome type 4",
+                  "primaryCoding": {
+                    "code": "C2674723",
+                    "iris": [
+                      "https://identifiers.org/medgen:C2674723",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C2674723"
+                    ],
+                    "name": "Autoimmune lymphoproliferative syndrome type 4",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.4",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "MONDO:0008903",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0008903",
+                          "https://identifiers.org/mondo:0008903"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "211980",
+                        "iris": [
+                          "https://www.omim.org/entry/211980",
+                          "https://identifiers.org/mim:211980"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Lung cancer",
+                  "primaryCoding": {
+                    "code": "C0242379",
+                    "iris": [
+                      "https://identifiers.org/medgen:C0242379",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C0242379"
+                    ],
+                    "name": "Lung cancer",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.2",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "227535",
+                        "iris": [
+                          "https://identifiers.org/orphanet.ordo:Orphanet_227535",
+                          "http://www.orpha.net/ORDO/Orphanet_227535"
+                        ],
+                        "system": "Orphanet"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0016419",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0016419",
+                          "https://identifiers.org/mondo:0016419"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "114480",
+                        "iris": [
+                          "https://www.omim.org/entry/114480",
+                          "https://identifiers.org/mim:114480"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Familial cancer of breast",
+                  "primaryCoding": {
+                    "code": "C0346153",
+                    "iris": [
+                      "https://identifiers.org/medgen:C0346153",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C0346153"
+                    ],
+                    "name": "Familial cancer of breast",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.6",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "3339",
+                        "iris": [
+                          "https://identifiers.org/orphanet.ordo:Orphanet_3339",
+                          "http://www.orpha.net/ORDO/Orphanet_3339"
+                        ],
+                        "system": "Orphanet"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0010854",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0010854",
+                          "https://identifiers.org/mondo:0010854"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "600268",
+                        "iris": [
+                          "https://www.omim.org/entry/600268",
+                          "https://identifiers.org/mim:600268"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Toriello-Lacassie-Droste syndrome",
+                  "primaryCoding": {
+                    "code": "C1838329",
+                    "iris": [
+                      "https://identifiers.org/medgen:C1838329",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C1838329"
+                    ],
+                    "name": "Toriello-Lacassie-Droste syndrome",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.5",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "1333",
+                        "iris": [
+                          "https://identifiers.org/orphanet.ordo:Orphanet_1333",
+                          "http://www.orpha.net/ORDO/Orphanet_1333"
+                        ],
+                        "system": "Orphanet"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0015278",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0015278",
+                          "https://identifiers.org/mondo:0015278"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "260350",
+                        "iris": [
+                          "https://www.omim.org/entry/260350",
+                          "https://identifiers.org/mim:260350"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Familial pancreatic carcinoma",
+                  "primaryCoding": {
+                    "code": "C2931038",
+                    "iris": [
+                      "https://identifiers.org/medgen:C2931038",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C2931038"
+                    ],
+                    "name": "Familial pancreatic carcinoma",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.11",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "1340",
+                        "iris": [
+                          "https://identifiers.org/orphanet.ordo:Orphanet_1340",
+                          "http://www.orpha.net/ORDO/Orphanet_1340"
+                        ],
+                        "system": "Orphanet"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0014112",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0014112",
+                          "https://identifiers.org/mondo:0014112"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "615278",
+                        "iris": [
+                          "https://www.omim.org/entry/615278",
+                          "https://identifiers.org/mim:615278"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Cardiofaciocutaneous syndrome 2",
+                  "primaryCoding": {
+                    "code": "C3809005",
+                    "iris": [
+                      "https://identifiers.org/medgen:C3809005",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C3809005"
+                    ],
+                    "name": "Cardiofaciocutaneous syndrome 2",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV005634967.3",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "2612",
+                        "iris": [
+                          "https://identifiers.org/orphanet.ordo:Orphanet_2612",
+                          "http://www.orpha.net/ORDO/Orphanet_2612"
+                        ],
+                        "system": "Orphanet"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "MONDO:0008097",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0008097",
+                          "https://identifiers.org/mondo:0008097"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "163200",
+                        "iris": [
+                          "https://www.omim.org/entry/163200",
+                          "https://identifiers.org/mim:163200"
+                        ],
+                        "system": "OMIM"
+                      },
+                      "relation": "relatedMatch"
+                    },
+                    {
+                      "coding": {
+                        "code": "HP:0010817",
+                        "iris": [
+                          "https://identifiers.org/HP:0010817",
+                          "https://hpo.jax.org/browse/term/HP:0010817"
+                        ],
+                        "system": "Human Phenotype Ontology"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Linear nevus sebaceous syndrome",
+                  "primaryCoding": {
+                    "code": "C4552097",
+                    "iris": [
+                      "https://identifiers.org/medgen:C4552097",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C4552097"
+                    ],
+                    "name": "Linear nevus sebaceous syndrome",
+                    "system": "MedGen"
+                  }
+                }
+              ],
+              "id": "SCV005634967",
+              "membershipOperator": "AND",
+              "type": "ConceptSet"
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "criteria provided, single submitter"
+    }
+  ],
+  "id": "RCV005007840.1-G-PATH",
+  "proposition": {
+    "id": "RCV005007840-G-PATH",
+    "objectCondition": {
+      "conditions": [
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.9",
+          "mappings": [
+            {
+              "coding": {
+                "code": "D013274",
+                "iris": [
+                  "https://identifiers.org/mesh:D013274",
+                  "https://www.ncbi.nlm.nih.gov/mesh/?term=D013274"
+                ],
+                "system": "MeSH"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0001056",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0001056",
+                  "https://identifiers.org/mondo:0001056"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "613659",
+                "iris": [
+                  "https://www.omim.org/entry/613659",
+                  "https://identifiers.org/mim:613659"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0012126",
+                "iris": [
+                  "https://identifiers.org/HP:0012126",
+                  "https://hpo.jax.org/browse/term/HP:0012126"
+                ],
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Gastric cancer",
+          "primaryCoding": {
+            "code": "C0024623",
+            "iris": [
+              "https://identifiers.org/medgen:C0024623",
+              "https://www.ncbi.nlm.nih.gov/medgen/C0024623"
+            ],
+            "name": "Gastric cancer",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.7",
+          "mappings": [
+            {
+              "coding": {
+                "code": "519",
+                "iris": [
+                  "https://identifiers.org/orphanet.ordo:Orphanet_519",
+                  "http://www.orpha.net/ORDO/Orphanet_519"
+                ],
+                "system": "Orphanet"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "D015470",
+                "iris": [
+                  "https://identifiers.org/mesh:D015470",
+                  "https://www.ncbi.nlm.nih.gov/mesh/?term=D015470"
+                ],
+                "system": "MeSH"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0018874",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0018874",
+                  "https://identifiers.org/mondo:0018874"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "601626",
+                "iris": [
+                  "https://www.omim.org/entry/601626",
+                  "https://identifiers.org/mim:601626"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0004808",
+                "iris": [
+                  "https://identifiers.org/HP:0004808",
+                  "https://hpo.jax.org/browse/term/HP:0004808"
+                ],
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0001914",
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0004843",
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0005516",
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0006724",
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0006728",
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Acute myeloid leukemia",
+          "primaryCoding": {
+            "code": "C0023467",
+            "iris": [
+              "https://identifiers.org/medgen:C0023467",
+              "https://www.ncbi.nlm.nih.gov/medgen/C0023467"
+            ],
+            "name": "Acute myeloid leukemia",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.8",
+          "mappings": [
+            {
+              "coding": {
+                "code": "648",
+                "iris": [
+                  "https://identifiers.org/orphanet.ordo:Orphanet_648",
+                  "http://www.orpha.net/ORDO/Orphanet_648"
+                ],
+                "system": "Orphanet"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0012371",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0012371",
+                  "https://identifiers.org/mondo:0012371"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "609942",
+                "iris": [
+                  "https://www.omim.org/entry/609942",
+                  "https://identifiers.org/mim:609942"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Noonan syndrome 3",
+          "primaryCoding": {
+            "code": "C1860991",
+            "iris": [
+              "https://identifiers.org/medgen:C1860991",
+              "https://www.ncbi.nlm.nih.gov/medgen/C1860991"
+            ],
+            "name": "Noonan syndrome 3",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.1",
+          "mappings": [
+            {
+              "coding": {
+                "code": "MONDO:0001187",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0001187",
+                  "https://identifiers.org/mondo:0001187"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "109800",
+                "iris": [
+                  "https://www.omim.org/entry/109800",
+                  "https://identifiers.org/mim:109800"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Malignant tumor of urinary bladder",
+          "primaryCoding": {
+            "code": "C0005684",
+            "iris": [
+              "https://identifiers.org/medgen:C0005684",
+              "https://www.ncbi.nlm.nih.gov/medgen/C0005684"
+            ],
+            "name": "Malignant tumor of urinary bladder",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.0",
+          "mappings": [
+            {
+              "coding": {
+                "code": "46724",
+                "iris": [
+                  "https://identifiers.org/orphanet.ordo:Orphanet_46724",
+                  "http://www.orpha.net/ORDO/Orphanet_46724"
+                ],
+                "system": "Orphanet"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0007154",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0007154",
+                  "https://identifiers.org/mondo:0007154"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "108010",
+                "iris": [
+                  "https://www.omim.org/entry/108010",
+                  "https://identifiers.org/mim:108010"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0002408",
+                "iris": [
+                  "https://identifiers.org/HP:0002408",
+                  "https://hpo.jax.org/browse/term/HP:0002408"
+                ],
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Cerebral arteriovenous malformation",
+          "primaryCoding": {
+            "code": "C0917804",
+            "iris": [
+              "https://identifiers.org/medgen:C0917804",
+              "https://www.ncbi.nlm.nih.gov/medgen/C0917804"
+            ],
+            "name": "Cerebral arteriovenous malformation",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.10",
+          "mappings": [
+            {
+              "coding": {
+                "code": "268114",
+                "iris": [
+                  "https://identifiers.org/orphanet.ordo:Orphanet_268114",
+                  "http://www.orpha.net/ORDO/Orphanet_268114"
+                ],
+                "system": "Orphanet"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0013767",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0013767",
+                  "https://identifiers.org/mondo:0013767"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "614470",
+                "iris": [
+                  "https://www.omim.org/entry/614470",
+                  "https://identifiers.org/mim:614470"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Autoimmune lymphoproliferative syndrome type 4",
+          "primaryCoding": {
+            "code": "C2674723",
+            "iris": [
+              "https://identifiers.org/medgen:C2674723",
+              "https://www.ncbi.nlm.nih.gov/medgen/C2674723"
+            ],
+            "name": "Autoimmune lymphoproliferative syndrome type 4",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.4",
+          "mappings": [
+            {
+              "coding": {
+                "code": "MONDO:0008903",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0008903",
+                  "https://identifiers.org/mondo:0008903"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "211980",
+                "iris": [
+                  "https://www.omim.org/entry/211980",
+                  "https://identifiers.org/mim:211980"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Lung cancer",
+          "primaryCoding": {
+            "code": "C0242379",
+            "iris": [
+              "https://identifiers.org/medgen:C0242379",
+              "https://www.ncbi.nlm.nih.gov/medgen/C0242379"
+            ],
+            "name": "Lung cancer",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.2",
+          "mappings": [
+            {
+              "coding": {
+                "code": "227535",
+                "iris": [
+                  "https://identifiers.org/orphanet.ordo:Orphanet_227535",
+                  "http://www.orpha.net/ORDO/Orphanet_227535"
+                ],
+                "system": "Orphanet"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0016419",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0016419",
+                  "https://identifiers.org/mondo:0016419"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "114480",
+                "iris": [
+                  "https://www.omim.org/entry/114480",
+                  "https://identifiers.org/mim:114480"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Familial cancer of breast",
+          "primaryCoding": {
+            "code": "C0346153",
+            "iris": [
+              "https://identifiers.org/medgen:C0346153",
+              "https://www.ncbi.nlm.nih.gov/medgen/C0346153"
+            ],
+            "name": "Familial cancer of breast",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.6",
+          "mappings": [
+            {
+              "coding": {
+                "code": "3339",
+                "iris": [
+                  "https://identifiers.org/orphanet.ordo:Orphanet_3339",
+                  "http://www.orpha.net/ORDO/Orphanet_3339"
+                ],
+                "system": "Orphanet"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0010854",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0010854",
+                  "https://identifiers.org/mondo:0010854"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "600268",
+                "iris": [
+                  "https://www.omim.org/entry/600268",
+                  "https://identifiers.org/mim:600268"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Toriello-Lacassie-Droste syndrome",
+          "primaryCoding": {
+            "code": "C1838329",
+            "iris": [
+              "https://identifiers.org/medgen:C1838329",
+              "https://www.ncbi.nlm.nih.gov/medgen/C1838329"
+            ],
+            "name": "Toriello-Lacassie-Droste syndrome",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.5",
+          "mappings": [
+            {
+              "coding": {
+                "code": "1333",
+                "iris": [
+                  "https://identifiers.org/orphanet.ordo:Orphanet_1333",
+                  "http://www.orpha.net/ORDO/Orphanet_1333"
+                ],
+                "system": "Orphanet"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0015278",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0015278",
+                  "https://identifiers.org/mondo:0015278"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "260350",
+                "iris": [
+                  "https://www.omim.org/entry/260350",
+                  "https://identifiers.org/mim:260350"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Familial pancreatic carcinoma",
+          "primaryCoding": {
+            "code": "C2931038",
+            "iris": [
+              "https://identifiers.org/medgen:C2931038",
+              "https://www.ncbi.nlm.nih.gov/medgen/C2931038"
+            ],
+            "name": "Familial pancreatic carcinoma",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.11",
+          "mappings": [
+            {
+              "coding": {
+                "code": "1340",
+                "iris": [
+                  "https://identifiers.org/orphanet.ordo:Orphanet_1340",
+                  "http://www.orpha.net/ORDO/Orphanet_1340"
+                ],
+                "system": "Orphanet"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0014112",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0014112",
+                  "https://identifiers.org/mondo:0014112"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "615278",
+                "iris": [
+                  "https://www.omim.org/entry/615278",
+                  "https://identifiers.org/mim:615278"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Cardiofaciocutaneous syndrome 2",
+          "primaryCoding": {
+            "code": "C3809005",
+            "iris": [
+              "https://identifiers.org/medgen:C3809005",
+              "https://www.ncbi.nlm.nih.gov/medgen/C3809005"
+            ],
+            "name": "Cardiofaciocutaneous syndrome 2",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV005634967.3",
+          "mappings": [
+            {
+              "coding": {
+                "code": "2612",
+                "iris": [
+                  "https://identifiers.org/orphanet.ordo:Orphanet_2612",
+                  "http://www.orpha.net/ORDO/Orphanet_2612"
+                ],
+                "system": "Orphanet"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "MONDO:0008097",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0008097",
+                  "https://identifiers.org/mondo:0008097"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "163200",
+                "iris": [
+                  "https://www.omim.org/entry/163200",
+                  "https://identifiers.org/mim:163200"
+                ],
+                "system": "OMIM"
+              },
+              "relation": "relatedMatch"
+            },
+            {
+              "coding": {
+                "code": "HP:0010817",
+                "iris": [
+                  "https://identifiers.org/HP:0010817",
+                  "https://hpo.jax.org/browse/term/HP:0010817"
+                ],
+                "system": "Human Phenotype Ontology"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Linear nevus sebaceous syndrome",
+          "primaryCoding": {
+            "code": "C4552097",
+            "iris": [
+              "https://identifiers.org/medgen:C4552097",
+              "https://www.ncbi.nlm.nih.gov/medgen/C4552097"
+            ],
+            "name": "Linear nevus sebaceous syndrome",
+            "system": "MedGen"
+          }
+        }
+      ],
+      "id": "SCV005634967",
+      "membershipOperator": "AND",
+      "type": "ConceptSet"
+    },
+    "predicate": "isCausalFor",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

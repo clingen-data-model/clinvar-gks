@@ -1,0 +1,192 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Oncogenic"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Oncogenic"
+          },
+          "confidence": "criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV005094257.2"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "criteria provided, single submitter"
+            }
+          ],
+          "id": "RCV004668724.2-S-ONCO-CP",
+          "proposition": {
+            "id": "RCV004668724-S-ONCO-CP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV005094257.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "D009369",
+                    "iris": [
+                      "https://identifiers.org/mesh:D009369",
+                      "https://www.ncbi.nlm.nih.gov/mesh/?term=D009369"
+                    ],
+                    "system": "MeSH"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0005070",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0005070",
+                      "https://identifiers.org/mondo:0005070"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "HP:0002664",
+                    "iris": [
+                      "https://identifiers.org/HP:0002664",
+                      "https://hpo.jax.org/browse/term/HP:0002664"
+                    ],
+                    "system": "Human Phenotype Ontology"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "HP:0003008",
+                    "system": "Human Phenotype Ontology"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "HP:0006741",
+                    "system": "Human Phenotype Ontology"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "Neoplasm",
+              "primaryCoding": {
+                "code": "C0027651",
+                "iris": [
+                  "https://identifiers.org/medgen:C0027651",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0027651"
+                ],
+                "name": "Neoplasm",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isOncogenicFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantOncogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "criteria provided, single submitter"
+    }
+  ],
+  "id": "RCV004668724.2-S-ONCO",
+  "proposition": {
+    "id": "RCV004668724-S-ONCO",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "id": "SCV005094257.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "D009369",
+            "iris": [
+              "https://identifiers.org/mesh:D009369",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D009369"
+            ],
+            "system": "MeSH"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0005070",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0005070",
+              "https://identifiers.org/mondo:0005070"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0002664",
+            "iris": [
+              "https://identifiers.org/HP:0002664",
+              "https://hpo.jax.org/browse/term/HP:0002664"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0003008",
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0006741",
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Neoplasm",
+      "primaryCoding": {
+        "code": "C0027651",
+        "iris": [
+          "https://identifiers.org/medgen:C0027651",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0027651"
+        ],
+        "name": "Neoplasm",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isOncogenicFor",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantOncogenicityProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

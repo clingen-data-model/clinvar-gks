@@ -1,0 +1,265 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Tier I (Strong) - diagnostic - supports diagnosis (1)"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Tier I (Strong) - diagnostic - supports diagnosis (1)"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "conceptType": "Classification",
+                    "name": "Tier I (Strong) - diagnostic - supports diagnosis (1)"
+                  },
+                  "confidence": "criteria provided",
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "clinvar.submission:SCV007105422.1"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "extensions": [
+                    {
+                      "name": "clinvarReviewStatus",
+                      "value": "criteria provided, single submitter"
+                    }
+                  ],
+                  "id": "RCV006253519.1-S-SCI-CP-T1",
+                  "proposition": {
+                    "id": "RCV006253519-S-SCI-CP-T1",
+                    "objectCondition": {
+                      "conceptType": "Disease",
+                      "id": "SCV007105422.0",
+                      "mappings": [
+                        {
+                          "coding": {
+                            "code": "146",
+                            "iris": [
+                              "https://identifiers.org/orphanet.ordo:Orphanet_146",
+                              "http://www.orpha.net/ORDO/Orphanet_146"
+                            ],
+                            "system": "Orphanet"
+                          },
+                          "relation": "relatedMatch"
+                        },
+                        {
+                          "coding": {
+                            "code": "D000077273",
+                            "iris": [
+                              "https://identifiers.org/mesh:D000077273",
+                              "https://www.ncbi.nlm.nih.gov/mesh/?term=D000077273"
+                            ],
+                            "system": "MeSH"
+                          },
+                          "relation": "relatedMatch"
+                        },
+                        {
+                          "coding": {
+                            "code": "MONDO:0005075",
+                            "iris": [
+                              "http://purl.obolibrary.org/obo/MONDO_0005075",
+                              "https://identifiers.org/mondo:0005075"
+                            ],
+                            "system": "MONDO"
+                          },
+                          "relation": "relatedMatch"
+                        },
+                        {
+                          "coding": {
+                            "code": "HP:0002895",
+                            "iris": [
+                              "https://identifiers.org/HP:0002895",
+                              "https://hpo.jax.org/browse/term/HP:0002895"
+                            ],
+                            "system": "Human Phenotype Ontology"
+                          },
+                          "relation": "relatedMatch"
+                        }
+                      ],
+                      "name": "Papillary thyroid carcinoma",
+                      "primaryCoding": {
+                        "code": "C0238463",
+                        "iris": [
+                          "https://identifiers.org/medgen:C0238463",
+                          "https://www.ncbi.nlm.nih.gov/medgen/C0238463"
+                        ],
+                        "name": "Papillary thyroid carcinoma",
+                        "system": "MedGen"
+                      }
+                    },
+                    "predicate": "hasSignificanceFor",
+                    "subjectVariant": "clinvar:12582",
+                    "type": "VariantClinicalSignificanceProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "RCV006253519.1-S-SCI-CP",
+          "proposition": {
+            "id": "RCV006253519-S-SCI-CP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV007105422.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "146",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_146",
+                      "http://www.orpha.net/ORDO/Orphanet_146"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "D000077273",
+                    "iris": [
+                      "https://identifiers.org/mesh:D000077273",
+                      "https://www.ncbi.nlm.nih.gov/mesh/?term=D000077273"
+                    ],
+                    "system": "MeSH"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0005075",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0005075",
+                      "https://identifiers.org/mondo:0005075"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "HP:0002895",
+                    "iris": [
+                      "https://identifiers.org/HP:0002895",
+                      "https://hpo.jax.org/browse/term/HP:0002895"
+                    ],
+                    "system": "Human Phenotype Ontology"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "Papillary thyroid carcinoma",
+              "primaryCoding": {
+                "code": "C0238463",
+                "iris": [
+                  "https://identifiers.org/medgen:C0238463",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0238463"
+                ],
+                "name": "Papillary thyroid carcinoma",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "hasSignificanceFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantClinicalSignificanceProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "id": "RCV006253519.1-S-SCI",
+  "proposition": {
+    "id": "RCV006253519-S-SCI",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "id": "SCV007105422.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "146",
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_146",
+              "http://www.orpha.net/ORDO/Orphanet_146"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "D000077273",
+            "iris": [
+              "https://identifiers.org/mesh:D000077273",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D000077273"
+            ],
+            "system": "MeSH"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0005075",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0005075",
+              "https://identifiers.org/mondo:0005075"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0002895",
+            "iris": [
+              "https://identifiers.org/HP:0002895",
+              "https://hpo.jax.org/browse/term/HP:0002895"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Papillary thyroid carcinoma",
+      "primaryCoding": {
+        "code": "C0238463",
+        "iris": [
+          "https://identifiers.org/medgen:C0238463",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0238463"
+        ],
+        "name": "Papillary thyroid carcinoma",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "hasSignificanceFor",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantClinicalSignificanceProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

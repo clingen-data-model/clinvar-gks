@@ -1,0 +1,76 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "drug response"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "drug response"
+          },
+          "confidence": "expert panel",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV002031251.1"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "reviewed by expert panel"
+            }
+          ],
+          "id": "RCV001787371.11-G-DR-EP",
+          "proposition": {
+            "id": "RCV001787371-G-DR-EP",
+            "objectCondition": {
+              "conceptType": "DrugResponse",
+              "id": "SCV002031251.0",
+              "name": "ivacaftor / tezacaftor response - Efficacy"
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "reviewed by expert panel"
+    }
+  ],
+  "id": "RCV001787371.11-G-DR",
+  "proposition": {
+    "id": "RCV001787371-G-DR",
+    "objectCondition": {
+      "conceptType": "DrugResponse",
+      "id": "SCV002031251.0",
+      "name": "ivacaftor / tezacaftor response - Efficacy"
+    },
+    "predicate": "isCausalFor",
+    "subjectVariant": "clinvar:7105",
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

@@ -1,0 +1,188 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "association"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "association"
+          },
+          "confidence": "no assertion criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV004035006.2"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "no assertion criteria provided"
+            }
+          ],
+          "id": "RCV003327361.6-G-ASSOC-NOCP",
+          "proposition": {
+            "id": "RCV003327361-G-ASSOC-NOCP",
+            "objectCondition": {
+              "conditions": [
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV004035006.1",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "MONDO:0006193",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0006193",
+                          "https://identifiers.org/mondo:0006193"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Endometrial hyperplasia without atypia",
+                  "primaryCoding": {
+                    "code": "C1516855",
+                    "iris": [
+                      "https://identifiers.org/medgen:C1516855",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C1516855"
+                    ],
+                    "name": "Endometrial hyperplasia without atypia",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "id": "SCV004035006.0",
+                  "mappings": [
+                    {
+                      "coding": {
+                        "code": "MONDO:0006096",
+                        "iris": [
+                          "http://purl.obolibrary.org/obo/MONDO_0006096",
+                          "https://identifiers.org/mondo:0006096"
+                        ],
+                        "system": "MONDO"
+                      },
+                      "relation": "relatedMatch"
+                    }
+                  ],
+                  "name": "Atypical endometrial hyperplasia",
+                  "primaryCoding": {
+                    "code": "C0349579",
+                    "iris": [
+                      "https://identifiers.org/medgen:C0349579",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C0349579"
+                    ],
+                    "name": "Atypical endometrial hyperplasia",
+                    "system": "MedGen"
+                  }
+                }
+              ],
+              "id": "SCV004035006",
+              "membershipOperator": "AND",
+              "type": "ConceptSet"
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "no assertion criteria provided"
+    }
+  ],
+  "id": "RCV003327361.6-G-ASSOC",
+  "proposition": {
+    "id": "RCV003327361-G-ASSOC",
+    "objectCondition": {
+      "conditions": [
+        {
+          "conceptType": "Disease",
+          "id": "SCV004035006.1",
+          "mappings": [
+            {
+              "coding": {
+                "code": "MONDO:0006193",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0006193",
+                  "https://identifiers.org/mondo:0006193"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Endometrial hyperplasia without atypia",
+          "primaryCoding": {
+            "code": "C1516855",
+            "iris": [
+              "https://identifiers.org/medgen:C1516855",
+              "https://www.ncbi.nlm.nih.gov/medgen/C1516855"
+            ],
+            "name": "Endometrial hyperplasia without atypia",
+            "system": "MedGen"
+          }
+        },
+        {
+          "conceptType": "Disease",
+          "id": "SCV004035006.0",
+          "mappings": [
+            {
+              "coding": {
+                "code": "MONDO:0006096",
+                "iris": [
+                  "http://purl.obolibrary.org/obo/MONDO_0006096",
+                  "https://identifiers.org/mondo:0006096"
+                ],
+                "system": "MONDO"
+              },
+              "relation": "relatedMatch"
+            }
+          ],
+          "name": "Atypical endometrial hyperplasia",
+          "primaryCoding": {
+            "code": "C0349579",
+            "iris": [
+              "https://identifiers.org/medgen:C0349579",
+              "https://www.ncbi.nlm.nih.gov/medgen/C0349579"
+            ],
+            "name": "Atypical endometrial hyperplasia",
+            "system": "MedGen"
+          }
+        }
+      ],
+      "id": "SCV004035006",
+      "membershipOperator": "AND",
+      "type": "ConceptSet"
+    },
+    "predicate": "isCausalFor",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}
