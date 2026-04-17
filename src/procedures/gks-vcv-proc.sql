@@ -113,23 +113,31 @@ BEGIN
           WHERE b.prop_type = 'sci'
           GROUP BY 1, 2, 3, 4, 5
       ),
+      vcv_conditions_deduped AS (
+          SELECT variation_id, statement_group, prop_type, submission_level, tier_grouping,
+                 condition_id, ANY_VALUE(condition_json) as condition_json
+          FROM (
+            SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level,
+                   IF(b.prop_type = 'sci', b.classif_type, CAST(NULL AS STRING)) as tier_grouping,
+                   cond.id as condition_id,
+                   TO_JSON(STRUCT(
+                     cond.id, cond.name, cond.conceptType, cond.primaryCoding, cond.mappings
+                   )) as condition_json
+            FROM `{P}.temp_vcv_base_data` b
+            JOIN `{S}.gks_scv_condition_sets` scs ON b.scv_id = scs.scv_id
+            CROSS JOIN UNNEST(
+              IF(scs.condition IS NOT NULL,
+                [scs.condition],
+                ARRAY(SELECT AS STRUCT c.* FROM UNNEST(scs.conditionSet.conditions) c)
+              )
+            ) as cond
+          )
+          GROUP BY 1, 2, 3, 4, 5, 6
+      ),
       vcv_conditions AS (
-          SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level,
-                 IF(b.prop_type = 'sci', b.classif_type, CAST(NULL AS STRING)) as tier_grouping,
-                 ARRAY_AGG(DISTINCT condition_json) as unique_conditions
-          FROM `{P}.temp_vcv_base_data` b
-          JOIN `{S}.gks_scv_condition_sets` scs ON b.scv_id = scs.scv_id
-          CROSS JOIN UNNEST(
-            IF(scs.condition IS NOT NULL,
-              [TO_JSON(STRUCT(
-                scs.condition.id, scs.condition.name, scs.condition.conceptType,
-                scs.condition.primaryCoding, scs.condition.mappings
-              ))],
-              ARRAY(SELECT TO_JSON(STRUCT(
-                c.id, c.name, c.conceptType, c.primaryCoding, c.mappings
-              )) FROM UNNEST(scs.conditionSet.conditions) c)
-            )
-          ) as condition_json
+          SELECT variation_id, statement_group, prop_type, submission_level, tier_grouping,
+                 ARRAY_AGG(condition_json) as unique_conditions
+          FROM vcv_conditions_deduped
           GROUP BY 1, 2, 3, 4, 5
       ),
       final_prep AS (
