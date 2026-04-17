@@ -38,8 +38,8 @@ BEGIN
           scv.id,
           scv.version,
           IF(
-            cct.final_proposition_type IS NOT NULL,
-            STRUCT(cct.final_proposition_type as type, cct.final_predicate as pred),
+            cpt.gks_type IS NOT NULL,
+            STRUCT(cpt.gks_type as type, cpt.gks_predicate as pred),
             STRUCT('ClinvarUndefinedProposition' as type, 'isClinvarUndefinedAssociationFor' as pred)
           ) as proposition,
 
@@ -137,6 +137,9 @@ BEGIN
             cct.code = scv.classif_type
             AND
             cct.statement_type = scv.statement_type
+        LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt
+          ON
+            cpt.code = scv.original_proposition_type
         LEFT JOIN `clinvar_ingest.submission_level` sl
           ON
             sl.rank = scv.rank
