@@ -15,6 +15,7 @@ BEGIN
   DECLARE temp_rcv_trait_assignment_stage4_query STRING;
   DECLARE gks_scv_condition_mapping_query STRING;
   DECLARE query_gks_traits STRING;
+  DECLARE query_gks_trait_sets STRING;
   DECLARE query_condition_sets STRING;
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
@@ -337,6 +338,45 @@ BEGIN
     SET temp_all_rcv_traits_query = REPLACE(temp_all_rcv_traits_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE temp_all_rcv_traits_query;
+
+    -- -----------------------------------------------------------------------
+    -- STEP 5b: Create gks_trait_sets (persistent baseline traitset representations)
+    -- Unique trait sets with clinvar.traitset:{id} identifiers, referencing
+    -- member traits via #/traits/clinvar.trait:{trait_id}.
+    -- -----------------------------------------------------------------------
+    SET query_gks_trait_sets = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_trait_sets` AS
+      WITH trait_set_traits AS (
+        SELECT DISTINCT
+          art.trait_set_id,
+          art.trait_id
+        FROM {P}.temp_all_rcv_traits art
+      ),
+      trait_set_info AS (
+        SELECT DISTINCT
+          gsts.trait_set_id,
+          gsts.trait_set_type
+        FROM {P}.temp_gks_scv_trait_sets gsts
+      )
+      SELECT
+        FORMAT('clinvar.traitset:%s', tsi.trait_set_id) AS id,
+        tsi.trait_set_type AS conceptSetType,
+        ARRAY_AGG(
+          FORMAT('#/traits/clinvar.trait:%s', tst.trait_id)
+          ORDER BY tst.trait_id
+        ) AS condition_refs,
+        IF(
+          ANY_VALUE(art.trait_relationship_type) IN ('Finding member','co-occurring condition'),
+          'AND',
+          'OR'
+        ) AS membershipOperator
+      FROM trait_set_info tsi
+      JOIN trait_set_traits tst ON tst.trait_set_id = tsi.trait_set_id
+      LEFT JOIN {P}.temp_all_rcv_traits art ON art.trait_set_id = tsi.trait_set_id AND art.trait_id = tst.trait_id
+      GROUP BY tsi.trait_set_id, tsi.trait_set_type
+    """, '{S}', rec.schema_name);
+    SET query_gks_trait_sets = REPLACE(query_gks_trait_sets, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_gks_trait_sets;
 
     -- -----------------------------------------------------------------------
     -- STEP 6: Create temp_normalized_traits
@@ -1659,12 +1699,9 @@ BEGIN
           t.id = scm.trait_id
       ),
       multi_sets AS (
-        -- Aggregate only for multi-condition SCVs, using references to gks_traits
+        -- Aggregate only for multi-condition SCVs
         SELECT
           ec.scv_id,
-          ARRAY_AGG(
-            IF(ec.trait_id IS NOT NULL, FORMAT('#/traits/clinvar.trait:%s', ec.trait_id), ec.id)
-          ) as condition_refs,
           ARRAY_AGG(
             STRUCT(ec.id, ec.name, ec.conceptType, ec.primaryCoding, ec.mappings, ec.extensions)
           ) as conditions,
@@ -1709,7 +1746,6 @@ BEGIN
           ms.scv_id IS NOT NULL,
           STRUCT(
             FORMAT('clinvar.traitset:%s', gsts.trait_set_id) as id,
-            ms.condition_refs,
             ms.conditions,
             ms.membershipOperator,
             ARRAY_CONCAT(
