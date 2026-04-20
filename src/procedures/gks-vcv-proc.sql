@@ -114,23 +114,35 @@ BEGIN
           GROUP BY 1, 2, 3, 4, 5
       ),
       vcv_conditions_deduped AS (
+          -- Preserve top-level identity: single conditions keyed by trait_id,
+          -- conditionSets keyed by trait_set_id. Never flatten sets into traits.
           SELECT variation_id, statement_group, prop_type, submission_level, tier_grouping,
-                 condition_id, ANY_VALUE(condition_json) as condition_json
+                 condition_ref, ANY_VALUE(condition_json) as condition_json
           FROM (
+            -- Single conditions: reference by trait_id
             SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level,
                    IF(b.prop_type = 'sci', b.classif_type, CAST(NULL AS STRING)) as tier_grouping,
-                   cond.id as condition_id,
+                   scs.condition.id as condition_ref,
                    TO_JSON(STRUCT(
-                     cond.id, cond.name, cond.conceptType, cond.primaryCoding, cond.mappings
+                     scs.condition.id as id,
+                     scs.condition.name, scs.condition.conceptType,
+                     scs.condition.primaryCoding, scs.condition.mappings
                    )) as condition_json
             FROM `{P}.temp_vcv_base_data` b
             JOIN `{S}.gks_scv_condition_sets` scs ON b.scv_id = scs.scv_id
-            CROSS JOIN UNNEST(
-              IF(scs.condition IS NOT NULL,
-                [scs.condition],
-                ARRAY(SELECT AS STRUCT c.* FROM UNNEST(scs.conditionSet.conditions) c)
-              )
-            ) as cond
+            WHERE scs.condition IS NOT NULL
+            UNION ALL
+            -- ConditionSets: reference by trait_set_id (kept as atomic unit)
+            SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level,
+                   IF(b.prop_type = 'sci', b.classif_type, CAST(NULL AS STRING)) as tier_grouping,
+                   scs.conditionSet.id as condition_ref,
+                   TO_JSON(STRUCT(
+                     scs.conditionSet.id as id,
+                     scs.conditionSet.membershipOperator
+                   )) as condition_json
+            FROM `{P}.temp_vcv_base_data` b
+            JOIN `{S}.gks_scv_condition_sets` scs ON b.scv_id = scs.scv_id
+            WHERE scs.conditionSet IS NOT NULL
           )
           GROUP BY 1, 2, 3, 4, 5, 6
       ),
