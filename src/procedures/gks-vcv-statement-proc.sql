@@ -190,7 +190,7 @@ BEGIN
             ),
             STRUCT(
               'EvidenceLine' AS type,
-              'supports' AS directionOfEvidenceProvided,
+              'neutral' AS directionOfEvidenceProvided,
               'non-contributing' AS strengthOfEvidenceProvided,
               ARRAY(
                 SELECT TO_JSON(STRUCT(stmt_id AS id))
@@ -280,7 +280,7 @@ BEGIN
             ),
             STRUCT(
               'EvidenceLine' AS type,
-              'supports' AS directionOfEvidenceProvided,
+              'neutral' AS directionOfEvidenceProvided,
               'non-contributing' AS strengthOfEvidenceProvided,
               ARRAY(
                 SELECT TO_JSON(STRUCT(nc.layer_id AS id))
@@ -371,7 +371,7 @@ BEGIN
             CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
           ),
           IF(nc.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, 'non-contributing' AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
+            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, 'non-contributing' AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
             CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
           )
         ) AS evidenceLines
@@ -438,7 +438,7 @@ BEGIN
             CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
           ),
           IF(nc.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, 'non-contributing' AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
+            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, 'non-contributing' AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
             CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
           )
         ) AS evidenceLines
