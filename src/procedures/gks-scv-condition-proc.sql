@@ -14,6 +14,7 @@ BEGIN
   DECLARE temp_rcv_trait_assignment_stage3_query STRING;
   DECLARE temp_rcv_trait_assignment_stage4_query STRING;
   DECLARE gks_scv_condition_mapping_query STRING;
+  DECLARE query_gks_traits STRING;
   DECLARE query_condition_sets STRING;
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
@@ -173,6 +174,31 @@ BEGIN
     SET temp_gks_trait_query = REPLACE(temp_gks_trait_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE temp_gks_trait_query;
+
+    -- -----------------------------------------------------------------------
+    -- STEP 1b: Create gks_traits (persistent baseline trait representations)
+    -- All traits with clinvar.trait:{id} identifiers, stripped of SCV-specific
+    -- extensions. Only 'aliases' extension is retained.
+    -- -----------------------------------------------------------------------
+    SET query_gks_traits = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_traits` AS
+      SELECT
+        FORMAT('clinvar.trait:%s', t.id) AS id,
+        t.conceptType,
+        t.name,
+        t.primaryCoding,
+        t.mappings,
+        IF(
+          ARRAY_LENGTH(
+            ARRAY(SELECT AS STRUCT e.name, e.value_string, e.value_array_codings FROM UNNEST(t.extensions) e WHERE e.name = 'aliases')
+          ) > 0,
+          ARRAY(SELECT AS STRUCT e.name, e.value_string, e.value_array_codings FROM UNNEST(t.extensions) e WHERE e.name = 'aliases'),
+          CAST(NULL AS ARRAY<STRUCT<name STRING, value_string STRING, value_array_codings ARRAY<STRUCT<code STRING, system STRING>>>>)
+        ) AS extensions
+      FROM {P}.temp_gks_trait t
+    """, '{S}', rec.schema_name);
+    SET query_gks_traits = REPLACE(query_gks_traits, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_gks_traits;
 
     -- -----------------------------------------------------------------------
     -- STEP 2: Create temp_normalized_trait_mappings
@@ -1581,6 +1607,7 @@ BEGIN
         SELECT
           scm.scv_id,
           scm.cat_id as id,
+          scm.trait_id,
           IFNULL(scm.cat_name, scm.trait_name) as name,
           scm.cat_type as conceptType,
           t.primaryCoding,
@@ -1632,27 +1659,30 @@ BEGIN
           t.id = scm.trait_id
       ),
       multi_sets AS (
-        -- Aggregate only for multi-condition SCVs
+        -- Aggregate only for multi-condition SCVs, using references to gks_traits
         SELECT
-          scv_id,
+          ec.scv_id,
           ARRAY_AGG(
-            STRUCT(id, name, conceptType, primaryCoding, mappings, extensions)
+            IF(ec.trait_id IS NOT NULL, FORMAT('#/traits/clinvar.trait:%s', ec.trait_id), ec.id)
+          ) as condition_refs,
+          ARRAY_AGG(
+            STRUCT(ec.id, ec.name, ec.conceptType, ec.primaryCoding, ec.mappings, ec.extensions)
           ) as conditions,
           IF(
-            ANY_VALUE(trait_relationship_type) IN ('Finding member','co-occurring condition'),
+            ANY_VALUE(ec.trait_relationship_type) IN ('Finding member','co-occurring condition'),
             'AND',
             'OR'
           ) as membershipOperator
-        FROM enriched_conditions
-        WHERE trait_count > 1
-        GROUP BY scv_id
+        FROM enriched_conditions ec
+        WHERE ec.trait_count > 1
+        GROUP BY ec.scv_id
       )
       SELECT
         gsts.scv_id,
         IF(
           ec.id IS NOT NULL,
           STRUCT(
-            ec.id,
+            IF(ec.trait_id IS NOT NULL, FORMAT('clinvar.trait:%s', ec.trait_id), ec.id) as id,
             ec.name,
             ec.conceptType,
             ec.primaryCoding,
@@ -1678,7 +1708,8 @@ BEGIN
         IF(
           ms.scv_id IS NOT NULL,
           STRUCT(
-            ms.scv_id as id,
+            FORMAT('clinvar.traitset:%s', gsts.trait_set_id) as id,
+            ms.condition_refs,
             ms.conditions,
             ms.membershipOperator,
             ARRAY_CONCAT(
