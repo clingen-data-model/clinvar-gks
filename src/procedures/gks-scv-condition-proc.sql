@@ -75,7 +75,7 @@ BEGIN
               )
               FROM `clinvar_ingest.gks_xref_iri_templates` iri
               WHERE iri.db = xref.db
-                AND iri.type = IFNULL(xref.type, 'primary')
+                AND iri.type IS NOT DISTINCT FROM xref.type
             ) as iris
           ) as mapping
         from traits t
