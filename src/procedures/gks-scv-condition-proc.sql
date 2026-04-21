@@ -1,6 +1,6 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_scv_condition_proc`(on_date DATE, debug BOOL)
 BEGIN
-  DECLARE temp_gks_trait_query STRING;
+  DECLARE query_gks_traits STRING;
   DECLARE temp_normalized_trait_mappings_query STRING;
   DECLARE temp_rcv_mapping_traits_query STRING;
   DECLARE temp_gks_scv_trait_sets_query STRING;
@@ -14,7 +14,6 @@ BEGIN
   DECLARE temp_rcv_trait_assignment_stage3_query STRING;
   DECLARE temp_rcv_trait_assignment_stage4_query STRING;
   DECLARE gks_scv_condition_mapping_query STRING;
-  DECLARE query_gks_traits STRING;
   DECLARE query_gks_trait_sets STRING;
   DECLARE query_condition_sets STRING;
   DECLARE temp_create STRING;
@@ -32,7 +31,7 @@ BEGIN
     -- Clean up any persistent temp tables from a prior debug run
     IF NOT debug THEN
       CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
-        'temp_gks_trait', 'temp_normalized_trait_mappings', 'temp_rcv_mapping_traits',
+        'temp_normalized_trait_mappings', 'temp_rcv_mapping_traits',
         'temp_gks_scv_trait_sets', 'temp_all_rcv_traits', 'temp_normalized_traits',
         'temp_scv_trait_name_xrefs', 'temp_all_scv_traits', 'temp_all_mapped_scv_traits',
         'temp_rcv_trait_assignment_stage1', 'temp_rcv_trait_assignment_stage2',
@@ -41,115 +40,95 @@ BEGIN
     END IF;
 
     -- -----------------------------------------------------------------------
-    -- STEP 1: Create temp_gks_trait
-    -- -----------------------------------------------------------------------
-    SET temp_gks_trait_query = REPLACE("""
-      {CT} {P}.temp_gks_trait
-      AS
-        WITH traits AS (
-          select distinct
-            t.id,
-            t.type,
-            t.name,
-            ARRAY_TO_STRING(t.alternate_names,', ') as synonyms,
-            clinvar_ingest.parseXRefItems(t.xrefs) as xrefs
-          FROM `{S}.trait` t
-        ),
-        trait_xrefs AS (
-          select DISTINCT
-            t.id,
-            STRUCT(
-              IF(xref.db='MedGen', t.name, null) as name,
-              xref.id as code,
-              xref.db as system,
-              ARRAY(
-                SELECT FORMAT(
-                  iri.template,
-                  CASE
-                    WHEN iri.id_replace_pattern IS NOT NULL
-                      THEN REGEXP_REPLACE(xref.id, iri.id_replace_pattern, iri.id_replacement)
-                    WHEN iri.id_extract_pattern IS NOT NULL
-                      THEN REGEXP_EXTRACT(xref.id, iri.id_extract_pattern)
-                    ELSE xref.id
-                  END
-                )
-                FROM `clinvar_ingest.gks_xref_iri_templates` iri
-                WHERE iri.db = xref.db
-                  AND iri.type = IFNULL(xref.type, 'primary')
-              ) as iris
-            ) as mapping
-          from traits t
-          CROSS JOIN UNNEST(t.xrefs) as xref
-        )
-        deduped_trait_xrefs AS (
-          -- Deduplicate by (trait_id, code, system) keeping one mapping per unique pair
-          SELECT
-            tx.id,
-            tx.mapping,
-            ROW_NUMBER() OVER (PARTITION BY tx.id, tx.mapping.code, tx.mapping.system ORDER BY tx.mapping.code) as rn
-          FROM trait_xrefs tx
-        )
-        SELECT
-          t.id,
-          t.type as conceptType,
-          t.name,
-          ARRAY_AGG(
-            IF(
-              dtx.mapping.system = 'MedGen',
-              dtx.mapping,
-              null
-            )
-            IGNORE NULLS
-          )[SAFE_OFFSET(0)] as primaryCoding,
-          ARRAY_AGG(
-            IF(
-              dtx.mapping.system <> 'MedGen',
-              STRUCT(dtx.mapping as coding, 'relatedMatch' as relation),
-              null
-            )
-            IGNORE NULLS
-          ) as mappings,
-          IF(
-            t.synonyms is not null and t.synonyms <> '',
-            [STRUCT(
-              'aliases' as name,
-              t.synonyms as value_string,
-              [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-            )],
-            CAST(NULL AS ARRAY<STRUCT<name STRING, value_string STRING, value_array_codings ARRAY<STRUCT<code STRING, system STRING>>>>)
-          ) as extensions
-        FROM traits t
-        LEFT JOIN deduped_trait_xrefs dtx
-        ON
-          dtx.id = t.id AND dtx.rn = 1
-        GROUP BY
-          t.id,
-          t.type,
-          t.name,
-          t.synonyms
-      """, '{S}', rec.schema_name);
-    SET temp_gks_trait_query = REPLACE(temp_gks_trait_query, '{CT}', temp_create);
-    SET temp_gks_trait_query = REPLACE(temp_gks_trait_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE temp_gks_trait_query;
-
-    -- -----------------------------------------------------------------------
-    -- STEP 1b: Create gks_traits (persistent baseline trait representations)
-    -- All traits with clinvar.trait:{id} identifiers, stripped of SCV-specific
-    -- extensions. Only 'aliases' extension is retained.
+    -- STEP 1: Create gks_traits (canonical trait representations)
+    -- All traits with clinvar.trait:{id} identifiers, with primaryCoding,
+    -- mappings (deduplicated by code+system), and aliases extension.
     -- -----------------------------------------------------------------------
     SET query_gks_traits = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_traits` AS
+      WITH traits AS (
+        select distinct
+          t.id,
+          t.type,
+          t.name,
+          ARRAY_TO_STRING(t.alternate_names,', ') as synonyms,
+          clinvar_ingest.parseXRefItems(t.xrefs) as xrefs
+        FROM `{S}.trait` t
+      ),
+      trait_xrefs AS (
+        select DISTINCT
+          t.id,
+          STRUCT(
+            IF(xref.db='MedGen', t.name, null) as name,
+            xref.id as code,
+            xref.db as system,
+            ARRAY(
+              SELECT FORMAT(
+                iri.template,
+                CASE
+                  WHEN iri.id_replace_pattern IS NOT NULL
+                    THEN REGEXP_REPLACE(xref.id, iri.id_replace_pattern, iri.id_replacement)
+                  WHEN iri.id_extract_pattern IS NOT NULL
+                    THEN REGEXP_EXTRACT(xref.id, iri.id_extract_pattern)
+                  ELSE xref.id
+                END
+              )
+              FROM `clinvar_ingest.gks_xref_iri_templates` iri
+              WHERE iri.db = xref.db
+                AND iri.type = IFNULL(xref.type, 'primary')
+            ) as iris
+          ) as mapping
+        from traits t
+        CROSS JOIN UNNEST(t.xrefs) as xref
+      ),
+      deduped_trait_xrefs AS (
+        -- Deduplicate by (trait_id, code, system) keeping one mapping per unique pair
+        SELECT
+          tx.id,
+          tx.mapping,
+          ROW_NUMBER() OVER (PARTITION BY tx.id, tx.mapping.code, tx.mapping.system ORDER BY tx.mapping.code) as rn
+        FROM trait_xrefs tx
+      )
       SELECT
         FORMAT('clinvar.trait:%s', t.id) AS id,
-        t.conceptType,
+        t.id as trait_id,
+        t.type as conceptType,
         t.name,
-        t.primaryCoding,
-        t.mappings,
-        t.extensions
-      FROM {P}.temp_gks_trait t
+        ARRAY_AGG(
+          IF(
+            dtx.mapping.system = 'MedGen',
+            dtx.mapping,
+            null
+          )
+          IGNORE NULLS
+        )[SAFE_OFFSET(0)] as primaryCoding,
+        ARRAY_AGG(
+          IF(
+            dtx.mapping.system <> 'MedGen',
+            STRUCT(dtx.mapping as coding, 'relatedMatch' as relation),
+            null
+          )
+          IGNORE NULLS
+        ) as mappings,
+        IF(
+          t.synonyms is not null and t.synonyms <> '',
+          [STRUCT(
+            'aliases' as name,
+            t.synonyms as value_string,
+            [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
+          )],
+          CAST(NULL AS ARRAY<STRUCT<name STRING, value_string STRING, value_array_codings ARRAY<STRUCT<code STRING, system STRING>>>>)
+        ) as extensions
+      FROM traits t
+      LEFT JOIN deduped_trait_xrefs dtx
+      ON
+        dtx.id = t.id AND dtx.rn = 1
+      GROUP BY
+        t.id,
+        t.type,
+        t.name,
+        t.synonyms
     """, '{S}', rec.schema_name);
-    SET query_gks_traits = REPLACE(query_gks_traits, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_gks_traits;
 
     -- -----------------------------------------------------------------------
@@ -1645,9 +1624,9 @@ BEGIN
           scm.trait_relationship_type,
           COUNT(*) OVER (PARTITION BY scm.scv_id) as trait_count
         FROM `{S}.gks_scv_condition_mapping` scm
-        LEFT JOIN {P}.temp_gks_trait t
+        LEFT JOIN `{S}.gks_traits` t
         ON
-          t.id = scm.trait_id
+          t.trait_id = scm.trait_id
       ),
       multi_sets AS (
         -- Aggregate only for multi-condition SCVs
@@ -1729,7 +1708,6 @@ BEGIN
     EXECUTE IMMEDIATE query_condition_sets;
 
     IF NOT debug THEN
-      DROP TABLE IF EXISTS _SESSION.temp_gks_trait;
       DROP TABLE IF EXISTS _SESSION.temp_normalized_trait_mappings;
       DROP TABLE IF EXISTS _SESSION.temp_rcv_mapping_traits;
       DROP TABLE IF EXISTS _SESSION.temp_gks_scv_trait_sets;
