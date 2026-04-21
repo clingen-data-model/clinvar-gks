@@ -56,7 +56,7 @@ BEGIN
           FROM `{S}.trait` t
         ),
         trait_xrefs AS (
-          select
+          select DISTINCT
             t.id,
             STRUCT(
               IF(xref.db='MedGen', t.name, null) as name,
@@ -76,47 +76,18 @@ BEGIN
                 FROM `clinvar_ingest.gks_xref_iri_templates` iri
                 WHERE iri.db = xref.db
                   AND iri.type = IFNULL(xref.type, 'primary')
-              ) as iris,
-              ARRAY_CONCAT(
-                IF(
-                  xref.type IS NOT NULL,
-                  [STRUCT('mappingType' as name, xref.type as value)],
-                  []
-                ),
-                IF(
-                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.status IGNORE NULLS))>0,
-                  [STRUCT(
-                    'mappingStatuses' as name,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.status IGNORE NULLS), ', ') as value
-                  )],
-                  []
-                ),
-                IF(
-                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.url IGNORE NULLS))>0,
-                  [STRUCT(
-                    'mappingUrls' as name,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.url IGNORE NULLS), ', ') as value
-                  )],
-                  []
-                ),
-                IF(
-                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.ref_field IGNORE NULLS))>0,
-                  [STRUCT(
-                    'mappingRefFields' as name,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.ref_field IGNORE NULLS), ', ') as value
-                  )],
-                  []
-                )
-              ) as extensions
+              ) as iris
             ) as mapping
           from traits t
           CROSS JOIN UNNEST(t.xrefs) as xref
-          GROUP BY
-            t.id,
-            t.name,
-            xref.type,
-            xref.id,
-            xref.db
+        )
+        deduped_trait_xrefs AS (
+          -- Deduplicate by (trait_id, code, system) keeping one mapping per unique pair
+          SELECT
+            tx.id,
+            tx.mapping,
+            ROW_NUMBER() OVER (PARTITION BY tx.id, tx.mapping.code, tx.mapping.system ORDER BY tx.mapping.code) as rn
+          FROM trait_xrefs tx
         )
         SELECT
           t.id,
@@ -124,16 +95,16 @@ BEGIN
           t.name,
           ARRAY_AGG(
             IF(
-              tx.mapping.system = 'MedGen',
-              tx.mapping,
+              dtx.mapping.system = 'MedGen',
+              dtx.mapping,
               null
             )
             IGNORE NULLS
           )[SAFE_OFFSET(0)] as primaryCoding,
           ARRAY_AGG(
             IF(
-              tx.mapping.system <> 'MedGen',
-              STRUCT(tx.mapping as coding, 'relatedMatch' as relation),
+              dtx.mapping.system <> 'MedGen',
+              STRUCT(dtx.mapping as coding, 'relatedMatch' as relation),
               null
             )
             IGNORE NULLS
@@ -162,9 +133,9 @@ BEGIN
             )
           ) as extensions
         FROM traits t
-        LEFT JOIN trait_xrefs tx
+        LEFT JOIN deduped_trait_xrefs dtx
         ON
-          tx.id = t.id
+          dtx.id = t.id AND dtx.rn = 1
         GROUP BY
           t.id,
           t.type,
