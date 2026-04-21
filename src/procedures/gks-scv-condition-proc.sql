@@ -109,28 +109,14 @@ BEGIN
             )
             IGNORE NULLS
           ) as mappings,
-          ARRAY_CONCAT(
-            [
-              STRUCT(
-                'clinvarTraitId' as name,
-                t.id as value_string,
-                [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-              ),
-              STRUCT(
-                'clinvarTraitType' as name,
-                t.type as value_string,
-                [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-              )
-            ],
-            IF(
-              t.synonyms is not null and t.synonyms <> '',
-              [STRUCT(
-                'aliases' as name,
-                t.synonyms as value_string,
-                [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-              )],
-              []
-            )
+          IF(
+            t.synonyms is not null and t.synonyms <> '',
+            [STRUCT(
+              'aliases' as name,
+              t.synonyms as value_string,
+              [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
+            )],
+            CAST(NULL AS ARRAY<STRUCT<name STRING, value_string STRING, value_array_codings ARRAY<STRUCT<code STRING, system STRING>>>>)
           ) as extensions
         FROM traits t
         LEFT JOIN deduped_trait_xrefs dtx
@@ -160,13 +146,7 @@ BEGIN
         t.name,
         t.primaryCoding,
         t.mappings,
-        IF(
-          ARRAY_LENGTH(
-            ARRAY(SELECT AS STRUCT e.name, e.value_string, e.value_array_codings FROM UNNEST(t.extensions) e WHERE e.name = 'aliases')
-          ) > 0,
-          ARRAY(SELECT AS STRUCT e.name, e.value_string, e.value_array_codings FROM UNNEST(t.extensions) e WHERE e.name = 'aliases'),
-          CAST(NULL AS ARRAY<STRUCT<name STRING, value_string STRING, value_array_codings ARRAY<STRUCT<code STRING, system STRING>>>>)
-        ) AS extensions
+        t.extensions
       FROM {P}.temp_gks_trait t
     """, '{S}', rec.schema_name);
     SET query_gks_traits = REPLACE(query_gks_traits, '{P}', IF(debug, rec.schema_name, '_SESSION'));
