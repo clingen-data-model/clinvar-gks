@@ -91,14 +91,6 @@ BEGIN
           AND iri.db = dtxr.db
           AND iri.type IS NOT DISTINCT FROM dtxr.type
         GROUP BY dtxr.trait_id, dtxr.trait_name, dtxr.id, dtxr.db
-      ),
-      deduped_trait_xrefs AS (
-        -- Deduplicate by (trait_id, code, system) keeping one mapping per unique pair
-        SELECT
-          tx.id,
-          tx.mapping,
-          ROW_NUMBER() OVER (PARTITION BY tx.id, tx.mapping.code, tx.mapping.system ORDER BY tx.mapping.code) as rn
-        FROM trait_xrefs tx
       )
       SELECT
         FORMAT('clinvar.trait:%s', t.id) AS id,
@@ -107,16 +99,16 @@ BEGIN
         t.name,
         ARRAY_AGG(
           IF(
-            dtx.mapping.system = 'MedGen',
-            dtx.mapping,
+            tx.mapping.system = 'MedGen',
+            tx.mapping,
             null
           )
           IGNORE NULLS
         )[SAFE_OFFSET(0)] as primaryCoding,
         ARRAY_AGG(
           IF(
-            dtx.mapping.system <> 'MedGen',
-            STRUCT(dtx.mapping as coding, 'relatedMatch' as relation),
+            tx.mapping.system <> 'MedGen',
+            STRUCT(tx.mapping as coding, 'relatedMatch' as relation),
             null
           )
           IGNORE NULLS
@@ -131,9 +123,9 @@ BEGIN
           CAST(NULL AS ARRAY<STRUCT<name STRING, value_string STRING, value_array_codings ARRAY<STRUCT<code STRING, system STRING>>>>)
         ) as extensions
       FROM traits t
-      LEFT JOIN deduped_trait_xrefs dtx
+      LEFT JOIN trait_xrefs tx
       ON
-        dtx.id = t.id AND dtx.rn = 1
+        tx.id = t.id
       GROUP BY
         t.id,
         t.type,
