@@ -55,33 +55,42 @@ BEGIN
           clinvar_ingest.parseXRefItems(t.xrefs) as xrefs
         FROM `{S}.trait` t
       ),
+      distinct_trait_xrefs AS (
+        SELECT DISTINCT
+          t.id as trait_id,
+          t.name as trait_name,
+          xref.id,
+          xref.db,
+          xref.type
+        FROM traits t
+        CROSS JOIN UNNEST(t.xrefs) as xref
+      ),
       trait_xrefs AS (
         SELECT
-          t.id,
+          dtxr.trait_id as id,
           STRUCT(
-            IF(xref.db='MedGen', t.name, null) as name,
-            xref.id as code,
-            xref.db as system,
+            IF(dtxr.db='MedGen', dtxr.trait_name, null) as name,
+            dtxr.id as code,
+            dtxr.db as system,
             ARRAY_AGG(
               FORMAT(
                 iri.template,
                 CASE
                   WHEN iri.id_replace_pattern IS NOT NULL
-                    THEN REGEXP_REPLACE(xref.id, iri.id_replace_pattern, iri.id_replacement)
+                    THEN REGEXP_REPLACE(dtxr.id, iri.id_replace_pattern, iri.id_replacement)
                   WHEN iri.id_extract_pattern IS NOT NULL
-                    THEN REGEXP_EXTRACT(xref.id, iri.id_extract_pattern)
-                  ELSE xref.id
+                    THEN REGEXP_EXTRACT(dtxr.id, iri.id_extract_pattern)
+                  ELSE dtxr.id
                 END
               )
             ) as iris
           ) as mapping
-        FROM traits t
-        CROSS JOIN UNNEST(t.xrefs) as xref
+        FROM distinct_trait_xrefs dtxr
         JOIN `clinvar_ingest.gks_xref_iri_templates` iri
           ON iri.category = 'Condition'
-          AND iri.db = xref.db
-          AND iri.type IS NOT DISTINCT FROM xref.type
-        GROUP BY t.id, t.name, xref.id, xref.db
+          AND iri.db = dtxr.db
+          AND iri.type IS NOT DISTINCT FROM dtxr.type
+        GROUP BY dtxr.trait_id, dtxr.trait_name, dtxr.id, dtxr.db
       ),
       deduped_trait_xrefs AS (
         -- Deduplicate by (trait_id, code, system) keeping one mapping per unique pair
