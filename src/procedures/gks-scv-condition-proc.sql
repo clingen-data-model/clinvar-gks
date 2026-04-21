@@ -56,14 +56,14 @@ BEGIN
         FROM `{S}.trait` t
       ),
       trait_xrefs AS (
-        select DISTINCT
+        SELECT
           t.id,
           STRUCT(
             IF(xref.db='MedGen', t.name, null) as name,
             xref.id as code,
             xref.db as system,
-            ARRAY(
-              SELECT FORMAT(
+            ARRAY_AGG(
+              FORMAT(
                 iri.template,
                 CASE
                   WHEN iri.id_replace_pattern IS NOT NULL
@@ -73,20 +73,15 @@ BEGIN
                   ELSE xref.id
                 END
               )
-              FROM `clinvar_ingest.gks_xref_iri_templates` iri
-              WHERE iri.category = 'Condition'
-                AND iri.db = xref.db
-                AND iri.type IS NOT DISTINCT FROM xref.type
             ) as iris
           ) as mapping
-        from traits t
+        FROM traits t
         CROSS JOIN UNNEST(t.xrefs) as xref
-        WHERE EXISTS (
-          SELECT 1 FROM `clinvar_ingest.gks_xref_iri_templates` iri
-          WHERE iri.category = 'Condition'
-            AND iri.db = xref.db
-            AND iri.type IS NOT DISTINCT FROM xref.type
-        )
+        JOIN `clinvar_ingest.gks_xref_iri_templates` iri
+          ON iri.category = 'Condition'
+          AND iri.db = xref.db
+          AND iri.type IS NOT DISTINCT FROM xref.type
+        GROUP BY t.id, t.name, xref.id, xref.db
       ),
       deduped_trait_xrefs AS (
         -- Deduplicate by (trait_id, code, system) keeping one mapping per unique pair
