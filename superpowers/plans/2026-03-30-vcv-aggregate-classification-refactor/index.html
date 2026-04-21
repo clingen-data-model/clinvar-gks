@@ -1,0 +1,3519 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="ClinVar data transformation pipeline to GA4GH GKS format">
+      
+      
+      
+        <link rel="canonical" href="https://clingen-data-model.github.io/clinvar-gks/superpowers/plans/2026-03-30-vcv-aggregate-classification-refactor/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>VCV Aggregate Classification Refactor Implementation Plan - ClinVar-GKS Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#vcv-aggregate-classification-refactor-implementation-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="ClinVar-GKS Documentation" class="md-header__button md-logo" aria-label="ClinVar-GKS Documentation" data-md-component="logo">
+      <img src="../../../assets/images/clingen-logo-white.svg" alt="ClinVar-GKS Documentation" height="40">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ClinVar-GKS Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              VCV Aggregate Classification Refactor Implementation Plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    <a href="https://www.ga4gh.org" title="GA4GH" target="_blank" rel="noopener" class="md-header__ga4gh">
+      <img src="../../../assets/images/ga4gh-logo.svg" alt="GA4GH" height="40">
+    </a>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="ClinVar-GKS Documentation" class="md-nav__button md-logo" aria-label="ClinVar-GKS Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/images/clingen-logo-white.svg" alt="logo">
+
+    </a>
+    ClinVar-GKS Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/variation-identity/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variation Identity
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-loc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequence Locations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-hgvs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HGVS Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-xref/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cross-References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-identity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity Table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vrs-processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VRS Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/cat-vrs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cat-VRS
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cat-VRS
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/cat-vrs/catvar-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Categorical Variant Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/conditions-and-traits/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditions & Traits
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Conditions & Traits
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/traits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Traits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-sets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/scv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    SCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Records
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/final-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Final Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/vcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    VCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-aggregation-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aggregation Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/rcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../output-reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Output Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/cat-vrs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Categorical Variants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/scv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/vcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/rcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/id-references/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ID References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../profiles/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiles
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/statement-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statement Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/classifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/review-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../data-access/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Access
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Access
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/output-files/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downloads
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../drafts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Under Construction
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Under Construction
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../drafts/acmgv4-variant-pathogenicity/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ACMGv4 Variant Pathogenicity
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ACMGv4 Variant Pathogenicity
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Case Data Model (Notes)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM-Schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Case Schema & Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/gks-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GA4GH GKS Standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/known-issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#design-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#submission-level-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Submission Level Codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scv-classification-extension-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCV Classification Extension Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scv-submission-level-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCV Submission Level Extension
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vcv-aggregate-classification-structures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VCV Aggregate Classification Structures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pgep-proposition-objectclassification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PGEP Proposition objectClassification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vcv-statement-level-review-status-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VCV Statement-Level Review Status Extension
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vcv-layer-1-aggregation-rules-by-submission-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VCV Layer 1 Aggregation Rules by Submission Level
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-1-scv-statement-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 1: SCV Statement Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 1: SCV Statement Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-1-add-submission_level-extension-to-scv-statements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1: Add submission_level extension to SCV statements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-2-add-description-extension-to-scv-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2: Add description extension to SCV classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-2-vcv-proc-layer-1-aggregation-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 2: VCV Proc Layer 1 Aggregation Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 2: VCV Proc Layer 1 Aggregation Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-3-combine-pg-and-ep-into-pgep-at-layer-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 3: Combine PG and EP into PGEP at Layer 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-4-propagate-new-layer-1-columns-through-layers-2-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4: Propagate new Layer 1 columns through Layers 2-4
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-3-vcv-statement-proc-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 3: VCV Statement Proc Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 3: VCV Statement Proc Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-5-replace-classification-with-aggregate_classification_single-and-aggregate_classification_array" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 5: Replace classification with aggregate_classification_single and aggregate_classification_array
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-6-modify-l1-pre-to-populate-aggregate_classification_array-for-pgep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 6: Modify L1 PRE to populate aggregate_classification_array for PGEP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-7-update-l2l3l4-pre-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 7: Update L2/L3/L4 PRE layers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-8-update-final-combined-vcv-statement-pre" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 8: Update FINAL combined VCV statement pre
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-4-json-serialization-and-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 4: JSON Serialization and Cleanup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 4: JSON Serialization and Cleanup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-9-update-json-proc-for-new-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 9: Update JSON proc for new attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-10-update-example-files-and-clean-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 10: Update example files and clean up
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-5-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 5: Documentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 5: Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-11-document-vcv-aggregation-rules-in-mkdocs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 11: Document VCV aggregation rules in MkDocs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#confirmed-design-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confirmed Design Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="vcv-aggregate-classification-refactor-implementation-plan">VCV Aggregate Classification Refactor Implementation Plan<a class="headerlink" href="#vcv-aggregate-classification-refactor-implementation-plan" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Refactor the VCV aggregation pipeline to handle submission-level-specific classification logic with two new aggregate classification attributes and per-SCV descriptions.</p>
+<p><strong>Architecture:</strong> Three SQL stored procedures are modified: (1) SCV statement proc adds submission_level extension and description to every SCV, (2) VCV proc combines PG+EP into PGEP at Layer 1 with submission-level-specific aggregation logic, (3) VCV statement proc replaces the single <code>classification</code> struct with two mutually exclusive attributes — <code>aggregate_classification_single</code> and <code>aggregate_classification_array</code> — and adds <code>clinvarReviewStatus</code> to statement extensions.</p>
+<p><strong>Tech Stack:</strong> BigQuery SQL stored procedures using DECLARE/SET/REPLACE/EXECUTE IMMEDIATE pattern with <code>{S}</code>, <code>{CT}</code>, <code>{P}</code> placeholders.</p>
+<hr />
+<h2 id="design-reference">Design Reference<a class="headerlink" href="#design-reference" title="Permanent link">&para;</a></h2>
+<h3 id="submission-level-codes">Submission Level Codes<a class="headerlink" href="#submission-level-codes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Label (for description template)</th>
+<th>Rank</th>
+<th>Stars</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PG</td>
+<td>practice guideline</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>EP</td>
+<td>expert panel</td>
+<td>3</td>
+<td>3</td>
+</tr>
+<tr>
+<td>CP</td>
+<td>assertion criteria provided</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>NOCP</td>
+<td>no assertion criteria provided</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>NOCL</td>
+<td>no classification provided</td>
+<td>-1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>FLAG</td>
+<td>flagged</td>
+<td>-3</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scv-classification-extension-format">SCV Classification Extension Format<a class="headerlink" href="#scv-classification-extension-format" title="Permanent link">&para;</a></h3>
+<p>Every SCV gets a <code>description</code> extension in <code>classification.extensions</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">&quot;classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Pathogenic&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;primaryCoding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">},</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;extensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;description&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;for Breast cancer\nClassification is based on the expert panel submission\nMar 2024 by GeneDx&quot;</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="p">]</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">}</span>
+</code></pre></div>
+<p>Template:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>for &lt;condition_name&gt;\nClassification is based on the &lt;submission_level_label&gt; submission\n&lt;evaluated_date&gt; by &lt;submitter_name&gt;
+</code></pre></div>
+Where:
+- <code>&lt;condition_name&gt;</code> = condition.name for single conditions, or "<code>N</code> conditions" (where N is the count) for conditionSets with 2+ conditions
+- <code>&lt;submission_level_label&gt;</code> = PG→'practice guideline', EP→'expert panel', CP→'assertion criteria provided', NOCP→'no assertion criteria provided', NOCL→'no classification provided', FLAG→'flagged'
+- <code>&lt;evaluated_date&gt;</code> = FORMAT_DATE('%b %Y', last_evaluated) or '(-)' for null
+- <code>&lt;submitter_name&gt;</code> = scv submitter name</p>
+<h3 id="scv-submission-level-extension">SCV Submission Level Extension<a class="headerlink" href="#scv-submission-level-extension" title="Permanent link">&para;</a></h3>
+<p>Every SCV also gets a <code>submissionLevel</code> extension in the statement-level <code>extensions</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">&quot;extensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;clinvarScvId&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value_string&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SCV000123456&quot;</span><span class="p">},</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;clinvarScvVersion&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value_string&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">},</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;clinvarScvReviewStatus&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value_string&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;criteria provided, single submitter&quot;</span><span class="p">},</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;submissionLevel&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value_string&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CP&quot;</span><span class="p">},</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="err">...</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">]</span>
+</code></pre></div>
+<h3 id="vcv-aggregate-classification-structures">VCV Aggregate Classification Structures<a class="headerlink" href="#vcv-aggregate-classification-structures" title="Permanent link">&para;</a></h3>
+<p>Two mutually exclusive attributes replace the current <code>classification</code>:</p>
+<p><strong><code>aggregate_classification_single</code></strong> — used for CP, NOCP, NOCL, FLAG:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;conceptType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AggregateClassification&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Pathogenic/Likely pathogenic&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;extension&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;conflictingExplanation&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Pathogenic(3); Likely pathogenic(2)&quot;</span><span class="p">}</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="p">]</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
+</code></pre></div></p>
+<p><strong><code>aggregate_classification_array</code></strong> — used for PGEP only:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">[</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">&quot;conceptType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AggregateClassification&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Pathogenic&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;for Breast cancer\nClassification is based on the expert panel submission\nMar 2024 by GeneDx&quot;</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="p">{</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">&quot;conceptType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AggregateClassification&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Likely pathogenic&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;for Hereditary cancer\nClassification is based on the practice guideline submission\nJan 2023 by NCCN&quot;</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">]</span>
+</code></pre></div></p>
+<h3 id="pgep-proposition-objectclassification">PGEP Proposition objectClassification<a class="headerlink" href="#pgep-proposition-objectclassification" title="Permanent link">&para;</a></h3>
+<p>For non-PGEP submission levels, the proposition uses <code>objectClassification_mappableConcept</code> (single classification name) as it does today. No changes.</p>
+<p>For PGEP, the proposition uses <code>objectClassification_conceptSet</code> to represent the <strong>unique</strong> combinations of (classification, condition, submission_level) from contributing SCVs. This array is deduplicated — if multiple submitters have the same classification for the same condition at the same submission level, it appears only once. <strong>No submitter information</strong> is included in the proposition.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">&quot;proposition&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;VariantAggregateClassificationProposition&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;12582.G.path.PGEP&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">&quot;subjectVariant&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;clinvar:12582&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">&quot;predicate&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hasAggregateClassification&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">&quot;objectClassification_mappableConcept&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">&quot;objectClassification_conceptSet&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ConceptSet&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="nt">&quot;concepts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">      </span><span class="p">{</span><span class="nt">&quot;conceptType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Classification&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Pathogenic&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;condition&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Breast cancer&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;submissionLevel&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;expert panel&quot;</span><span class="p">},</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">      </span><span class="p">{</span><span class="nt">&quot;conceptType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Classification&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Pathogenic&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;condition&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hereditary cancer&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;submissionLevel&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;practice guideline&quot;</span><span class="p">}</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">    </span><span class="p">],</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span><span class="nt">&quot;membershipOperator&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OR&quot;</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">  </span><span class="nt">&quot;aggregateQualifiers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="p">}</span>
+</code></pre></div>
+<p>The concept struct for PGEP needs to be wider than the current <code>STRUCT&lt;conceptType STRING, name STRING&gt;</code>. It adds <code>condition</code> and <code>submissionLevel</code> fields. For non-PGEP layers that use <code>objectClassification_conceptSet</code> (currently none do, always NULL), these extra fields will be NULL and stripped by <code>JSON_STRIP_NULLS</code>.</p>
+<h3 id="vcv-statement-level-review-status-extension">VCV Statement-Level Review Status Extension<a class="headerlink" href="#vcv-statement-level-review-status-extension" title="Permanent link">&para;</a></h3>
+<p>Added to VCV statement top-level <code>extensions</code> array:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;clinvarReviewStatus&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;review_status_label&gt;&quot;</span><span class="p">}</span>
+</code></pre></div>
+Review status values by submission level:
+- <strong>PGEP (mixed)</strong>: <code>"practice guideline and expert panel mix"</code>
+- <strong>PGEP (PG-only)</strong>: <code>"practice guideline"</code>
+- <strong>PGEP (EP-only)</strong>: <code>"reviewed by expert panel"</code>
+- <strong>CP (1 submitter)</strong>: <code>"criteria provided, single submitter"</code>
+- <strong>CP (multiple, concordant)</strong>: <code>"criteria provided, multiple submitters, no conflicts"</code>
+- <strong>CP (multiple, conflicting)</strong>: <code>"criteria provided, conflicting classifications"</code>
+- <strong>NOCP</strong>: <code>"no assertion criteria provided"</code>
+- <strong>NOCL</strong>: <code>"no classification provided"</code>
+- <strong>FLAG</strong>: <code>"flagged submission"</code></p>
+<h3 id="vcv-layer-1-aggregation-rules-by-submission-level">VCV Layer 1 Aggregation Rules by Submission Level<a class="headerlink" href="#vcv-layer-1-aggregation-rules-by-submission-level" title="Permanent link">&para;</a></h3>
+<p><strong>PGEP (combined PG + EP):</strong>
+- PG and EP submissions are combined into a single "PGEP" grouping
+- No concordance/conflict checking
+- Collect array of per-SCV classifications (name + description from SCV)
+- Strength: "PG" if only PG contributing, "EP" if only EP, "PGEP" if both</p>
+<p><strong>CP:</strong>
+- Traditional aggregation with concordance/conflict detection
+- Produces single classification label
+- Review status may upgrade from "single submitter" to "multiple submitters, no conflicts" or "conflicting classifications"</p>
+<p><strong>NOCP:</strong>
+- Traditional aggregation with concordance/conflict detection
+- Produces single classification label
+- No review status upgrade (stays "no assertion criteria provided")</p>
+<p><strong>FLAG:</strong>
+- Always produces: "no classifications from unflagged records"
+- No concordance/conflict checking</p>
+<p><strong>NOCL:</strong>
+- Passes through as-is (single "not provided" label)
+- No concordance/conflict checking</p>
+<hr />
+<h2 id="chunk-1-scv-statement-changes">Chunk 1: SCV Statement Changes<a class="headerlink" href="#chunk-1-scv-statement-changes" title="Permanent link">&para;</a></h2>
+<h3 id="task-1-add-submission_level-extension-to-scv-statements">Task 1: Add submission_level extension to SCV statements<a class="headerlink" href="#task-1-add-submission_level-extension-to-scv-statements" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-scv-statement-proc.sql</code> — Step 1 (temp_gks_scv) and Step 7 (final output)</p>
+<p>The SCV statement proc currently does not capture submission_level. We need to:
+1. Add <code>submission_level</code> to <code>temp_gks_scv</code> by joining <code>scv_summary.rank</code> to <code>submission_level.rank</code>
+2. Add the <code>submissionLevel</code> extension to the final SCV statement output</p>
+<ul>
+<li>[ ] <strong>Step 1.1: Add submission_level to temp_gks_scv query</strong></li>
+</ul>
+<p>In <code>gks-scv-statement-proc.sql</code>, Step 1 (<code>query_scv_records</code>), add a JOIN to <code>submission_level</code> and select <code>sl.code AS submission_level</code> and <code>sl.label AS submission_level_label</code>:</p>
+<p>After the existing JOIN to <code>clinvar_clinsig_types</code>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="o">`</span><span class="n">clinvar_ingest</span><span class="p">.</span><span class="n">submission_level</span><span class="o">`</span><span class="w"> </span><span class="n">sl</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">sl</span><span class="p">.</span><span class="n">rank</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scv</span><span class="p">.</span><span class="n">rank</span>
+</code></pre></div></p>
+<p>Add to the SELECT list (after <code>scv.classification_comment</code>):
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">sl</span><span class="p">.</span><span class="n">code</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">submission_level</span><span class="p">,</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">sl</span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">submission_level_label</span><span class="p">,</span>
+</code></pre></div></p>
+<p>Note: <code>scv</code> here refers to <code>scv_summary</code> (aliased as <code>scv</code> in the FROM clause via <code>{S}.scv_summary</code>).</p>
+<ul>
+<li>[ ] <strong>Step 1.2: Add submissionLevel extension to final SCV output</strong></li>
+</ul>
+<p>In Step 7 (<code>query_statement_scv_pre</code>), add the <code>submissionLevel</code> extension to the <code>extensions</code> array. In the <code>ARRAY_CONCAT(...)</code> that builds extensions, add after the <code>submittedScvLocalKey</code> block:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">IF</span><span class="p">(</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="n">scv</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="p">[],</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="p">[</span><span class="n">STRUCT</span><span class="p">(</span><span class="s1">&#39;submissionLevel&#39;</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">scv</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">value_string</span><span class="p">)]</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">),</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 1.3: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-scv-statement-proc.sql
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add submissionLevel extension to SCV statements&quot;</span>
+</code></pre></div>
+<h3 id="task-2-add-description-extension-to-scv-classification">Task 2: Add description extension to SCV classification<a class="headerlink" href="#task-2-add-description-extension-to-scv-classification" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-scv-statement-proc.sql</code> — Step 7 (final output)</p>
+<p>The SCV classification currently has <code>name</code> and <code>primaryCoding</code>. We need to add an <code>extensions</code> array containing the formatted description.</p>
+<ul>
+<li>[ ] <strong>Step 2.1: Add condition name to temp_gks_scv or use existing condition data</strong></li>
+</ul>
+<p>The condition name is available in <code>gks_scv_condition_sets</code> (via <code>condition.name</code> or <code>conditionSet</code> members). We need to derive a single condition name string. In Step 7's final SELECT, we can access the condition through the proposition join (<code>sp</code>).</p>
+<p>Add a CTE at the top of Step 7 (inside the <code>query_statement_scv_pre</code> string, before <code>scv_citation</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">scv_condition_name</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="k">SELECT</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="n">scv_id</span><span class="p">,</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="k">CASE</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">      </span><span class="k">WHEN</span><span class="w"> </span><span class="n">condition</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="n">condition</span><span class="p">.</span><span class="n">name</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">      </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ARRAY_LENGTH</span><span class="p">(</span><span class="n">conditionSet</span><span class="p">.</span><span class="n">conditions</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">2</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">        </span><span class="k">THEN</span><span class="w"> </span><span class="n">FORMAT</span><span class="p">(</span><span class="s1">&#39;%d conditions&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">ARRAY_LENGTH</span><span class="p">(</span><span class="n">conditionSet</span><span class="p">.</span><span class="n">conditions</span><span class="p">))</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">      </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;unspecified condition&#39;</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">condition_name</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">gks_scv_condition_sets</span><span class="o">`</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="p">),</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2.2: Modify classification struct to include extensions</strong></li>
+</ul>
+<p>In the final SELECT of Step 7, change the classification struct from:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">STRUCT</span><span class="p">(</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="n">scv</span><span class="p">.</span><span class="n">submitted_classification</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="k">IF</span><span class="p">(</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="n">scv</span><span class="p">.</span><span class="n">classification_code</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="n">STRUCT</span><span class="p">(</span><span class="n">scv</span><span class="p">.</span><span class="n">classification_code</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="n">scv</span><span class="p">.</span><span class="n">classif_and_strength_code_system</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="k">system</span><span class="p">),</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="k">null</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">  </span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">primaryCoding</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">classification</span><span class="p">,</span>
+</code></pre></div>
+<p>To:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">STRUCT</span><span class="p">(</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="n">scv</span><span class="p">.</span><span class="n">submitted_classification</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="k">IF</span><span class="p">(</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="n">scv</span><span class="p">.</span><span class="n">classification_code</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="n">STRUCT</span><span class="p">(</span><span class="n">scv</span><span class="p">.</span><span class="n">classification_code</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="n">scv</span><span class="p">.</span><span class="n">classif_and_strength_code_system</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="k">system</span><span class="p">),</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="k">null</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">primaryCoding</span><span class="p">,</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">  </span><span class="p">[</span><span class="n">STRUCT</span><span class="p">(</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="s1">&#39;description&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="n">CONCAT</span><span class="p">(</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">      </span><span class="s1">&#39;for &#39;</span><span class="p">,</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">scn</span><span class="p">.</span><span class="n">condition_name</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unspecified condition&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;\n&#39;</span><span class="p">,</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">      </span><span class="s1">&#39;Classification is based on the &#39;</span><span class="p">,</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">scv</span><span class="p">.</span><span class="n">submission_level_label</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unknown&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39; submission&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\n&#39;</span><span class="p">,</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">      </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">FORMAT_DATE</span><span class="p">(</span><span class="s1">&#39;%b %Y&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">scv</span><span class="p">.</span><span class="n">last_evaluated</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;(-)&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39; by &#39;</span><span class="p">,</span><span class="w"> </span><span class="n">scv</span><span class="p">.</span><span class="n">submitter</span><span class="p">.</span><span class="n">name</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">value_string</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">  </span><span class="p">)]</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">extensions</span>
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">classification</span><span class="p">,</span>
+</code></pre></div>
+<p>And add the JOIN to the condition name CTE:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">scv_condition_name</span><span class="w"> </span><span class="n">scn</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="k">ON</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="n">scn</span><span class="p">.</span><span class="n">scv_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scv</span><span class="p">.</span><span class="n">id</span>
+</code></pre></div>
+<p><strong>Note:</strong> The <code>\n</code> in the CONCAT will be a literal newline in the output since this is inside a triple-quoted EXECUTE IMMEDIATE string. Use <code>\\n</code> if the newline should be a literal <code>\n</code> text in the JSON output, or <code>\n</code> if it should be an actual newline character. Based on prior convention in this codebase (see L1 PRE in vcv-statement-proc), use <code>\\n</code> for literal newline text in the formatted string.</p>
+<ul>
+<li>[ ] <strong>Step 2.3: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-scv-statement-proc.sql
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add description extension to SCV classification&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="chunk-2-vcv-proc-layer-1-aggregation-changes">Chunk 2: VCV Proc Layer 1 Aggregation Changes<a class="headerlink" href="#chunk-2-vcv-proc-layer-1-aggregation-changes" title="Permanent link">&para;</a></h2>
+<h3 id="task-3-combine-pg-and-ep-into-pgep-at-layer-1">Task 3: Combine PG and EP into PGEP at Layer 1<a class="headerlink" href="#task-3-combine-pg-and-ep-into-pgep-at-layer-1" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-vcv-proc.sql</code> — temp_vcv_base_data and Layer 1 BASE AGGREGATION</p>
+<p>The current <code>temp_vcv_base_data</code> gets <code>submission_level</code> from the <code>submission_level</code> lookup table via <code>sl.rank = ss.rank</code>. PG (rank 4) and EP (rank 3) are currently separate codes. We need to combine them into 'PGEP' for Layer 1 grouping while preserving the original submission_level for the PGEP strength derivation.</p>
+<ul>
+<li>[ ] <strong>Step 3.1: Add original_submission_level and remap to PGEP in base data</strong></li>
+</ul>
+<p>In <code>gks-vcv-proc.sql</code>, modify the <code>temp_vcv_base_data</code> query. Change:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">sl</span><span class="p">.</span><span class="n">code</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">submission_level</span>
+</code></pre></div>
+<p>To:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">sl</span><span class="p">.</span><span class="n">code</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">original_submission_level</span><span class="p">,</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">sl</span><span class="p">.</span><span class="n">code</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;PG&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;EP&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="n">sl</span><span class="p">.</span><span class="n">code</span><span class="w"> </span><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">submission_level</span>
+</code></pre></div>
+<p>This preserves the original code for downstream strength derivation while grouping PG+EP together.</p>
+<ul>
+<li>[ ] <strong>Step 3.2: Add PGEP submission_level_label to base data</strong></li>
+</ul>
+<p>Also add the submission level label for use in descriptions:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">sl</span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">submission_level_label</span><span class="p">,</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 3.3: Modify Layer 1 aggregation for PGEP-specific logic</strong></li>
+</ul>
+<p>In the <code>core_agg</code> CTE, the GROUP BY already uses <code>submission_level</code> which will now be 'PGEP' for combined PG+EP records. This grouping is correct.</p>
+<p>Add to <code>core_agg</code> SELECT:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">ARRAY_AGG</span><span class="p">(</span><span class="k">DISTINCT</span><span class="w"> </span><span class="n">original_submission_level</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">contributing_submission_levels</span><span class="p">,</span>
+</code></pre></div></p>
+<p>In <code>final_prep</code>, add PGEP strength derivation:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">CASE</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span><span class="w"> </span><span class="k">THEN</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span><span class="k">CASE</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">      </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ARRAY_LENGTH</span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">contributing_submission_levels</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">contributing_submission_levels</span><span class="p">[</span><span class="k">OFFSET</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PG&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;PG&#39;</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">      </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ARRAY_LENGTH</span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">contributing_submission_levels</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">contributing_submission_levels</span><span class="p">[</span><span class="k">OFFSET</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;EP&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;EP&#39;</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="w">      </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span>
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="w">    </span><span class="k">END</span>
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">  </span><span class="k">ELSE</span><span class="w"> </span><span class="n">submission_level</span>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">pgep_strength</span><span class="p">,</span>
+</code></pre></div></p>
+<ul>
+<li>[ ] <strong>Step 3.4: Modify Layer 1 conflict logic for submission-level-specific behavior</strong></li>
+</ul>
+<p>In <code>final_prep</code>, the current conflict detection uses <code>significance_count &gt; 1 AND conflict_detectable</code>. This needs to be scoped:</p>
+<ul>
+<li><strong>PGEP</strong>: No conflict detection — skip the conflicting explanation entirely</li>
+<li><strong>CP/NOCP</strong>: Keep existing conflict detection logic</li>
+<li><strong>FLAG</strong>: Always produce "no classifications from unflagged records"</li>
+<li><strong>NOCL</strong>: No conflict detection (pass through)</li>
+</ul>
+<p>Modify the <code>actual_agg_classif_label</code> CASE expression:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="k">CASE</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="k">NULL</span><span class="w">  </span><span class="c1">-- PGEP uses array, not single label</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;FLAG&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;no classifications from unflagged records&#39;</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="n">cs</span><span class="p">.</span><span class="n">significance_count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">conflict_detectable</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">prop_type</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s1">&#39;sci&#39;</span><span class="w"> </span><span class="k">THEN</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">    </span><span class="n">FORMAT</span><span class="p">(</span><span class="s1">&#39;Conflicting classifications of %s&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">LOWER</span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">prop_label</span><span class="p">))</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">prop_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;sci&#39;</span><span class="w"> </span><span class="k">THEN</span>
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="w">    </span><span class="k">CASE</span>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="w">      </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ARRAY_LENGTH</span><span class="p">(</span><span class="n">sc</span><span class="p">.</span><span class="n">unique_traits</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="n">FORMAT</span><span class="p">(</span><span class="s1">&#39;%s for %s&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">cs</span><span class="p">.</span><span class="n">agg_classif_label</span><span class="p">,</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">unique_traits</span><span class="p">[</span><span class="k">OFFSET</span><span class="p">(</span><span class="mi">0</span><span class="p">)])</span>
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="w">      </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ARRAY_LENGTH</span><span class="p">(</span><span class="n">sc</span><span class="p">.</span><span class="n">unique_traits</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="n">FORMAT</span><span class="p">(</span><span class="s1">&#39;%s for %d tumor types&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">cs</span><span class="p">.</span><span class="n">agg_classif_label</span><span class="p">,</span><span class="w"> </span><span class="n">ARRAY_LENGTH</span><span class="p">(</span><span class="n">sc</span><span class="p">.</span><span class="n">unique_traits</span><span class="p">))</span>
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="w">      </span><span class="k">ELSE</span><span class="w"> </span><span class="n">cs</span><span class="p">.</span><span class="n">agg_classif_label</span>
+<a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="w">    </span><span class="k">END</span>
+<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="w">  </span><span class="k">ELSE</span><span class="w"> </span><span class="n">cs</span><span class="p">.</span><span class="n">agg_classif_label</span>
+<a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">actual_agg_classif_label</span>
+</code></pre></div>
+<p>Similarly, suppress <code>agg_label_conflicting_explanation</code> for PGEP and FLAG:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">CASE</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;PGEP&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;FLAG&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="k">NULL</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span><span class="k">ELSE</span><span class="w"> </span><span class="k">IF</span><span class="p">(</span><span class="n">cs</span><span class="p">.</span><span class="n">significance_count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">conflict_detectable</span><span class="p">,</span><span class="w"> </span><span class="n">cs</span><span class="p">.</span><span class="n">agg_string</span><span class="p">,</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">NULL</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">STRING</span><span class="p">))</span>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">agg_label_conflicting_explanation</span><span class="p">,</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 3.5: Add PGEP per-SCV classification array data to Layer 1</strong></li>
+</ul>
+<p>For PGEP groupings, we need to carry forward the per-SCV classification details (name + description) so the VCV statement proc can build <code>aggregate_classification_array</code>. Add a new column to <code>gks_vcv_layer1_base_agg</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1">-- In final_prep or a new CTE</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="k">CASE</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">full_scv_ids</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span><span class="k">ELSE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">NULL</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">ARRAY</span><span class="o">&lt;</span><span class="n">STRING</span><span class="o">&gt;</span><span class="p">)</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">pgep_scv_ids</span><span class="p">,</span>
+</code></pre></div>
+<p>The actual per-SCV classification data (name, description) will be resolved in the VCV statement proc by joining back to <code>gks_scv_statement_pre</code> using these SCV IDs. This avoids duplicating condition/submitter data in the aggregation tables.</p>
+<ul>
+<li>[ ] <strong>Step 3.6: Add aggregate review status to Layer 1</strong></li>
+</ul>
+<p>Derive the aggregate review status for all submission levels. Add to <code>core_agg</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="w"> </span><span class="n">submitter_id</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">unique_submitter_count</span><span class="p">,</span>
+</code></pre></div>
+<p>Then in <code>final_prep</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="k">CASE</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span><span class="w"> </span><span class="k">THEN</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">    </span><span class="k">CASE</span>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">      </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ARRAY_LENGTH</span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">contributing_submission_levels</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">contributing_submission_levels</span><span class="p">[</span><span class="k">OFFSET</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PG&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;practice guideline&#39;</span>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">      </span><span class="k">WHEN</span><span class="w"> </span><span class="n">ARRAY_LENGTH</span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">contributing_submission_levels</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">contributing_submission_levels</span><span class="p">[</span><span class="k">OFFSET</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;EP&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;reviewed by expert panel&#39;</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">      </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;practice guideline and expert panel mix&#39;</span>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="w">    </span><span class="k">END</span>
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CP&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">unique_submitter_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;criteria provided, single submitter&#39;</span>
+<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CP&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">cs</span><span class="p">.</span><span class="n">significance_count</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;criteria provided, multiple submitters, no conflicts&#39;</span>
+<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CP&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">cs</span><span class="p">.</span><span class="n">significance_count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">conflict_detectable</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;criteria provided, conflicting classifications&#39;</span>
+<a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CP&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;criteria provided, single submitter&#39;</span>
+<a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;NOCP&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;no assertion criteria provided&#39;</span>
+<a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;NOCL&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;no classification provided&#39;</span>
+<a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a><span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;FLAG&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;flagged submission&#39;</span>
+<a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a><span class="w">  </span><span class="k">ELSE</span><span class="w"> </span><span class="k">NULL</span>
+<a id="__codelineno-25-16" name="__codelineno-25-16" href="#__codelineno-25-16"></a><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">aggregate_review_status</span><span class="p">,</span>
+</code></pre></div>
+<p>Note: We need <code>submitter_id</code> in temp_vcv_base_data. It's already there (<code>ss.submitter_id</code>). We need <code>unique_submitter_count</code> from <code>core_agg</code> passed through to <code>final_prep</code>.</p>
+<ul>
+<li>[ ] <strong>Step 3.7: Propagate new columns through final SELECT</strong></li>
+</ul>
+<p>Ensure the final SELECT of Layer 1 includes:
+- <code>pgep_strength</code>
+- <code>pgep_scv_ids</code> (or just reuse <code>full_scv_ids</code> when submission_level = 'PGEP')
+- <code>aggregate_review_status</code>
+- <code>contributing_submission_levels</code></p>
+<ul>
+<li>[ ] <strong>Step 3.8: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-vcv-proc.sql
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add PGEP combined submission level and per-level classification logic to Layer 1&quot;</span>
+</code></pre></div>
+<h3 id="task-4-propagate-new-layer-1-columns-through-layers-2-4">Task 4: Propagate new Layer 1 columns through Layers 2-4<a class="headerlink" href="#task-4-propagate-new-layer-1-columns-through-layers-2-4" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-vcv-proc.sql</code> — Layers 2, 3, and 4</p>
+<p>The new columns from Layer 1 (<code>pgep_strength</code>, <code>aggregate_review_status</code>, <code>contributing_submission_levels</code>) need to flow through the aggregation layers.</p>
+<ul>
+<li>[ ] <strong>Step 4.1: Layer 2 — propagate PGEP and review status columns</strong></li>
+</ul>
+<p>Layer 2 aggregates by tier within submission level (only for <code>tier_grouping IS NOT NULL</code>, which is somatic <code>sci</code> proposition type). PGEP submissions are germline, so they won't appear in Layer 2. However, the <code>aggregate_review_status</code> and <code>pgep_strength</code> need to be available for Layers 3-4.</p>
+<p>In the <code>unified_input</code> CTE of Layer 3 (which unions Layer 2 output with Layer 1 non-tiered records), ensure the new columns are included.</p>
+<p>Add to Layer 2 output SELECT:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">ANY_VALUE</span><span class="p">(</span><span class="n">pgep_strength</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">pgep_strength</span><span class="p">,</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="n">ANY_VALUE</span><span class="p">(</span><span class="n">aggregate_review_status</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">aggregate_review_status</span><span class="p">,</span>
+</code></pre></div></p>
+<ul>
+<li>[ ] <strong>Step 4.2: Layer 3 — carry forward to winner-takes-all</strong></li>
+</ul>
+<p>Layer 3 does submission-level ranking. The winning record's <code>pgep_strength</code>, <code>aggregate_review_status</code>, and <code>submission_level</code> are carried forward. Add these columns to <code>unified_input</code>, <code>ranked_levels</code>, <code>winner_takes_all</code>, and the final SELECT.</p>
+<p>Add to final SELECT:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="n">w</span><span class="p">.</span><span class="n">pgep_strength</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">.</span><span class="n">aggregate_review_status</span><span class="p">,</span>
+</code></pre></div></p>
+<ul>
+<li>[ ] <strong>Step 4.3: Layer 4 — carry forward to final aggregation</strong></li>
+</ul>
+<p>Layer 4 does proposition-type ranking for germline. Carry <code>pgep_strength</code>, <code>aggregate_review_status</code>, and <code>contributing_submission_level</code> (already exists) through.</p>
+<p>Add to <code>contributing_props</code>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="n">ANY_VALUE</span><span class="p">(</span><span class="n">pgep_strength</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">pgep_strength</span><span class="p">,</span>
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="n">ANY_VALUE</span><span class="p">(</span><span class="n">aggregate_review_status</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">aggregate_review_status</span><span class="p">,</span>
+</code></pre></div></p>
+<ul>
+<li>[ ] <strong>Step 4.4: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-vcv-proc.sql
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Propagate PGEP strength and review status through VCV layers 2-4&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="chunk-3-vcv-statement-proc-changes">Chunk 3: VCV Statement Proc Changes<a class="headerlink" href="#chunk-3-vcv-statement-proc-changes" title="Permanent link">&para;</a></h2>
+<h3 id="task-5-replace-classification-with-aggregate_classification_single-and-aggregate_classification_array">Task 5: Replace classification with aggregate_classification_single and aggregate_classification_array<a class="headerlink" href="#task-5-replace-classification-with-aggregate_classification_single-and-aggregate_classification_array" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-vcv-statement-proc.sql</code> — All 4 base layers and all 4 PRE layers</p>
+<p>This is the largest change. The current <code>classification</code> struct on all VCV statement layers needs to be replaced with two mutually exclusive attributes.</p>
+<ul>
+<li>[ ] <strong>Step 5.1: Modify Layer 1 BASE to use new aggregate classification and proposition attributes</strong></li>
+</ul>
+<p>Replace the current <code>classification</code> struct with two mutually exclusive aggregate classification attributes:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1">-- For non-PGEP: single aggregate classification</span>
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="k">IF</span><span class="p">(</span>
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span><span class="n">agg</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span><span class="p">,</span>
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">  </span><span class="n">STRUCT</span><span class="p">(</span>
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="w">    </span><span class="s1">&#39;AggregateClassification&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">conceptType</span><span class="p">,</span>
+<a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="w">    </span><span class="n">agg</span><span class="p">.</span><span class="n">actual_agg_classif_label</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="w">    </span><span class="k">IF</span><span class="p">(</span>
+<a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a><span class="w">      </span><span class="n">agg</span><span class="p">.</span><span class="n">agg_label_conflicting_explanation</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">agg</span><span class="p">.</span><span class="n">agg_label_conflicting_explanation</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+<a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a><span class="w">      </span><span class="p">[</span><span class="n">STRUCT</span><span class="p">(</span><span class="s1">&#39;conflictingExplanation&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">.</span><span class="n">agg_label_conflicting_explanation</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">value</span><span class="p">)],</span>
+<a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a><span class="w">      </span><span class="k">CAST</span><span class="p">(</span><span class="k">NULL</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">ARRAY</span><span class="o">&lt;</span><span class="n">STRUCT</span><span class="o">&lt;</span><span class="n">name</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">STRING</span><span class="o">&gt;&gt;</span><span class="p">)</span>
+<a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">extension</span>
+<a id="__codelineno-31-12" name="__codelineno-31-12" href="#__codelineno-31-12"></a><span class="w">  </span><span class="p">),</span>
+<a id="__codelineno-31-13" name="__codelineno-31-13" href="#__codelineno-31-13"></a><span class="w">  </span><span class="k">NULL</span>
+<a id="__codelineno-31-14" name="__codelineno-31-14" href="#__codelineno-31-14"></a><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">aggregate_classification_single</span><span class="p">,</span>
+<a id="__codelineno-31-15" name="__codelineno-31-15" href="#__codelineno-31-15"></a>
+<a id="__codelineno-31-16" name="__codelineno-31-16" href="#__codelineno-31-16"></a><span class="c1">-- For PGEP: array will be populated in L1 PRE</span>
+<a id="__codelineno-31-17" name="__codelineno-31-17" href="#__codelineno-31-17"></a><span class="k">CAST</span><span class="p">(</span><span class="k">NULL</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">ARRAY</span><span class="o">&lt;</span><span class="n">STRUCT</span><span class="o">&lt;</span>
+<a id="__codelineno-31-18" name="__codelineno-31-18" href="#__codelineno-31-18"></a><span class="w">  </span><span class="n">conceptType</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span>
+<a id="__codelineno-31-19" name="__codelineno-31-19" href="#__codelineno-31-19"></a><span class="w">  </span><span class="n">name</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span>
+<a id="__codelineno-31-20" name="__codelineno-31-20" href="#__codelineno-31-20"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="n">STRING</span>
+<a id="__codelineno-31-21" name="__codelineno-31-21" href="#__codelineno-31-21"></a><span class="o">&gt;&gt;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">aggregate_classification_array</span><span class="p">,</span>
+</code></pre></div>
+<p>Also update the proposition's <code>objectClassification_conceptSet</code> struct type to support PGEP's wider concept fields. Change the CAST(NULL) type from:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="k">CAST</span><span class="p">(</span><span class="k">NULL</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">STRUCT</span><span class="o">&lt;</span><span class="k">type</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span><span class="w"> </span><span class="n">concepts</span><span class="w"> </span><span class="nb">ARRAY</span><span class="o">&lt;</span><span class="n">STRUCT</span><span class="o">&lt;</span><span class="n">conceptType</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="n">STRING</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">membershipOperator</span><span class="w"> </span><span class="n">STRING</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">objectClassification_conceptSet</span><span class="p">,</span>
+</code></pre></div>
+<p>To:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="k">CAST</span><span class="p">(</span><span class="k">NULL</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">STRUCT</span><span class="o">&lt;</span>
+<a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="w">  </span><span class="k">type</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span>
+<a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a><span class="w">  </span><span class="n">concepts</span><span class="w"> </span><span class="nb">ARRAY</span><span class="o">&lt;</span><span class="n">STRUCT</span><span class="o">&lt;</span><span class="n">conceptType</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span><span class="w"> </span><span class="n">condition</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span><span class="w"> </span><span class="n">submissionLevel</span><span class="w"> </span><span class="n">STRING</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+<a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="w">  </span><span class="n">membershipOperator</span><span class="w"> </span><span class="n">STRING</span>
+<a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">objectClassification_conceptSet</span><span class="p">,</span>
+</code></pre></div>
+<p>For non-PGEP layers this remains NULL (stripped by <code>JSON_STRIP_NULLS</code>). The wider concept struct adds <code>condition</code> and <code>submissionLevel</code> fields used only by PGEP. The actual PGEP population happens in L1 PRE (Task 6).</p>
+<p>For PGEP records, also set <code>objectClassification_mappableConcept</code> to NULL since PGEP uses the conceptSet instead.</p>
+<ul>
+<li>[ ] <strong>Step 5.2: Add clinvarReviewStatus to Layer 1 BASE statement extensions</strong></li>
+</ul>
+<p>Add a new top-level <code>extensions</code> field to the Layer 1 statement (currently not present). This will contain the <code>clinvarReviewStatus</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="k">IF</span><span class="p">(</span>
+<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="w">  </span><span class="n">agg</span><span class="p">.</span><span class="n">aggregate_review_status</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a><span class="w">  </span><span class="p">[</span><span class="n">STRUCT</span><span class="p">(</span><span class="s1">&#39;clinvarReviewStatus&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">agg</span><span class="p">.</span><span class="n">aggregate_review_status</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">value</span><span class="p">)],</span>
+<a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="w">  </span><span class="p">[</span><span class="n">STRUCT</span><span class="p">(</span><span class="s1">&#39;clinvarReviewStatus&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">sl</span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">value</span><span class="p">)]</span>
+<a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">extensions</span><span class="p">,</span>
+</code></pre></div>
+<p>Where <code>sl.label</code> is the standard review status label from the submission_level table (already joined).</p>
+<ul>
+<li>[ ] <strong>Step 5.3: Modify Layers 2, 3, 4 BASE similarly</strong></li>
+</ul>
+<p>Apply the same pattern to Layer 2, 3, and 4 base statements. These layers already have <code>agg_label</code> and <code>agg_label_conflicting_explanation</code>. The PGEP check uses <code>submission_level</code> (Layer 2) or <code>contributing_submission_level</code> (Layers 3-4).</p>
+<p>For Layers 3 and 4, the review status comes from the contributing layer's <code>aggregate_review_status</code>.</p>
+<ul>
+<li>[ ] <strong>Step 5.4: Commit base layer changes</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-vcv-statement-proc.sql
+<a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Replace classification with aggregate_classification_single/array in VCV base layers&quot;</span>
+</code></pre></div>
+<h3 id="task-6-modify-l1-pre-to-populate-aggregate_classification_array-for-pgep">Task 6: Modify L1 PRE to populate aggregate_classification_array for PGEP<a class="headerlink" href="#task-6-modify-l1-pre-to-populate-aggregate_classification_array-for-pgep" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-vcv-statement-proc.sql</code> — L1 PRE section</p>
+<ul>
+<li>[ ] <strong>Step 6.1: Rework L1 PRE to handle PGEP array classification and proposition objectClassification</strong></li>
+</ul>
+<p>The current L1 PRE has <code>ep_pg_scv_name</code> CTE that generates formatted explanation strings. This needs to be reworked to populate both <code>aggregate_classification_array</code> and <code>proposition.objectClassification_conceptSet</code> for PGEP records.</p>
+<p>For PGEP records, join to <code>gks_scv_statement_pre</code> to get each SCV's classification name and description extension, then build the statement-level array:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="n">pgep_classifications</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a><span class="w">  </span><span class="k">SELECT</span>
+<a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a><span class="w">    </span><span class="n">agg</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">l1_id</span><span class="p">,</span>
+<a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a><span class="w">    </span><span class="n">ARRAY_AGG</span><span class="p">(</span>
+<a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a><span class="w">      </span><span class="n">STRUCT</span><span class="p">(</span>
+<a id="__codelineno-36-6" name="__codelineno-36-6" href="#__codelineno-36-6"></a><span class="w">        </span><span class="s1">&#39;AggregateClassification&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">conceptType</span><span class="p">,</span>
+<a id="__codelineno-36-7" name="__codelineno-36-7" href="#__codelineno-36-7"></a><span class="w">        </span><span class="n">scv_pre</span><span class="p">.</span><span class="n">classification</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-36-8" name="__codelineno-36-8" href="#__codelineno-36-8"></a><span class="w">        </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">ext</span><span class="p">.</span><span class="n">value_string</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">UNNEST</span><span class="p">(</span><span class="n">scv_pre</span><span class="p">.</span><span class="n">classification</span><span class="p">.</span><span class="n">extensions</span><span class="p">)</span><span class="w"> </span><span class="n">ext</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">ext</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;description&#39;</span><span class="w"> </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">description</span>
+<a id="__codelineno-36-9" name="__codelineno-36-9" href="#__codelineno-36-9"></a><span class="w">      </span><span class="p">)</span>
+<a id="__codelineno-36-10" name="__codelineno-36-10" href="#__codelineno-36-10"></a><span class="w">      </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">scv_pre</span><span class="p">.</span><span class="n">id</span>
+<a id="__codelineno-36-11" name="__codelineno-36-11" href="#__codelineno-36-11"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">classifications</span>
+<a id="__codelineno-36-12" name="__codelineno-36-12" href="#__codelineno-36-12"></a><span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">gks_vcv_layer1_base_agg</span><span class="o">`</span><span class="w"> </span><span class="n">agg</span>
+<a id="__codelineno-36-13" name="__codelineno-36-13" href="#__codelineno-36-13"></a><span class="w">  </span><span class="k">CROSS</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="k">UNNEST</span><span class="p">(</span><span class="n">agg</span><span class="p">.</span><span class="n">full_scv_ids</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">full_scv_id</span>
+<a id="__codelineno-36-14" name="__codelineno-36-14" href="#__codelineno-36-14"></a><span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">gks_scv_statement_pre</span><span class="o">`</span><span class="w"> </span><span class="n">scv_pre</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">scv_pre</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FORMAT</span><span class="p">(</span><span class="s1">&#39;clinvar.submission:%s&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">full_scv_id</span><span class="p">)</span>
+<a id="__codelineno-36-15" name="__codelineno-36-15" href="#__codelineno-36-15"></a><span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="n">agg</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span>
+<a id="__codelineno-36-16" name="__codelineno-36-16" href="#__codelineno-36-16"></a><span class="w">  </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">agg</span><span class="p">.</span><span class="n">id</span>
+<a id="__codelineno-36-17" name="__codelineno-36-17" href="#__codelineno-36-17"></a><span class="p">)</span>
+</code></pre></div>
+<p>Then in the L1 PRE SELECT:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="n">l1</span><span class="p">.</span><span class="n">aggregate_classification_single</span><span class="p">,</span>
+<a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a><span class="k">COALESCE</span><span class="p">(</span><span class="n">pgep</span><span class="p">.</span><span class="n">classifications</span><span class="p">,</span><span class="w"> </span><span class="n">l1</span><span class="p">.</span><span class="n">aggregate_classification_array</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">aggregate_classification_array</span><span class="p">,</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 6.2: Build PGEP proposition objectClassification_conceptSet in L1 PRE</strong></li>
+</ul>
+<p>For PGEP records, populate <code>objectClassification_conceptSet</code> with the <strong>unique</strong> combinations of (classification, condition, submission_level) from contributing SCVs. No submitter info. Deduplicate so identical combos from different submitters appear only once.</p>
+<p>Add a CTE:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="n">pgep_object_concepts</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="w">  </span><span class="k">SELECT</span>
+<a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a><span class="w">    </span><span class="n">agg</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">l1_id</span><span class="p">,</span>
+<a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a><span class="w">    </span><span class="n">STRUCT</span><span class="p">(</span>
+<a id="__codelineno-38-5" name="__codelineno-38-5" href="#__codelineno-38-5"></a><span class="w">      </span><span class="s1">&#39;ConceptSet&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">type</span><span class="p">,</span>
+<a id="__codelineno-38-6" name="__codelineno-38-6" href="#__codelineno-38-6"></a><span class="w">      </span><span class="n">ARRAY_AGG</span><span class="p">(</span><span class="k">DISTINCT</span>
+<a id="__codelineno-38-7" name="__codelineno-38-7" href="#__codelineno-38-7"></a><span class="w">        </span><span class="n">STRUCT</span><span class="p">(</span>
+<a id="__codelineno-38-8" name="__codelineno-38-8" href="#__codelineno-38-8"></a><span class="w">          </span><span class="s1">&#39;Classification&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">conceptType</span><span class="p">,</span>
+<a id="__codelineno-38-9" name="__codelineno-38-9" href="#__codelineno-38-9"></a><span class="w">          </span><span class="n">scv_pre</span><span class="p">.</span><span class="n">classification</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-38-10" name="__codelineno-38-10" href="#__codelineno-38-10"></a><span class="w">          </span><span class="k">COALESCE</span><span class="p">(</span>
+<a id="__codelineno-38-11" name="__codelineno-38-11" href="#__codelineno-38-11"></a><span class="w">            </span><span class="n">sp</span><span class="p">.</span><span class="n">objectCondition_single</span><span class="p">.</span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-38-12" name="__codelineno-38-12" href="#__codelineno-38-12"></a><span class="w">            </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">STRING_AGG</span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">UNNEST</span><span class="p">(</span><span class="n">sp</span><span class="p">.</span><span class="n">objectCondition_compound</span><span class="p">.</span><span class="n">conditions</span><span class="p">)</span><span class="w"> </span><span class="k">c</span><span class="p">)</span>
+<a id="__codelineno-38-13" name="__codelineno-38-13" href="#__codelineno-38-13"></a><span class="w">          </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">condition</span><span class="p">,</span>
+<a id="__codelineno-38-14" name="__codelineno-38-14" href="#__codelineno-38-14"></a><span class="w">          </span><span class="n">sl</span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">submissionLevel</span>
+<a id="__codelineno-38-15" name="__codelineno-38-15" href="#__codelineno-38-15"></a><span class="w">        </span><span class="p">)</span>
+<a id="__codelineno-38-16" name="__codelineno-38-16" href="#__codelineno-38-16"></a><span class="w">      </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">concepts</span><span class="p">,</span>
+<a id="__codelineno-38-17" name="__codelineno-38-17" href="#__codelineno-38-17"></a><span class="w">      </span><span class="s1">&#39;OR&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">membershipOperator</span>
+<a id="__codelineno-38-18" name="__codelineno-38-18" href="#__codelineno-38-18"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">concept_set</span>
+<a id="__codelineno-38-19" name="__codelineno-38-19" href="#__codelineno-38-19"></a><span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">gks_vcv_layer1_base_agg</span><span class="o">`</span><span class="w"> </span><span class="n">agg</span>
+<a id="__codelineno-38-20" name="__codelineno-38-20" href="#__codelineno-38-20"></a><span class="w">  </span><span class="k">CROSS</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="k">UNNEST</span><span class="p">(</span><span class="n">agg</span><span class="p">.</span><span class="n">full_scv_ids</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">full_scv_id</span>
+<a id="__codelineno-38-21" name="__codelineno-38-21" href="#__codelineno-38-21"></a><span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">gks_scv_statement_pre</span><span class="o">`</span><span class="w"> </span><span class="n">scv_pre</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">scv_pre</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FORMAT</span><span class="p">(</span><span class="s1">&#39;clinvar.submission:%s&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">full_scv_id</span><span class="p">)</span>
+<a id="__codelineno-38-22" name="__codelineno-38-22" href="#__codelineno-38-22"></a><span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">scv_summary</span><span class="o">`</span><span class="w"> </span><span class="n">ss</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">ss</span><span class="p">.</span><span class="n">full_scv_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">full_scv_id</span>
+<a id="__codelineno-38-23" name="__codelineno-38-23" href="#__codelineno-38-23"></a><span class="w">  </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="o">`</span><span class="n">clinvar_ingest</span><span class="p">.</span><span class="n">submission_level</span><span class="o">`</span><span class="w"> </span><span class="n">sl</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sl</span><span class="p">.</span><span class="n">rank</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ss</span><span class="p">.</span><span class="n">rank</span>
+<a id="__codelineno-38-24" name="__codelineno-38-24" href="#__codelineno-38-24"></a><span class="w">  </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">gks_scv_condition_sets</span><span class="o">`</span><span class="w"> </span><span class="n">scs</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">scs</span><span class="p">.</span><span class="n">scv_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ss</span><span class="p">.</span><span class="n">id</span>
+<a id="__codelineno-38-25" name="__codelineno-38-25" href="#__codelineno-38-25"></a><span class="w">  </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="err">{</span><span class="n">P</span><span class="err">}</span><span class="p">.</span><span class="n">temp_gks_scv_proposition</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sp</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ss</span><span class="p">.</span><span class="n">id</span>
+<a id="__codelineno-38-26" name="__codelineno-38-26" href="#__codelineno-38-26"></a><span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="n">agg</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span>
+<a id="__codelineno-38-27" name="__codelineno-38-27" href="#__codelineno-38-27"></a><span class="w">  </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">agg</span><span class="p">.</span><span class="n">id</span>
+<a id="__codelineno-38-28" name="__codelineno-38-28" href="#__codelineno-38-28"></a><span class="p">)</span>
+</code></pre></div>
+<p>Note: The condition name comes from the SCV's proposition (objectCondition_single.name or objectCondition_compound). The submission level label comes from the original SCV's rank (not the combined PGEP code). <code>ARRAY_AGG(DISTINCT ...)</code> ensures deduplication.</p>
+<p>Then in the L1 PRE SELECT, reconstruct the proposition to use the conceptSet for PGEP:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="n">STRUCT</span><span class="p">(</span>
+<a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a><span class="w">  </span><span class="n">l1</span><span class="p">.</span><span class="n">proposition</span><span class="p">.</span><span class="k">type</span><span class="p">,</span>
+<a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a><span class="w">  </span><span class="n">l1</span><span class="p">.</span><span class="n">proposition</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+<a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a><span class="w">  </span><span class="n">l1</span><span class="p">.</span><span class="n">proposition</span><span class="p">.</span><span class="n">subjectVariant</span><span class="p">,</span>
+<a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a><span class="w">  </span><span class="n">l1</span><span class="p">.</span><span class="n">proposition</span><span class="p">.</span><span class="n">predicate</span><span class="p">,</span>
+<a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a><span class="w">  </span><span class="k">IF</span><span class="p">(</span><span class="n">agg</span><span class="p">.</span><span class="n">submission_level</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s1">&#39;PGEP&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">l1</span><span class="p">.</span><span class="n">proposition</span><span class="p">.</span><span class="n">objectClassification_mappableConcept</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">objectClassification_mappableConcept</span><span class="p">,</span>
+<a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a><span class="w">  </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">poc</span><span class="p">.</span><span class="n">concept_set</span><span class="p">,</span><span class="w"> </span><span class="n">l1</span><span class="p">.</span><span class="n">proposition</span><span class="p">.</span><span class="n">objectClassification_conceptSet</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">objectClassification_conceptSet</span><span class="p">,</span>
+<a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a><span class="w">  </span><span class="n">l1</span><span class="p">.</span><span class="n">proposition</span><span class="p">.</span><span class="n">aggregateQualifiers</span>
+<a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">proposition</span><span class="p">,</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 6.3: Remove old ep_pg_scv_name and explanation extension logic from L1 PRE</strong></li>
+</ul>
+<p>The old <code>ep_pg_scv_name</code> CTE and the wide extension type reconstruction in L1 PRE classification are no longer needed. Remove them entirely since PGEP is now handled by <code>aggregate_classification_array</code> and the proposition by <code>pgep_object_concepts</code>.</p>
+<ul>
+<li>[ ] <strong>Step 6.4: Simplify L1 PRE classification handling</strong></li>
+</ul>
+<p>Since L1 PRE no longer needs to merge explanation extensions into classification, the classification reconstruction can be simplified. The <code>aggregate_classification_single</code> and <code>aggregate_classification_array</code> pass through directly. The proposition is reconstructed only for PGEP objectClassification switching.</p>
+<ul>
+<li>[ ] <strong>Step 6.5: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-vcv-statement-proc.sql
+<a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Populate aggregate_classification_array and PGEP proposition objectClassification in L1 PRE&quot;</span>
+</code></pre></div>
+<h3 id="task-7-update-l2l3l4-pre-layers">Task 7: Update L2/L3/L4 PRE layers<a class="headerlink" href="#task-7-update-l2l3l4-pre-layers" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-vcv-statement-proc.sql</code> — L2, L3, L4 PRE sections</p>
+<ul>
+<li>[ ] <strong>Step 7.1: Remove explanation rollup CTEs from L2/L3/L4 PRE</strong></li>
+</ul>
+<p>The <code>l2_explanations</code>, <code>l3_explanations</code>, <code>l4_explanations</code> CTEs that rolled up explanation extensions through classification are no longer needed. The PGEP <code>aggregate_classification_array</code> flows through as-is via the evidence item inlining.</p>
+<p>Remove:
+- <code>l2_explanations</code> CTE and its LEFT JOIN
+- <code>l3_explanations</code> CTE and its LEFT JOIN
+- <code>l4_explanations</code> CTE and its LEFT JOIN</p>
+<ul>
+<li>[ ] <strong>Step 7.2: Update L2/L3/L4 PRE to pass through both aggregate classification attributes</strong></li>
+</ul>
+<p>Replace the classification reconstruction in each PRE layer with simple passthrough of both attributes:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="n">l2</span><span class="p">.</span><span class="n">aggregate_classification_single</span><span class="p">,</span>
+<a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a><span class="n">l2</span><span class="p">.</span><span class="n">aggregate_classification_array</span><span class="p">,</span>
+</code></pre></div>
+<p>(Same pattern for L3 and L4 PRE)</p>
+<ul>
+<li>[ ] <strong>Step 7.3: Update L2/L3/L4 PRE extensions to include clinvarReviewStatus</strong></li>
+</ul>
+<p>Ensure the <code>extensions</code> field (containing <code>clinvarReviewStatus</code>) passes through each PRE layer alongside the other fields.</p>
+<ul>
+<li>[ ] <strong>Step 7.4: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-vcv-statement-proc.sql
+<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Simplify L2/L3/L4 PRE layers with new aggregate classification attributes&quot;</span>
+</code></pre></div>
+<h3 id="task-8-update-final-combined-vcv-statement-pre">Task 8: Update FINAL combined VCV statement pre<a class="headerlink" href="#task-8-update-final-combined-vcv-statement-pre" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-vcv-statement-proc.sql</code> — FINAL section</p>
+<ul>
+<li>[ ] <strong>Step 8.1: Verify UNION ALL compatibility</strong></li>
+</ul>
+<p>The FINAL section unions L4 PRE with somatic L3 PRE. Ensure both have identical column schemas with the new <code>aggregate_classification_single</code>, <code>aggregate_classification_array</code>, and <code>extensions</code> columns.</p>
+<ul>
+<li>[ ] <strong>Step 8.2: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-vcv-statement-proc.sql
+<a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update final VCV statement pre for new aggregate classification schema&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="chunk-4-json-serialization-and-cleanup">Chunk 4: JSON Serialization and Cleanup<a class="headerlink" href="#chunk-4-json-serialization-and-cleanup" title="Permanent link">&para;</a></h2>
+<h3 id="task-9-update-json-proc-for-new-attributes">Task 9: Update JSON proc for new attributes<a class="headerlink" href="#task-9-update-json-proc-for-new-attributes" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-json-proc.sql</code> — VCV section</p>
+<ul>
+<li>[ ] <strong>Step 9.1: Verify JSON serialization handles new attributes</strong></li>
+</ul>
+<p>The JSON proc uses <code>TO_JSON(tv)</code> with <code>JSON_STRIP_NULLS(remove_empty =&gt; TRUE)</code> to serialize <code>gks_vcv_statement_pre</code> rows. Since <code>aggregate_classification_single</code> will be NULL for PGEP records and <code>aggregate_classification_array</code> will be NULL for non-PGEP records, <code>JSON_STRIP_NULLS</code> should automatically exclude the null attribute from the output. Verify this behavior.</p>
+<ul>
+<li>[ ] <strong>Step 9.2: Commit if changes needed</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-json-proc.sql
+<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update JSON proc for aggregate classification attributes&quot;</span>
+</code></pre></div>
+<h3 id="task-10-update-example-files-and-clean-up">Task 10: Update example files and clean up<a class="headerlink" href="#task-10-update-example-files-and-clean-up" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>examples/vcv/VCV000012582.63-G.jsonc</code></p>
+<ul>
+<li>[ ] <strong>Step 10.1: Update VCV example to reflect new structure</strong></li>
+</ul>
+<p>Update the example JSON to show the new <code>aggregate_classification_single</code> attribute (this example is CP-level, so it uses the single form) and <code>clinvarReviewStatus</code> extension.</p>
+<ul>
+<li>[ ] <strong>Step 10.2: Create a PGEP example</strong></li>
+</ul>
+<p>If a suitable PGEP example exists in the data, create a new example file showing <code>aggregate_classification_array</code>.</p>
+<ul>
+<li>[ ] <strong>Step 10.3: Update memory file</strong></li>
+</ul>
+<p>Update <code>project_vcv_ep_pg_fix.md</code> to reflect the completed refactoring.</p>
+<ul>
+<li>[ ] <strong>Step 10.4: Final commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>git<span class="w"> </span>add<span class="w"> </span>examples/
+<a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update VCV examples for aggregate classification refactor&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="chunk-5-documentation">Chunk 5: Documentation<a class="headerlink" href="#chunk-5-documentation" title="Permanent link">&para;</a></h2>
+<h3 id="task-11-document-vcv-aggregation-rules-in-mkdocs">Task 11: Document VCV aggregation rules in MkDocs<a class="headerlink" href="#task-11-document-vcv-aggregation-rules-in-mkdocs" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Create: <code>docs/pipeline/vcv-statements/vcv-aggregation-rules.md</code>
+- Modify: <code>docs/pipeline/vcv-statements/index.md</code> — remove "Under Construction" placeholder, add overview
+- Modify: <code>docs/profiles/review-status.md</code> — add aggregate review status rules
+- Modify: <code>mkdocs.yml</code> — add new page to nav</p>
+<p>The VCV statements section is currently placeholder content. This task creates a clear, accessible reference for both technical consumers (developers querying BigQuery) and non-technical consumers (clinical teams interpreting output JSON).</p>
+<ul>
+<li>[ ] <strong>Step 11.1: Create VCV Aggregation Rules page</strong></li>
+</ul>
+<p>Create <code>docs/pipeline/vcv-statements/vcv-aggregation-rules.md</code> covering:</p>
+<ol>
+<li>
+<p><strong>Overview</strong> — What VCV aggregation does (combines individual SCV submissions into aggregate variant-level classifications) and why submission levels matter.</p>
+</li>
+<li>
+<p><strong>Submission Levels</strong> — Table of all 6 codes (PG, EP, CP, NOCP, NOCL, FLAG) with their labels, star ratings, and brief descriptions. Explain that PG and EP are combined into PGEP for aggregation.</p>
+</li>
+<li>
+<p><strong>SCV Description</strong> — How every SCV gets a formatted description in its classification extensions, with the template and field definitions. Include an example.</p>
+</li>
+<li>
+<p><strong>Aggregation by Submission Level</strong> — One subsection per level group:</p>
+</li>
+<li><strong>PGEP</strong>: No conflict detection. Per-SCV classifications preserved as an array (<code>aggregate_classification_array</code>). Explain strength derivation (PG-only / EP-only / mixed).</li>
+<li><strong>CP</strong>: Concordance/conflict detection. Single aggregate label (<code>aggregate_classification_single</code>). Review status upgrades. Include examples of concordant vs conflicting.</li>
+<li><strong>NOCP</strong>: Same aggregation as CP but no review status upgrade.</li>
+<li><strong>FLAG</strong>: Fixed classification "no classifications from unflagged records". No aggregation logic.</li>
+<li>
+<p><strong>NOCL</strong>: Passthrough. Fixed "not provided" label.</p>
+</li>
+<li>
+<p><strong>Aggregate Classification Output</strong> — Show the two mutually exclusive JSON attributes with examples:</p>
+</li>
+<li><code>aggregate_classification_single</code> example (CP concordant, CP conflicting)</li>
+<li>
+<p><code>aggregate_classification_array</code> example (PGEP with multiple SCVs)</p>
+</li>
+<li>
+<p><strong>Review Status</strong> — Table showing all possible <code>clinvarReviewStatus</code> values and when each applies.</p>
+</li>
+<li>
+<p><strong>Layer Hierarchy</strong> — Brief explanation of L1→L2→L3→L4 with a diagram or table showing what each layer aggregates and which submission levels participate at each layer.</p>
+</li>
+</ol>
+<p>Keep the tone accessible: use plain language with JSON examples. Avoid SQL implementation details — link to <code>vcv-proc.md</code> for those.</p>
+<ul>
+<li>[ ] <strong>Step 11.2: Update VCV Statements index page</strong></li>
+</ul>
+<p>Replace the placeholder content in <code>docs/pipeline/vcv-statements/index.md</code> with:
+- A brief overview of VCV statement generation
+- Links to the aggregation rules page and procedures page
+- Summary of the 4-layer hierarchy</p>
+<ul>
+<li>[ ] <strong>Step 11.3: Update review-status.md with aggregate review status</strong></li>
+</ul>
+<p>Add a new section to <code>docs/profiles/review-status.md</code> documenting the aggregate review status values:
+- CP-specific review status upgrades (single submitter → multiple submitters, no conflicts → conflicting)
+- PGEP combined review status
+- Standard pass-through for NOCP, NOCL, FLAG</p>
+<ul>
+<li>[ ] <strong>Step 11.4: Add new page to mkdocs.yml nav</strong></li>
+</ul>
+<p>In <code>mkdocs.yml</code>, update the VCV Statements nav section:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">VCV Statements</span><span class="p">:</span>
+<a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pipeline/vcv-statements/index.md</span>
+<a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">Aggregation Rules</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pipeline/vcv-statements/vcv-aggregation-rules.md</span>
+<a id="__codelineno-46-4" name="__codelineno-46-4" href="#__codelineno-46-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">VCV Procedures</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pipeline/vcv-statements/vcv-proc.md</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 11.5: Validate docs build</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 11.6: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>git<span class="w"> </span>add<span class="w"> </span>docs/pipeline/vcv-statements/<span class="w"> </span>docs/profiles/review-status.md<span class="w"> </span>mkdocs.yml
+<a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Document VCV aggregation rules and review status logic&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="confirmed-design-decisions">Confirmed Design Decisions<a class="headerlink" href="#confirmed-design-decisions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p><strong>PGEP at Layer 2</strong>: Confirmed — PGEP is germline-only with no <code>tier_grouping</code>, so it bypasses Layer 2 entirely (Layer 2 only processes <code>tier_grouping IS NOT NULL</code>). No changes needed in Layer 2 for PGEP.</p>
+</li>
+<li>
+<p><strong>NOCL behavior</strong>: Confirmed — NOCL records always produce "not provided" as their <code>actual_agg_classif_label</code> without modification.</p>
+</li>
+<li>
+<p><strong>FLAG aggregation</strong>: Confirmed — FLAG should never do conflict detection. Explicit submission_level gating in the CASE expression ensures this, independent of <code>conflict_detectable</code>.</p>
+</li>
+<li>
+<p><strong>SCV description extension type</strong>: Confirmed — use <code>value_string</code> (not <code>value</code>) to match the existing SCV extension convention. VCV statement-level extensions use <code>value</code>.</p>
+</li>
+<li>
+<p><strong>Review status for all submission levels</strong>: Confirmed — all submission levels get a <code>clinvarReviewStatus</code> extension:</p>
+</li>
+<li><strong>PGEP</strong>: <code>"practice guideline and expert panel mix"</code></li>
+<li><strong>PG-only PGEP</strong>: <code>"practice guideline"</code> (when only PG SCVs contribute)</li>
+<li><strong>EP-only PGEP</strong>: <code>"reviewed by expert panel"</code> (when only EP SCVs contribute)</li>
+<li><strong>CP</strong>: Derived from aggregation (<code>"criteria provided, single submitter"</code> / <code>"criteria provided, multiple submitters, no conflicts"</code> / <code>"criteria provided, conflicting classifications"</code>)</li>
+<li><strong>NOCP</strong>: <code>"no assertion criteria provided"</code></li>
+<li><strong>NOCL</strong>: <code>"no classification provided"</code></li>
+<li><strong>FLAG</strong>: <code>"flagged submission"</code></li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
