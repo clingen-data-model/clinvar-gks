@@ -74,12 +74,19 @@ BEGIN
                 END
               )
               FROM `clinvar_ingest.gks_xref_iri_templates` iri
-              WHERE iri.db = xref.db
+              WHERE iri.category = 'Condition'
+                AND iri.db = xref.db
                 AND iri.type IS NOT DISTINCT FROM xref.type
             ) as iris
           ) as mapping
         from traits t
         CROSS JOIN UNNEST(t.xrefs) as xref
+        WHERE EXISTS (
+          SELECT 1 FROM `clinvar_ingest.gks_xref_iri_templates` iri
+          WHERE iri.category = 'Condition'
+            AND iri.db = xref.db
+            AND iri.type IS NOT DISTINCT FROM xref.type
+        )
       ),
       deduped_trait_xrefs AS (
         -- Deduplicate by (trait_id, code, system) keeping one mapping per unique pair
