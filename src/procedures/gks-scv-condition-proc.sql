@@ -1,6 +1,6 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_scv_condition_proc`(on_date DATE, debug BOOL)
 BEGIN
-  DECLARE temp_gks_trait_query STRING;
+  DECLARE query_gks_traits STRING;
   DECLARE temp_normalized_trait_mappings_query STRING;
   DECLARE temp_rcv_mapping_traits_query STRING;
   DECLARE temp_gks_scv_trait_sets_query STRING;
@@ -14,6 +14,7 @@ BEGIN
   DECLARE temp_rcv_trait_assignment_stage3_query STRING;
   DECLARE temp_rcv_trait_assignment_stage4_query STRING;
   DECLARE gks_scv_condition_mapping_query STRING;
+  DECLARE query_gks_trait_sets STRING;
   DECLARE query_condition_sets STRING;
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
@@ -30,7 +31,7 @@ BEGIN
     -- Clean up any persistent temp tables from a prior debug run
     IF NOT debug THEN
       CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
-        'temp_gks_trait', 'temp_normalized_trait_mappings', 'temp_rcv_mapping_traits',
+        'temp_normalized_trait_mappings', 'temp_rcv_mapping_traits',
         'temp_gks_scv_trait_sets', 'temp_all_rcv_traits', 'temp_normalized_traits',
         'temp_scv_trait_name_xrefs', 'temp_all_scv_traits', 'temp_all_mapped_scv_traits',
         'temp_rcv_trait_assignment_stage1', 'temp_rcv_trait_assignment_stage2',
@@ -39,140 +40,99 @@ BEGIN
     END IF;
 
     -- -----------------------------------------------------------------------
-    -- STEP 1: Create temp_gks_trait
+    -- STEP 1: Create gks_traits (canonical trait representations)
+    -- All traits with clinvar.trait:{id} identifiers, with primaryCoding,
+    -- mappings (deduplicated by code+system), and aliases extension.
     -- -----------------------------------------------------------------------
-    SET temp_gks_trait_query = REPLACE("""
-      {CT} {P}.temp_gks_trait
-      AS
-        WITH traits AS (
-          select distinct
-            t.id,
-            t.type,
-            t.name,
-            ARRAY_TO_STRING(t.alternate_names,', ') as synonyms,
-            clinvar_ingest.parseXRefItems(t.xrefs) as xrefs
-          FROM `{S}.trait` t
-        ),
-        trait_xrefs AS (
-          select
-            t.id,
-            STRUCT(
-              IF(xref.db='MedGen', t.name, null) as name,
-              xref.id as code,
-              xref.db as system,
-              ARRAY(
-                SELECT FORMAT(
-                  iri.template,
-                  CASE
-                    WHEN iri.id_replace_pattern IS NOT NULL
-                      THEN REGEXP_REPLACE(xref.id, iri.id_replace_pattern, iri.id_replacement)
-                    WHEN iri.id_extract_pattern IS NOT NULL
-                      THEN REGEXP_EXTRACT(xref.id, iri.id_extract_pattern)
-                    ELSE xref.id
-                  END
-                )
-                FROM `clinvar_ingest.gks_xref_iri_templates` iri
-                WHERE iri.db = xref.db
-                  AND iri.type = IFNULL(xref.type, 'primary')
-              ) as iris,
-              ARRAY_CONCAT(
-                IF(
-                  xref.type IS NOT NULL,
-                  [STRUCT('mappingType' as name, xref.type as value)],
-                  []
-                ),
-                IF(
-                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.status IGNORE NULLS))>0,
-                  [STRUCT(
-                    'mappingStatuses' as name,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.status IGNORE NULLS), ', ') as value
-                  )],
-                  []
-                ),
-                IF(
-                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.url IGNORE NULLS))>0,
-                  [STRUCT(
-                    'mappingUrls' as name,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.url IGNORE NULLS), ', ') as value
-                  )],
-                  []
-                ),
-                IF(
-                  ARRAY_LENGTH(ARRAY_AGG(DISTINCT xref.ref_field IGNORE NULLS))>0,
-                  [STRUCT(
-                    'mappingRefFields' as name,
-                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT xref.ref_field IGNORE NULLS), ', ') as value
-                  )],
-                  []
-                )
-              ) as extensions
-            ) as mapping
-          from traits t
-          CROSS JOIN UNNEST(t.xrefs) as xref
-          GROUP BY
-            t.id,
-            t.name,
-            xref.type,
-            xref.id,
-            xref.db
-        )
-        SELECT
-          t.id,
-          t.type as conceptType,
-          t.name,
-          ARRAY_AGG(
-            IF(
-              tx.mapping.system = 'MedGen',
-              tx.mapping,
-              null
-            )
-            IGNORE NULLS
-          )[SAFE_OFFSET(0)] as primaryCoding,
-          ARRAY_AGG(
-            IF(
-              tx.mapping.system <> 'MedGen',
-              STRUCT(tx.mapping as coding, 'relatedMatch' as relation),
-              null
-            )
-            IGNORE NULLS
-          ) as mappings,
-          ARRAY_CONCAT(
-            [
-              STRUCT(
-                'clinvarTraitId' as name,
-                t.id as value_string,
-                [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-              ),
-              STRUCT(
-                'clinvarTraitType' as name,
-                t.type as value_string,
-                [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-              )
-            ],
-            IF(
-              t.synonyms is not null and t.synonyms <> '',
-              [STRUCT(
-                'aliases' as name,
-                t.synonyms as value_string,
-                [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-              )],
-              []
-            )
-          ) as extensions
-        FROM traits t
-        LEFT JOIN trait_xrefs tx
-        ON
-          tx.id = t.id
-        GROUP BY
+    SET query_gks_traits = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_traits` AS
+      WITH traits AS (
+        select distinct
           t.id,
           t.type,
           t.name,
-          t.synonyms
-      """, '{S}', rec.schema_name);
-    SET temp_gks_trait_query = REPLACE(temp_gks_trait_query, '{CT}', temp_create);
-    SET temp_gks_trait_query = REPLACE(temp_gks_trait_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE temp_gks_trait_query;
+          ARRAY_TO_STRING(t.alternate_names,', ') as synonyms,
+          clinvar_ingest.parseXRefItems(t.xrefs) as xrefs
+        FROM `{S}.trait` t
+      ),
+      distinct_trait_xrefs AS (
+        SELECT DISTINCT
+          t.id as trait_id,
+          t.name as trait_name,
+          xref.id,
+          xref.db,
+          xref.type
+        FROM traits t
+        CROSS JOIN UNNEST(t.xrefs) as xref
+      ),
+      trait_xrefs AS (
+        SELECT
+          dtxr.trait_id as id,
+          STRUCT(
+            IF(dtxr.db='MedGen', dtxr.trait_name, null) as name,
+            dtxr.id as code,
+            dtxr.db as system,
+            ARRAY_AGG(
+              FORMAT(
+                iri.template,
+                CASE
+                  WHEN iri.id_replace_pattern IS NOT NULL
+                    THEN REGEXP_REPLACE(dtxr.id, iri.id_replace_pattern, iri.id_replacement)
+                  WHEN iri.id_extract_pattern IS NOT NULL
+                    THEN REGEXP_EXTRACT(dtxr.id, iri.id_extract_pattern)
+                  ELSE dtxr.id
+                END
+              )
+            ) as iris
+          ) as mapping
+        FROM distinct_trait_xrefs dtxr
+        JOIN `clinvar_ingest.gks_xref_iri_templates` iri
+          ON iri.category = 'Condition'
+          AND iri.db = dtxr.db
+          AND iri.type IS NOT DISTINCT FROM dtxr.type
+        GROUP BY dtxr.trait_id, dtxr.trait_name, dtxr.id, dtxr.db
+      )
+      SELECT
+        FORMAT('clinvar.trait:%s', t.id) AS id,
+        t.id as trait_id,
+        t.type as conceptType,
+        t.name,
+        ARRAY_AGG(
+          IF(
+            tx.mapping.system = 'MedGen',
+            tx.mapping,
+            null
+          )
+          IGNORE NULLS
+        )[SAFE_OFFSET(0)] as primaryCoding,
+        ARRAY_AGG(
+          IF(
+            tx.mapping.system <> 'MedGen',
+            STRUCT(tx.mapping as coding, 'relatedMatch' as relation),
+            null
+          )
+          IGNORE NULLS
+        ) as mappings,
+        IF(
+          t.synonyms is not null and t.synonyms <> '',
+          [STRUCT(
+            'aliases' as name,
+            t.synonyms as value_string,
+            [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
+          )],
+          CAST(NULL AS ARRAY<STRUCT<name STRING, value_string STRING, value_array_codings ARRAY<STRUCT<code STRING, system STRING>>>>)
+        ) as extensions
+      FROM traits t
+      LEFT JOIN trait_xrefs tx
+      ON
+        tx.id = t.id
+      GROUP BY
+        t.id,
+        t.type,
+        t.name,
+        t.synonyms
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE query_gks_traits;
 
     -- -----------------------------------------------------------------------
     -- STEP 2: Create temp_normalized_trait_mappings
@@ -311,6 +271,45 @@ BEGIN
     SET temp_all_rcv_traits_query = REPLACE(temp_all_rcv_traits_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE temp_all_rcv_traits_query;
+
+    -- -----------------------------------------------------------------------
+    -- STEP 5b: Create gks_trait_sets (persistent baseline traitset representations)
+    -- Unique trait sets with clinvar.traitset:{id} identifiers, referencing
+    -- member traits via #/traits/clinvar.trait:{trait_id}.
+    -- -----------------------------------------------------------------------
+    SET query_gks_trait_sets = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_trait_sets` AS
+      WITH trait_set_traits AS (
+        SELECT DISTINCT
+          art.trait_set_id,
+          art.trait_id
+        FROM {P}.temp_all_rcv_traits art
+      ),
+      trait_set_info AS (
+        SELECT DISTINCT
+          gsts.trait_set_id,
+          gsts.trait_set_type
+        FROM {P}.temp_gks_scv_trait_sets gsts
+      )
+      SELECT
+        FORMAT('clinvar.traitset:%s', tsi.trait_set_id) AS id,
+        tsi.trait_set_type AS conceptSetType,
+        ARRAY_AGG(
+          FORMAT('#/traits/clinvar.trait:%s', tst.trait_id)
+          ORDER BY tst.trait_id
+        ) AS condition_refs,
+        IF(
+          ANY_VALUE(art.trait_relationship_type) IN ('Finding member','co-occurring condition'),
+          'AND',
+          'OR'
+        ) AS membershipOperator
+      FROM trait_set_info tsi
+      JOIN trait_set_traits tst ON tst.trait_set_id = tsi.trait_set_id
+      LEFT JOIN {P}.temp_all_rcv_traits art ON art.trait_set_id = tsi.trait_set_id AND art.trait_id = tst.trait_id
+      GROUP BY tsi.trait_set_id, tsi.trait_set_type
+    """, '{S}', rec.schema_name);
+    SET query_gks_trait_sets = REPLACE(query_gks_trait_sets, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_gks_trait_sets;
 
     -- -----------------------------------------------------------------------
     -- STEP 6: Create temp_normalized_traits
@@ -1581,6 +1580,7 @@ BEGIN
         SELECT
           scm.scv_id,
           scm.cat_id as id,
+          scm.trait_id,
           IFNULL(scm.cat_name, scm.trait_name) as name,
           scm.cat_type as conceptType,
           t.primaryCoding,
@@ -1627,32 +1627,32 @@ BEGIN
           scm.trait_relationship_type,
           COUNT(*) OVER (PARTITION BY scm.scv_id) as trait_count
         FROM `{S}.gks_scv_condition_mapping` scm
-        LEFT JOIN {P}.temp_gks_trait t
+        LEFT JOIN `{S}.gks_traits` t
         ON
-          t.id = scm.trait_id
+          t.trait_id = scm.trait_id
       ),
       multi_sets AS (
         -- Aggregate only for multi-condition SCVs
         SELECT
-          scv_id,
+          ec.scv_id,
           ARRAY_AGG(
-            STRUCT(id, name, conceptType, primaryCoding, mappings, extensions)
+            STRUCT(ec.id, ec.name, ec.conceptType, ec.primaryCoding, ec.mappings, ec.extensions)
           ) as conditions,
           IF(
-            ANY_VALUE(trait_relationship_type) IN ('Finding member','co-occurring condition'),
+            ANY_VALUE(ec.trait_relationship_type) IN ('Finding member','co-occurring condition'),
             'AND',
             'OR'
           ) as membershipOperator
-        FROM enriched_conditions
-        WHERE trait_count > 1
-        GROUP BY scv_id
+        FROM enriched_conditions ec
+        WHERE ec.trait_count > 1
+        GROUP BY ec.scv_id
       )
       SELECT
         gsts.scv_id,
         IF(
           ec.id IS NOT NULL,
           STRUCT(
-            ec.id,
+            IF(ec.trait_id IS NOT NULL, FORMAT('clinvar.trait:%s', ec.trait_id), ec.id) as id,
             ec.name,
             ec.conceptType,
             ec.primaryCoding,
@@ -1678,7 +1678,7 @@ BEGIN
         IF(
           ms.scv_id IS NOT NULL,
           STRUCT(
-            ms.scv_id as id,
+            FORMAT('clinvar.traitset:%s', gsts.trait_set_id) as id,
             ms.conditions,
             ms.membershipOperator,
             ARRAY_CONCAT(
@@ -1711,7 +1711,6 @@ BEGIN
     EXECUTE IMMEDIATE query_condition_sets;
 
     IF NOT debug THEN
-      DROP TABLE IF EXISTS _SESSION.temp_gks_trait;
       DROP TABLE IF EXISTS _SESSION.temp_normalized_trait_mappings;
       DROP TABLE IF EXISTS _SESSION.temp_rcv_mapping_traits;
       DROP TABLE IF EXISTS _SESSION.temp_gks_scv_trait_sets;
