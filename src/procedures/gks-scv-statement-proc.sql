@@ -7,6 +7,9 @@ BEGIN
   DECLARE query_penetrance_qualifiers STRING;
   DECLARE query_scv_proposition STRING;
   DECLARE query_scv_target_proposition STRING;
+  DECLARE query_scv_condition_names STRING;
+  DECLARE query_scv_citations STRING;
+  DECLARE query_scv_method STRING;
   DECLARE query_statement_scv_pre STRING;
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
@@ -24,7 +27,8 @@ BEGIN
     IF NOT debug THEN
       CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
         'temp_gks_scv', 'temp_gene_context_qualifiers', 'temp_moi_qualifiers',
-        'temp_penetrance_qualifiers', 'temp_gks_scv_proposition', 'temp_gks_scv_target_proposition'
+        'temp_penetrance_qualifiers', 'temp_gks_scv_proposition', 'temp_gks_scv_target_proposition',
+        'temp_scv_condition_names', 'temp_scv_citations', 'temp_scv_method'
       ]);
     END IF;
 
@@ -38,8 +42,8 @@ BEGIN
           scv.id,
           scv.version,
           IF(
-            cct.final_proposition_type IS NOT NULL,
-            STRUCT(cct.final_proposition_type as type, cct.final_predicate as pred),
+            cpt.gks_type IS NOT NULL,
+            STRUCT(cpt.gks_type as type, cpt.gks_predicate as pred),
             STRUCT('ClinvarUndefinedProposition' as type, 'isClinvarUndefinedAssociationFor' as pred)
           ) as proposition,
 
@@ -137,6 +141,9 @@ BEGIN
             cct.code = scv.classif_type
             AND
             cct.statement_type = scv.statement_type
+        LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt
+          ON
+            cpt.code = scv.original_proposition_type
         LEFT JOIN `clinvar_ingest.submission_level` sl
           ON
             sl.rank = scv.rank
@@ -450,23 +457,30 @@ BEGIN
     EXECUTE IMMEDIATE query_scv_target_proposition;
 
     ---------------------------------------------------------------------------
-    -- Step 7: Create statement SCV pre table
+    -- Step 7a: Materialize condition names (lightweight lookup)
     ---------------------------------------------------------------------------
-    SET query_statement_scv_pre = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_scv_statement_pre`
-      as
-      WITH scv_condition_name AS (
-        SELECT
-          scv_id,
-          CASE
-            WHEN condition.name IS NOT NULL THEN condition.name
-            WHEN ARRAY_LENGTH(conditionSet.conditions) >= 2
-              THEN FORMAT('%d conditions', ARRAY_LENGTH(conditionSet.conditions))
-            ELSE 'unspecified condition'
-          END AS condition_name
-        FROM `{S}.gks_scv_condition_sets`
-      ),
-      scv_citation AS (
+    SET query_scv_condition_names = REPLACE("""
+      {CT} {P}.temp_scv_condition_names AS
+      SELECT
+        scv_id,
+        CASE
+          WHEN condition.name IS NOT NULL THEN condition.name
+          WHEN ARRAY_LENGTH(conditionSet.conditions) >= 2
+            THEN FORMAT('%d conditions', ARRAY_LENGTH(conditionSet.conditions))
+          ELSE 'unspecified condition'
+        END AS condition_name
+      FROM `{S}.gks_scv_condition_sets`
+    """, '{S}', rec.schema_name);
+    SET query_scv_condition_names = REPLACE(query_scv_condition_names, '{CT}', temp_create);
+    SET query_scv_condition_names = REPLACE(query_scv_condition_names, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_scv_condition_names;
+
+    ---------------------------------------------------------------------------
+    -- Step 7b: Materialize citations (avoids CROSS JOIN UNNEST in final query)
+    ---------------------------------------------------------------------------
+    SET query_scv_citations = REPLACE("""
+      {CT} {P}.temp_scv_citations AS
+      WITH scv_citation AS (
         SELECT
           scv.id,
           STRUCT(
@@ -494,67 +508,83 @@ BEGIN
         WHERE
           cid.source IS NOT NULL
           OR c.url IS NOT NULL
-      ),
-      scv_citations as (
-        SELECT
-          id,
-          ARRAY_AGG(doc) as reportedIn
-        FROM scv_citation
-        GROUP BY id
-      ),
-      scv_method as (
-        -- there are less than 10 assertion method attributes that contain multiple citations
-        --   these are likely mis-submitted info since they should be in the interp citations
-        --   not the assertion method citations which should almost exclusively be 1 item
-        --   for now we comprimise by grouping any multi- citation id values together as a string
-        --   and hoping that the citation source and url will aggregate to the same single record.
-        --   this hacky policy works around the bad data as of 2024-04-07
-        SELECT
-          scv.id,
-          STRUCT (
-            'Method' as type,
-            scv.method_type as methodType,
-            a.attribute.value as name,
-            IF(
-              (cid.source is not null OR c.url is not null),
-              STRUCT(
-                'Document' as type,
-                IF(LOWER(cid.source) = 'pubmed', STRING_AGG(cid.id), null) as pmid,
-                IF(LOWER(cid.source) = 'doi', STRING_AGG(cid.id), null) as doi,
-                [
-                  CASE
-                  WHEN c.url IS NOT NULL THEN
-                    c.url
-                  WHEN LOWER(cid.source) = 'pubmed' THEN
-                    FORMAT('https://pubmed.ncbi.nlm.nih.gov/%s',STRING_AGG(cid.id))
-                  WHEN LOWER(cid.source) = 'pmc' THEN
-                    FORMAT('https://europepmc.org/article/PMC/%s',STRING_AGG(cid.id))
-                  WHEN LOWER(cid.source) = 'doi' THEN
-                    FORMAT('https://doi.org/%s',STRING_AGG(cid.id))
-                  WHEN LOWER(cid.source) = 'bookshelf' THEN
-                    FORMAT('https://www.ncbi.nlm.nih.gov/books/%s',STRING_AGG(cid.id))
-                  ELSE
-                    FORMAT('%s:%s', cid.source, STRING_AGG(cid.id))
-                  END
-                ] as urls
-              ),
-              null
-            ) as reportedIn
-          ) as specifiedBy
-        FROM {P}.temp_gks_scv scv
-        CROSS JOIN UNNEST(scv.attribs) as a
-        LEFT JOIN UNNEST(a.citation) as c
-        LEFT JOIN UNNEST(c.id) as cid
-        WHERE
-          a.attribute.type = 'AssertionMethod'
-        GROUP BY
-          scv.id,
-          a.attribute.value,
-          cid.source,
-          c.url,
-          scv.method_type
       )
-      -- final output before it is normalized into json
+      SELECT
+        id,
+        ARRAY_AGG(doc) as reportedIn
+      FROM scv_citation
+      GROUP BY id
+    """, '{S}', rec.schema_name);
+    SET query_scv_citations = REPLACE(query_scv_citations, '{CT}', temp_create);
+    SET query_scv_citations = REPLACE(query_scv_citations, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_scv_citations;
+
+    ---------------------------------------------------------------------------
+    -- Step 7c: Materialize assertion method (avoids CROSS JOIN UNNEST in final query)
+    ---------------------------------------------------------------------------
+    SET query_scv_method = REPLACE("""
+      {CT} {P}.temp_scv_method AS
+      -- there are less than 10 assertion method attributes that contain multiple citations
+      --   these are likely mis-submitted info since they should be in the interp citations
+      --   not the assertion method citations which should almost exclusively be 1 item
+      --   for now we comprimise by grouping any multi- citation id values together as a string
+      --   and hoping that the citation source and url will aggregate to the same single record.
+      --   this hacky policy works around the bad data as of 2024-04-07
+      SELECT
+        scv.id,
+        STRUCT (
+          'Method' as type,
+          scv.method_type as methodType,
+          a.attribute.value as name,
+          IF(
+            (cid.source is not null OR c.url is not null),
+            STRUCT(
+              'Document' as type,
+              IF(LOWER(cid.source) = 'pubmed', STRING_AGG(cid.id), null) as pmid,
+              IF(LOWER(cid.source) = 'doi', STRING_AGG(cid.id), null) as doi,
+              [
+                CASE
+                WHEN c.url IS NOT NULL THEN
+                  c.url
+                WHEN LOWER(cid.source) = 'pubmed' THEN
+                  FORMAT('https://pubmed.ncbi.nlm.nih.gov/%s',STRING_AGG(cid.id))
+                WHEN LOWER(cid.source) = 'pmc' THEN
+                  FORMAT('https://europepmc.org/article/PMC/%s',STRING_AGG(cid.id))
+                WHEN LOWER(cid.source) = 'doi' THEN
+                  FORMAT('https://doi.org/%s',STRING_AGG(cid.id))
+                WHEN LOWER(cid.source) = 'bookshelf' THEN
+                  FORMAT('https://www.ncbi.nlm.nih.gov/books/%s',STRING_AGG(cid.id))
+                ELSE
+                  FORMAT('%s:%s', cid.source, STRING_AGG(cid.id))
+                END
+              ] as urls
+            ),
+            null
+          ) as reportedIn
+        ) as specifiedBy
+      FROM {P}.temp_gks_scv scv
+      CROSS JOIN UNNEST(scv.attribs) as a
+      LEFT JOIN UNNEST(a.citation) as c
+      LEFT JOIN UNNEST(c.id) as cid
+      WHERE
+        a.attribute.type = 'AssertionMethod'
+      GROUP BY
+        scv.id,
+        a.attribute.value,
+        cid.source,
+        c.url,
+        scv.method_type
+    """, '{S}', rec.schema_name);
+    SET query_scv_method = REPLACE(query_scv_method, '{CT}', temp_create);
+    SET query_scv_method = REPLACE(query_scv_method, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_scv_method;
+
+    ---------------------------------------------------------------------------
+    -- Step 8: Create statement SCV pre table (simple join, no UNNEST)
+    ---------------------------------------------------------------------------
+    SET query_statement_scv_pre = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_scv_statement_pre`
+      as
       SELECT
         FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
         'Statement' as type,
@@ -661,13 +691,13 @@ BEGIN
       LEFT JOIN {P}.temp_gks_scv_target_proposition stp
       ON
         stp.scv_id = scv.id
-      LEFT JOIN scv_method sm
+      LEFT JOIN {P}.temp_scv_method sm
       ON
         sm.id = scv.id
-      LEFT JOIN scv_citations scit
+      LEFT JOIN {P}.temp_scv_citations scit
       ON
         scit.id = scv.id
-      LEFT JOIN scv_condition_name scn
+      LEFT JOIN {P}.temp_scv_condition_names scn
       ON
         scn.scv_id = scv.id
     """, '{S}', rec.schema_name);
@@ -681,6 +711,9 @@ BEGIN
       DROP TABLE _SESSION.temp_penetrance_qualifiers;
       DROP TABLE _SESSION.temp_gks_scv_proposition;
       DROP TABLE _SESSION.temp_gks_scv_target_proposition;
+      DROP TABLE _SESSION.temp_scv_condition_names;
+      DROP TABLE _SESSION.temp_scv_citations;
+      DROP TABLE _SESSION.temp_scv_method;
     END IF;
 
   END FOR;
