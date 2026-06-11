@@ -5,6 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## General Rules
 
 - Only modify files explicitly requested by the user. Do not proactively edit test files, SQL files, or other files beyond the scope of the current request without asking first.
+- Don't assume. Don't hide confusion. Surface tradeoffs.
+- Minimum code that solves the problem. Nothing speculative.
+- Touch only what you must. Clean up only your own mess.
+- Define success criteria. Loop until verified.
 
 ## Project Overview
 
