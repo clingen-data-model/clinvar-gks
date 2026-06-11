@@ -1,0 +1,265 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Tier I (Strong) - diagnostic - supports diagnosis (1)"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Tier I (Strong) - diagnostic - supports diagnosis (1)"
+          },
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "classification": {
+                    "conceptType": "Classification",
+                    "name": "Tier I (Strong) - diagnostic - supports diagnosis (1)"
+                  },
+                  "confidence": "criteria provided",
+                  "direction": "supports",
+                  "evidenceLines": [
+                    {
+                      "directionOfEvidenceProvided": "supports",
+                      "evidenceItems": [
+                        {
+                          "id": "clinvar.submission:SCV007105432.1"
+                        }
+                      ],
+                      "strengthOfEvidenceProvided": "contributing",
+                      "type": "EvidenceLine"
+                    }
+                  ],
+                  "extensions": [
+                    {
+                      "name": "clinvarReviewStatus",
+                      "value": "criteria provided, single submitter"
+                    }
+                  ],
+                  "id": "RCV006253521.1-S-SCI-CP-T1",
+                  "proposition": {
+                    "id": "RCV006253521-S-SCI-CP-T1",
+                    "objectCondition": {
+                      "conceptType": "Disease",
+                      "id": "SCV007105432.0",
+                      "mappings": [
+                        {
+                          "coding": {
+                            "code": "182067",
+                            "iris": [
+                              "https://identifiers.org/orphanet.ordo:Orphanet_182067",
+                              "http://www.orpha.net/ORDO/Orphanet_182067"
+                            ],
+                            "system": "Orphanet"
+                          },
+                          "relation": "relatedMatch"
+                        },
+                        {
+                          "coding": {
+                            "code": "D005910",
+                            "iris": [
+                              "https://identifiers.org/mesh:D005910",
+                              "https://www.ncbi.nlm.nih.gov/mesh/?term=D005910"
+                            ],
+                            "system": "MeSH"
+                          },
+                          "relation": "relatedMatch"
+                        },
+                        {
+                          "coding": {
+                            "code": "MONDO:0021042",
+                            "iris": [
+                              "http://purl.obolibrary.org/obo/MONDO_0021042",
+                              "https://identifiers.org/mondo:0021042"
+                            ],
+                            "system": "MONDO"
+                          },
+                          "relation": "relatedMatch"
+                        },
+                        {
+                          "coding": {
+                            "code": "HP:0009733",
+                            "iris": [
+                              "https://identifiers.org/HP:0009733",
+                              "https://hpo.jax.org/browse/term/HP:0009733"
+                            ],
+                            "system": "Human Phenotype Ontology"
+                          },
+                          "relation": "relatedMatch"
+                        }
+                      ],
+                      "name": "Glioma",
+                      "primaryCoding": {
+                        "code": "C0017638",
+                        "iris": [
+                          "https://identifiers.org/medgen:C0017638",
+                          "https://www.ncbi.nlm.nih.gov/medgen/C0017638"
+                        ],
+                        "name": "Glioma",
+                        "system": "MedGen"
+                      }
+                    },
+                    "predicate": "hasSignificanceFor",
+                    "subjectVariant": "clinvar:12582",
+                    "type": "VariantClinicalSignificanceProposition"
+                  },
+                  "strength": "definitive",
+                  "type": "Statement"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "id": "RCV006253521.1-S-SCI-CP",
+          "proposition": {
+            "id": "RCV006253521-S-SCI-CP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV007105432.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "182067",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_182067",
+                      "http://www.orpha.net/ORDO/Orphanet_182067"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "D005910",
+                    "iris": [
+                      "https://identifiers.org/mesh:D005910",
+                      "https://www.ncbi.nlm.nih.gov/mesh/?term=D005910"
+                    ],
+                    "system": "MeSH"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0021042",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0021042",
+                      "https://identifiers.org/mondo:0021042"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "HP:0009733",
+                    "iris": [
+                      "https://identifiers.org/HP:0009733",
+                      "https://hpo.jax.org/browse/term/HP:0009733"
+                    ],
+                    "system": "Human Phenotype Ontology"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "Glioma",
+              "primaryCoding": {
+                "code": "C0017638",
+                "iris": [
+                  "https://identifiers.org/medgen:C0017638",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0017638"
+                ],
+                "name": "Glioma",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "hasSignificanceFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantClinicalSignificanceProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "id": "RCV006253521.1-S-SCI",
+  "proposition": {
+    "id": "RCV006253521-S-SCI",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "id": "SCV007105432.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "182067",
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_182067",
+              "http://www.orpha.net/ORDO/Orphanet_182067"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "D005910",
+            "iris": [
+              "https://identifiers.org/mesh:D005910",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D005910"
+            ],
+            "system": "MeSH"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0021042",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0021042",
+              "https://identifiers.org/mondo:0021042"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "HP:0009733",
+            "iris": [
+              "https://identifiers.org/HP:0009733",
+              "https://hpo.jax.org/browse/term/HP:0009733"
+            ],
+            "system": "Human Phenotype Ontology"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Glioma",
+      "primaryCoding": {
+        "code": "C0017638",
+        "iris": [
+          "https://identifiers.org/medgen:C0017638",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0017638"
+        ],
+        "name": "Glioma",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "hasSignificanceFor",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantClinicalSignificanceProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

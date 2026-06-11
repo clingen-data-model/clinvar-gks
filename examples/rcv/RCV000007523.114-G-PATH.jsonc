@@ -1,0 +1,554 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Pathogenic"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "practice guidelines",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV000071392.3"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "practice guideline"
+            }
+          ],
+          "id": "RCV000007523.114-G-PATH-PG",
+          "proposition": {
+            "id": "RCV000007523-G-PATH-PG",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV000027724.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "586",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_586",
+                      "http://www.orpha.net/ORDO/Orphanet_586"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0009061",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0009061",
+                      "https://identifiers.org/mondo:0009061"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "219700",
+                    "iris": [
+                      "https://www.omim.org/entry/219700",
+                      "https://identifiers.org/mim:219700"
+                    ],
+                    "system": "OMIM"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "CYSTIC FIBROSIS",
+              "primaryCoding": {
+                "code": "C0010674",
+                "iris": [
+                  "https://identifiers.org/medgen:C0010674",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0010674"
+                ],
+                "name": "Cystic fibrosis",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    },
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic/Likely pathogenic"
+          },
+          "confidence": "criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV006554430.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004100881.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002579737.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV002759371.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000584079.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001527339.4"
+                },
+                {
+                  "id": "clinvar.submission:SCV002503785.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV000891676.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000074347.16"
+                },
+                {
+                  "id": "clinvar.submission:SCV000221179.6"
+                },
+                {
+                  "id": "clinvar.submission:SCV002761398.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV001169465.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002564582.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000864219.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004805438.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV002072562.5"
+                },
+                {
+                  "id": "clinvar.submission:SCV002053836.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV007448776.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000741228.6"
+                },
+                {
+                  "id": "clinvar.submission:SCV001149705.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV007329966.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV006555683.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001810348.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV004037030.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV000886152.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV003841941.4"
+                },
+                {
+                  "id": "clinvar.submission:SCV000538017.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000883108.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002061800.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV000594089.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002048630.9"
+                },
+                {
+                  "id": "clinvar.submission:SCV001424387.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002818128.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV002507372.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001251533.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV005051724.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV005397656.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002097285.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV001193905.2"
+                },
+                {
+                  "id": "clinvar.submission:SCV001244997.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV001161676.3"
+                },
+                {
+                  "id": "clinvar.submission:SCV004101520.3"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "criteria provided, multiple submitters, no conflicts"
+            }
+          ],
+          "id": "RCV000007523.114-G-PATH-CP",
+          "proposition": {
+            "id": "RCV000007523-G-PATH-CP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV000027724.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "586",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_586",
+                      "http://www.orpha.net/ORDO/Orphanet_586"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0009061",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0009061",
+                      "https://identifiers.org/mondo:0009061"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "219700",
+                    "iris": [
+                      "https://www.omim.org/entry/219700",
+                      "https://identifiers.org/mim:219700"
+                    ],
+                    "system": "OMIM"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "CYSTIC FIBROSIS",
+              "primaryCoding": {
+                "code": "C0010674",
+                "iris": [
+                  "https://identifiers.org/medgen:C0010674",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0010674"
+                ],
+                "name": "Cystic fibrosis",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "type": "Statement"
+        },
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "expert panel",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV000071493.4"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "reviewed by expert panel"
+            }
+          ],
+          "id": "RCV000007523.114-G-PATH-EP",
+          "proposition": {
+            "id": "RCV000007523-G-PATH-EP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV000027724.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "586",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_586",
+                      "http://www.orpha.net/ORDO/Orphanet_586"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0009061",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0009061",
+                      "https://identifiers.org/mondo:0009061"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "219700",
+                    "iris": [
+                      "https://www.omim.org/entry/219700",
+                      "https://identifiers.org/mim:219700"
+                    ],
+                    "system": "OMIM"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "CYSTIC FIBROSIS",
+              "primaryCoding": {
+                "code": "C0010674",
+                "iris": [
+                  "https://identifiers.org/medgen:C0010674",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0010674"
+                ],
+                "name": "Cystic fibrosis",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        },
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Pathogenic"
+          },
+          "confidence": "no assertion criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV000027724.10"
+                },
+                {
+                  "id": "clinvar.submission:SCV004101106.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV000536740.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV004024086.1"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "no assertion criteria provided"
+            }
+          ],
+          "id": "RCV000007523.114-G-PATH-NOCP",
+          "proposition": {
+            "id": "RCV000007523-G-PATH-NOCP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV000027724.0",
+              "mappings": [
+                {
+                  "coding": {
+                    "code": "586",
+                    "iris": [
+                      "https://identifiers.org/orphanet.ordo:Orphanet_586",
+                      "http://www.orpha.net/ORDO/Orphanet_586"
+                    ],
+                    "system": "Orphanet"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "MONDO:0009061",
+                    "iris": [
+                      "http://purl.obolibrary.org/obo/MONDO_0009061",
+                      "https://identifiers.org/mondo:0009061"
+                    ],
+                    "system": "MONDO"
+                  },
+                  "relation": "relatedMatch"
+                },
+                {
+                  "coding": {
+                    "code": "219700",
+                    "iris": [
+                      "https://www.omim.org/entry/219700",
+                      "https://identifiers.org/mim:219700"
+                    ],
+                    "system": "OMIM"
+                  },
+                  "relation": "relatedMatch"
+                }
+              ],
+              "name": "CYSTIC FIBROSIS",
+              "primaryCoding": {
+                "code": "C0010674",
+                "iris": [
+                  "https://identifiers.org/medgen:C0010674",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C0010674"
+                ],
+                "name": "Cystic fibrosis",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "non-contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "practice guideline"
+    }
+  ],
+  "id": "RCV000007523.114-G-PATH",
+  "proposition": {
+    "id": "RCV000007523-G-PATH",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "id": "SCV000027724.0",
+      "mappings": [
+        {
+          "coding": {
+            "code": "586",
+            "iris": [
+              "https://identifiers.org/orphanet.ordo:Orphanet_586",
+              "http://www.orpha.net/ORDO/Orphanet_586"
+            ],
+            "system": "Orphanet"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "MONDO:0009061",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0009061",
+              "https://identifiers.org/mondo:0009061"
+            ],
+            "system": "MONDO"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "219700",
+            "iris": [
+              "https://www.omim.org/entry/219700",
+              "https://identifiers.org/mim:219700"
+            ],
+            "system": "OMIM"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "CYSTIC FIBROSIS",
+      "primaryCoding": {
+        "code": "C0010674",
+        "iris": [
+          "https://identifiers.org/medgen:C0010674",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0010674"
+        ],
+        "name": "Cystic fibrosis",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isCausalFor",
+    "subjectVariant": "clinvar:7105",
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}

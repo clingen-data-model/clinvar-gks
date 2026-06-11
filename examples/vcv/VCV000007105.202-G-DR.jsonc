@@ -1,7 +1,7 @@
 {
   "classification": {
     "conceptType": "Classification",
-    "name": "Oncogenic"
+    "name": "drug response"
   },
   "direction": "supports",
   "evidenceLines": [
@@ -11,16 +11,19 @@
         {
           "classification": {
             "conceptType": "Classification",
-            "name": "Oncogenic"
+            "name": "drug response"
           },
-          "confidence": "criteria provided",
+          "confidence": "reviewed by expert panel",
           "direction": "supports",
           "evidenceLines": [
             {
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "id": "clinvar.submission:SCV005094257.2"
+                  "id": "clinvar.submission:SCV002031250.1"
+                },
+                {
+                  "id": "clinvar.submission:SCV002031251.1"
                 }
               ],
               "strengthOfEvidenceProvided": "contributing",
@@ -30,16 +33,16 @@
           "extensions": [
             {
               "name": "clinvarReviewStatus",
-              "value": "criteria provided, single submitter"
+              "value": "reviewed by expert panel"
             }
           ],
-          "id": "VCV000012582.63-S-ONCO-CP",
+          "id": "VCV000007105.202-G-DR-EP",
           "proposition": {
-            "id": "VCV000012582-S-ONCO-CP",
+            "id": "VCV000007105-G-DR-EP",
             "objectCondition": {"conceptType": "Disease", "name": "some condition"},
-            "predicate": "isOncogenicFor",
-            "subjectVariant": "clinvar:12582",
-            "type": "VariantOncogenicityProposition"
+            "predicate": "isClinvarDrugResponseFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "ClinVarDrugResponseProposition"
           },
           "strength": "definitive",
           "type": "Statement"
@@ -52,16 +55,16 @@
   "extensions": [
     {
       "name": "clinvarReviewStatus",
-      "value": "criteria provided, single submitter"
+      "value": "reviewed by expert panel"
     }
   ],
-  "id": "VCV000012582.63-S-ONCO",
+  "id": "VCV000007105.202-G-DR",
   "proposition": {
-    "id": "VCV000012582-S-ONCO",
+    "id": "VCV000007105-G-DR",
     "objectCondition": {"conceptType": "Disease", "name": "some condition"},
-    "predicate": "isOncogenicFor",
-    "subjectVariant": "clinvar:12582",
-    "type": "VariantOncogenicityProposition"
+    "predicate": "isClinvarDrugResponseFor",
+    "subjectVariant": "clinvar:7105",
+    "type": "ClinVarDrugResponseProposition"
   },
   "strength": "definitive",
   "type": "Statement"

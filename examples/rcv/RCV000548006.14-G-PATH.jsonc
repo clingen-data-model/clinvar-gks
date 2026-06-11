@@ -1,13 +1,7 @@
 {
   "classification": {
     "conceptType": "Classification",
-    "extension": [
-      {
-        "name": "conflictingExplanation",
-        "value": "Uncertain significance(1); Likely benign(1)"
-      }
-    ],
-    "name": "Conflicting classifications of pathogenicity"
+    "name": "Pathogenic"
   },
   "direction": "supports",
   "evidenceLines": [
@@ -17,13 +11,7 @@
         {
           "classification": {
             "conceptType": "Classification",
-            "extension": [
-              {
-                "name": "conflictingExplanation",
-                "value": "Uncertain significance(1); Likely benign(1)"
-              }
-            ],
-            "name": "Conflicting classifications of pathogenicity"
+            "name": "Pathogenic"
           },
           "confidence": "criteria provided",
           "direction": "supports",
@@ -32,10 +20,10 @@
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "id": "clinvar.submission:SCV001524786.1"
+                  "id": "clinvar.submission:SCV000659085.3"
                 },
                 {
-                  "id": "clinvar.submission:SCV000397270.3"
+                  "id": "clinvar.submission:SCV002601600.1"
                 }
               ],
               "strengthOfEvidenceProvided": "contributing",
@@ -45,52 +33,52 @@
           "extensions": [
             {
               "name": "clinvarReviewStatus",
-              "value": "criteria provided, conflicting classifications"
+              "value": "criteria provided, multiple submitters, no conflicts"
             }
           ],
-          "id": "RCV001781420.15-G-PATH-CP",
+          "id": "RCV000548006.14-G-PATH-CP",
           "proposition": {
-            "id": "RCV001781420-G-PATH-CP",
+            "id": "RCV000548006-G-PATH-CP",
             "objectCondition": {
               "conceptType": "Disease",
-              "id": "SCV000397270.0",
+              "id": "SCV000659085.0",
               "mappings": [
                 {
                   "coding": {
-                    "code": "MONDO:0009960",
+                    "code": "536391",
                     "iris": [
-                      "http://purl.obolibrary.org/obo/MONDO_0009960",
-                      "https://identifiers.org/mondo:0009960"
+                      "https://identifiers.org/orphanet.ordo:Orphanet_536391",
+                      "http://www.orpha.net/ORDO/Orphanet_536391"
                     ],
-                    "system": "MONDO"
+                    "system": "Orphanet"
                   },
                   "relation": "relatedMatch"
                 },
                 {
                   "coding": {
-                    "code": "266600",
+                    "code": "MONDO:0021060",
                     "iris": [
-                      "https://www.omim.org/entry/266600",
-                      "https://identifiers.org/mim:266600"
+                      "http://purl.obolibrary.org/obo/MONDO_0021060",
+                      "https://identifiers.org/mondo:0021060"
                     ],
-                    "system": "OMIM"
+                    "system": "MONDO"
                   },
                   "relation": "relatedMatch"
                 }
               ],
-              "name": "Inflammatory bowel disease 1",
+              "name": "RASopathy",
               "primaryCoding": {
-                "code": "CN260071",
+                "code": "C5555857",
                 "iris": [
-                  "https://identifiers.org/medgen:CN260071",
-                  "https://www.ncbi.nlm.nih.gov/medgen/CN260071"
+                  "https://identifiers.org/medgen:C5555857",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C5555857"
                 ],
-                "name": "Inflammatory bowel disease 1",
+                "name": "RASopathy",
                 "system": "MedGen"
               }
             },
             "predicate": "isCausalFor",
-            "subjectVariant": "clinvar:97850",
+            "subjectVariant": "clinvar:12582",
             "type": "VariantPathogenicityProposition"
           },
           "strength": "definitive",
@@ -104,52 +92,52 @@
   "extensions": [
     {
       "name": "clinvarReviewStatus",
-      "value": "criteria provided, conflicting classifications"
+      "value": "criteria provided, multiple submitters, no conflicts"
     }
   ],
-  "id": "RCV001781420.15-G-PATH",
+  "id": "RCV000548006.14-G-PATH",
   "proposition": {
-    "id": "RCV001781420-G-PATH",
+    "id": "RCV000548006-G-PATH",
     "objectCondition": {
       "conceptType": "Disease",
-      "id": "SCV000397270.0",
+      "id": "SCV000659085.0",
       "mappings": [
         {
           "coding": {
-            "code": "MONDO:0009960",
+            "code": "536391",
             "iris": [
-              "http://purl.obolibrary.org/obo/MONDO_0009960",
-              "https://identifiers.org/mondo:0009960"
+              "https://identifiers.org/orphanet.ordo:Orphanet_536391",
+              "http://www.orpha.net/ORDO/Orphanet_536391"
             ],
-            "system": "MONDO"
+            "system": "Orphanet"
           },
           "relation": "relatedMatch"
         },
         {
           "coding": {
-            "code": "266600",
+            "code": "MONDO:0021060",
             "iris": [
-              "https://www.omim.org/entry/266600",
-              "https://identifiers.org/mim:266600"
+              "http://purl.obolibrary.org/obo/MONDO_0021060",
+              "https://identifiers.org/mondo:0021060"
             ],
-            "system": "OMIM"
+            "system": "MONDO"
           },
           "relation": "relatedMatch"
         }
       ],
-      "name": "Inflammatory bowel disease 1",
+      "name": "RASopathy",
       "primaryCoding": {
-        "code": "CN260071",
+        "code": "C5555857",
         "iris": [
-          "https://identifiers.org/medgen:CN260071",
-          "https://www.ncbi.nlm.nih.gov/medgen/CN260071"
+          "https://identifiers.org/medgen:C5555857",
+          "https://www.ncbi.nlm.nih.gov/medgen/C5555857"
         ],
-        "name": "Inflammatory bowel disease 1",
+        "name": "RASopathy",
         "system": "MedGen"
       }
     },
     "predicate": "isCausalFor",
-    "subjectVariant": "clinvar:97850",
+    "subjectVariant": "clinvar:12582",
     "type": "VariantPathogenicityProposition"
   },
   "strength": "definitive",

@@ -6,7 +6,7 @@ on:
       full_refresh:
         description: 'Re-fetch all releases (not just new ones)'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 jobs:

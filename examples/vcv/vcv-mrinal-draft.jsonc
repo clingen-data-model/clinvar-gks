@@ -1,0 +1,1451 @@
+{
+  "recordMetadata": {
+    "release.20250125": {
+      "file": "clinvar_2025_01_25_v1_2_1.xml",
+      "release": "2025-01-25",
+      "version": "1",
+      "createdOn": "2025-01-25T21:44:00Z",
+      "lastUpdatedOn": "2025-01-25T21:44:00Z"
+    }
+  },
+  "variant": {
+    "clinvar.variant:12582": {
+      "id": "clinvar.variant:12582"
+      // TBD...more examples needed to get the data in this file to be aligned, it is a mix of a vcv that does not match the scv, etc...
+    }
+  },
+  "condition": {
+    "clinvar.trait:30012": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "aliases",
+          "value": "Malignant tumor of stomach, Stomach cancer"
+        }
+      ],
+      "id": "clinvar.trait:30012",
+      "mappings": [
+        {
+          "coding": {
+            "code": "D013274",
+            "iris": [
+              "https://identifiers.org/mesh:D013274",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D013274"
+            ],
+            "system": "mesh"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0001056",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0001056",
+              "https://identifiers.org/mondo:0001056"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "613659",
+            "iris": [
+              "https://www.omim.org/entry/613659",
+              "https://identifiers.org/mim:613659"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0012126",
+            "iris": [
+              "https://identifiers.org/HP:0012126",
+              "http://purl.obolibrary.org/obo/HP_0012126"
+            ],
+            "system": "hp"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Gastric cancer",
+      "primaryCoding": {
+        "code": "C0024623",
+        "iris": [
+          "https://identifiers.org/medgen:C0024623",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0024623"
+        ],
+        "name": "Gastric cancer",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:15736": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "aliases",
+          "value": "Acute myeloid leukemia, adult, AML adult, Acute non-lymphocytic leukemia, Acute granulocytic leukemia, Leukemia, acute myeloid, somatic, Leukemia, acute myelogenous, somatic"
+        }
+      ],
+      "id": "clinvar.trait:15736",
+      "mappings": [
+        {
+          "coding": {
+            "code": "519",
+            "iris": [
+              "https://identifiers.org/orphanet:519",
+              "http://www.orpha.net/ORDO/Orphanet_519"
+            ],
+            "system": "orpha"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "D015470",
+            "iris": [
+              "https://identifiers.org/mesh:D015470",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D015470"
+            ],
+            "system": "mesh"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0018874",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0018874",
+              "https://identifiers.org/mondo:0018874"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "601626",
+            "iris": [
+              "https://www.omim.org/entry/601626",
+              "https://identifiers.org/mim:601626"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0004808",
+            "iris": [
+              "https://identifiers.org/HP:0004808",
+              "https://hpo.jax.org/browse/term/HP:0004808"
+            ],
+            "system": "hp"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Acute myeloid leukemia",
+      "primaryCoding": {
+        "code": "C0023467",
+        "iris": [
+          "https://identifiers.org/medgen:C0023467",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0023467"
+        ],
+        "name": "Acute myeloid leukemia",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:11277": {
+      "id": "clinvar.trati:11277",
+      "conceptType": "Disease",
+      "name": "Autoimmune lymphoproliferative syndrome type 4",
+      "primaryCoding": {
+        "name": "Autoimmune lymphoproliferative syndrome type 4",
+        "code": "C2674723",
+        "system": "medgen",
+        "iris": [
+          "https://www.ncbi.nlm.nih.gov/medgen/C2674723",
+          "https://identifiers.org/medgen:C2674723"
+        ]
+      },
+      "mappings": [
+        {
+          "coding": {
+            "code": "268114",
+            "system": "orpha",
+            "iris": [
+              "http://www.orpha.net/ORDO/Orphanet_268114",
+              "https://identifiers.org/orphanet:268114"
+            ]
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0013767",
+            "system": "mondo",
+            "iris": [
+              "https://identifiers.org/mondo:0013767",
+              "http://purl.obolibrary.org/obo/MONDO_0013767"
+            ]
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "614470",
+            "system": "omim",
+            "iris": [
+              "https://www.omim.org/entry/614470",
+              "https://identifiers.org/mim:614470"
+            ]
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "extensions": [
+        {
+          "name": "aliases",
+          "value": [
+            "RAS-associated autoimmune leukoproliferative disorder",
+            "AUTOIMMUNE LYMPHOPROLIFERATIVE SYNDROME, TYPE IV"
+          ]
+        }
+      ]
+    },
+    "clinvar.trait:3187": {
+      "conceptType": "Disease",
+      "id": "clinvar.trait:3187",
+      "mappings": [
+        {
+          "coding": {
+            "code": "648",
+            "iris": [
+              "https://identifiers.org/orphanet:648",
+              "http://www.orpha.net/ORDO/Orphanet_648"
+            ],
+            "system": "orpha"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0012371",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0012371",
+              "https://identifiers.org/mondo:0012371"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "609942",
+            "iris": [
+              "https://www.omim.org/entry/609942",
+              "https://identifiers.org/mim:609942"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Noonan syndrome 3",
+      "primaryCoding": {
+        "code": "C1860991",
+        "iris": [
+          "https://identifiers.org/medgen:C1860991",
+          "https://www.ncbi.nlm.nih.gov/medgen/C1860991"
+        ],
+        "name": "Noonan syndrome 3",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:4675": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "aliases",
+          "value": "Urinary bladder cancer, Bladder cancer, Urinary Bladder Neoplasms"
+        }
+      ],
+      "id": "clinvar.trait:4675",
+      "mappings": [
+        {
+          "coding": {
+            "code": "0001187",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0001187",
+              "https://identifiers.org/mondo:0001187"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "109800",
+            "iris": [
+              "https://www.omim.org/entry/109800",
+              "https://identifiers.org/mim:109800"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Malignant tumor of urinary bladder",
+      "primaryCoding": {
+        "code": "C0005684",
+        "iris": [
+          "https://identifiers.org/medgen:C0005684",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0005684"
+        ],
+        "name": "Malignant tumor of urinary bladder",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:4617": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "aliases",
+          "value": "CEREBRAL ARTERIOVENOUS MALFORMATIONS, Arteriovenous malformations of the brain"
+        }
+      ],
+      "id": "clinvar.trait:4617",
+      "mappings": [
+        {
+          "coding": {
+            "code": "46724",
+            "iris": [
+              "https://identifiers.org/orphanet:46724",
+              "http://www.orpha.net/ORDO/Orphanet_46724"
+            ],
+            "system": "orpha"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0007154",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0007154",
+              "https://identifiers.org/mondo:0007154"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "108010",
+            "iris": [
+              "https://www.omim.org/entry/108010",
+              "https://identifiers.org/mim:108010"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0002408",
+            "iris": [
+              "https://identifiers.org/HP:0002408",
+              "https://hpo.jax.org/browse/term/HP:0002408"
+            ],
+            "system": "hp"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Cerebral arteriovenous malformation",
+      "primaryCoding": {
+        "code": "C0917804",
+        "iris": [
+          "https://identifiers.org/medgen:C0917804",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0917804"
+        ],
+        "name": "Cerebral arteriovenous malformation",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:4676": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "aliases",
+          "value": "Malignant tumor of kidney, Kidney cancer, Renal cell carcinoma, somatic"
+        }
+      ],
+      "id": "clinvar.trait:4676",
+      "mappings": [
+        {
+          "coding": {
+            "code": "0008904",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0008904",
+              "https://identifiers.org/mondo:0008904"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "211980",
+            "iris": [
+              "https://www.omim.org/entry/211980",
+              "https://identifiers.org/mim:211980"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Renal cell carcinoma",
+      "primaryCoding": {
+        "code": "C0022661",
+        "iris": [
+          "https://identifiers.org/medgen:C0022661",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0022661"
+        ],
+        "name": "Renal cell carcinoma",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:54641": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "aliases",
+          "value": "Malignant tumor of lung, Lung cancer, somatic"
+        }
+      ],
+      "id": "clinvar.trait:54641",
+      "mappings": [
+        {
+          "coding": {
+            "code": "0008903",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0008903",
+              "https://identifiers.org/mondo:0008903"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "211980",
+            "iris": [
+              "https://www.omim.org/entry/211980",
+              "https://identifiers.org/mim:211980"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Lung cancer",
+      "primaryCoding": {
+        "code": "C0242379",
+        "iris": [
+          "https://identifiers.org/medgen:C0242379",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0242379"
+        ],
+        "name": "Lung cancer",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:536": {
+      "conceptType": "Disease",
+      "extensions": [
+        {
+          "name": "aliases",
+          "value": "BREAST CANCER, FAMILIAL, Hereditary breast cancer, hereditary breast carcinoma"
+        }
+      ],
+      "id": "clinvar.trait:536",
+      "mappings": [
+        {
+          "coding": {
+            "code": "227535",
+            "iris": [
+              "https://identifiers.org/orphanet:227535",
+              "http://www.orpha.net/ORDO/Orphanet_227535"
+            ],
+            "system": "orpha"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0016419",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0016419",
+              "https://identifiers.org/mondo:0016419"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "114480",
+            "iris": [
+              "https://www.omim.org/entry/114480",
+              "https://identifiers.org/mim:114480"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Familial cancer of breast",
+      "primaryCoding": {
+        "code": "C0346153",
+        "iris": [
+          "https://identifiers.org/medgen:C0346153",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0346153"
+        ],
+        "name": "Familial cancer of breast",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:4602": {
+      "conceptType": "Disease",
+      "id": "clinvar.trait:4602",
+      "mappings": [
+        {
+          "coding": {
+            "code": "3339",
+            "iris": [
+              "https://identifiers.org/orphanet:3339",
+              "http://www.orpha.net/ORDO/Orphanet_3339"
+            ],
+            "system": "orpha"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0010854",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0010854",
+              "https://identifiers.org/mondo:0010854"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "600268",
+            "iris": [
+              "https://www.omim.org/entry/600268",
+              "https://identifiers.org/mim:600268"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Toriello-Lacassie-Droste syndrome",
+      "primaryCoding": {
+        "code": "C1838329",
+        "iris": [
+          "https://identifiers.org/medgen:C1838329",
+          "https://www.ncbi.nlm.nih.gov/medgen/C1838329"
+        ],
+        "name": "Toriello-Lacassie-Droste syndrome",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:18481": {
+      "id": "18481",
+      "conceptType": "Disease",
+      "name": "Familial pancreatic carcinoma",
+      "primaryCoding": {
+        "name": "Familial pancreatic carcinoma",
+        "code": "C2931038",
+        "system": "medgen",
+        "iris": [
+          "https://www.ncbi.nlm.nih.gov/medgen/C2931038",
+          "https://identifiers.org/medgen:C2931038"
+        ]
+      },
+      "mappings": [
+        {
+          "coding": {
+            "code": "1333",
+            "system": "orpha",
+            "iris": [
+              "http://www.orpha.net/ORDO/Orphanet_1333",
+              "https://identifiers.org/orphanet:1333"
+            ]
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0015278",
+            "system": "mondo",
+            "iris": [
+              "https://identifiers.org/mondo:0015278",
+              "http://purl.obolibrary.org/obo/MONDO_0015278"
+            ]
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "name": null,
+            "code": "260350",
+            "system": "omim",
+            "iris": [
+              "https://www.omim.org/entry/260350",
+              "https://identifiers.org/mim:260350"
+            ]
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+    },
+    "clinvar.trait:17942": {
+      "conceptType": "Disease",
+      "id": "clinvar.trait:17942",
+      "mappings": [
+        {
+          "coding": {
+            "code": "D020521",
+            "iris": [
+              "https://identifiers.org/mesh:D020521",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D020521"
+            ],
+            "system": "mesh"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0001057",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0001057",
+              "https://identifiers.org/mondo:0001057"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "613659",
+            "iris": [
+              "https://www.omim.org/entry/613659",
+              "https://identifiers.org/mim:613659"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0012126",
+            "iris": [
+              "https://identifiers.org/HP:0012126",
+              "https://hpo.jax.org/browse/term/HP:0012126"
+            ],
+            "system": "hp"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Gastric adenocarcinoma",
+      "primaryCoding": {
+        "code": "C0024625",
+        "iris": [
+          "https://identifiers.org/medgen:C0024625",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0024625"
+        ],
+        "name": "Gastric adenocarcinoma",
+        "system": "medgen"
+      }
+    },
+    "clinvar.trait:4371": {
+      "conceptType": "Disease",
+      "id": "clinvar.trait:4371",
+      "mappings": [
+        {
+          "coding": {
+            "code": "D020521",
+            "iris": [
+              "https://identifiers.org/mesh:D020521",
+              "https://www.ncbi.nlm.nih.gov/mesh/?term=D020521"
+            ],
+            "system": "mesh"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0001057",
+            "iris": [
+              "http://purl.obolibrary.org/obo/MONDO_0001057",
+              "https://identifiers.org/mondo:0001057"
+            ],
+            "system": "mondo"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "613659",
+            "iris": [
+              "https://www.omim.org/entry/613659",
+              "https://identifiers.org/mim:613659"
+            ],
+            "system": "omim"
+          },
+          "relation": "relatedMatch"
+        },
+        {
+          "coding": {
+            "code": "0012126",
+            "iris": [
+              "https://identifiers.org/HP:0012126",
+              "https://hpo.jax.org/browse/term/HP:0012126"
+            ],
+            "system": "hp"
+          },
+          "relation": "relatedMatch"
+        }
+      ],
+      "name": "Gastric neoplasms",
+      "primaryCoding": {
+        "code": "C0024626",
+        "iris": [
+          "https://identifiers.org/medgen:C0024626",
+          "https://www.ncbi.nlm.nih.gov/medgen/C0024626"
+        ],
+        "name": "Gastric neoplasms",
+        "system": "medgen"
+      }
+    }
+  },
+  "conditionSet": {
+    "clinvar.traitset:100171": {
+      "conceptSetType": "Disease",
+      "concepts": [
+        "#/condition/clinvar.trait:30012",
+        "#/condition/clinvar.trait:11277",
+        "#/condition/clinvar.trait:15736",
+        "#/condition/clinvar.trait:3187",
+        "#/condition/clinvar.trait:4675",
+        "#/condition/clinvar.trait:4617",
+        "#/condition/clinvar.trait:4676",
+        "#/condition/clinvar.trait:54641",
+        "#/condition/clinvar.trait:536",
+        "#/condition/clinvar.trait:4602",
+        "#/condition/clinvar.trait:18481",
+        "#/condition/clinvar.trait:17942",
+        "#/condition/clinvar.trait:4371"
+      ],
+      "id": "clinvar.traitset:100171",
+      "membershipOperator": "AND"
+    }
+  },
+  "contributor": {
+    "clinvar.submitter:500105": {
+      "id": "clinvar.submitter:500105",
+      "name": "Fulgent Genetics, Fulgent Genetics",
+      "type": "Agent"
+    }
+  },
+  "gene": {
+    "clinvar.gene:6407": {
+      "conceptType": "gene",
+      "id": "clinvar.gene:6407",
+      "mappings": [
+        {
+          "coding": {
+            "code": "3845",
+            "iris": [
+              "https://identifiers.org/ncbigene:3845",
+              "https://www.ncbi.nlm.nih.gov/gene/3845"
+            ],
+            "system": "https://www.ncbi.nlm.nih.gov/gene/"
+          },
+          "relation": "exactMatch"
+        }
+      ],
+      "name": "KRAS",
+      "primaryCoding": {
+        "code": "6407",
+        "iris": [
+          "https://identifiers.org/hgnc:6407",
+          "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/6407"
+        ],
+        "name": "KRAS",
+        "system": "https://www.genenames.org"
+      }
+    }
+  },
+  "submission": {
+    "clinvar.submission:SCV005634967.1": {
+      "recordMetadata": "#/recordMetadata/release.20250125",
+      "classification": {
+        "extensions": [
+          {
+            "name": "description",
+            "value": "for 12 conditions\nClassification is based on the criteria provided submission\nFeb 2024 by Fulgent Genetics, Fulgent Genetics"
+          }
+        ],
+        "name": "Pathogenic",
+        "primaryCoding": {
+          "code": "pathogenic",
+          "system": "ACMG Guidelines, 2015"
+        }
+      },
+      "confidenceLevel": {
+        "name": "criteria provided"
+      },
+      "contributions": [
+        {
+          "activityType": "submitted",
+          "contributor": "#/contributor/clinvar.submitter:500105",
+          "date": "2025-01-25",
+          "type": "Contribution"
+        },
+        {
+          "activityType": "created",
+          "contributor": "#/contributor/clinvar.submitter:500105",
+          "date": "2025-01-25",
+          "type": "Contribution"
+        },
+        {
+          "activityType": "evaluated",
+          "contributor": "#/contributor/clinvar.submitter:500105",
+          "date": "2024-02-23",
+          "type": "Contribution"
+        }
+      ],
+      "direction": "supports",
+      "extensions": [
+        {
+          "name": "clinvarScvId",
+          "value": "SCV005634967"
+        },
+        {
+          "name": "clinvarScvVersion",
+          "value": "1"
+        },
+        {
+          "name": "clinvarScvReviewStatus",
+          "value": "criteria provided, single submitter"
+        },
+        {
+          "name": "submittedScvLocalKey",
+          "value": "(v1:FilteredVar)[GRCh37]chr12/25398284:25398284(C:T:)NM_004985.5|OMIM:108010;109800;114480;163200;211980;260350;600268;601626;609942;613659;614470;615278"
+        },
+        {
+          "name": "submittedVaraintExpression",
+          "value": "chr12:25398284 C>T (GRCh37)" // dummy info
+        },
+        {
+          "name": "submittedConditionMapping",
+          "value": {
+            "key": "clinvar.traitset:100171",
+            "value": {
+              "conceptSetType": "Disease",
+              "concepts": [
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "613659",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '613659'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(613659)"
+                    }
+                  ],
+                  "id": "SCV005634967.9",
+                  "name": "Abdominal carcinoma type 3",  //  only show if it is different?
+                  "primaryCoding": {
+                    "code": "30012",
+                    "iris": [
+                      "#/condition/clinvar.trait:30012"
+                    ],
+                    "system": "clinvar.trait"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "109800",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '109800'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(109800)"
+                    }
+                  ],
+                  "id": "SCV005634967.1",
+                  "primaryCoding": {
+                    "code": "4675",
+                    "iris": [
+                      "#/condition/clinvar.trait:4675"
+                    ],
+                    "system": "clinvar.trait"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "601626",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '601626'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(601626)"
+                    }
+                  ],
+                  "id": "SCV005634967.7",
+                  "primaryCoding": {
+                    "code": "15736",
+                    "iris": [
+                      "#/condition/clinvar.trait:15736"
+                    ],
+                    "system": "clinvar.trait"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "211980",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '211980'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(211980)"
+                    }
+                  ],
+                  "id": "SCV005634967.4",
+                  "primaryCoding": {
+                    "code": "54641",
+                    "iris": [
+                      "#/condition/clinvar.trait:54641"
+                    ],
+                    "system": "clinvar.trait"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "614470",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '614470'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(614470)"
+                    }
+                  ],
+                  "id": "SCV005634967.10",
+                  "primaryCoding": {
+                    "code": "11277",
+                    "iris": [
+                      "#/condition/clinvar.trait:11277"
+                    ],
+                    "system": "clinvar.trait"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "114480",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '114480'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(114480)"
+                    }
+                  ],
+                  "id": "SCV005634967.2",
+                  "primaryCoding": {
+                    "code": "536",
+                    "iris": [
+                      "#/condition/clinvar.trait:536"
+                    ],
+                    "system": "clinvar.trait"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "600268",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '600268'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(600268)"
+                    }
+                  ],
+                  "id": "SCV005634967.6",
+                  "primaryCoding": {
+                    "code": "4602",
+                    "iris": [
+                      "#/condition/clinvar.trait:4602"
+                    ],
+                    "system": "clinvar.trait"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "108010",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '108010'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(108010)"
+                    }
+                  ],
+                  "id": "SCV005634967.0",
+                  "primaryCoding": {
+                    "code": "4617",
+                    "iris": [
+                      "#/condition/clinvar.trait:4617"
+                    ],
+                    "system": "clinvar.trait"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "609942",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '609942'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(609942)"
+                    }
+                  ],
+                  "id": "SCV005634967.8",
+                  "primaryCoding": {
+                    "code": "18481",
+                    "iris": [
+                      "#/condition/clinvar.trait:18481"
+                    ],
+                    "system": "clinvar.trait"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "260350",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '260350'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(260350)"
+                    }
+                  ],
+                  "id": "SCV005634967.5",
+                  "name": "Familial pancreatic carcinoma",
+                  "primaryCoding": {
+                    "code": "C2931038",
+                    "iris": [
+                      "https://identifiers.org/medgen:C2931038",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C2931038"
+                    ],
+                    "name": "Familial pancreatic carcinoma",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "aliases",
+                      "value": "JADASSOHN NEVUS PHAKOMATOSIS, Linear nevus sebaceous, Linear sebaceous nevus sequence, Nevus, Sebaceous of Jadassohn, SCHIMMELPENNING-FEUERSTEIN-MIMS SYNDROME, SOMATIC MOSAIC, Sebaceous nevus syndrome and hemimegalencephaly, NEVUS SEBACEUS OF JADASSOHN, ORGANOID NEVUS PHAKOMATOSIS, SFM SYNDROME"
+                    },
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "163200",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '163200'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(163200)"
+                    }
+                  ],
+                  "id": "SCV005634967.3",
+                  "name": "Linear nevus sebaceous syndrome",
+                  "primaryCoding": {
+                    "code": "C4552097",
+                    "iris": [
+                      "https://identifiers.org/medgen:C4552097",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C4552097"
+                    ],
+                    "name": "Linear nevus sebaceous syndrome",
+                    "system": "MedGen"
+                  }
+                },
+                {
+                  "conceptType": "Disease",
+                  "extensions": [
+                    {
+                      "name": "submittedScvXrefs",
+                      "value": [
+                        {
+                          "code": "615278",
+                          "system": "OMIM"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "submittedScvTraitAssignment",
+                      "value": "scv trait: omim id '615278'"
+                    },
+                    {
+                      "name": "clinvarScvTraitAssignment",
+                      "value": "rcv-tm medgen id"
+                    },
+                    {
+                      "name": "clinvarScvTraitMappingType:ref(val)",
+                      "value": "xref:omim(615278)"
+                    }
+                  ],
+                  "id": "SCV005634967.11",
+                  "name": "Cardiofaciocutaneous syndrome 2",
+                  "primaryCoding": {
+                    "code": "C3809005",
+                    "iris": [
+                      "https://identifiers.org/medgen:C3809005",
+                      "https://www.ncbi.nlm.nih.gov/medgen/C3809005"
+                    ],
+                    "name": "Cardiofaciocutaneous syndrome 2",
+                    "system": "MedGen"
+                  }
+                }
+              ],
+              "id": "SCV005634967.0",
+              "membershipOperator": "AND"
+            }
+          }
+        }
+      ],
+      "id": "clinvar.submission:SCV005634967.1",
+      "proposition": {
+        "geneContextQualifier": "#/gene/clinvar.gene:6407",
+        "id": "clinvar.submission:SCV005634967", // generated id for the non-versioned spirit of the submission
+        "objectCondition": "#/conditionSet/clinvar.traitset:100171",
+        "predicate": "isCausalFor",
+        "subjectVariant": "#/variant/clinvar.variant:12582",
+        "type": "VariantPathogenicityProposition"
+      },
+      "specifiedBy": {
+        "methodType": "clinical testing",
+        "name": "ACMG Guidelines, 2015",
+        "reportedIn": {
+          "pmid": "25741868",
+          "type": "Document",
+          "urls": [
+            "https://pubmed.ncbi.nlm.nih.gov/25741868"
+          ]
+        },
+        "type": "Method"
+      },
+      "evidenceStrength": {
+        "name": "Definitive",
+        "primaryCoding": {
+          "code": "definitive",
+          "system": "ACMG Guidelines, 2015"
+        }
+      },
+      "type": "Statement"
+    }
+    // more SCVs need to be added here to fulfill the references in the example vcv below
+  },
+  // the vcv example below does not match the scv data above, I will be updating this to make sure we have a complete example asap.
+  "vcv": {
+    "clinvar.vcv:VCV001354986.7-G-PATH": {
+      "classification": {
+        "conceptType": "Classification",
+        "extension": [
+          {
+            "name": "conflictingExplanation",
+            "value": "Uncertain significance(1); Likely benign(1)"
+          }
+        ],
+        "name": "Conflicting classifications of pathogenicity"
+      },
+      "confidence": "criteria provided",
+      "direction": "neutral",
+      "evidenceLines": [
+        {
+          "directionOfEvidenceProvided": "supports",
+          "evidenceItems": [
+            {
+              "classification": {
+                "conceptType": "Classification",
+                "extension": [
+                  {
+                    "name": "conflictingExplanation",
+                    "value": "Uncertain significance(1); Likely benign(1)"
+                  }
+                ],
+                "name": "Conflicting classifications of pathogenicity"
+              },
+              "confidence": "criteria provided",
+              "direction": "neutral",
+              "evidenceLines": [
+                {
+                  "directionOfEvidenceProvided": "supports",
+                  "evidenceItems": [
+                    "#/submission/clinvar.submission:SCV005933543.1",
+                    "#/submission/clinvar.submission:SCV002121756.5"
+                  ],
+                  "strengthOfEvidenceProvided": "contributing",
+                  "type": "EvidenceLine"
+                }
+              ],
+              "extensions": [
+                {
+                  "name": "clinvarReviewStatus",
+                  "value": "criteria provided, conflicting classifications"
+                }
+              ],
+              "id": "VCV001354986.7-G-PATH-CP",
+              "proposition": {
+                "id": "VCV001354986-G-PATH-CP",
+                "objectCondition": {
+                  // this really should be an iri to a conditionset reference that has yet to be added to this example.
+                  "conceptSetType": "Disease",
+                  "concepts": [
+                    // TBD fix condition references for this vcv example. i need to add more SCVs with the right conditions to the submission section above.
+                    "#/condition/clinvar.trait:xxx",
+                    "#/condition/clinvar.trait:yyy"
+                  ],
+                  "membershipOperator": "OR"
+                },
+                "predicate": "isCausalFor",
+                "subjectVariant": "#/variant/clinvar:1354986",
+                "type": "VariantPathogenicityProposition"
+              },
+              "type": "Statement"
+            }
+          ],
+          "strengthOfEvidenceProvided": "contributing",
+          "type": "EvidenceLine"
+        }
+      ],
+      "extensions": [
+        {
+          "name": "clinvarReviewStatus",
+          "value": "criteria provided, conflicting classifications"
+        }
+      ],
+      "id": "VCV001354986.7-G-PATH",
+      "proposition": {
+        "id": "VCV001354986-G-PATH",
+        "objectCondition": {
+          "concepts": [
+            {
+              "conceptType": "Disease",
+              "id": "SCV002121756.0",
+              "name": "not provided",
+              "primaryCoding": {
+                "code": "C3661900",
+                "iris": [
+                  "https://identifiers.org/medgen:C3661900",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C3661900"
+                ],
+                "name": "not provided",
+                "system": "MedGen"
+              }
+            },
+            {
+              "conceptType": "Disease",
+              "id": "SCV005933543.0",
+              "name": "not specified",
+              "primaryCoding": {
+                "code": "CN169374",
+                "iris": [
+                  "https://identifiers.org/medgen:CN169374",
+                  "https://www.ncbi.nlm.nih.gov/medgen/CN169374"
+                ],
+                "name": "not specified",
+                "system": "MedGen"
+              }
+            }
+          ],
+          "membershipOperator": "OR",
+          "type": "ConceptSet"
+        },
+        "predicate": "isCausalFor",
+        "subjectVariant": "#/variant/clinvar:1354986",   // wrong variant id. i need to align this vcv with the data I added for the scv above.
+        "type": "VariantPathogenicityProposition"
+      },
+      "type": "Statement"
+    }
+  }
+}

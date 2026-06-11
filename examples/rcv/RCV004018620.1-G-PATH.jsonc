@@ -1,0 +1,94 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "Likely pathogenic"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "Likely pathogenic"
+          },
+          "confidence": "criteria provided",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV005023563.1"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "criteria provided, single submitter"
+            }
+          ],
+          "id": "RCV004018620.1-G-PATH-CP",
+          "proposition": {
+            "id": "RCV004018620-G-PATH-CP",
+            "objectCondition": {
+              "conceptType": "Finding",
+              "id": "SCV005023563.0",
+              "name": "Cardiovascular phenotype",
+              "primaryCoding": {
+                "code": "CN230736",
+                "iris": [
+                  "https://identifiers.org/medgen:CN230736",
+                  "https://www.ncbi.nlm.nih.gov/medgen/CN230736"
+                ],
+                "name": "Cardiovascular phenotype",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:12582",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "likely",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "criteria provided, single submitter"
+    }
+  ],
+  "id": "RCV004018620.1-G-PATH",
+  "proposition": {
+    "id": "RCV004018620-G-PATH",
+    "objectCondition": {
+      "conceptType": "Finding",
+      "id": "SCV005023563.0",
+      "name": "Cardiovascular phenotype",
+      "primaryCoding": {
+        "code": "CN230736",
+        "iris": [
+          "https://identifiers.org/medgen:CN230736",
+          "https://www.ncbi.nlm.nih.gov/medgen/CN230736"
+        ],
+        "name": "Cardiovascular phenotype",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isCausalFor",
+    "subjectVariant": "clinvar:12582",
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": "likely",
+  "type": "Statement"
+}

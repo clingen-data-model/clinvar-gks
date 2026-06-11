@@ -99,7 +99,7 @@ The `objectConditionClassification` field on RCV propositions is not an extensio
 
 When the underlying SCV uses a multi-condition `conditionSet` instead of a single `condition`, the first concept is itself a nested ConceptSet of conditions. Extensions on the source condition are excluded.
 
-This same structure is used at all four layers without modification -- no per-SCV expansion or recombination is performed.
+This same structure is used at all aggregation steps without modification -- no per-SCV expansion or recombination is performed.
 
 ---
 
@@ -138,7 +138,7 @@ RCV proposition `aggregateQualifiers` are not technically extensions -- they are
     </tr>
     <tr>
       <td><code>ClassificationTier</code><br><em>aggregateQualifiers</em><br>string</td>
-      <td>The somatic classification tier (e.g., <code>Tier I - Strong</code>, <code>Tier II - Potential</code>). Present only at Layer 1 for somatic clinical impact propositions with tier grouping.</td>
+      <td>The somatic classification tier (e.g., <code>Tier I - Strong</code>, <code>Tier II - Potential</code>). Present only at the Base Grouping step for somatic clinical impact propositions with tier grouping.</td>
     </tr>
     <tr>
       <td colspan="2"><pre><code>{ "name": "ClassificationTier", "value": "Tier I - Strong" }</code></pre></td>

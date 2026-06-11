@@ -1,7 +1,7 @@
 {
   "classification": {
     "conceptType": "Classification",
-    "name": "Oncogenic"
+    "name": "Pathogenic"
   },
   "direction": "supports",
   "evidenceLines": [
@@ -11,7 +11,7 @@
         {
           "classification": {
             "conceptType": "Classification",
-            "name": "Oncogenic"
+            "name": "Pathogenic"
           },
           "confidence": "criteria provided",
           "direction": "supports",
@@ -20,7 +20,7 @@
               "directionOfEvidenceProvided": "supports",
               "evidenceItems": [
                 {
-                  "id": "clinvar.submission:SCV005094257.2"
+                  "id": "clinvar.submission:SCV005044128.1"
                 }
               ],
               "strengthOfEvidenceProvided": "contributing",
@@ -33,13 +33,17 @@
               "value": "criteria provided, single submitter"
             }
           ],
-          "id": "VCV000012582.63-S-ONCO-CP",
+          "id": "RCV004554600.1-G-PATH-CP",
           "proposition": {
-            "id": "VCV000012582-S-ONCO-CP",
-            "objectCondition": {"conceptType": "Disease", "name": "some condition"},
-            "predicate": "isOncogenicFor",
+            "id": "RCV004554600-G-PATH-CP",
+            "objectCondition": {
+              "conceptType": "Disease",
+              "id": "SCV005044128.0",
+              "name": "Congenital Pulmonary Airway Malformations"
+            },
+            "predicate": "isCausalFor",
             "subjectVariant": "clinvar:12582",
-            "type": "VariantOncogenicityProposition"
+            "type": "VariantPathogenicityProposition"
           },
           "strength": "definitive",
           "type": "Statement"
@@ -55,13 +59,17 @@
       "value": "criteria provided, single submitter"
     }
   ],
-  "id": "VCV000012582.63-S-ONCO",
+  "id": "RCV004554600.1-G-PATH",
   "proposition": {
-    "id": "VCV000012582-S-ONCO",
-    "objectCondition": {"conceptType": "Disease", "name": "some condition"},
-    "predicate": "isOncogenicFor",
+    "id": "RCV004554600-G-PATH",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "id": "SCV005044128.0",
+      "name": "Congenital Pulmonary Airway Malformations"
+    },
+    "predicate": "isCausalFor",
     "subjectVariant": "clinvar:12582",
-    "type": "VariantOncogenicityProposition"
+    "type": "VariantPathogenicityProposition"
   },
   "strength": "definitive",
   "type": "Statement"
