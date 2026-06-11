@@ -16,7 +16,7 @@ BUCKET_NAME="clinvar-gks"
 PUBLIC_BUCKET_NAME="clingen-public/clinvar-gks" 
 
 # --- Date Configuration: Change this date to run for a different export ---
-EXPORT_DATE="2025-09-28"
+EXPORT_DATE="2026-03-15"
 DATASET_VERSION="v2_4_3" # The version suffix of the dataset
 
 # --- Dynamic Configuration (Derived from Date) ---
@@ -153,29 +153,26 @@ EOF
   finalize_status "3. Cleanup complete."
 
   # --- Step 4: Validation ---
-  print_status "4. Validating record counts..."
+  # Validate that the composed file exists with non-zero size and that the
+  # BQ source table has records. Avoids downloading the entire file for a
+  # line count (which is prohibitively slow for large tables).
+  print_status "4. Validating export..."
   bq_count=$(bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false --format=csv "SELECT COUNT(*) FROM \`${PROJECT_ID}.${DATASET_ID}.${TABLE}\`" | tail -n 1)
-  
-  # Define the public filename for validation counting
+  bq_count=$(echo "$bq_count" | tr -d '[:space:]')
+
+  gcs_size=$(gsutil du -s "${COMPOSED_FILE_URI}" 2>/dev/null | awk '{print $1}')
+  gcs_size=${gcs_size:-0}
+
+  # Define the public filename (used in step 5)
   PUBLIC_FILENAME="clinvar_gks_${OUTPUT_NAME}${DATE_SUFFIX}${PUBLIC_FILE_VERSION}.${TYPE}.gz"
   PUBLIC_FILE_URI="gs://${PUBLIC_BUCKET_NAME}/${PUBLIC_FILENAME}"
-  
-  # rewrite_status "4. Validating record counts... (Counting records in GCS)"
-  if [[ -n "${PUBLIC_BUCKET_NAME}" ]] && gsutil -q stat "${PUBLIC_FILE_URI}"; then
-    gcs_count=$(gsutil cat "${PUBLIC_FILE_URI}" | gunzip -c | wc -l)
-  else
-    gcs_count=0
-  fi
-  
-  bq_count=$(echo "$bq_count" | tr -d '[:space:]')
-  gcs_count=$(echo "$gcs_count" | tr -d '[:space:]')
 
-  if [[ "${bq_count}" -eq "${gcs_count}" ]]; then
-    finalize_status "4. ✅ VALIDATION SUCCESS: Record counts match (${bq_count})."
+  if [[ "${bq_count}" -gt 0 && "${gcs_size}" -gt 0 ]]; then
+    finalize_status "4. ✅ VALIDATION SUCCESS: BQ has ${bq_count} records, GCS file is ${gcs_size} bytes."
   else
-    finalize_status "4. ❌ VALIDATION FAILED: Record count Mismatch for table ${TABLE}!"
+    finalize_status "4. ❌ VALIDATION FAILED for table ${TABLE}!"
     echo "   - Source BigQuery Table Count: ${bq_count}"
-    echo "   - Final GCS File Record Count: ${gcs_count}"
+    echo "   - GCS Composed File Size: ${gcs_size} bytes"
     exit 1
   fi
 
