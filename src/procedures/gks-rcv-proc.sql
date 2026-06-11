@@ -45,7 +45,7 @@ BEGIN
           cct.original_description_order as classif_type_order,
           cct.significance,
           cct.direction as scv_direction,
-          cct.strength_name as scv_strength_name,
+          cct.strength_label as scv_strength_name,
           cpt.conflict_detectable,
           cpt.code as prop_type,
           cpt.label as prop_label,
