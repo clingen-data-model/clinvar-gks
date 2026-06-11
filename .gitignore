@@ -14,6 +14,9 @@ __pycache__/
 # MkDocs build output
 site/
 
+# Schema build output
+schema/clinvar-gks/build/
+
 # IDE
 .vscode/
 .idea/
@@ -21,4 +24,3 @@ site/
 .claude/Useful background for the documentation.md
 .claude/settings.json
 venv/
-schema/clinvar-gks/build/

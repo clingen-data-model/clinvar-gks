@@ -30,7 +30,7 @@
                       "directionOfEvidenceProvided": "supports",
                       "evidenceItems": [
                         {
-                          "id": "clinvar.submission:SCV007105704.1"
+                          "id": "clinvar.submission:SCV007105405.1"
                         }
                       ],
                       "strengthOfEvidenceProvided": "contributing",
@@ -43,38 +43,38 @@
                       "value": "criteria provided, single submitter"
                     }
                   ],
-                  "id": "RCV006254391.1-S-SCI-CP-T1",
+                  "id": "RCV006253523.1-S-SCI-CP-T1",
                   "proposition": {
-                    "id": "RCV006254391-S-SCI-CP-T1",
+                    "id": "RCV006253523-S-SCI-CP-T1",
                     "objectCondition": {
                       "conceptType": "Disease",
-                      "id": "SCV007105704.0",
+                      "id": "SCV007105405.0",
                       "mappings": [
                         {
                           "coding": {
-                            "code": "MONDO:0850196",
+                            "code": "MONDO:0858939",
                             "iris": [
-                              "http://purl.obolibrary.org/obo/MONDO_0850196",
-                              "https://identifiers.org/mondo:0850196"
+                              "http://purl.obolibrary.org/obo/MONDO_0858939",
+                              "https://identifiers.org/mondo:0858939"
                             ],
                             "system": "MONDO"
                           },
                           "relation": "relatedMatch"
                         }
                       ],
-                      "name": "Medulloblastoma WNT activated",
+                      "name": "Diffuse pediatric-type high-grade glioma, H3-wildtype and IDH-wildtype",
                       "primaryCoding": {
-                        "code": "C4331965",
+                        "code": "C5669918",
                         "iris": [
-                          "https://identifiers.org/medgen:C4331965",
-                          "https://www.ncbi.nlm.nih.gov/medgen/C4331965"
+                          "https://identifiers.org/medgen:C5669918",
+                          "https://www.ncbi.nlm.nih.gov/medgen/C5669918"
                         ],
-                        "name": "Medulloblastoma WNT activated",
+                        "name": "Diffuse pediatric-type high-grade glioma, H3-wildtype and IDH-wildtype",
                         "system": "MedGen"
                       }
                     },
                     "predicate": "hasSignificanceFor",
-                    "subjectVariant": "clinvar:2758242",
+                    "subjectVariant": "clinvar:12582",
                     "type": "VariantClinicalSignificanceProposition"
                   },
                   "strength": "definitive",
@@ -85,38 +85,38 @@
               "type": "EvidenceLine"
             }
           ],
-          "id": "RCV006254391.1-S-SCI-CP",
+          "id": "RCV006253523.1-S-SCI-CP",
           "proposition": {
-            "id": "RCV006254391-S-SCI-CP",
+            "id": "RCV006253523-S-SCI-CP",
             "objectCondition": {
               "conceptType": "Disease",
-              "id": "SCV007105704.0",
+              "id": "SCV007105405.0",
               "mappings": [
                 {
                   "coding": {
-                    "code": "MONDO:0850196",
+                    "code": "MONDO:0858939",
                     "iris": [
-                      "http://purl.obolibrary.org/obo/MONDO_0850196",
-                      "https://identifiers.org/mondo:0850196"
+                      "http://purl.obolibrary.org/obo/MONDO_0858939",
+                      "https://identifiers.org/mondo:0858939"
                     ],
                     "system": "MONDO"
                   },
                   "relation": "relatedMatch"
                 }
               ],
-              "name": "Medulloblastoma WNT activated",
+              "name": "Diffuse pediatric-type high-grade glioma, H3-wildtype and IDH-wildtype",
               "primaryCoding": {
-                "code": "C4331965",
+                "code": "C5669918",
                 "iris": [
-                  "https://identifiers.org/medgen:C4331965",
-                  "https://www.ncbi.nlm.nih.gov/medgen/C4331965"
+                  "https://identifiers.org/medgen:C5669918",
+                  "https://www.ncbi.nlm.nih.gov/medgen/C5669918"
                 ],
-                "name": "Medulloblastoma WNT activated",
+                "name": "Diffuse pediatric-type high-grade glioma, H3-wildtype and IDH-wildtype",
                 "system": "MedGen"
               }
             },
             "predicate": "hasSignificanceFor",
-            "subjectVariant": "clinvar:2758242",
+            "subjectVariant": "clinvar:12582",
             "type": "VariantClinicalSignificanceProposition"
           },
           "strength": "definitive",
@@ -127,38 +127,38 @@
       "type": "EvidenceLine"
     }
   ],
-  "id": "RCV006254391.1-S-SCI",
+  "id": "RCV006253523.1-S-SCI",
   "proposition": {
-    "id": "RCV006254391-S-SCI",
+    "id": "RCV006253523-S-SCI",
     "objectCondition": {
       "conceptType": "Disease",
-      "id": "SCV007105704.0",
+      "id": "SCV007105405.0",
       "mappings": [
         {
           "coding": {
-            "code": "MONDO:0850196",
+            "code": "MONDO:0858939",
             "iris": [
-              "http://purl.obolibrary.org/obo/MONDO_0850196",
-              "https://identifiers.org/mondo:0850196"
+              "http://purl.obolibrary.org/obo/MONDO_0858939",
+              "https://identifiers.org/mondo:0858939"
             ],
             "system": "MONDO"
           },
           "relation": "relatedMatch"
         }
       ],
-      "name": "Medulloblastoma WNT activated",
+      "name": "Diffuse pediatric-type high-grade glioma, H3-wildtype and IDH-wildtype",
       "primaryCoding": {
-        "code": "C4331965",
+        "code": "C5669918",
         "iris": [
-          "https://identifiers.org/medgen:C4331965",
-          "https://www.ncbi.nlm.nih.gov/medgen/C4331965"
+          "https://identifiers.org/medgen:C5669918",
+          "https://www.ncbi.nlm.nih.gov/medgen/C5669918"
         ],
-        "name": "Medulloblastoma WNT activated",
+        "name": "Diffuse pediatric-type high-grade glioma, H3-wildtype and IDH-wildtype",
         "system": "MedGen"
       }
     },
     "predicate": "hasSignificanceFor",
-    "subjectVariant": "clinvar:2758242",
+    "subjectVariant": "clinvar:12582",
     "type": "VariantClinicalSignificanceProposition"
   },
   "strength": "definitive",

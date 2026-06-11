@@ -105,7 +105,7 @@ VCV proposition `aggregateQualifiers` are not technically extensions — they ar
     </tr>
     <tr>
       <td><code>ClassificationTier</code><br><em>aggregateQualifiers</em><br>string</td>
-      <td>The somatic classification tier (e.g., <code>Tier I (Strong)</code>, <code>Tier II (Potential)</code>). Present only at Layer 1 for somatic clinical impact propositions with tier grouping.</td>
+      <td>The somatic classification tier (e.g., <code>Tier I (Strong)</code>, <code>Tier II (Potential)</code>). Present only at the Base Grouping step for somatic clinical impact propositions with tier grouping.</td>
     </tr>
     <tr>
       <td colspan="2"><pre><code>{ "name": "ClassificationTier", "value": "Tier I (Strong)" }</code></pre></td>

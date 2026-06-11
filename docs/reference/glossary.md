@@ -94,10 +94,10 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   Higher-level grouping that associates a ClinVar variation with its resolved VRS representation. Types: CanonicalAllele, CategoricalCnvChange, CategoricalCnvCount.
 
 **MappableConcept**
-:   A single concept with `conceptType`, `name`, and optional `extension` array. Used for single-label classifications and objectClassification.
+:   A single concept with `conceptType`, `name`, and optional `extension` array. Used for single-label classifications and single-condition `objectCondition` values.
 
 **ConceptSet**
-:   A structured group of concepts with `membershipOperator` (AND). Used for multi-concept classifications such as RCV's `objectConditionClassification` (combining condition and classification).
+:   A structured group of concepts with `membershipOperator`. Used for multi-condition `objectCondition` values (OR operator for VCV with multiple distinct conditions; AND operator for RCV conditionSets).
 
 **Constraint** (Cat-VRS)
 :   Defining relationship between a categorical variant and its VRS representation. Types: DefiningAlleleConstraint, DefiningLocationConstraint, CopyChangeConstraint, CopyCountConstraint.
@@ -127,9 +127,6 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 **VariantPrognosticProposition**
 :   Proposition type for prognostic assertions. Statement type S.14.
 
-**VariantAggregateClassificationProposition**
-:   Proposition type used in VCV aggregate statements. Predicate: `hasAggregateClassification`.
-
 **ClinVar\*Proposition**
 :   Custom proposition types for non-standard ClinVar statement types (G.02-G.09): Drug Response, Risk Factor, Protective, Affects, Association, Confers Sensitivity, Other, Not Provided.
 
@@ -137,11 +134,14 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 
 ## Classification Terms
 
+**Confidence**
+:   Statement-level attribute indicating the submission level label for the contributing submission (e.g., `"expert panel"`, `"assertion criteria provided"`). Present on both SCV and aggregate (VCV/RCV) statements.
+
 **Direction**
-:   Whether evidence supports or disputes a proposition. Values: `supports`, `disputes`, `neutral`.
+:   Whether evidence supports or disputes a proposition. Values: `supports`, `disputes`, `neutral`. On aggregate statements, derived from the classification label (multi-SCV) or passed through from the contributing SCV (single-SCV).
 
 **Strength**
-:   Evidence strength level. Values: `definitive`, `likely`, `strong`, `potential`. Omitted (null) when not applicable.
+:   Evidence strength level. Values: `definitive`, `likely`, `strong`, `potential`. Omitted (null) when not applicable. On aggregate statements, derived from the classification label (multi-SCV) or passed through from the contributing SCV (single-SCV).
 
 **Tier I** / **Tier II** / **Tier III** / **Tier IV**
 :   Somatic clinical impact classification levels. Tier I (Strong) and Tier II (Potential) require paired sub-statements. Tier III (Unknown) and Tier IV (Benign/Likely benign) do not.
@@ -165,9 +165,6 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 **Penetrance Qualifier**
 :   Proposition qualifier indicating penetrance level for pathogenic or risk allele classifications. Values: `low`, `risk`.
 
-**Aggregate Qualifiers**
-:   Array on VCV propositions containing context qualifiers: AssertionGroup, PropositionType, SubmissionLevel, ClassificationTier.
-
 ---
 
 ## VCV Aggregation
@@ -176,7 +173,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   Process of combining multiple SCV submissions into higher-order VCV statements following submission-level-specific logic.
 
 **Winner-Takes-All**
-:   Aggregation strategy at Layer 3 where the highest-ranked submission level's classification becomes the aggregate result. Lower-ranked levels become non-contributing.
+:   Aggregation strategy at the Aggregate Contribution Layer where the highest-ranked submission level's classification becomes the aggregate result. Lower-ranked levels become non-contributing.
 
 **Contributing Submission**
 :   Submission whose review status is highest-ranked within an aggregation group. Directly reflected in the aggregate classification.
@@ -184,33 +181,30 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 **Non-Contributing Submission**
 :   Submission ranked lower than the contributing submission. Preserved in the evidence structure but not reflected in the aggregate label.
 
-**Layer 1** (Base)
-:   First aggregation layer. Groups by variation + statement group + proposition type + submission level [+ tier]. Produces base-level aggregate classifications.
+**Grouping Layer**
+:   First conceptual aggregation layer. Consists of Base Grouping and Tier Grouping steps. Produces initial aggregation of SCVs into groups by submission level.
 
-**Layer 2** (Tier)
-:   Second aggregation layer (somatic only). Aggregates tier-level groups within each submission level.
+**Base Grouping** (Grouping Layer)
+:   First step of the Grouping Layer. Groups SCVs by variation + statement group + proposition type + submission level [+ tier]. Applies submission-level-specific classification and conflict detection logic.
 
-**Layer 3** (Submission Level)
-:   Third aggregation layer. Applies winner-takes-all ranking across submission levels. Top-level output for somatic VCV statements.
+**Tier Grouping** (Grouping Layer)
+:   Second step of the Grouping Layer (somatic sci only). Aggregates tier-level groups within each submission level.
 
-**Layer 4** (Statement Group)
-:   Fourth aggregation layer (germline only). Aggregates proposition types within the germline statement group. Top-level output for germline VCV statements.
-
-**Tier Grouping**
-:   Grouping of somatic clinical impact submissions by their classification tier for Layer 1/Layer 2 aggregation.
+**Aggregate Contribution Layer**
+:   Second and final aggregation layer. Applies winner-takes-all ranking across submission levels. Terminal layer for both germline and somatic statements.
 
 **Aggregate Review Status**
 :   Final review status of a VCV statement derived from submission level and aggregation outcome. See [Aggregate Review Status](../pipeline/vcv-statements/vcv-aggregation-rules.md#aggregate-review-status).
 
 ---
 
-## Classification Attributes (VCV)
+## Classification Attributes (VCV/RCV)
 
 **classification**
-:   VCV/RCV classification attribute. Contains a single aggregate label with optional `conflictingExplanation` extension.
+:   VCV/RCV statement-level classification attribute. Contains a single aggregate label with optional `conflictingExplanation` extension. The classification lives only on the statement, not on the proposition.
 
-**objectClassification**
-:   VCV proposition classification attribute. A MappableConcept matching the statement classification, without extensions.
+**objectCondition**
+:   VCV/RCV proposition attribute. Contains the unique condition(s) associated with the aggregate statement. For VCV, this is a single MappableConcept or an OR ConceptSet of distinct conditions from contributing SCVs. For RCV, this is the condition sourced from `gks_scv_condition_sets` — either a `Condition` MappableConcept or a `ConditionSet` ConceptSet. Extensions excluded.
 
 ---
 

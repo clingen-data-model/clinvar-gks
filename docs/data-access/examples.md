@@ -61,22 +61,22 @@ Examples of aggregate classification `Statement` records produced by rolling up 
 
 | File | VCV | Prop Types | Submission Levels | Description |
 | --- | --- | --- | --- | --- |
-| [VCV000012582.63-G.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-G.jsonc) | VCV000012582 | Pathogenicity, Association, Not Provided | CP, NOCP, NOCL | Full 4-layer germline hierarchy (L4→L3→L1). CP pathogenicity with 13 contributing SCVs concordant. NOCP non-contributing. Association and Not Provided as non-contributing prop types |
+| [VCV000012582.63-G-PATH.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-G-PATH.jsonc) | VCV000012582 | Pathogenicity, Association, Not Provided | CP, NOCP, NOCL | Aggregate Contribution Layer germline statement. CP pathogenicity with 13 contributing SCVs concordant, NOCP non-contributing. Association and Not Provided as non-contributing prop types |
 
 ### Somatic
 
 | File | VCV | Prop Types | Tiers | Description |
 | --- | --- | --- | --- | --- |
-| [VCV000012582.63-S-sci.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-sci.jsonc) | VCV000012582 | Somatic Clinical Impact | Tier I, Tier II | 3-layer somatic hierarchy (L3→L2→L1). Layer 2 tier aggregation combining Tier I and Tier II. CP contributing, NOCP non-contributing |
-| [VCV000012582.63-S-onco.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-onco.jsonc) | VCV000012582 | Oncogenicity | N/A | Somatic oncogenicity aggregate (L3→L1). Single CP submission, no tier grouping |
+| [VCV000012582.63-S-sci.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-sci.jsonc) | VCV000012582 | Somatic Clinical Impact | Tier I, Tier II | Aggregate Contribution → Tier Grouping → Base Grouping hierarchy. Tier Grouping combining Tier I and Tier II. CP contributing, NOCP non-contributing |
+| [VCV000012582.63-S-onco.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-onco.jsonc) | VCV000012582 | Oncogenicity | N/A | Somatic oncogenicity aggregate (Aggregate Contribution → Base Grouping). Single CP submission, no tier grouping |
 
 ### PG and EP (single-submission levels)
 
-PG (practice guideline) and EP (reviewed by expert panel) submissions are aggregated as separate top-tier submission levels. PG outranks EP in the Layer 3 winner-takes-all selection, followed by CP, NOCP, NOCL, and FLAG.
+PG (practice guideline) and EP (reviewed by expert panel) submissions are aggregated as separate top-tier submission levels. PG outranks EP in the Aggregate Contribution Layer winner-takes-all selection, followed by CP, NOCP, NOCL, and FLAG.
 
 | File | VCV | Submission Level | Description |
 | --- | --- | --- | --- |
-| [VCV-PG-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-PG-example.jsonc) | VCV999999999 (hypothetical) | PG | Layer 1 base statement for a practice guideline submission. Uses standard `classification` and `objectClassification` |
-| [VCV-EP-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-EP-example.jsonc) | VCV999999999 (hypothetical) | EP | Layer 1 base statement for an expert panel submission. Same form as PG; only the submission level qualifier and review status differ |
+| [VCV-PG-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-PG-example.jsonc) | VCV999999999 (hypothetical) | PG | Base Grouping statement for a practice guideline submission. Uses standard `classification` and `objectClassification` |
+| [VCV-EP-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-EP-example.jsonc) | VCV999999999 (hypothetical) | EP | Base Grouping statement for an expert panel submission. Same form as PG; only the submission level qualifier and review status differ |
 
 See [VCV Statements output reference](../output-reference/vcv-statements.md) for field documentation.

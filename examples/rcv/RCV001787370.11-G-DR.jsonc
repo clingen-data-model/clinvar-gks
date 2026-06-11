@@ -1,0 +1,94 @@
+{
+  "classification": {
+    "conceptType": "Classification",
+    "name": "drug response"
+  },
+  "direction": "supports",
+  "evidenceLines": [
+    {
+      "directionOfEvidenceProvided": "supports",
+      "evidenceItems": [
+        {
+          "classification": {
+            "conceptType": "Classification",
+            "name": "drug response"
+          },
+          "confidence": "expert panel",
+          "direction": "supports",
+          "evidenceLines": [
+            {
+              "directionOfEvidenceProvided": "supports",
+              "evidenceItems": [
+                {
+                  "id": "clinvar.submission:SCV002031250.1"
+                }
+              ],
+              "strengthOfEvidenceProvided": "contributing",
+              "type": "EvidenceLine"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "clinvarReviewStatus",
+              "value": "reviewed by expert panel"
+            }
+          ],
+          "id": "RCV001787370.11-G-DR-EP",
+          "proposition": {
+            "id": "RCV001787370-G-DR-EP",
+            "objectCondition": {
+              "conceptType": "DrugResponse",
+              "id": "SCV002031250.0",
+              "name": "ivacaftor / lumacaftor response - Efficacy",
+              "primaryCoding": {
+                "code": "CN322746",
+                "iris": [
+                  "https://identifiers.org/medgen:CN322746",
+                  "https://www.ncbi.nlm.nih.gov/medgen/CN322746"
+                ],
+                "name": "ivacaftor / lumacaftor response - Efficacy",
+                "system": "MedGen"
+              }
+            },
+            "predicate": "isCausalFor",
+            "subjectVariant": "clinvar:7105",
+            "type": "VariantPathogenicityProposition"
+          },
+          "strength": "definitive",
+          "type": "Statement"
+        }
+      ],
+      "strengthOfEvidenceProvided": "contributing",
+      "type": "EvidenceLine"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "clinvarReviewStatus",
+      "value": "reviewed by expert panel"
+    }
+  ],
+  "id": "RCV001787370.11-G-DR",
+  "proposition": {
+    "id": "RCV001787370-G-DR",
+    "objectCondition": {
+      "conceptType": "DrugResponse",
+      "id": "SCV002031250.0",
+      "name": "ivacaftor / lumacaftor response - Efficacy",
+      "primaryCoding": {
+        "code": "CN322746",
+        "iris": [
+          "https://identifiers.org/medgen:CN322746",
+          "https://www.ncbi.nlm.nih.gov/medgen/CN322746"
+        ],
+        "name": "ivacaftor / lumacaftor response - Efficacy",
+        "system": "MedGen"
+      }
+    },
+    "predicate": "isCausalFor",
+    "subjectVariant": "clinvar:7105",
+    "type": "VariantPathogenicityProposition"
+  },
+  "strength": "definitive",
+  "type": "Statement"
+}
