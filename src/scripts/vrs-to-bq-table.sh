@@ -45,14 +45,18 @@ GCLOUD_JOB_REGION='us-east1'
 
 # BigQuery Load Configuration
 TABLE_ID='gks_vrs'
-SCHEMA_FILE_PATH='vrs_output_2_0_1.schema.json'
-DATASET_VERSION='v2_4_3' # The version suffix of the dataset
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCHEMA_FILE_PATH="${SCRIPT_DIR}/../../schemas/vrs_output_2_0_1.schema.json"
 
 # BigQuery Stored Procedures to run in order.
 BIGQUERY_PROCEDURES=(
   'clinvar_ingest.gks_catvar_proc'
   'clinvar_ingest.gks_scv_condition_proc'
   'clinvar_ingest.gks_scv_statement_proc'
+  'clinvar_ingest.gks_rcv_proc'
+  'clinvar_ingest.gks_rcv_statement_proc'
+  'clinvar_ingest.gks_vcv_proc'
+  'clinvar_ingest.gks_vcv_statement_proc'
 )
 
 # BigQuery Export Configuration
@@ -60,11 +64,15 @@ EXPORT_TABLE_NAMES=(
   "gks_catvar"
   "gks_scv_statement_by_ref"
   "gks_scv_statement_inline"
+  "gks_rcv_statement"
+  "gks_vcv_statement"
 )
 EXPORT_OUTPUT_NAMES=(
   "variation"
   "scv_by_ref"
   "scv_inline"
+  "rcv"
+  "vcv"
 )
 
 # Array of release dates to process (format: YYYY-MM-DD)
@@ -96,6 +104,15 @@ RELEASE_DATES=(
   # '2026-03-02'
   # '2026-03-08'
   # '2026-03-15'
+  # '2026-03-21'
+  # '2026-03-28'
+  # '2026-04-04'
+  # '2026-04-14'
+  # '2026-04-18'
+  # '2026-04-26'
+  # '2026-05-03'
+  # '2026-05-10'
+  '2026-05-16'
   # Add more dates as needed
 )
 # --- END OF CONFIGURATION ---
@@ -112,22 +129,38 @@ finalize_status() { echo -e "\r\033[K$1"; }
 
 generate_dataset_id() {
   local date=$1
-  echo "clinvar_${date//-/_}_${DATASET_VERSION}"
+  local date_underscored="${date//-/_}"
+  local prefix="clinvar_${date_underscored}_"
+
+  # Find the existing dataset matching this release date
+  local match
+  match=$(bq ls --project_id="$PROJECT_ID" --max_results=10000 \
+    | awk '{$1=$1; print}' \
+    | grep "^${prefix}" \
+    | head -n 1)
+
+  if [[ -n "$match" ]]; then
+    echo "$match"
+  else
+    echo "ERROR: No dataset found matching '${prefix}*' in project ${PROJECT_ID}" >&2
+    return 1
+  fi
 }
 
 load_vrs_data() {
   local release_date=$1
   local dataset_id; dataset_id=$(generate_dataset_id "$release_date")
   local gcs_json_path="gs://${BUCKET_NAME}/${release_date}/dev/vi-final.jsonl.gz"
-  
+
   echo "Attempting to load data for $release_date..."
   echo "  - BigQuery Table: $PROJECT_ID:$dataset_id.$TABLE_ID"
   echo "  - GCS Source: $gcs_json_path"
-  
+
   if ! gcloud storage ls "$gcs_json_path" &>/dev/null; then
     echo "❌ ERROR: GCS file not found. Ensure Step 1 completed successfully: $gcs_json_path"; return 1;
   fi
-  
+
+
   if bq --project_id="$PROJECT_ID" load --source_format=NEWLINE_DELIMITED_JSON --schema="$SCHEMA_FILE_PATH" --max_bad_records=2 --ignore_unknown_values --replace "$dataset_id.$TABLE_ID" "$gcs_json_path"; then
     echo "✅ BigQuery load succeeded."; return 0;
   else
@@ -162,7 +195,10 @@ export_and_publish_tables() {
     local export_root_path="${release_date}"
     local type="jsonl"
     local date_suffix="_${release_date//-/_}"
-    local public_file_version="_${DATASET_VERSION}"
+    local date_underscored="${release_date//-/_}"
+    local prefix="clinvar_${date_underscored}_"
+    local dataset_version="${dataset_id#"$prefix"}"
+    local public_file_version="_${dataset_version}"
 
     echo "Starting export and publish process for dataset: ${dataset_id}"
 
@@ -185,7 +221,7 @@ export_and_publish_tables() {
         fi
 
         echo "--- Processing table: ${table} ---"
-        
+
         # 1. Export Data
         print_status "1. Exporting data to shards..."
         bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false --quiet "EXPORT DATA OPTIONS(uri='${shard_export_uri}', format='JSON', compression='GZIP', overwrite=true) AS SELECT ${select_fields} FROM \`${PROJECT_ID}.${dataset_id}.${table}\`"
@@ -273,7 +309,7 @@ success_count=0; failure_count=0; failed_dates_details=()
 
 for date in "${RELEASE_DATES[@]}"; do
   echo; echo "--- Processing release date: $date ---"
-  
+
   # --- STEP 1: Execute Cloud Run Job ---
   if (( START_STEP <= 1 )); then
     echo "[1/4] Executing Cloud Run job..."
@@ -302,7 +338,7 @@ for date in "${RELEASE_DATES[@]}"; do
     fi
     echo "✅ BigQuery procedures completed."
   fi
-  
+
   # --- STEP 4: Export and Publish Tables ---
   if (( START_STEP <= 4 )); then
     echo "[4/4] Exporting and publishing result tables..."
