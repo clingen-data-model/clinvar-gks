@@ -340,8 +340,11 @@ BEGIN
           scv.proposition.type as type,
           FORMAT('clinvar:%s', scv.variation_id) as subjectVariant,
           scv.proposition.pred as predicate,
-          scs.condition as objectCondition_single,
-          scs.conditionSet as objectCondition_compound,
+          IFNULL(
+            scs.extensions.value_submitted_condition.normalized_match,
+            scs.extensions.value_submitted_condition_set.normalized_match
+          ) as objectCondition,
+          scs.extensions as condition_extensions,
           (SELECT AS STRUCT sgq.* EXCEPT(scv_id)) as geneContextQualifier,
           (SELECT AS STRUCT smq.* EXCEPT(scv_id)) as modeOfInheritanceQualifier,
           (SELECT AS STRUCT spq.* EXCEPT(scv_id)) as penetranceQualifier
@@ -406,14 +409,12 @@ BEGIN
           scv.evidence_line_target_proposition.pred as predicate,
           IF(
             scv.clinical_impact_assertion_type IS DISTINCT FROM 'therapeutic',
-            scs.condition,
+            IFNULL(
+              scs.extensions.value_submitted_condition.normalized_match,
+              scs.extensions.value_submitted_condition_set.normalized_match
+            ),
             null
-          ) as objectCondition_single,
-          IF(
-            scv.clinical_impact_assertion_type IS DISTINCT FROM 'therapeutic',
-            scs.conditionSet,
-            null
-          ) as objectCondition_compound,
+          ) as objectCondition,
           IF(
             ARRAY_LENGTH(sd.therapies) > 1,
             STRUCT(sd.therapies, 'AND' as membershipOperator),
@@ -422,14 +423,12 @@ BEGIN
           sd.therapy as objectTherapy_single,
           IF(
             scv.clinical_impact_assertion_type IS NOT DISTINCT FROM 'therapeutic',
-            scs.condition,
+            IFNULL(
+              scs.extensions.value_submitted_condition.normalized_match,
+              scs.extensions.value_submitted_condition_set.normalized_match
+            ),
             null
-          ) as conditionQualifier_single,
-          IF(
-            scv.clinical_impact_assertion_type IS NOT DISTINCT FROM 'therapeutic',
-            scs.conditionSet,
-            null
-          ) as conditionQualifier_compound,
+          ) as conditionQualifier,
           (SELECT AS STRUCT sgq.* EXCEPT(scv_id)) as geneContextQualifier,
           (SELECT AS STRUCT smq.* EXCEPT(scv_id)) as modeOfInheritanceQualifier,
           (SELECT AS STRUCT spq.* EXCEPT(scv_id)) as penetranceQualifier
@@ -464,9 +463,10 @@ BEGIN
       SELECT
         scv_id,
         CASE
-          WHEN condition.name IS NOT NULL THEN condition.name
-          WHEN ARRAY_LENGTH(conditionSet.conditions) >= 2
-            THEN FORMAT('%d conditions', ARRAY_LENGTH(conditionSet.conditions))
+          WHEN extensions.value_submitted_condition.name IS NOT NULL
+            THEN extensions.value_submitted_condition.name
+          WHEN ARRAY_LENGTH(extensions.value_submitted_condition_set.concepts) >= 2
+            THEN FORMAT('%d conditions', ARRAY_LENGTH(extensions.value_submitted_condition_set.concepts))
           ELSE 'unspecified condition'
         END AS condition_name
       FROM `{S}.gks_scv_condition_sets`
@@ -588,7 +588,8 @@ BEGIN
       SELECT
         FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
         'Statement' as type,
-        (SELECT AS STRUCT sp.* EXCEPT(scv_id)) as proposition,
+        (SELECT AS STRUCT sp.* EXCEPT(scv_id, condition_extensions)) as proposition,
+        sp.condition_extensions,
         STRUCT(
           scv.submitted_classification as name,
           IF(
