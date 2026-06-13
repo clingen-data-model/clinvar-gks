@@ -335,17 +335,21 @@ BEGIN
       {CT} {P}.temp_gks_scv_proposition
       AS
         SELECT
-          scv.id as scv_id,
+          scv.id as scv_id,          
           FORMAT('clinvar.submission:%s', scv.id) as id,
           scv.proposition.type as type,
-          FORMAT('clinvar:%s', scv.variation_id) as subjectVariant,
+          FORMAT('#/variation/clinvar:%s', scv.variation_id) as subjectVariant,
           scv.proposition.pred as predicate,
-          scs.condition as objectCondition_single,
-          scs.conditionSet as objectCondition_compound,
+          COALESCE(
+            scs.extensions.value_submitted_condition.condition,
+            scs.extensions.value_submitted_condition.conditionSet,
+            scs.extensions.value_submitted_condition_set.condition,
+            scs.extensions.value_submitted_condition_set.conditionSet
+          ) as objectCondition,
           (SELECT AS STRUCT sgq.* EXCEPT(scv_id)) as geneContextQualifier,
           (SELECT AS STRUCT smq.* EXCEPT(scv_id)) as modeOfInheritanceQualifier,
           (SELECT AS STRUCT spq.* EXCEPT(scv_id)) as penetranceQualifier
-        FROM {P}.temp_gks_scv scv
+        FROM {P}.temp_gks_scv scv 
         LEFT JOIN {P}.temp_gene_context_qualifiers sgq
         ON
           sgq.scv_id = scv.id
@@ -402,18 +406,18 @@ BEGIN
           scv.id as scv_id,
           FORMAT('clinvar.submission:%s', scv.id) as id,
           scv.evidence_line_target_proposition.type as type,
-          '4/proposition/subjectVariant' as subjectVariant,
+          FORMAT('#/variation/clinvar:%s', scv.variation_id) as subjectVariant,
           scv.evidence_line_target_proposition.pred as predicate,
           IF(
             scv.clinical_impact_assertion_type IS DISTINCT FROM 'therapeutic',
-            scs.condition,
+            COALESCE(
+              scs.extensions.value_submitted_condition.condition,
+              scs.extensions.value_submitted_condition.conditionSet,
+              scs.extensions.value_submitted_condition_set.condition,
+              scs.extensions.value_submitted_condition_set.conditionSet
+            ),
             null
-          ) as objectCondition_single,
-          IF(
-            scv.clinical_impact_assertion_type IS DISTINCT FROM 'therapeutic',
-            scs.conditionSet,
-            null
-          ) as objectCondition_compound,
+          ) as objectCondition,
           IF(
             ARRAY_LENGTH(sd.therapies) > 1,
             STRUCT(sd.therapies, 'AND' as membershipOperator),
@@ -422,14 +426,14 @@ BEGIN
           sd.therapy as objectTherapy_single,
           IF(
             scv.clinical_impact_assertion_type IS NOT DISTINCT FROM 'therapeutic',
-            scs.condition,
+            COALESCE(
+              scs.extensions.value_submitted_condition.condition,
+              scs.extensions.value_submitted_condition.conditionSet,
+              scs.extensions.value_submitted_condition_set.condition,
+              scs.extensions.value_submitted_condition_set.conditionSet
+            ),
             null
-          ) as conditionQualifier_single,
-          IF(
-            scv.clinical_impact_assertion_type IS NOT DISTINCT FROM 'therapeutic',
-            scs.conditionSet,
-            null
-          ) as conditionQualifier_compound,
+          ) as conditionQualifier,
           (SELECT AS STRUCT sgq.* EXCEPT(scv_id)) as geneContextQualifier,
           (SELECT AS STRUCT smq.* EXCEPT(scv_id)) as modeOfInheritanceQualifier,
           (SELECT AS STRUCT spq.* EXCEPT(scv_id)) as penetranceQualifier
@@ -464,9 +468,10 @@ BEGIN
       SELECT
         scv_id,
         CASE
-          WHEN condition.name IS NOT NULL THEN condition.name
-          WHEN ARRAY_LENGTH(conditionSet.conditions) >= 2
-            THEN FORMAT('%d conditions', ARRAY_LENGTH(conditionSet.conditions))
+          WHEN extensions.value_submitted_condition.name IS NOT NULL
+            THEN extensions.value_submitted_condition.name
+          WHEN ARRAY_LENGTH(extensions.value_submitted_condition_set.concepts) >= 2
+            THEN FORMAT('%d conditions', ARRAY_LENGTH(extensions.value_submitted_condition_set.concepts))
           ELSE 'unspecified condition'
         END AS condition_name
       FROM `{S}.gks_scv_condition_sets`
@@ -585,10 +590,44 @@ BEGIN
     SET query_statement_scv_pre = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_scv_statement_pre`
       as
+      WITH null_templates AS (
+        SELECT
+          STRUCT(
+            CAST(null as STRING) as conditionSet,
+            CAST(null as STRING) as condition,
+            CAST(null as STRING) as multiple_condition_explanation,
+            [STRUCT(
+              CAST(null as STRING) AS id,
+              CAST(null as STRING) AS name,
+              CAST(null as STRING) AS type,
+              CAST(null as STRING) AS medgen_id,
+              [STRUCT(CAST(null as STRING) AS code, CAST(null as STRING) AS system)] AS xrefs,
+              STRUCT(CAST(null as STRING) AS id, CAST(null as STRING) AS name) AS original_medgen_match,
+              CAST(null as STRING) AS direct_match,
+              CAST(null as STRING) AS normalized_match,
+              CAST(null as STRING) AS normalized_resolution,
+              STRUCT(CAST(null as STRING) AS type, CAST(null as STRING) AS ref, CAST(null as STRING) AS value) AS mapping
+            )] as concepts
+          ) AS null_cs,
+          STRUCT(
+            CAST(null as STRING) AS conditionSet,
+            CAST(null as STRING) AS condition,
+            CAST(null as STRING) AS id,
+            CAST(null as STRING) AS name,
+            CAST(null as STRING) AS type,
+            CAST(null as STRING) AS medgen_id,
+            [STRUCT(CAST(null as STRING) AS code, CAST(null as STRING) AS system)] AS xrefs,
+            STRUCT(CAST(null as STRING) AS id, CAST(null as STRING) AS name) AS original_medgen_match,
+            CAST(null as STRING) AS direct_match,
+            CAST(null as STRING) AS normalized_match,
+            CAST(null as STRING) AS normalized_resolution,
+            STRUCT(CAST(null as STRING) AS type, CAST(null as STRING) AS ref, CAST(null as STRING) AS value) AS mapping
+          ) AS null_c
+      )
       SELECT
         FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
         'Statement' as type,
-        (SELECT AS STRUCT sp.* EXCEPT(scv_id)) as proposition,
+        FORMAT('#/proposition/clinvar.submission:%s', scv.id) as proposition,
         STRUCT(
           scv.submitted_classification as name,
           IF(
@@ -619,19 +658,19 @@ BEGIN
         [
           STRUCT(
             'Contribution' as type,
-            scv.submitter as contributor,
+            FORMAT('#/submitter/%s', scv.submitter.id) as contributor,
             scv.date_last_updated as date,
             'submitted' as activityType
           ),
           STRUCT(
             'Contribution' as type,
-            scv.submitter as contributor,
+            FORMAT('#/submitter/%s', scv.submitter.id) as contributor,
             scv.date_created as date,
             'created' as activityType
           ),
           STRUCT(
             'Contribution' as type,
-            scv.submitter as contributor,
+            FORMAT('#/submitter/%s', scv.submitter.id) as contributor,
             scv.last_evaluated as date,
             'evaluated' as activityType
           )
@@ -640,28 +679,32 @@ BEGIN
         scit.reportedIn,
         ARRAY_CONCAT(
           [
-            STRUCT('clinvarScvId' as name, scv.id as value_string),
-            STRUCT('clinvarScvVersion' as name, CAST(scv.version AS STRING) as value_string)
+            STRUCT('clinvarScvId' as name, scv.id as value_string, nt.null_cs as value_submitted_condition_set, nt.null_c as value_submitted_condition),
+            STRUCT('clinvarScvVersion' as name, CAST(scv.version AS STRING) as value_string, nt.null_cs as value_submitted_condition_set, nt.null_c as value_submitted_condition)
           ],
           IF(
-            scv.review_status IS NULL,
-            [],
-            [STRUCT('clinvarScvReviewStatus' as name, scv.review_status as value_string)]
+            spc.extensions.value_submitted_condition_set IS NOT NULL,
+            [STRUCT('submittedConditionSet' as name, CAST(NULL as STRING) as value_string, spc.extensions.value_submitted_condition_set, nt.null_c as value_submitted_condition)],
+            IF(spc.extensions.value_submitted_condition IS NOT NULL,
+              [STRUCT('submittedCondition' as name, CAST(NULL as STRING) as value_string, nt.null_cs as value_submitted_condition_set, spc.extensions.value_submitted_condition as value_submitted_condition)],
+              []
+            )
           ),
           IF(
-            scv.submitted_classification IS NOT DISTINCT FROM scv.classification_name,
-            [],
-            [STRUCT('submittedScvClassification' as name, scv.submitted_classification as value_string)]
+            scv.review_status IS NULL, [],
+            [STRUCT('clinvarScvReviewStatus' as name, scv.review_status as value_string, nt.null_cs as value_submitted_condition_set, nt.null_c as value_submitted_condition)]
           ),
           IF(
-            scv.local_key IS NULL,
-            [],
-            [STRUCT('submittedScvLocalKey' as name, scv.local_key as value_string)]
+            scv.submitted_classification IS NOT DISTINCT FROM scv.classification_name, [],
+            [STRUCT('submittedScvClassification' as name, scv.submitted_classification as value_string, nt.null_cs as value_submitted_condition_set, nt.null_c as value_submitted_condition)]
           ),
           IF(
-            scv.submission_level IS NULL,
-            [],
-            [STRUCT('submissionLevel' as name, scv.submission_level as value_string)]
+            scv.local_key IS NULL, [],
+            [STRUCT('submittedScvLocalKey' as name, scv.local_key as value_string, nt.null_cs as value_submitted_condition_set, nt.null_c as value_submitted_condition)]
+          ),
+          IF(
+            scv.submission_level IS NULL, [],
+            [STRUCT('submissionLevel' as name, scv.submission_level as value_string, nt.null_cs as value_submitted_condition_set, nt.null_c as value_submitted_condition)]
           )
         ) as extensions,
         IF (
@@ -670,7 +713,7 @@ BEGIN
             STRUCT(
               FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
               'EvidenceLine' as type,
-              (SELECT AS STRUCT stp.* EXCEPT(scv_id)) as proposition,
+              FORMAT('#/proposition/clinvar.submission:%s', scv.id) as proposition,
               'supports' as directionOfEvidenceProvided,
               CASE scv.classification_code
                 WHEN 'tier 1' THEN
@@ -679,15 +722,27 @@ BEGIN
                   STRUCT('Level C/D' as name)
                 ELSE
                   STRUCT(scv.classification_code as name)
-              END as evidenceOutcome
+              END as evidenceOutcome,
+              IF(
+                spc.extensions.value_submitted_condition_set IS NOT NULL,
+                [STRUCT('submittedConditionSet' as name, spc.extensions.value_submitted_condition_set, nt.null_c as value_submitted_condition)],
+                IF(spc.extensions.value_submitted_condition IS NOT NULL,
+                  [STRUCT('submittedCondition' as name, nt.null_cs as value_submitted_condition_set, spc.extensions.value_submitted_condition as value_submitted_condition)],
+                  []
+                )
+              ) as extensions
             )
           ],
           []
         ) as hasEvidenceLines
       FROM {P}.temp_gks_scv scv
+      CROSS JOIN null_templates nt
       JOIN {P}.temp_gks_scv_proposition sp
       ON
         sp.scv_id = scv.id
+      JOIN `{S}.gks_scv_condition_sets` spc
+      ON
+        spc.scv_id = scv.id
       LEFT JOIN {P}.temp_gks_scv_target_proposition stp
       ON
         stp.scv_id = scv.id

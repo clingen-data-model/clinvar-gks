@@ -161,6 +161,7 @@ load_vrs_data() {
   fi
 
 
+
   if bq --project_id="$PROJECT_ID" load --source_format=NEWLINE_DELIMITED_JSON --schema="$SCHEMA_FILE_PATH" --max_bad_records=2 --ignore_unknown_values --replace "$dataset_id.$TABLE_ID" "$gcs_json_path"; then
     echo "✅ BigQuery load succeeded."; return 0;
   else
