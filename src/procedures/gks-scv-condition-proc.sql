@@ -1,20 +1,15 @@
+
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_scv_condition_proc`(on_date DATE, debug BOOL)
 BEGIN
   DECLARE query_gks_traits STRING;
-  DECLARE temp_normalized_trait_mappings_query STRING;
   DECLARE temp_rcv_mapping_traits_query STRING;
   DECLARE temp_gks_scv_trait_sets_query STRING;
   DECLARE temp_all_rcv_traits_query STRING;
-  DECLARE temp_normalized_traits_query STRING;
-  DECLARE temp_scv_trait_name_xrefs_query STRING;
-  DECLARE temp_all_scv_traits_query STRING;
-  DECLARE temp_all_mapped_scv_traits_query STRING;
-  DECLARE temp_rcv_trait_assignment_stage1_query STRING;
-  DECLARE temp_rcv_trait_assignment_stage2_query STRING;
-  DECLARE temp_rcv_trait_assignment_stage3_query STRING;
-  DECLARE temp_rcv_trait_assignment_stage4_query STRING;
-  DECLARE gks_scv_condition_mapping_query STRING;
   DECLARE query_gks_trait_sets STRING;
+  DECLARE temp_scv_trait_name_xrefs_query STRING;
+  DECLARE temp_scv_trait_mappings_query STRING;  
+  DECLARE temp_scv_trait_assignment_stage1_query STRING;
+  DECLARE temp_scv_trait_assignment_stage2_query STRING;
   DECLARE query_condition_sets STRING;
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
@@ -31,11 +26,10 @@ BEGIN
     -- Clean up any persistent temp tables from a prior debug run
     IF NOT debug THEN
       CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
-        'temp_normalized_trait_mappings', 'temp_rcv_mapping_traits',
-        'temp_gks_scv_trait_sets', 'temp_all_rcv_traits', 'temp_normalized_traits',
-        'temp_scv_trait_name_xrefs', 'temp_all_scv_traits', 'temp_all_mapped_scv_traits',
-        'temp_rcv_trait_assignment_stage1', 'temp_rcv_trait_assignment_stage2',
-        'temp_rcv_trait_assignment_stage3', 'temp_rcv_trait_assignment_stage4'
+        'temp_rcv_mapping_traits', 'temp_gks_scv_trait_sets',
+        'temp_all_rcv_traits', 'temp_scv_trait_name_xrefs',
+        'temp_scv_trait_mappings', 'temp_scv_trait_assignment_stage1',
+        'temp_scv_trait_assignment_stage2'
       ]);
     END IF;
 
@@ -51,7 +45,7 @@ BEGIN
           t.id,
           t.type,
           t.name,
-          ARRAY_TO_STRING(t.alternate_names,', ') as synonyms,
+          t.alternate_names as synonyms,
           clinvar_ingest.parseXRefItems(t.xrefs) as xrefs
         FROM `{S}.trait` t
       ),
@@ -70,8 +64,8 @@ BEGIN
           dtxr.trait_id as id,
           STRUCT(
             IF(dtxr.db='MedGen', dtxr.trait_name, null) as name,
-            dtxr.id as code,
-            dtxr.db as system,
+            IF(iri.id_extract_pattern IS NOT NULL, REGEXP_EXTRACT(dtxr.id, iri.id_extract_pattern), dtxr.id) as code,
+            iri.system as system,
             ARRAY_AGG(
               FORMAT(
                 iri.template,
@@ -86,11 +80,11 @@ BEGIN
             ) as iris
           ) as mapping
         FROM distinct_trait_xrefs dtxr
-        JOIN `clinvar_ingest.gks_xref_iri_templates` iri
+        LEFT JOIN `clinvar_ingest.gks_xref_iri_templates` iri
           ON iri.category = 'Condition'
           AND iri.db = dtxr.db
           AND iri.type IS NOT DISTINCT FROM dtxr.type
-        GROUP BY dtxr.trait_id, dtxr.trait_name, dtxr.id, dtxr.db
+        GROUP BY dtxr.trait_id, dtxr.trait_name, dtxr.id, dtxr.db, iri.id_extract_pattern, iri.system
       )
       SELECT
         FORMAT('clinvar.trait:%s', t.id) AS id,
@@ -99,7 +93,7 @@ BEGIN
         t.name,
         ARRAY_AGG(
           IF(
-            tx.mapping.system = 'MedGen',
+            tx.mapping.system = 'medgen',
             tx.mapping,
             null
           )
@@ -107,21 +101,23 @@ BEGIN
         )[SAFE_OFFSET(0)] as primaryCoding,
         ARRAY_AGG(
           IF(
-            tx.mapping.system <> 'MedGen',
+            tx.mapping.system <> 'medgen',
             STRUCT(tx.mapping as coding, 'relatedMatch' as relation),
             null
           )
           IGNORE NULLS
         ) as mappings,
-        IF(
-          t.synonyms is not null and t.synonyms <> '',
-          [STRUCT(
-            'aliases' as name,
-            t.synonyms as value_string,
-            [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-          )],
-          CAST(NULL AS ARRAY<STRUCT<name STRING, value_string STRING, value_array_codings ARRAY<STRUCT<code STRING, system STRING>>>>)
-        ) as extensions
+        -- Use ANY_VALUE because we cannot GROUP BY the synonyms array
+        ANY_VALUE(
+          IF(
+            ARRAY_LENGTH(t.synonyms) > 0, 
+            [STRUCT(
+              'aliases' AS name,
+              t.synonyms AS value_array_string
+            )],
+            NULL 
+          )
+        ) AS extensions
       FROM traits t
       LEFT JOIN trait_xrefs tx
       ON
@@ -129,34 +125,12 @@ BEGIN
       GROUP BY
         t.id,
         t.type,
-        t.name,
-        t.synonyms
+        t.name
     """, '{S}', rec.schema_name);
     EXECUTE IMMEDIATE query_gks_traits;
 
     -- -----------------------------------------------------------------------
-    -- STEP 2: Create temp_normalized_trait_mappings
-    -- -----------------------------------------------------------------------
-    SET temp_normalized_trait_mappings_query = REPLACE("""
-      {CT} {P}.temp_normalized_trait_mappings
-      AS
-      SELECT DISTINCT
-        *
-        EXCEPT (release_date)
-        REPLACE(
-          LOWER(mapping_type) as mapping_type,
-          LOWER(mapping_ref) as mapping_ref,
-          LOWER(mapping_value) as mapping_value
-        )
-      FROM `{S}.trait_mapping`
-    """, '{S}', rec.schema_name);
-    SET temp_normalized_trait_mappings_query = REPLACE(temp_normalized_trait_mappings_query, '{CT}', temp_create);
-    SET temp_normalized_trait_mappings_query = REPLACE(temp_normalized_trait_mappings_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE temp_normalized_trait_mappings_query;
-
-    -- -----------------------------------------------------------------------
-    -- STEP 3: Create temp_rcv_mapping_traits
+    -- STEP 2: Create temp_rcv_mapping_traits
     -- -----------------------------------------------------------------------
     SET temp_rcv_mapping_traits_query = REPLACE("""
       {CT} {P}.temp_rcv_mapping_traits
@@ -175,32 +149,21 @@ BEGIN
     EXECUTE IMMEDIATE temp_rcv_mapping_traits_query;
 
     -- -----------------------------------------------------------------------
-    -- STEP 4: Create temp_gks_scv_trait_sets
+    -- STEP 3: Create temp_gks_scv_trait_sets
     -- -----------------------------------------------------------------------
     SET temp_gks_scv_trait_sets_query = REPLACE("""
       {CT} {P}.temp_gks_scv_trait_sets
       AS
         SELECT
           cats.id as scv_id,
-          rmt.trait_set_id as trait_set_id,
-          rmt.ts.type as trait_set_type,
+          rmt.trait_set_id as rcv_trait_set_id,
+          rmt.ts.type as rcv_trait_set_type,
           ARRAY_LENGTH(rmt.ts.trait) as rcv_trait_count,
           ARRAY_LENGTH(cats.clinical_assertion_trait_ids) as cats_trait_count,
           cats.type as cats_type,
           cats.clinical_assertion_trait_ids,
           rmt.ts.trait as rcv_traits,
-          [
-            STRUCT(
-              'clinvarTraitSetType' as name,
-              rmt.ts.type as value_string,
-              [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-            ),
-            STRUCT(
-              'clinvarTraitSetId' as name,
-              rmt.trait_set_id as value_string,
-              [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-            )
-          ] as extensions
+          JSON_VALUE(content, '$."@multipleConditionExplanation"') AS multiple_condition_explanation
         FROM {P}.temp_rcv_mapping_traits rmt
         JOIN `{S}.clinical_assertion_trait_set` cats
         ON
@@ -212,60 +175,104 @@ BEGIN
     EXECUTE IMMEDIATE temp_gks_scv_trait_sets_query;
 
     -- -----------------------------------------------------------------------
-    -- STEP 5: Create temp_all_rcv_traits
+    -- STEP 4: Create temp_all_rcv_traits
     -- -----------------------------------------------------------------------
     SET temp_all_rcv_traits_query = REPLACE("""
       {CT} {P}.temp_all_rcv_traits
       AS
-        -- IMPORTANT! there is one and only one rcv trait that has 2 medgen ids, trait_id 17556 'not provided' and it has an old medgen id 'CN517202' in addition to the current one 'C3661900'
-        -- this should be considered downstream.
-        select
-          sts.trait_set_id,
-          t.id as trait_id,
-          pref_name.element_value as trait_name,
-          t.type as trait_type,
-          t.trait_relationship.type as trait_relationship_type,
-          medgen.id as medgen_id,
-          ARRAY_AGG(DISTINCT alt_name.element_value IGNORE NULLS ORDER BY alt_name.element_value) as alternate_names,
-          ARRAY_AGG(DISTINCT mondo.id IGNORE NULLS ORDER BY mondo.id) as mondo_ids,
-          ARRAY_AGG(DISTINCT omim.id IGNORE NULLS ORDER BY omim.id) as omim_ids,
-          ARRAY_AGG(DISTINCT hp.id IGNORE NULLS ORDER BY hp.id) as hp_ids,
-          ARRAY_AGG(DISTINCT orphanet.id IGNORE NULLS ORDER BY orphanet.id) as orphanet_ids,
-          ARRAY_AGG(DISTINCT mesh.id IGNORE NULLS ORDER BY mesh.id) as mesh_ids,
-          ARRAY_AGG(DISTINCT sts.scv_id ORDER BY sts.scv_id) as scv_ids  -- <<< convenience array so that we do not need to join the 5M+ rows from the gks_scv_trait_sets table when dealing with small sets of scvs downstream
-        from {P}.temp_gks_scv_trait_sets sts
-        cross join unnest(sts.rcv_traits) as t
-        left join unnest(t.name) as pref_name
-        on
-          pref_name.type = 'Preferred'
-        left join unnest(t.name) as alt_name
-        on
-          alt_name.type = 'Alternate'
-        left join unnest(t.xref) as medgen
-        on
-          medgen.db = 'MedGen'
-        left join unnest(t.xref) as mondo
-        on
-          mondo.db = 'MONDO'
-        left join unnest(t.xref) as omim
-        on
-          omim.db = 'OMIM'
-        left join unnest(t.xref) as orphanet
-        on
-          orphanet.db = 'Orphanet'
-        left join unnest(t.xref) as hp
-        on
-          hp.db = 'Human Phenotype Ontology'
-        left join unnest(t.xref) as mesh
-        on
-          mesh.db = 'MeSH'
-        group by
-          sts.trait_set_id,
-          t.id,
-          pref_name.element_value,
-          t.type,
-          t.trait_relationship.type,
-          medgen.id
+         WITH raw_rcv_traits AS (
+          select
+            sts.rcv_trait_set_id,
+            t.id as rcv_trait_id,
+            pref_name.element_value as rcv_trait_name,
+            t.type as rcv_trait_type,
+            t.trait_relationship.type as rcv_trait_relationship_type,
+            -- IF(medgen.id = 'CN517202', 'C3661900', medgen.id) as medgen_id,
+            medgen.id as medgen_id,
+            ARRAY_AGG(DISTINCT alt_name.element_value IGNORE NULLS ORDER BY alt_name.element_value) as alternate_names,
+            ARRAY_AGG(DISTINCT mondo.id IGNORE NULLS ORDER BY mondo.id) as mondo_ids,
+            ARRAY_AGG(DISTINCT omim.id IGNORE NULLS ORDER BY omim.id) as omim_ids,
+            ARRAY_AGG(DISTINCT omimps.id IGNORE NULLS ORDER BY omimps.id) as omimps_ids,
+            ARRAY_AGG(DISTINCT hp.id IGNORE NULLS ORDER BY hp.id) as hp_ids,
+            ARRAY_AGG(DISTINCT orphanet.id IGNORE NULLS ORDER BY orphanet.id) as orphanet_ids,
+            ARRAY_AGG(DISTINCT mesh.id IGNORE NULLS ORDER BY mesh.id) as mesh_ids,
+            ARRAY_AGG(DISTINCT sts.scv_id ORDER BY sts.scv_id) as scv_ids
+          from {P}.temp_gks_scv_trait_sets sts
+          cross join unnest(sts.rcv_traits) as t
+          left join unnest(t.name) as pref_name
+          on
+            pref_name.type = 'Preferred'
+          left join unnest(t.name) as alt_name
+          on
+            alt_name.type = 'Alternate'
+          left join unnest(t.xref) as medgen
+          on
+            medgen.db = 'MedGen'
+          left join unnest(t.xref) as mondo
+          on
+            mondo.db = 'MONDO'
+          left join unnest(t.xref) as omim
+          on
+            omim.db = 'OMIM' AND omim.type = 'MIM'
+          left join unnest(t.xref) as omimps
+          on
+            omimps.db = 'OMIM' AND omimps.type = 'Phenotypic series'
+          left join unnest(t.xref) as orphanet
+          on
+            orphanet.db = 'Orphanet'
+          left join unnest(t.xref) as hp
+          on
+            hp.db = 'Human Phenotype Ontology' AND hp.type = 'primary'
+          left join unnest(t.xref) as mesh
+          on
+            mesh.db = 'MeSH'
+          group by
+            sts.rcv_trait_set_id,
+            t.id,
+            pref_name.element_value,
+            t.type,
+            t.trait_relationship.type,
+            medgen.id
+        ),
+        -- Deduplicate rows with the same (rcv_trait_set_id, rcv_trait_id).
+        -- Scalar attributes (name, type, relationship_type, medgen_id) come
+        -- from the row with the most scv_ids (the "newer" row).
+        -- Array columns are concatenated first, then deduplicated.
+        merged AS (
+          SELECT
+            rcv_trait_set_id,
+            rcv_trait_id,
+            ARRAY_AGG(rcv_trait_name ORDER BY ARRAY_LENGTH(scv_ids) DESC LIMIT 1)[OFFSET(0)] AS rcv_trait_name,
+            ARRAY_AGG(rcv_trait_type ORDER BY ARRAY_LENGTH(scv_ids) DESC LIMIT 1)[OFFSET(0)] AS rcv_trait_type,
+            ARRAY_AGG(rcv_trait_relationship_type ORDER BY ARRAY_LENGTH(scv_ids) DESC LIMIT 1)[OFFSET(0)] AS rcv_trait_relationship_type,
+            ARRAY_AGG(medgen_id IGNORE NULLS ORDER BY ARRAY_LENGTH(scv_ids) DESC LIMIT 1)[SAFE_OFFSET(0)] AS medgen_id,
+            ARRAY_CONCAT_AGG(alternate_names) AS alternate_names,
+            ARRAY_CONCAT_AGG(mondo_ids) AS mondo_ids,
+            ARRAY_CONCAT_AGG(omim_ids) AS omim_ids,
+            ARRAY_CONCAT_AGG(omimps_ids) AS omimps_ids,
+            ARRAY_CONCAT_AGG(hp_ids) AS hp_ids,
+            ARRAY_CONCAT_AGG(orphanet_ids) AS orphanet_ids,
+            ARRAY_CONCAT_AGG(mesh_ids) AS mesh_ids,
+            ARRAY_CONCAT_AGG(scv_ids) AS scv_ids
+          FROM raw_rcv_traits
+          GROUP BY rcv_trait_set_id, rcv_trait_id
+        )
+        SELECT
+          rcv_trait_set_id,
+          rcv_trait_id,
+          rcv_trait_name,
+          rcv_trait_type,
+          rcv_trait_relationship_type,
+          medgen_id,
+          ARRAY(SELECT DISTINCT v FROM UNNEST(alternate_names) v WHERE v IS NOT NULL ORDER BY v) AS alternate_names,
+          ARRAY(SELECT DISTINCT v FROM UNNEST(mondo_ids) v WHERE v IS NOT NULL ORDER BY v) AS mondo_ids,
+          ARRAY(SELECT DISTINCT v FROM UNNEST(omim_ids) v WHERE v IS NOT NULL ORDER BY v) AS omim_ids,
+          ARRAY(SELECT DISTINCT v FROM UNNEST(omimps_ids) v WHERE v IS NOT NULL ORDER BY v) AS omimps_ids,
+          ARRAY(SELECT DISTINCT v FROM UNNEST(hp_ids) v WHERE v IS NOT NULL ORDER BY v) AS hp_ids,
+          ARRAY(SELECT DISTINCT v FROM UNNEST(orphanet_ids) v WHERE v IS NOT NULL ORDER BY v) AS orphanet_ids,
+          ARRAY(SELECT DISTINCT v FROM UNNEST(mesh_ids) v WHERE v IS NOT NULL ORDER BY v) AS mesh_ids,
+          ARRAY(SELECT DISTINCT v FROM UNNEST(scv_ids) v ORDER BY v) AS scv_ids
+        FROM merged
     """, '{S}', rec.schema_name);
     SET temp_all_rcv_traits_query = REPLACE(temp_all_rcv_traits_query, '{CT}', temp_create);
     SET temp_all_rcv_traits_query = REPLACE(temp_all_rcv_traits_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -273,7 +280,7 @@ BEGIN
     EXECUTE IMMEDIATE temp_all_rcv_traits_query;
 
     -- -----------------------------------------------------------------------
-    -- STEP 5b: Create gks_trait_sets (persistent baseline traitset representations)
+    -- STEP 5: Create gks_trait_sets (persistent baseline traitset representations)
     -- Unique trait sets with clinvar.traitset:{id} identifiers, referencing
     -- member traits via #/traits/clinvar.trait:{trait_id}.
     -- -----------------------------------------------------------------------
@@ -281,104 +288,46 @@ BEGIN
       CREATE OR REPLACE TABLE `{S}.gks_trait_sets` AS
       WITH trait_set_traits AS (
         SELECT DISTINCT
-          art.trait_set_id,
-          art.trait_id
+          art.rcv_trait_set_id,
+          art.rcv_trait_id
         FROM {P}.temp_all_rcv_traits art
       ),
       trait_set_info AS (
         SELECT DISTINCT
-          gsts.trait_set_id,
-          gsts.trait_set_type
+          gsts.rcv_trait_set_id,
+          gsts.rcv_trait_set_type
         FROM {P}.temp_gks_scv_trait_sets gsts
       )
       SELECT
-        FORMAT('clinvar.traitset:%s', tsi.trait_set_id) AS id,
-        tsi.trait_set_type AS conceptSetType,
+        FORMAT('clinvar.traitset:%s', tsi.rcv_trait_set_id) AS id,
+        tsi.rcv_trait_set_type AS conceptSetType,
         ARRAY_AGG(
-          FORMAT('#/traits/clinvar.trait:%s', tst.trait_id)
-          ORDER BY tst.trait_id
+          FORMAT('#/condition/clinvar.trait:%s', tst.rcv_trait_id)
+          ORDER BY tst.rcv_trait_id
         ) AS condition_refs,
         IF(
-          ANY_VALUE(art.trait_relationship_type) IN ('Finding member','co-occurring condition'),
+          ANY_VALUE(art.rcv_trait_relationship_type) IN ('Finding member','co-occurring condition'),
           'AND',
           'OR'
         ) AS membershipOperator
       FROM trait_set_info tsi
-      JOIN trait_set_traits tst ON tst.trait_set_id = tsi.trait_set_id
-      LEFT JOIN {P}.temp_all_rcv_traits art ON art.trait_set_id = tsi.trait_set_id AND art.trait_id = tst.trait_id
-      GROUP BY tsi.trait_set_id, tsi.trait_set_type
+      JOIN trait_set_traits tst 
+        ON tst.rcv_trait_set_id = tsi.rcv_trait_set_id
+      LEFT JOIN {P}.temp_all_rcv_traits art 
+        ON art.rcv_trait_set_id = tsi.rcv_trait_set_id AND art.rcv_trait_id = tst.rcv_trait_id
+      GROUP BY tsi.rcv_trait_set_id, tsi.rcv_trait_set_type
     """, '{S}', rec.schema_name);
     SET query_gks_trait_sets = REPLACE(query_gks_trait_sets, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_gks_trait_sets;
-
+  
     -- -----------------------------------------------------------------------
-    -- STEP 6: Create temp_normalized_traits
-    -- -----------------------------------------------------------------------
-    SET temp_normalized_traits_query = REPLACE("""
-      {CT} {P}.temp_normalized_traits
-      AS
-        -- build a list of unique normalized trait id records reducing any
-        -- duplicate trait id records to use the one with more lookup values
-        -- (alt name, omim ids, hp_ids, etc...) and where the trait_type is
-        -- first alphabetically. This will be the master list to assign
-        -- trait_ids to the ca trait records.
-        WITH trait_recs AS (
-          SELECT DISTINCT
-            art.*
-            EXCEPT (trait_set_id, scv_ids, trait_relationship_type)
-          FROM {P}.temp_all_rcv_traits art
-        ),
-        dupe_trait_recs AS (
-          SELECT
-            trait_id
-          FROM trait_recs
-          GROUP BY
-            trait_id
-          HAVING count(*) = 1
-        )
-        SELECT
-          oth.*
-        FROM trait_recs src
-        JOIN trait_recs oth
-        ON
-          oth.trait_id = src.trait_id
-          and
-          (
-            ARRAY_LENGTH(oth.alternate_names) > ARRAY_LENGTH(src.alternate_names)
-            OR
-            ARRAY_LENGTH(oth.mondo_ids) > ARRAY_LENGTH(src.mondo_ids)
-            OR
-            ARRAY_LENGTH(oth.omim_ids) > ARRAY_LENGTH(src.omim_ids)
-            OR
-            ARRAY_LENGTH(oth.hp_ids) > ARRAY_LENGTH(src.hp_ids)
-            OR
-            ARRAY_LENGTH(oth.orphanet_ids) > ARRAY_LENGTH(src.orphanet_ids)
-            OR
-            ARRAY_LENGTH(oth.mesh_ids) > ARRAY_LENGTH(src.mesh_ids)
-            or
-            oth.trait_type < src.trait_type    -- 2 dupes with different trait_types (disease and finding) this will cause disease to be prioritized in results
-          )
-        UNION ALL
-        SELECT DISTINCT
-          tr.*
-        FROM trait_recs tr
-        JOIN dupe_trait_recs dtr
-        ON
-          dtr.trait_id = tr.trait_id
-    """, '{S}', rec.schema_name);
-    SET temp_normalized_traits_query = REPLACE(temp_normalized_traits_query, '{CT}', temp_create);
-    SET temp_normalized_traits_query = REPLACE(temp_normalized_traits_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE temp_normalized_traits_query;
-
-    -- -----------------------------------------------------------------------
-    -- STEP 7: Create temp_scv_trait_name_xrefs
+    -- STEP 6: Create temp_scv_trait_name_xrefs
     -- -----------------------------------------------------------------------
     SET temp_scv_trait_name_xrefs_query = REPLACE("""
       {CT} {P}.temp_scv_trait_name_xrefs
       AS
         WITH scv_trait_xrefs AS (
-          SELECT
+          SELECT 
             id,
             type,
             medgen_id,
@@ -389,64 +338,119 @@ BEGIN
           FROM `{S}.clinical_assertion_trait` cat
           WHERE
             ARRAY_LENGTH(SPLIT(id,'.')) = 2
-          -- 3,616,101
+            -- 7,289,602
+            --SCV000380563 (von Wildebrand disorder mismaps to von Wildebrand disease in clinvar UI between SCV and RCV/VCV conditions.)
         ),
         submitted_xrefs AS (
           -- db
-          -- x GeneReviews
-          -- x HP   -- Human Phenotype Ontology
-          -- x HPO  -- Human Phenotype Ontology
-          -- x MESH -- MeSH
-          -- x MONDO -- MONDO
-          -- x MeSH -- MeSH
-          -- x MedGen -- MedGen
-          -- x OMIM   -- OMIM
-          -- x OMIM phenotypic series -- OMIM
-          -- x Orphanet -- Orphanet
-          -- x UMLS    -- MedGen
+          -- x GeneReviews (ncbibook)
+          -- x HP   -- Human Phenotype Ontology (hp)
+          -- x HPO  -- Human Phenotype Ontology (hp)
+          -- x MESH -- MeSH (mesh)
+          -- x MONDO -- MONDO (mondo)
+          -- x MeSH -- MeSH (mesh)
+          -- x MedGen -- MedGen (medgen)
+          -- x OMIM   -- OMIM (omim)
+          -- x OMIM phenotypic series (omim.ps)
+          -- x Orphanet -- Orphanet (orpha)
+          -- x UMLS    -- MedGen (medgen)
           SELECT
             stx.id,
-            ARRAY_AGG(STRUCT(xref.id as code, xref.db as system)) as codings
+
+            ARRAY_AGG(
+              CASE
+              WHEN (xref.db = 'OMIM' and xref.id not like 'PS%') THEN
+                STRUCT(REGEXP_EXTRACT(xref.id, r'\\d+') as code, 'omim' as system)
+              WHEN (xref.db = 'OMIM phenotypic series' OR (xref.db = 'OMIM' AND xref.id like 'PS%')) THEN
+                STRUCT(FORMAT('PS%s', REGEXP_EXTRACT(xref.id, r'\\d+')) as code, 'omim.ps' as system)
+              WHEN (xref.db IN ('HP', 'HPO') AND REGEXP_CONTAINS(xref.id, r'^(HP:)?\\d+$')) THEN
+                STRUCT(REGEXP_EXTRACT(xref.id, r'\\d+') as code, 'HP' as system)
+              WHEN (xref.db = 'MONDO') THEN
+                STRUCT(RIGHT(REGEXP_EXTRACT(xref.id, r'\\d+'),7) as code, 'mondo' as system)
+              WHEN (xref.db IN ('MedGen', 'UMLS')) THEN
+                STRUCT(UPPER(xref.id) as code, 'medgen' as system)
+              WHEN (xref.db = 'Orphanet') THEN
+                STRUCT(REGEXP_EXTRACT(xref.id, r'\\d+') as code, 'orpha' as system)
+              WHEN (xref.db IN ('MeSH', 'MESH')) THEN
+                STRUCT(UPPER(xref.id) as code, 'mesh' as system)
+              WHEN (xref.db IN ('GeneReviews')) THEN
+                STRUCT(UPPER(xref.id) as code, 'ncbibook' as system)
+              ELSE
+                STRUCT(CAST(NULL AS STRING) as code, CAST(NULL AS STRING) as system)
+              END
+            ) as norm_codings,
+
+            ARRAY_AGG(
+              STRUCT(xref.id as code, xref.db as system)
+            ) as raw_codings
+
           FROM scv_trait_xrefs stx
           CROSS JOIN UNNEST(stx.xrefs) as xref
           GROUP BY
             stx.id
         )
+        -- this statement is responsible for preserving the submitted xref id and db values as well as normalizing
+        --  them so they best match the intended values and subsequently give the best opportunity to match with the gks_traits.xrefs.
         SELECT
           stx.id as cat_id,
           stx.type as cat_type,
           stx.name as cat_name,
           stx.trait_id as cat_trait_id,
           stx.medgen_id as cat_medgen_id,
-          omim.id as omim_id,
-          `clinvar_ingest.normalizeHpId`(hp.id) as hp_id,
-          mondo.id as mondo_id,
-          medgen.id as medgen_id,
-          orphanet.id as orphanet_id,
-          mesh.id as mesh_id,
-          sx.codings as submitted_xrefs
+          omim.code as omim_id,
+          omimps.code as omimps_id,
+          hp.code as hp_id,
+          mondo.code as mondo_id,
+          -- there are a couple odd situations whereby the submitted medgen_id does not end up in the clinvar trait_xrefs, so this will account for those
+          IFNULL(medgen.code, stx.medgen_id) as medgen_id,
+          orphanet.code as orphanet_id,
+          mesh.code as mesh_id,
+          ncbibook.code as ncbibook_id,
+          sx.raw_codings as submitted_xrefs
         FROM scv_trait_xrefs stx
         LEFT JOIN submitted_xrefs sx
         ON
           sx.id = stx.id
-        left join unnest(xrefs) as omim
+
+        -- OMIM.  99999, PS999999
+        left join unnest(sx.norm_codings) as omim
         on
-          omim.db IN ('OMIM', 'OMIM phenotypic series')
-        left join unnest(xrefs) as hp
+          omim.system = 'omim'
+        -- OMIMPS. PS999999
+        left join unnest(sx.norm_codings) as omimps
         on
-          hp.db IN ('HP', 'HPO')
-        left join unnest(xrefs) as mondo
+          omimps.system = 'omim.ps'
+
+        -- HP  HP:99999, 99999, (1) C999999
+        left join unnest(sx.norm_codings) as hp
         on
-          mondo.db = 'MONDO'
-        left join unnest(xrefs) as medgen
+          hp.system = 'HP'
+
+        -- MONDO MONDO:99999, 9999999 (should always be 7 in length
+        -- remove leading zeroes if longer, add leading zeroes if shorter
+        left join unnest(sx.norm_codings) as mondo
         on
-          medgen.db IN ('MedGen', 'UMLS')
-        left join unnest(xrefs) as orphanet
+          mondo.system = 'mondo'
+
+        -- medgen c99999 (1 lowercase c), C99999 (conceptid), CN999999 (concept id), 999999 (medgen uid) - both work
+        left join unnest(sx.norm_codings) as medgen
         on
-          orphanet.db = 'Orphanet'
-        left join unnest(xrefs) as mesh
+          medgen.system = 'medgen'
+
+        -- Orphanet ORPHA99999, 99999 (different length numeric components but doesn't matter)
+        left join unnest(sx.norm_codings) as orphanet
         on
-          mesh.db IN ('MeSH', 'MESH')
+          orphanet.system = 'orpha'
+
+        -- mesh D999999, C99.999.999.999.999. (sometimes several in a csv list), one name entry
+        left join unnest(sx.norm_codings) as mesh
+        on
+          mesh.system = 'mesh'
+
+        -- ncbibook NBK999999
+        left join unnest(sx.norm_codings) as ncbibook
+        on
+          ncbibook.system = 'ncbibook'
     """, '{S}', rec.schema_name);
     SET temp_scv_trait_name_xrefs_query = REPLACE(temp_scv_trait_name_xrefs_query, '{CT}', temp_create);
     SET temp_scv_trait_name_xrefs_query = REPLACE(temp_scv_trait_name_xrefs_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -454,1275 +458,536 @@ BEGIN
     EXECUTE IMMEDIATE temp_scv_trait_name_xrefs_query;
 
     -- -----------------------------------------------------------------------
-    -- STEP 8: Create temp_all_scv_traits
-    -- -----------------------------------------------------------------------
-    SET temp_all_scv_traits_query = REPLACE("""
-      {CT} {P}.temp_all_scv_traits
+    -- STEP 7: Create temp_scv_trait_mappings
+    -- Replaces temp_all_scv_traits and temp_all_mapped_scv_traits.
+    -- Uses COALESCE priority to select the best mapping key per SCV trait,
+    -- then joins to trait_mapping to get the mapped medgen_id.
+    -- Priority: cat_name > omim > hp > mondo > medgen > orphanet > mesh
+    -- -----------------------------------------------------------------------    
+    SET temp_scv_trait_mappings_query = REPLACE("""
+      {CT} {P}.temp_scv_trait_mappings
       AS
-        WITH all_ca_traits_and_mappings AS (
-          -- This query returns ALL ca traits (both those directly related to the scv as well as the scv's observatoins, if any)
-          -- We are intentionally bringing back both the scv and scv_obs traits since it is presumed that each trait will have
-          -- it's own trait mapping. And we can use the ca-trait id pattern to discern which records are scv traits vs scv-obs traits.
-          SELECT
-            REGEXP_EXTRACT(cat.id, r'SCV[0-9]+') as scv_id,
-            ARRAY_AGG(distinct cat.id) as cat_ids,
-            ARRAY_AGG(
-              IF(
-                ntm.clinical_assertion_id is not null,
-                STRUCT(ntm),
-                null
-              ) IGNORE NULLS
-            ) as trait_mappings
-          FROM `{S}.clinical_assertion_trait` cat
-          LEFT JOIN {P}.temp_normalized_trait_mappings ntm
-          ON
-            ntm.clinical_assertion_id = REGEXP_EXTRACT(cat.id, r'SCV[0-9]+')
-          GROUP BY
-            REGEXP_EXTRACT(cat.id, r'SCV[0-9]+')
+        WITH scv_traits AS (
+          SELECT DISTINCT
+            stnx.cat_id,
+            SPLIT(stnx.cat_id, '.')[OFFSET(0)] AS scv_id,
+            stnx.cat_type,
+            stnx.cat_name,
+            stnx.cat_trait_id,
+            stnx.cat_medgen_id,
+            stnx.omim_id,
+            stnx.omimps_id,
+            stnx.hp_id,
+            stnx.mondo_id,
+            stnx.medgen_id,
+            stnx.orphanet_id,
+            stnx.mesh_id,
+            stnx.ncbibook_id,
+            stnx.submitted_xrefs,
+            COALESCE(
+              stnx.cat_name,
+              stnx.omim_id,
+              stnx.omimps_id,
+              stnx.hp_id,
+              stnx.mondo_id,
+              stnx.medgen_id,
+              stnx.orphanet_id,
+              stnx.mesh_id,
+              stnx.ncbibook_id
+            ) AS mapping_value,
+            CASE
+              WHEN stnx.cat_name    IS NOT NULL THEN 'preferred'
+              WHEN stnx.omim_id     IS NOT NULL THEN 'omim'
+              WHEN stnx.omimps_id   IS NOT NULL THEN 'omim.ps'
+              WHEN stnx.hp_id       IS NOT NULL THEN 'HP'
+              WHEN stnx.mondo_id    IS NOT NULL THEN 'mondo'
+              WHEN stnx.medgen_id   IS NOT NULL THEN 'medgen'
+              WHEN stnx.orphanet_id IS NOT NULL THEN 'orpha'
+              WHEN stnx.mesh_id     IS NOT NULL THEN 'mesh'
+              WHEN stnx.ncbibook_id IS NOT NULL THEN 'ncbibook'
+            END AS mapping_ref,
+            IF(stnx.cat_name IS NOT NULL, 'Name', 'XRef') AS mapping_type
+          FROM {P}.temp_scv_trait_name_xrefs stnx
+        ),
+        trait_mappings AS (
+          SELECT DISTINCT
+            clinical_assertion_id,
+            mapping_type,
+            CASE
+              WHEN mapping_ref IN ('HP','HPO','Human Phenotype Ontology') THEN 'HP'
+              WHEN mapping_ref = 'OMIM' AND mapping_value NOT LIKE 'PS%' THEN 'omim'
+              WHEN mapping_ref LIKE 'OMIM%' AND mapping_value LIKE 'PS%' THEN 'omim.ps'
+              WHEN mapping_ref = 'Orphanet' THEN 'orpha'
+              ELSE lower(mapping_ref)
+            END AS mapping_ref,
+            IF(
+              mapping_type = 'XRef',
+              CASE
+                WHEN (mapping_value LIKE 'HP:%' OR mapping_value LIKE 'ORPHA%') THEN REGEXP_EXTRACT(mapping_value, r'\\d+')
+                WHEN (mapping_value LIKE 'MONDO:%') THEN RIGHT(REGEXP_EXTRACT(mapping_value, r'\\d+'),7)
+                WHEN (LOWER(mapping_ref) = 'omim phenotypic series') THEN FORMAT('PS%s', REGEXP_EXTRACT(mapping_value, r'\\d+'))
+                ELSE UPPER(mapping_value)
+              END,
+              mapping_value
+            ) as mapping_value,
+            medgen_id,
+            medgen_name
+            -- trait_type
+          FROM `{S}.trait_mapping`
+        ),
+        alt_trait_mappings AS (
+          SELECT DISTINCT
+            clinical_assertion_id,
+            mapping_value,
+            medgen_id,
+            medgen_name
+          FROM `{S}.trait_mapping`
+          WHERE mapping_ref = 'Alternate'
+            AND mapping_type = 'Name'
         )
         SELECT
-          actam.scv_id,
-          cat_id,
-          sts.trait_set_id,
-          sts.cats_trait_count,
-          sts.rcv_trait_count,
-          ARRAY_LENGTH(actam.cat_ids) as total_cat_cnt,
-          IFNULL(array_length(actam.trait_mappings),0) as total_tm_count,
-          stnx.cat_medgen_id,
-          stnx.cat_name,
-          stnx.cat_trait_id,
-          stnx.cat_type,
-          stnx.hp_id,
-          stnx.medgen_id,
-          stnx.mesh_id,
-          stnx.mondo_id,
-          stnx.omim_id,
-          stnx.orphanet_id,
-          stnx.submitted_xrefs
-        FROM all_ca_traits_and_mappings actam
-        JOIN {P}.temp_gks_scv_trait_sets sts
-        ON
-          actam.scv_id = sts.scv_id
-        CROSS JOIN UNNEST(actam.cat_ids) as cat_id
-        LEFT JOIN {P}.temp_scv_trait_name_xrefs stnx
-        ON
-          stnx.cat_id = cat_id
-        WHERE
-          -- only return direct scv related trait records
-          ARRAY_LENGTH(SPLIT(cat_id, '.')) = 2
-
+          st.scv_id,
+          st.cat_id,
+          gsts.rcv_trait_set_id,
+          gsts.cats_trait_count,
+          gsts.rcv_trait_count,
+          gsts.multiple_condition_explanation,
+          st.cat_type,
+          COALESCE(st.cat_name, atm.mapping_value) AS cat_name,
+          st.cat_trait_id,
+          COALESCE(st.cat_medgen_id, atm.medgen_id) AS cat_medgen_id,
+          st.omim_id,
+          st.omimps_id,
+          st.hp_id,
+          st.mondo_id,
+          st.medgen_id,
+          st.orphanet_id,
+          st.mesh_id,
+          st.ncbibook_id,
+          st.submitted_xrefs,
+          st.mapping_type,
+          st.mapping_ref,
+          st.mapping_value,
+          tm.medgen_id AS tm_medgen_id,
+          tm.medgen_name AS tm_medgen_name
+        FROM scv_traits st
+        JOIN {P}.temp_gks_scv_trait_sets gsts
+          ON gsts.scv_id = st.scv_id
+        LEFT JOIN trait_mappings tm
+          ON  st.scv_id = tm.clinical_assertion_id
+          AND st.mapping_ref = tm.mapping_ref
+          AND st.mapping_type = tm.mapping_type
+          AND st.mapping_value = tm.mapping_value
+        LEFT JOIN alt_trait_mappings atm
+          ON  st.scv_id = atm.clinical_assertion_id
+          AND st.cat_name IS NULL
     """, '{S}', rec.schema_name);
-    SET temp_all_scv_traits_query = REPLACE(temp_all_scv_traits_query, '{CT}', temp_create);
-    SET temp_all_scv_traits_query = REPLACE(temp_all_scv_traits_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET temp_scv_trait_mappings_query = REPLACE(temp_scv_trait_mappings_query, '{CT}', temp_create);
+    SET temp_scv_trait_mappings_query = REPLACE(temp_scv_trait_mappings_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE temp_all_scv_traits_query;
+    EXECUTE IMMEDIATE temp_scv_trait_mappings_query;
 
     -- -----------------------------------------------------------------------
-    -- STEP 9: Create temp_all_mapped_scv_traits
-    -- -----------------------------------------------------------------------
-    SET temp_all_mapped_scv_traits_query = REPLACE("""
-      {CT} {P}.temp_all_mapped_scv_traits
+    -- STEP 8: Create temp_scv_trait_assignment_stage1
+    -- Use temp_scv_trait_mappings to find rcv "normalized" traits
+    -- associations to scv traits.
+    -- -----------------------------------------------------------------------  
+    SET temp_scv_trait_assignment_stage1_query = REPLACE("""
+      {CT} {P}.temp_scv_trait_assignment_stage1
       AS
-        WITH scv_trait_base_mappings AS (
+        WITH medgen_scv_traits AS (
           SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.trait_set_id,
-            ast.cat_type,
-            ast.cat_name,
-            ast.cat_medgen_id,
-            FORMAT("scv trait: preferred name '%s'", LOWER(ast.cat_name)) AS tm_match,
-            ntm.mapping_type,
-            ntm.mapping_ref,
-            ntm.mapping_value,
-            ntm.medgen_id
-          FROM {P}.temp_all_scv_traits ast
-          JOIN {P}.temp_normalized_trait_mappings ntm
-          ON
-            ntm.clinical_assertion_id = ast.scv_id
-            AND
-            ntm.trait_type = ast.cat_type
-            AND
-            ntm.mapping_type = 'name'
-            AND
-            ntm.mapping_ref = 'preferred'
-            AND
-            ntm.mapping_value = lower(ast.cat_name)
-          UNION ALL
-          SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.trait_set_id,
-            ast.cat_type,
-            ast.cat_name,
-            ast.cat_medgen_id,
-            FORMAT("scv trait: medgen id '%s'", LOWER(ast.medgen_id)) AS tm_match,
-            ntm.mapping_type,
-            ntm.mapping_ref,
-            ntm.mapping_value,
-            ntm.medgen_id
-          FROM {P}.temp_all_scv_traits ast
-          JOIN {P}.temp_normalized_trait_mappings ntm
-          ON
-            ntm.clinical_assertion_id = ast.scv_id
-            AND
-            ntm.trait_type = ast.cat_type
-            AND
-            ntm.mapping_type = 'xref'
-            AND
-            ntm.mapping_ref = 'medgen'
-            AND
-            ntm.mapping_value = lower(ast.medgen_id)
-          UNION ALL
-          SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.trait_set_id,
-            ast.cat_type,
-            ast.cat_name,
-            ast.cat_medgen_id,
-            FORMAT("scv trait: omim id '%s'", LOWER(ast.omim_id)) AS tm_match,
-            ntm.mapping_type,
-            ntm.mapping_ref,
-            ntm.mapping_value,
-            ntm.medgen_id
-          FROM {P}.temp_all_scv_traits ast
-          JOIN {P}.temp_normalized_trait_mappings ntm
-          ON
-            ntm.clinical_assertion_id = ast.scv_id
-            AND
-            ntm.trait_type = ast.cat_type
-            AND
-            ntm.mapping_type = 'xref'
-            AND
-            ntm.mapping_ref like 'omim%'
-            AND
-            ntm.mapping_value = lower(ast.omim_id)
-          UNION ALL
-          SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.trait_set_id,
-            ast.cat_type,
-            ast.cat_name,
-            ast.cat_medgen_id,
-            FORMAT("scv trait: mondo id '%s'", LOWER(ast.mondo_id)) AS tm_match,
-            ntm.mapping_type,
-            ntm.mapping_ref,
-            ntm.mapping_value,
-            ntm.medgen_id
-          FROM {P}.temp_all_scv_traits ast
-          JOIN {P}.temp_normalized_trait_mappings ntm
-          ON
-            ntm.clinical_assertion_id = ast.scv_id
-            AND
-            ntm.trait_type = ast.cat_type
-            AND
-            ntm.mapping_type = 'xref'
-            AND
-            ntm.mapping_ref = 'mondo'
-            AND
-            ntm.mapping_value = lower(ast.mondo_id)
-          UNION ALL
-          SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.trait_set_id,
-            ast.cat_type,
-            ast.cat_name,
-            ast.cat_medgen_id,
-            FORMAT("scv trait: hpo id '%s'", LOWER(ast.hp_id)) AS tm_match,
-            ntm.mapping_type,
-            ntm.mapping_ref,
-            ntm.mapping_value,
-            ntm.medgen_id
-          FROM {P}.temp_all_scv_traits ast
-          JOIN {P}.temp_normalized_trait_mappings ntm
-          ON
-            ntm.clinical_assertion_id = ast.scv_id
-            AND
-            ntm.trait_type = ast.cat_type
-            AND
-            ntm.mapping_type = 'xref'
-            AND
-            ntm.mapping_ref IN ('hp', 'hpo', 'human phenotype ontology')
-            AND
-            ntm.mapping_value = lower(ast.hp_id)
-          UNION ALL
-          SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.trait_set_id,
-            ast.cat_type,
-            ast.cat_name,
-            ast.cat_medgen_id,
-            FORMAT("scv trait: mesh id '%s'", LOWER(ast.mesh_id)) AS tm_match,
-            ntm.mapping_type,
-            ntm.mapping_ref,
-            ntm.mapping_value,
-            ntm.medgen_id
-          from {P}.temp_all_scv_traits ast
-          join {P}.temp_normalized_trait_mappings ntm
-          on
-            ntm.clinical_assertion_id = ast.scv_id
-            AND
-            ntm.trait_type = ast.cat_type
-            AND
-            ntm.mapping_type = 'xref'
-            AND
-            ntm.mapping_ref = 'mesh'
-            AND
-            ntm.mapping_value = lower(ast.mesh_id)
-          UNION ALL
-          SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.trait_set_id,
-            ast.cat_type,
-            ast.cat_name,
-            ast.cat_medgen_id,
-            FORMAT("scv trait: orphanet id '%s'", LOWER(ast.orphanet_id)) AS tm_match,
-            ntm.mapping_type,
-            ntm.mapping_ref,
-            ntm.mapping_value,
-            ntm.medgen_id
-          FROM {P}.temp_all_scv_traits ast
-          JOIN {P}.temp_normalized_trait_mappings ntm
-          ON
-            ntm.clinical_assertion_id = ast.scv_id
-            AND
-            ntm.trait_type = ast.cat_type
-            AND
-            ntm.mapping_type = 'xref'
-            AND
-            ntm.mapping_ref = 'orphanet'
-            AND
-            ntm.mapping_value = lower(ast.orphanet_id)
+            stm.scv_id,
+            stm.cat_id,
+            stm.cat_name,
+            stm.cat_medgen_id,
+            stm.cat_type,
+            stm.submitted_xrefs,
+            stm.rcv_trait_set_id,
+            stm.tm_medgen_id,
+            stm.tm_medgen_name,
+            stm.mapping_type,
+            stm.mapping_ref,
+            stm.mapping_value,
+            stm.cats_trait_count,
+            stm.rcv_trait_count,
+            stm.multiple_condition_explanation,
+            COALESCE(stm.tm_medgen_id, stm.cat_medgen_id) AS lookup_medgen_id
+          FROM {P}.temp_scv_trait_mappings stm
         ),
-        single_trait_mapping_remaining AS (
+        scv_traits AS (
           SELECT
-            ast.scv_id
-          FROM {P}.temp_all_scv_traits ast
-          LEFT JOIN scv_trait_base_mappings stbm
-          ON
-            stbm.cat_id = ast.cat_id
-          WHERE
-            stbm.cat_id IS NULL
-            AND
-            ast.total_cat_cnt = ast.total_tm_count
-          GROUP BY
-            ast.scv_id
-          HAVING COUNT(*) = 1
-        )
-        SELECT
-          ast.scv_id,
-          ast.cat_id,
-          ast.trait_set_id,
-          ast.cat_type,
-          ast.cat_name,
-          ast.cat_medgen_id,
-          'scv trait: default to remaining trait mapping' AS tm_match,
-          ntm.mapping_type,
-          ntm.mapping_ref,
-          ntm.mapping_value,
-          ntm.medgen_id
-        FROM single_trait_mapping_remaining stmr
-        JOIN {P}.temp_all_scv_traits ast
-        ON
-          ast.scv_id = stmr.scv_id
-        LEFT JOIN scv_trait_base_mappings stbm
-        ON
-          stbm.cat_id = ast.cat_id
-        LEFT JOIN {P}.temp_normalized_trait_mappings ntm
-        ON
-          ntm.clinical_assertion_id = ast.scv_id
-          AND
-          (
-            ntm.mapping_type IS DISTINCT FROM stbm.mapping_type
-            AND
-            ntm.mapping_ref IS DISTINCT FROM stbm.mapping_ref
-            AND
-            ntm.mapping_value IS DISTINCT FROM stbm.mapping_value
-          )
-        WHERE
-          stbm.cat_id IS NULL
-        UNION ALL
-        SELECT
-          stbm.scv_id,
-          stbm.cat_id,
-          stbm.trait_set_id,
-          stbm.cat_type,
-          stbm.cat_name,
-          stbm.cat_medgen_id,
-          stbm.tm_match,
-          stbm.mapping_type,
-          stbm.mapping_ref,
-          stbm.mapping_value,
-          stbm.medgen_id
-        FROM scv_trait_base_mappings stbm
-    """, '{S}', rec.schema_name);
-    SET temp_all_mapped_scv_traits_query = REPLACE(temp_all_mapped_scv_traits_query, '{CT}', temp_create);
-    SET temp_all_mapped_scv_traits_query = REPLACE(temp_all_mapped_scv_traits_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE temp_all_mapped_scv_traits_query;
-
-    -- -----------------------------------------------------------------------
-    -- STEP 10: Create temp_rcv_trait_assignment_stage1
-    -- -----------------------------------------------------------------------
-    SET temp_rcv_trait_assignment_stage1_query = REPLACE("""
-      {CT} {P}.temp_rcv_trait_assignment_stage1
-      AS
-        -- Assign rcv traits to ca traits
-        -- 1st match attempt: trait-mapping medgen_id to rcv medgen_id
-        -- 2nd match attempt: trait-mapping mapping ref/type/values
-        WITH rcv_trait_medgen_assignment AS (
-          SELECT DISTINCT
-            amst.scv_id,
-            amst.cat_id,
-            amst.tm_match as cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'rcv-tm medgen id' AS assign_type
-          from {P}.temp_all_mapped_scv_traits amst
-          JOIN {P}.temp_all_rcv_traits art
-          on
-            amst.trait_set_id = art.trait_set_id
-            AND
-            amst.medgen_id = art.medgen_id
+            mst.scv_id,
+            mst.cat_id,
+            mst.cat_name AS submitted_name,
+            mst.cat_medgen_id AS submitted_medgen_id,
+            mst.cat_type AS submitted_type,
+            mst.submitted_xrefs,
+            mst.rcv_trait_set_id,
+            mst.tm_medgen_id,
+            mst.tm_medgen_name,
+            mst.lookup_medgen_id,
+            mst.mapping_type,
+            mst.mapping_ref,
+            mst.mapping_value,
+            mst.cats_trait_count,
+            mst.rcv_trait_count,
+            mst.multiple_condition_explanation,
+            gt.trait_id AS mapped_trait_id,
+            gt.name AS mapped_trait_name,
+            gt.conceptType AS mapped_trait_type,
+            gt.primaryCoding.code AS mapped_medgen_id,
+            IF(gt.trait_id IS NOT NULL, 'trait-mapping-then-submitted-medgen-id', NULL) AS mapped_resolution_type
+          FROM medgen_scv_traits mst
+          LEFT JOIN `{S}.gks_traits` gt
+            ON gt.primaryCoding.code = mst.lookup_medgen_id
         ),
-        unassigned_scv_traits AS (
+        -- Pivot each SCV trait's match key into a row with priority
+        -- Priority: medgen(1) > preferred name(2) > omim(3) > mondo(4) > HP(5) > omim.ps(6) > orpha(7) > mesh(8)
+        st_lookup AS (
+          SELECT cat_id, rcv_trait_set_id, 1 AS priority, lookup_medgen_id AS match_value, 'tm reftype xref medgen' AS resolution_type
+          FROM scv_traits WHERE mapping_type = 'XRef' AND mapping_ref = 'medgen'
+          UNION ALL
+          SELECT cat_id, rcv_trait_set_id, 2, IFNULL(mapped_trait_name, tm_medgen_name),'tm reftype preferred name'
+          FROM scv_traits WHERE mapping_type = 'Name' AND mapping_ref = 'preferred' 
+          UNION ALL
+          SELECT cat_id, rcv_trait_set_id, 3, mapping_value, 'tm reftype xref omim'
+          FROM scv_traits WHERE mapping_type = 'XRef' AND mapping_ref = 'omim'
+          UNION ALL
+          SELECT cat_id, rcv_trait_set_id, 4, 'MONDO:' || mapping_value, 'tm reftype xref mondo'
+          FROM scv_traits WHERE mapping_type = 'XRef' AND mapping_ref = 'mondo'
+          UNION ALL
+          SELECT cat_id, rcv_trait_set_id, 5, 'HP:' || mapping_value, 'tm reftype xref HP'
+          FROM scv_traits WHERE mapping_type = 'XRef' AND mapping_ref = 'HP'
+          UNION ALL
+          SELECT cat_id, rcv_trait_set_id, 6, mapping_value, 'tm reftype xref omim.ps'
+          FROM scv_traits WHERE mapping_type = 'XRef' AND mapping_ref = 'omim.ps'
+          UNION ALL
+          SELECT cat_id, rcv_trait_set_id, 7, mapping_value, 'tm reftype xref orpha'
+          FROM scv_traits WHERE mapping_type = 'XRef' AND mapping_ref = 'orpha'
+          UNION ALL
+          SELECT cat_id, rcv_trait_set_id, 8, mapping_value, 'tm reftype xref mesh'
+          FROM scv_traits WHERE mapping_type = 'XRef' AND mapping_ref = 'mesh'
+        ),
+        -- Flatten temp_all_rcv_traits into a lookup: one row per (trait_set_id, match_value)
+        art_lookup AS (
+          -- medgen (priority 1)
+          SELECT rcv_trait_set_id, medgen_id AS match_value,
+            rcv_trait_id, rcv_trait_name, rcv_trait_type, rcv_trait_relationship_type, medgen_id
+          FROM {P}.temp_all_rcv_traits
+          WHERE medgen_id IS NOT NULL
+          UNION ALL
+          -- preferred name (priority 2) — normalized
+          SELECT rcv_trait_set_id, rcv_trait_name, 
+            rcv_trait_id, rcv_trait_name, rcv_trait_type, rcv_trait_relationship_type, medgen_id
+          FROM {P}.temp_all_rcv_traits
+          WHERE rcv_trait_name IS NOT NULL
+          UNION ALL
+          -- omim (priority 3)
+          SELECT rcv_trait_set_id, omim_id,
+            rcv_trait_id, rcv_trait_name, rcv_trait_type, rcv_trait_relationship_type, medgen_id
+          FROM {P}.temp_all_rcv_traits, UNNEST(omim_ids) AS omim_id
+          UNION ALL
+          -- mondo (priority 4)
+          SELECT rcv_trait_set_id, mondo_id,
+            rcv_trait_id, rcv_trait_name, rcv_trait_type, rcv_trait_relationship_type, medgen_id
+          FROM {P}.temp_all_rcv_traits, UNNEST(mondo_ids) AS mondo_id
+          UNION ALL
+          -- HP (priority 5)
+          SELECT rcv_trait_set_id, hp_id,
+            rcv_trait_id, rcv_trait_name, rcv_trait_type, rcv_trait_relationship_type, medgen_id
+          FROM {P}.temp_all_rcv_traits, UNNEST(hp_ids) AS hp_id
+          UNION ALL
+          -- omim.ps (priority 6)
+          SELECT rcv_trait_set_id, omimps_id,
+            rcv_trait_id, rcv_trait_name, rcv_trait_type, rcv_trait_relationship_type, medgen_id
+          FROM {P}.temp_all_rcv_traits, UNNEST(omimps_ids) AS omimps_id
+          UNION ALL
+          -- orpha (priority 7)
+          SELECT rcv_trait_set_id, orphanet_id,
+            rcv_trait_id, rcv_trait_name, rcv_trait_type, rcv_trait_relationship_type, medgen_id
+          FROM {P}.temp_all_rcv_traits, UNNEST(orphanet_ids) AS orphanet_id
+          UNION ALL
+          -- mesh (priority 8)
+          SELECT rcv_trait_set_id, mesh_id,
+            rcv_trait_id, rcv_trait_name, rcv_trait_type, rcv_trait_relationship_type, medgen_id
+          FROM {P}.temp_all_rcv_traits, UNNEST(mesh_ids) AS mesh_id
+        ),
+        -- Single join: match st_lookup to art_lookup on trait_set + match_value
+        all_matches AS (
           SELECT
-            amst.scv_id,
-            amst.cat_id,
-            amst.cat_name,
-            amst.cat_medgen_id,
-            amst.tm_match as cat_tm_match,
-            amst.trait_set_id,
-            amst.cat_type,
-            amst.mapping_type,
-            amst.mapping_ref,
-            amst.mapping_value,
-            amst.medgen_id
-          from {P}.temp_all_mapped_scv_traits amst
-          left join rcv_trait_medgen_assignment rtma
-          on
-            rtma.cat_id = amst.cat_id
-          where
-            rtma.cat_id is null
+            sl.cat_id,
+            sl.priority,
+            sl.resolution_type,
+            al.rcv_trait_set_id AS normalized_trait_set_id,
+            al.rcv_trait_id AS normalized_trait_id,
+            al.rcv_trait_name AS normalized_trait_name,
+            al.rcv_trait_type AS normalized_trait_type,
+            al.rcv_trait_relationship_type AS normalized_trait_relationship_type,
+            al.medgen_id AS normalized_trait_medgen_id
+          FROM st_lookup sl
+          JOIN art_lookup al
+            ON al.rcv_trait_set_id = sl.rcv_trait_set_id
+            AND al.match_value = sl.match_value
         ),
-        rcv_trait_reftype_assignment AS (
-          --   process the various trait_mapping ref/type records with their rcv trait record
-          --   (DO NOT compare trait_type for rcv trait to trait mapping values)
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'tm reftype preferred name' AS assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            ust.trait_set_id = art.trait_set_id
-            AND
-            ust.mapping_type = 'name'
-            AND
-            ust.mapping_ref = 'preferred'
-          WHERE
-            ust.mapping_value = lower(art.trait_name)
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'tm reftype alternate name' AS assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            ust.trait_set_id = art.trait_set_id
-            AND
-            ust.mapping_type = 'name'
-            AND
-            ust.mapping_ref = 'alternate'
-          CROSS JOIN UNNEST(art.alternate_names) as alt_name
-          WHERE
-            ust.mapping_value = lower(alt_name)
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'tm reftype xref medgen' AS assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            ust.trait_set_id = art.trait_set_id
-            AND
-            ust.mapping_type = 'xref'
-            AND
-            ust.mapping_ref = 'medgen'
-          WHERE
-            ust.mapping_value = lower(art.medgen_id)
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'tm reftype xref omim' AS assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            ust.trait_set_id = art.trait_set_id
-            AND
-            ust.mapping_type = 'xref'
-            AND
-            ust.mapping_ref like 'omim%'
-          CROSS JOIN UNNEST(art.omim_ids) as omim_id
-          WHERE
-            ust.mapping_value = LOWER(omim_id)
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'tm reftype xref mondo' AS assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            ust.trait_set_id = art.trait_set_id
-            AND
-            ust.mapping_type = 'xref'
-            AND
-            ust.mapping_ref = 'mondo'
-          CROSS JOIN UNNEST(art.mondo_ids) as mondo_id
-          WHERE
-            ust.mapping_value = LOWER(mondo_id)
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'tm reftype xref hp' AS assign_type
-          from unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          on
-            ust.trait_set_id = art.trait_set_id
-            AND
-            ust.mapping_type = 'xref'
-            AND
-            ust.mapping_ref IN ('hp', 'hpo', 'human phenotype ontology')
-          CROSS JOIN UNNEST(art.hp_ids) as hp_id
-          WHERE
-            ust.mapping_value = LOWER(hp_id)
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'tm reftype xref mesh' AS assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            ust.trait_set_id = art.trait_set_id
-            AND
-            ust.mapping_type = 'xref'
-            AND
-            ust.mapping_ref = 'mesh'
-          CROSS JOIN UNNEST(art.mesh_ids) as mesh_id
-          WHERE
-            ust.mapping_value = LOWER(mesh_id)
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'tm reftype xref orphanet' AS assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            ust.trait_set_id = art.trait_set_id
-            AND
-            ust.mapping_type = 'xref'
-            AND
-            ust.mapping_ref = 'orphanet'
-          CROSS JOIN UNNEST(art.orphanet_ids) as orphanet_id
-          WHERE
-            ust.mapping_value = LOWER(orphanet_id)
-        )
-        select
-          scv_id,
-          cat_id,
-          cat_tm_match,
-          trait_set_id,
-          trait_id,
-          trait_name,
-          trait_type,
-          trait_relationship_type,
-          trait_medgen_id,
-          assign_type
-        FROM rcv_trait_medgen_assignment rtma
-        UNION ALL
-        SELECT
-          scv_id,
-          cat_id,
-          cat_tm_match,
-          trait_set_id,
-          trait_id,
-          trait_name,
-          trait_type,
-          trait_relationship_type,
-          trait_medgen_id,
-          assign_type
-        FROM rcv_trait_reftype_assignment rtra
-    """, '{S}', rec.schema_name);
-    SET temp_rcv_trait_assignment_stage1_query = REPLACE(temp_rcv_trait_assignment_stage1_query, '{CT}', temp_create);
-    SET temp_rcv_trait_assignment_stage1_query = REPLACE(temp_rcv_trait_assignment_stage1_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE temp_rcv_trait_assignment_stage1_query;
-
-    -- -----------------------------------------------------------------------
-    -- STEP 11: Create temp_rcv_trait_assignment_stage2
-    -- -----------------------------------------------------------------------
-    SET temp_rcv_trait_assignment_stage2_query = REPLACE("""
-      {CT} {P}.temp_rcv_trait_assignment_stage2
-      AS
-        WITH unassigned_scv_traits AS (
-          SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.cat_name,
-            ast.cat_medgen_id,
-            amst.tm_match as cat_tm_match,
-            ast.trait_set_id,
-            ast.hp_id,
-            ast.medgen_id,
-            ast.mesh_id,
-            ast.mondo_id,
-            ast.omim_id,
-            ast.orphanet_id,
-            ast.cats_trait_count,
-            ast.rcv_trait_count,
-            ast.total_cat_cnt,
-            ast.total_tm_count
-          FROM {P}.temp_all_scv_traits ast
-          LEFT JOIN {P}.temp_all_mapped_scv_traits amst
-          ON
-            amst.cat_id = ast.cat_id
-          LEFT JOIN {P}.temp_rcv_trait_assignment_stage1 rtas1
-          ON
-            rtas1.cat_id = ast.cat_id
-          WHERE
-            rtas1.cat_id is null
-        ),
-        singleton_unassigned_scv_traits AS (
-          -- figure out which remaining scv traits have only one trait left to map,
-          -- and figure out which trait ids are already mapped
-          SELECT
-            ust.scv_id,
-            ust.trait_set_id,
-            ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ust.cat_id),',') as cat_id,
-            ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ust.cat_tm_match),',') as cat_tm_match,
-            ARRAY_AGG(IF(rtas1.cat_id is null, null, STRUCT(rtas1.cat_id, rtas1.trait_id, rtas1.trait_name)) IGNORE NULLS) as assigned,
-            ARRAY_TO_STRING(ARRAY_AGG(DISTINCT IF(rtas1.trait_id is null, art.trait_id, null) ignore nulls),',') as unassigned_trait_id
-          FROM unassigned_scv_traits ust
-          LEFT JOIN {P}.temp_all_rcv_traits art
-          ON
-            art.trait_set_id = ust.trait_set_id
-          LEFT JOIN {P}.temp_rcv_trait_assignment_stage1 rtas1
-          ON
-            rtas1.scv_id = ust.scv_id
-            AND
-            rtas1.trait_id = art.trait_id
-          WHERE
-            ust.cats_trait_count = ust.rcv_trait_count
-          GROUP BY
-            ust.scv_id,
-            ust.trait_set_id
-          HAVING (
-            COUNT(distinct ust.cat_id) = 1
-            AND
-            COUNT(DISTINCT IF(rtas1.trait_id is null, art.trait_id, null)) = 1
-          )
-        ),
-        rcv_trait_singleton_assignment AS (
-          SELECT
-            s.scv_id,
-            s.cat_id,
-            s.cat_tm_match,
-            art.trait_set_id,
-            art.trait_id,
-            art.trait_name,
-            art.trait_type,
-            art.trait_relationship_type,
-            art.medgen_id as trait_medgen_id,
-            'single remaining trait' as assign_type
-          FROM singleton_unassigned_scv_traits AS s
-          -- join once to pull in all possible trait_set_traits for this trait_set_id
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            art.trait_set_id = s.trait_set_id
-            AND
-            art.trait_id = s.unassigned_trait_id
-
-          WHERE
-            -- HACK! exclude the duplicate 'not provided' trait in the '9460' trait set.
-            NOT (art.trait_id = '17556' and art.medgen_id = 'CN517202')
-        )
-        SELECT
-          scv_id,
-          cat_id,
-          cat_tm_match,
-          trait_set_id,
-          trait_id,
-          trait_name,
-          trait_type,
-          trait_relationship_type,
-          trait_medgen_id,
-          assign_type
-        FROM {P}.temp_rcv_trait_assignment_stage1 rtas1
-        UNION ALL
-        SELECT
-          scv_id,
-          cat_id,
-          cat_tm_match,
-          trait_set_id,
-          trait_id,
-          trait_name,
-          trait_type,
-          trait_relationship_type,
-          trait_medgen_id,
-          assign_type
-        FROM rcv_trait_singleton_assignment rtsa
-    """, '{S}', rec.schema_name);
-    SET temp_rcv_trait_assignment_stage2_query = REPLACE(temp_rcv_trait_assignment_stage2_query, '{CT}', temp_create);
-    SET temp_rcv_trait_assignment_stage2_query = REPLACE(temp_rcv_trait_assignment_stage2_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE temp_rcv_trait_assignment_stage2_query;
-
-    -- -----------------------------------------------------------------------
-    -- STEP 12: Create temp_rcv_trait_assignment_stage3
-    -- -----------------------------------------------------------------------
-    SET temp_rcv_trait_assignment_stage3_query = REPLACE("""
-      {CT} {P}.temp_rcv_trait_assignment_stage3
-      AS
-        WITH unassigned_scv_traits AS (
-          SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.cat_name,
-            ast.cat_medgen_id,
-            amst.tm_match as cat_tm_match,
-            ast.trait_set_id,
-            ast.hp_id,
-            ast.medgen_id,
-            ast.mesh_id,
-            ast.mondo_id,
-            ast.omim_id,
-            ast.orphanet_id,
-            ast.cats_trait_count,
-            ast.rcv_trait_count,
-            ast.total_cat_cnt,
-            ast.total_tm_count
-          FROM {P}.temp_all_scv_traits ast
-          LEFT JOIN {P}.temp_all_mapped_scv_traits amst
-          ON
-            amst.cat_id = ast.cat_id
-          LEFT JOIN {P}.temp_rcv_trait_assignment_stage2 rtas2
-          ON
-            rtas2.cat_id = ast.cat_id
-          WHERE
-            rtas2.cat_id is null
-        ),
-        rcv_trait_direct_assignment AS (
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            ust.trait_set_id,
-            nt.trait_id,
-            nt.trait_name,
-            nt.trait_type,
-            art.trait_relationship_type,
-            nt.medgen_id as trait_medgen_id,
-            'rcv-scv trait medgen_id' as assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            art.trait_set_id = ust.trait_set_id
-          JOIN {P}.temp_normalized_traits nt
-          ON
-            nt.trait_id = art.trait_id
-          WHERE
-            ust.medgen_id = art.medgen_id
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            ust.trait_set_id,
-            nt.trait_id,
-            nt.trait_name,
-            nt.trait_type,
-            art.trait_relationship_type,
-            nt.medgen_id as trait_medgen_id,
-            'rcv-scv trait omim_id' as assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            art.trait_set_id = ust.trait_set_id
-          JOIN {P}.temp_normalized_traits nt
-          ON
-            nt.trait_id = art.trait_id
-          CROSS JOIN UNNEST(nt.omim_ids) as omim_id
-          WHERE
-            ust.omim_id = omim_id
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            ust.trait_set_id,
-            nt.trait_id,
-            nt.trait_name,
-            nt.trait_type,
-            art.trait_relationship_type,
-            nt.medgen_id as trait_medgen_id,
-            'rcv-scv trait hp_id' as assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            art.trait_set_id = ust.trait_set_id
-          JOIN {P}.temp_normalized_traits nt
-          ON
-            nt.trait_id = art.trait_id
-          CROSS JOIN UNNEST(nt.hp_ids) as hp_id
-          WHERE
-            ust.hp_id = hp_id
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            ust.trait_set_id,
-            nt.trait_id,
-            nt.trait_name,
-            nt.trait_type,
-            art.trait_relationship_type,
-            nt.medgen_id as trait_medgen_id,
-            'rcv-scv trait mondo_id' as assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            art.trait_set_id = ust.trait_set_id
-          JOIN {P}.temp_normalized_traits nt
-          ON
-            nt.trait_id = art.trait_id
-          CROSS JOIN UNNEST(nt.mondo_ids) as mondo_id
-          WHERE
-            ust.mondo_id = mondo_id
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            ust.trait_set_id,
-            nt.trait_id,
-            nt.trait_name,
-            nt.trait_type,
-            art.trait_relationship_type,
-            nt.medgen_id as trait_medgen_id,
-            'rcv-scv trait orphanet_id' as assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            art.trait_set_id = ust.trait_set_id
-          JOIN {P}.temp_normalized_traits nt
-          ON
-            nt.trait_id = art.trait_id
-          CROSS JOIN UNNEST(nt.orphanet_ids) as orphanet_id
-          WHERE
-            ust.orphanet_id = orphanet_id
-          UNION ALL
-          SELECT DISTINCT
-            ust.scv_id,
-            ust.cat_id,
-            ust.cat_tm_match,
-            ust.trait_set_id,
-            nt.trait_id,
-            nt.trait_name,
-            nt.trait_type,
-            art.trait_relationship_type,
-            nt.medgen_id as trait_medgen_id,
-            'rcv-scv trait mesh_id' as assign_type
-          FROM unassigned_scv_traits ust
-          JOIN {P}.temp_all_rcv_traits art
-          ON
-            art.trait_set_id = ust.trait_set_id
-          JOIN {P}.temp_normalized_traits nt
-          ON
-            nt.trait_id = art.trait_id
-          CROSS JOIN UNNEST(nt.mesh_ids) as mesh_id
-          WHERE
-            ust.mesh_id = mesh_id
-        )
-        select
-          scv_id,
-          cat_id,
-          cat_tm_match,
-          trait_set_id,
-          trait_id,
-          trait_name,
-          trait_type,
-          trait_relationship_type,
-          trait_medgen_id,
-          assign_type
-        from {P}.temp_rcv_trait_assignment_stage2 rtas2
-        UNION ALL
-        select
-          scv_id,
-          cat_id,
-          cat_tm_match,
-          trait_set_id,
-          trait_id,
-          trait_name,
-          trait_type,
-          trait_relationship_type,
-          trait_medgen_id,
-          assign_type
-        from rcv_trait_direct_assignment rtda
-    """, '{S}', rec.schema_name);
-    SET temp_rcv_trait_assignment_stage3_query = REPLACE(temp_rcv_trait_assignment_stage3_query, '{CT}', temp_create);
-    SET temp_rcv_trait_assignment_stage3_query = REPLACE(temp_rcv_trait_assignment_stage3_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE temp_rcv_trait_assignment_stage3_query;
-
-    -- -----------------------------------------------------------------------
-    -- STEP 13: Create temp_rcv_trait_assignment_stage4
-    -- -----------------------------------------------------------------------
-    SET temp_rcv_trait_assignment_stage4_query = REPLACE("""
-      {CT} {P}.temp_rcv_trait_assignment_stage4
-      AS
-        WITH unassigned_scv_traits AS (
-          SELECT
-            ast.scv_id,
-            ast.cat_id,
-            ast.trait_set_id,
-            ast.cat_name,
-            amst.tm_match as cat_tm_match,
-            ast.hp_id,
-            ast.medgen_id,
-            ast.mesh_id,
-            ast.mondo_id,
-            ast.omim_id,
-            ast.orphanet_id,
-            ast.cats_trait_count,
-            ast.rcv_trait_count,
-            ast.total_cat_cnt,
-            ast.total_tm_count
-          FROM {P}.temp_all_scv_traits ast
-          LEFT JOIN {P}.temp_all_mapped_scv_traits amst
-          ON
-            amst.cat_id = ast.cat_id
-          LEFT JOIN {P}.temp_rcv_trait_assignment_stage3 rtas3
-          ON
-            rtas3.cat_id = ast.cat_id
-          WHERE
-            rtas3.cat_id is null
-        ),
-        -- Explode gks_normalized_traits into a flat lookup of (trait_id, assign_type, priority, match_value)
-        -- Priority order matches the original cascade: omim(1) > hp(2) > orphanet(3) > mondo(4) > mesh(5) > name(6) > alt_name(7) > medgen_fallback(8)
-        nt_lookup AS (
-          SELECT trait_id, trait_name, trait_type, medgen_id as trait_medgen_id,
-            'rcv-scv rogue trait omim_id' as assign_type, 1 as priority, LOWER(xref_val) as match_value
-          FROM {P}.temp_normalized_traits, UNNEST(omim_ids) as xref_val
-          UNION ALL
-          SELECT trait_id, trait_name, trait_type, medgen_id,
-            'rcv-scv rogue trait hp_id', 2, LOWER(xref_val)
-          FROM {P}.temp_normalized_traits, UNNEST(hp_ids) as xref_val
-          UNION ALL
-          SELECT trait_id, trait_name, trait_type, medgen_id,
-            'rcv-scv rogue trait orphanet_id', 3, LOWER(xref_val)
-          FROM {P}.temp_normalized_traits, UNNEST(orphanet_ids) as xref_val
-          UNION ALL
-          SELECT trait_id, trait_name, trait_type, medgen_id,
-            'rcv-scv rogue trait mondo_id', 4, LOWER(xref_val)
-          FROM {P}.temp_normalized_traits, UNNEST(mondo_ids) as xref_val
-          UNION ALL
-          SELECT trait_id, trait_name, trait_type, medgen_id,
-            'rcv-scv rogue trait mesh_id', 5, LOWER(xref_val)
-          FROM {P}.temp_normalized_traits, UNNEST(mesh_ids) as xref_val
-          UNION ALL
-          SELECT trait_id, trait_name, trait_type, medgen_id,
-            'rcv-scv rogue trait name', 6, LOWER(trait_name)
-          FROM {P}.temp_normalized_traits
-          WHERE
-            NOT (trait_name = 'not provided' AND trait_id IN ('54780', '76440','76481','78165','78166','78167'))
-          UNION ALL
-          SELECT trait_id, trait_name, trait_type, medgen_id,
-            'rcv-scv rogue alternate trait name', 7, LOWER(alt_name)
-          FROM {P}.temp_normalized_traits, UNNEST(alternate_names) as alt_name
-          WHERE
-            NOT (alt_name = 'not provided' AND trait_id IN ('54780', '76440','76481','78165','78166','78167'))
-          UNION ALL
-          SELECT trait_id, trait_name, trait_type, medgen_id,
-            'rcv-scv rogue trait name', 8, LOWER(medgen_id)
-          FROM {P}.temp_normalized_traits
-        ),
-        -- Pivot each unassigned SCV trait's match keys into rows with the same priority scheme
-        ust_lookup AS (
-          SELECT cat_id, scv_id, cat_tm_match, trait_set_id, 1 as priority, LOWER(omim_id) as match_value
-          FROM unassigned_scv_traits WHERE omim_id IS NOT NULL
-          UNION ALL
-          SELECT cat_id, scv_id, cat_tm_match, trait_set_id, 2, LOWER(hp_id)
-          FROM unassigned_scv_traits WHERE hp_id IS NOT NULL
-          UNION ALL
-          SELECT cat_id, scv_id, cat_tm_match, trait_set_id, 3, LOWER(orphanet_id)
-          FROM unassigned_scv_traits WHERE orphanet_id IS NOT NULL
-          UNION ALL
-          SELECT cat_id, scv_id, cat_tm_match, trait_set_id, 4, LOWER(mondo_id)
-          FROM unassigned_scv_traits WHERE mondo_id IS NOT NULL
-          UNION ALL
-          SELECT cat_id, scv_id, cat_tm_match, trait_set_id, 5, LOWER(mesh_id)
-          FROM unassigned_scv_traits WHERE mesh_id IS NOT NULL
-          UNION ALL
-          SELECT cat_id, scv_id, cat_tm_match, trait_set_id, 6, LOWER(cat_name)
-          FROM unassigned_scv_traits WHERE cat_name IS NOT NULL
-          UNION ALL
-          SELECT cat_id, scv_id, cat_tm_match, trait_set_id, 7, LOWER(cat_name)
-          FROM unassigned_scv_traits WHERE cat_name IS NOT NULL
-          UNION ALL
-          SELECT cat_id, scv_id, cat_tm_match, trait_set_id, 8, LOWER(medgen_id)
-          FROM unassigned_scv_traits WHERE cat_name IS NULL AND medgen_id IS NOT NULL
-        ),
-        -- Join on matching priority + value, then keep all matches at the best priority per cat_id
-        all_rogue_matches AS (
-          SELECT DISTINCT
-            ul.scv_id,
-            ul.cat_id,
-            ul.cat_tm_match,
-            ul.trait_set_id,
-            ntl.trait_id,
-            ntl.trait_name,
-            ntl.trait_type,
-            CAST(null as STRING) as trait_relationship_type,
-            ntl.trait_medgen_id,
-            ntl.assign_type,
-            ntl.priority
-          FROM ust_lookup ul
-          JOIN nt_lookup ntl
-          ON
-            ul.priority = ntl.priority
-            AND
-            ul.match_value = ntl.match_value
-        ),
-        best_priority_rogue AS (
+        -- Pick best (lowest) priority per cat_id, with tiebreaker
+        best_match AS (
           SELECT
             *,
-            MIN(priority) OVER (PARTITION BY cat_id) as min_priority
-          FROM all_rogue_matches
+            ROW_NUMBER() OVER (
+              PARTITION BY cat_id
+              ORDER BY priority, normalized_trait_id
+            ) AS rn
+          FROM all_matches
+        )
+        -- Final: join back to scv_traits for the full row, LEFT JOIN best_match for assigned
+        SELECT
+          st.*,
+          bm.normalized_trait_set_id,
+          bm.normalized_trait_id,
+          bm.normalized_trait_name,
+          bm.normalized_trait_type,
+          bm.normalized_trait_relationship_type,
+          bm.normalized_trait_medgen_id,
+          bm.resolution_type AS normalized_resolution_type
+        FROM scv_traits st
+        LEFT JOIN best_match bm
+          ON bm.cat_id = st.cat_id
+          AND bm.rn = 1
+    """, '{S}', rec.schema_name);
+    SET temp_scv_trait_assignment_stage1_query = REPLACE(temp_scv_trait_assignment_stage1_query, '{CT}', temp_create);
+    SET temp_scv_trait_assignment_stage1_query = REPLACE(temp_scv_trait_assignment_stage1_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+
+    EXECUTE IMMEDIATE temp_scv_trait_assignment_stage1_query;
+
+    -- -----------------------------------------------------------------------
+    -- STEP 9: Create temp_scv_trait_assignment_stage2
+    -- Random trait assignment for remaining traits that have same number of
+    -- unassigned scv traits as there are normalized traits for the same set.
+    -- This will assign singletons as well as 2-to-2, 3-to-3, etc...
+    -- -----------------------------------------------------------------------
+    SET temp_scv_trait_assignment_stage2_query = REPLACE("""
+      {CT} {P}.temp_scv_trait_assignment_stage2
+      AS
+        WITH unassigned AS (
+          SELECT
+            stas1.*
+          FROM {P}.temp_scv_trait_assignment_stage1 stas1
+          WHERE 
+          stas1.normalized_trait_id IS NULL
+            AND stas1.rcv_trait_count = stas1.cats_trait_count
+        ),
+        -- Traits already assigned to this scv_id in stage1
+        already_assigned AS (
+          SELECT DISTINCT
+            stas1.scv_id,
+            stas1.normalized_trait_id,
+            stas1.mapped_trait_id
+          FROM {P}.temp_scv_trait_assignment_stage1 stas1
+          WHERE
+            stas1.normalized_trait_id IS NOT NULL
+        ),
+        -- Unassigned traits per (scv_id, rcv_trait_set_id): all traits in the
+        -- trait set minus those already assigned for this scv_id
+        unassigned_traits AS (
+          SELECT
+            u.scv_id,
+            u.rcv_trait_set_id,
+            art.rcv_trait_id,
+            ANY_VALUE(art.rcv_trait_name) AS rcv_trait_name,
+            ANY_VALUE(art.rcv_trait_type) AS rcv_trait_type,
+            ANY_VALUE(art.rcv_trait_relationship_type) AS rcv_trait_relationship_type,
+            ANY_VALUE(art.medgen_id) AS medgen_id
+          FROM (SELECT DISTINCT scv_id, rcv_trait_set_id FROM unassigned) u
+          JOIN {P}.temp_all_rcv_traits art
+            ON art.rcv_trait_set_id = u.rcv_trait_set_id
+          LEFT JOIN already_assigned aa
+            ON aa.scv_id = u.scv_id
+            AND aa.normalized_trait_id = art.rcv_trait_id
+          WHERE 
+            aa.normalized_trait_id IS NULL
+          GROUP BY 
+            u.scv_id, 
+            u.rcv_trait_set_id, 
+            art.rcv_trait_id
+        ),
+        -- Count unassigned cat_ids and unassigned traits per scv_id;
+        -- only eligible when counts match
+        unassigned_cat_counts AS (
+          SELECT scv_id, rcv_trait_set_id, COUNT(*) AS unassigned_cat_count
+          FROM unassigned
+          GROUP BY scv_id, rcv_trait_set_id
+        ),
+        unassigned_trait_counts AS (
+          SELECT scv_id, rcv_trait_set_id, COUNT(*) AS unassigned_trait_count
+          FROM unassigned_traits
+          GROUP BY scv_id, rcv_trait_set_id
+        ),
+        valid_groups AS (
+          SELECT
+            uc.scv_id,
+            uc.rcv_trait_set_id
+          FROM unassigned_cat_counts uc
+          JOIN unassigned_trait_counts ut
+            ON ut.scv_id = uc.scv_id
+            AND ut.rcv_trait_set_id = uc.rcv_trait_set_id
+          WHERE uc.unassigned_cat_count = ut.unassigned_trait_count
+        ),
+        numbered_unassigned AS (
+          SELECT
+            u.*,
+            ROW_NUMBER() OVER (PARTITION BY u.scv_id ORDER BY u.cat_id) AS rn
+          FROM unassigned u
+          JOIN valid_groups vg ON vg.scv_id = u.scv_id
+        ),
+        numbered_traits AS (
+          SELECT
+            ut.scv_id, ut.rcv_trait_set_id, ut.rcv_trait_id, ut.rcv_trait_name, ut.rcv_trait_type,
+            ut.rcv_trait_relationship_type, ut.medgen_id,
+            ROW_NUMBER() OVER (PARTITION BY ut.scv_id ORDER BY ut.rcv_trait_id) AS rn
+          FROM unassigned_traits ut
+          JOIN valid_groups vg
+            ON vg.scv_id = ut.scv_id
+            AND vg.rcv_trait_set_id = ut.rcv_trait_set_id
         )
         SELECT
-          scv_id,
-          cat_id,
-          cat_tm_match,
-          trait_set_id,
-          trait_id,
-          trait_name,
-          trait_type,
-          trait_relationship_type,
-          trait_medgen_id,
-          assign_type
-        FROM {P}.temp_rcv_trait_assignment_stage3 rtas3
-        UNION ALL
-        SELECT
-          scv_id,
-          cat_id,
-          cat_tm_match,
-          trait_set_id,
-          trait_id,
-          trait_name,
-          trait_type,
-          trait_relationship_type,
-          trait_medgen_id,
-          assign_type
-        FROM best_priority_rogue
-        WHERE priority = min_priority
+          nu.* EXCEPT(
+            rn,
+            normalized_trait_set_id,
+            normalized_trait_id,
+            normalized_trait_name,
+            normalized_trait_type,
+            normalized_trait_relationship_type,
+            normalized_trait_medgen_id,
+            normalized_resolution_type
+          ),
+          nt.rcv_trait_set_id as normalized_trait_set_id,
+          nt.rcv_trait_id as normalized_trait_id,
+          nt.rcv_trait_name as normalized_trait_name,
+          nt.rcv_trait_type as normalized_trait_type,
+          nt.rcv_trait_relationship_type as normalized_trait_relationship_type,
+          nt.medgen_id as normalized_trait_medgen_id,
+          'random trait assignment' AS normalized_resolution_type
+        FROM numbered_unassigned nu
+        LEFT JOIN numbered_traits nt
+          ON nt.scv_id = nu.scv_id
+          AND nt.rn = nu.rn
+        UNION ALL 
+        SELECT stas1.*
+        FROM {P}.temp_scv_trait_assignment_stage1 stas1
+        LEFT JOIN numbered_unassigned nu
+        ON
+          nu.cat_id = stas1.cat_id
+        WHERE nu.cat_id IS NULL
     """, '{S}', rec.schema_name);
-    SET temp_rcv_trait_assignment_stage4_query = REPLACE(temp_rcv_trait_assignment_stage4_query, '{CT}', temp_create);
-    SET temp_rcv_trait_assignment_stage4_query = REPLACE(temp_rcv_trait_assignment_stage4_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET temp_scv_trait_assignment_stage2_query = REPLACE(temp_scv_trait_assignment_stage2_query, '{CT}', temp_create);
+    SET temp_scv_trait_assignment_stage2_query = REPLACE(temp_scv_trait_assignment_stage2_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE temp_rcv_trait_assignment_stage4_query;
+    EXECUTE IMMEDIATE temp_scv_trait_assignment_stage2_query;
 
-    -- -----------------------------------------------------------------------
-    -- STEP 14: Create gks_scv_condition_mapping
-    -- -----------------------------------------------------------------------
-    SET gks_scv_condition_mapping_query = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_scv_condition_mapping`
-      AS
-        SELECT
-          rtas4.scv_id,
-          rtas4.cat_id,
-          rtas4.trait_set_id,
-          ast.cat_name,
-          ast.cat_medgen_id,
-          ast.cat_type,
-          rtas4.cat_tm_match,
-          rtas4.trait_id,
-          rtas4.trait_name,
-          rtas4.trait_relationship_type,
-          rtas4.trait_medgen_id,
-          rtas4.assign_type,
-          amst.mapping_type,
-          amst.mapping_ref,
-          amst.mapping_value,
-          amst.medgen_id,
-          ast.submitted_xrefs
-        FROM {P}.temp_rcv_trait_assignment_stage4 rtas4
-        JOIN {P}.temp_all_scv_traits ast
-        ON
-          rtas4.cat_id = ast.cat_id
-        LEFT JOIN {P}.temp_all_mapped_scv_traits amst
-        ON
-          amst.cat_id = ast.cat_id
-        UNION ALL
-        SELECT
-          ast.scv_id,
-          ast.cat_id,
-          ast.trait_set_id,
-          ast.cat_name,
-          ast.cat_medgen_id,
-          ast.cat_type,
-          amst.tm_match as cat_tm_match,
-          CAST(null as STRING) as trait_id,
-          CAST(null as STRING) as trait_name,
-          CAST(null as STRING) as trait_relationship_type,
-          CAST(null as STRING)  as trait_medgen_id,
-          'unassignable scv trait' as assign_type,
-          CAST(null as string) as mapping_type,
-          CAST(null as string) as mapping_ref,
-          CAST(null as string) as mapping_value,
-          CAST(null as string) as medgen_id,
-          [] as submitted_xrefs
-        FROM {P}.temp_all_scv_traits ast
-        LEFT JOIN {P}.temp_all_mapped_scv_traits amst
-        ON
-          amst.cat_id = ast.cat_id
-        LEFT JOIN {P}.temp_rcv_trait_assignment_stage4 rtas4
-        ON
-          rtas4.cat_id = ast.cat_id
-        WHERE
-          rtas4.cat_id is null
-
-    """, '{S}', rec.schema_name);
-    SET gks_scv_condition_mapping_query = REPLACE(gks_scv_condition_mapping_query, '{CT}', temp_create);
-    SET gks_scv_condition_mapping_query = REPLACE(gks_scv_condition_mapping_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE gks_scv_condition_mapping_query;
 
     -- -----------------------------------------------------------------------
-    -- STEP 15: Create gks_scv_condition_sets
+    -- STEP 10: Create gks_scv_condition_sets
     -- -----------------------------------------------------------------------
     SET query_condition_sets = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_scv_condition_sets`
       AS
-      WITH enriched_conditions AS (
-        -- Single scan: build condition records with trait count via window function
-        SELECT
-          scm.scv_id,
-          scm.cat_id as id,
-          scm.trait_id,
-          IFNULL(scm.cat_name, scm.trait_name) as name,
-          scm.cat_type as conceptType,
-          t.primaryCoding,
-          t.mappings,
-          ARRAY_CONCAT(
-            t.extensions,
-            IF(
-              ARRAY_LENGTH(scm.submitted_xrefs) > 0,
-              [STRUCT(
-                'submittedScvXrefs' as name,
-                CAST(null as string) as value_string,
-                scm.submitted_xrefs as value_array_codings
-              )],
-              []
-            ),
-            IF(
-              scm.cat_tm_match IS NOT NULL,
-              [STRUCT(
-                'submittedScvTraitAssignment' as name,
-                scm.cat_tm_match as value_string,
-                [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-              )],
-              []
-            ),
-            IF(
-              scm.assign_type IS NOT NULL,
-              [STRUCT(
-                'clinvarScvTraitAssignment' as name,
-                scm.assign_type as value_string,
-                [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-              )],
-              []
-            ),
-            IF(
-              scm.mapping_type IS NOT NULL,
-              [STRUCT(
-                'clinvarScvTraitMappingType:ref(val)' as name,
-                FORMAT('%s:%s(%s)', scm.mapping_type, scm.mapping_ref, scm.mapping_value) as value_string,
-                [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-              )],
-              []
+        WITH base_conditions AS (
+          -- 1. Build the heavy condition struct ONCE and calculate the window partition count.
+          -- This keeps the network shuffle tiny (just counting the scv_id partition).
+          SELECT 
+            scm.scv_id,
+            IF(scm.rcv_trait_count > 1, FORMAT('#/conditionSet/%s', ts.id), NULL) AS conditionSet,
+            IF(scm.rcv_trait_count = 1, ts.condition_refs[SAFE_OFFSET(0)], NULL) AS condition,
+            scm.multiple_condition_explanation,
+            scm.cats_trait_count as scv_trait_count,
+            STRUCT(
+              scm.cat_id AS id,
+              scm.submitted_name AS name,
+              scm.submitted_type AS type,
+              scm.submitted_medgen_id AS medgen_id,
+              IF(ARRAY_LENGTH(scm.submitted_xrefs) > 0, scm.submitted_xrefs, []) AS xrefs,
+              
+              IF(scm.mapped_trait_id IS NULL AND scm.normalized_trait_medgen_id IS DISTINCT FROM scm.tm_medgen_id,
+                STRUCT(scm.tm_medgen_id AS id, scm.tm_medgen_name AS name),
+                NULL
+              ) AS original_medgen_match,
+              
+              IF(scm.mapped_trait_id IS DISTINCT FROM scm.normalized_trait_id, 
+                FORMAT('#/condition/clinvar.trait:%s', scm.mapped_trait_id), 
+                NULL
+              ) AS direct_match,
+              
+              FORMAT('#/condition/clinvar.trait:%s', scm.normalized_trait_id) AS normalized_match,
+              scm.normalized_resolution_type AS normalized_resolution,
+              STRUCT(scm.mapping_type AS type, scm.mapping_ref AS ref, scm.mapping_value AS value) AS mapping
+            ) AS condition_struct
+          FROM 
+            {P}.temp_scv_trait_assignment_stage2 scm
+          LEFT JOIN `{S}.gks_trait_sets` 
+            ts ON FORMAT('clinvar.traitset:%s', scm.rcv_trait_set_id) = ts.id
+        ),
+        multi_sets AS (
+          -- 2a. Aggregate ONLY multi-condition records. 
+          -- We only pay the memory/CPU penalty for ARRAY_AGG and regex sorting on rows that actually need it.
+          SELECT
+            scv_id,
+            STRUCT(
+              conditionSet,
+              condition,
+              multiple_condition_explanation,
+              ARRAY_AGG(condition_struct ORDER BY CAST(REGEXP_EXTRACT(condition_struct.id, r'\\.(\\d+)$') AS INT)) AS concepts
+            ) AS value_submitted_condition_set
+          FROM base_conditions
+          WHERE scv_trait_count > 1
+          GROUP BY scv_id, conditionSet, condition, multiple_condition_explanation
+        ),
+        singles AS (
+          -- 2b. Isolate single-condition records. 
+          -- Zero aggregation, zero regex, zero shuffle footprint.
+          SELECT
+            scv_id,
+            (SELECT AS STRUCT
+              conditionSet,
+              condition,
+              condition_struct.*
             )
-          ) as extensions,
-          scm.trait_relationship_type,
-          COUNT(*) OVER (PARTITION BY scm.scv_id) as trait_count
-        FROM `{S}.gks_scv_condition_mapping` scm
-        LEFT JOIN `{S}.gks_traits` t
-        ON
-          t.trait_id = scm.trait_id
-      ),
-      multi_sets AS (
-        -- Aggregate only for multi-condition SCVs
+            AS value_submitted_condition
+          FROM base_conditions
+          WHERE scv_trait_count = 1
+        )
+        -- 3. Final assembly. 
+        -- A double LEFT JOIN on mutually exclusive subsets is highly performant in BigQuery columnar storage.
         SELECT
-          ec.scv_id,
-          ARRAY_AGG(
-            STRUCT(ec.id, ec.name, ec.conceptType, ec.primaryCoding, ec.mappings, ec.extensions)
-          ) as conditions,
-          IF(
-            ANY_VALUE(ec.trait_relationship_type) IN ('Finding member','co-occurring condition'),
-            'AND',
-            'OR'
-          ) as membershipOperator
-        FROM enriched_conditions ec
-        WHERE ec.trait_count > 1
-        GROUP BY ec.scv_id
-      )
-      SELECT
-        gsts.scv_id,
-        IF(
-          ec.id IS NOT NULL,
+          gsts.scv_id,
           STRUCT(
-            IF(ec.trait_id IS NOT NULL, FORMAT('clinvar.trait:%s', ec.trait_id), ec.id) as id,
-            ec.name,
-            ec.conceptType,
-            ec.primaryCoding,
-            ec.mappings,
-            ARRAY_CONCAT(
-              ec.extensions,
-              gsts.extensions,
-              IF(
-                gsts.cats_type IS NOT NULL
-                AND
-                gsts.cats_type IS DISTINCT FROM gsts.trait_set_type,
-                [STRUCT(
-                  'submittedScvTraitSetType' as name,
-                  gsts.cats_type as value_string,
-                  [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-                )],
-                []
-              )
-            ) as extensions
-          ),
-          NULL
-        ) as condition,
-        IF(
-          ms.scv_id IS NOT NULL,
-          STRUCT(
-            FORMAT('clinvar.traitset:%s', gsts.trait_set_id) as id,
-            ms.conditions,
-            ms.membershipOperator,
-            ARRAY_CONCAT(
-              gsts.extensions,
-              IF(
-                gsts.cats_type IS NOT NULL
-                AND
-                gsts.cats_type IS DISTINCT FROM gsts.trait_set_type,
-                [STRUCT(
-                  'submittedScvTraitSetType' as name,
-                  gsts.cats_type as value_string,
-                  [STRUCT(CAST(null as STRING) as code, CAST(null as STRING) as system)] as value_array_codings
-                )],
-                []
-              )
-            ) as extensions
-          ),
-          NULL
-        ) as conditionSet
-      FROM {P}.temp_gks_scv_trait_sets gsts
-      LEFT JOIN multi_sets ms
-      ON
-        ms.scv_id = gsts.scv_id
-      LEFT JOIN enriched_conditions ec
-      ON
-        ms.scv_id IS NULL AND ec.scv_id = gsts.scv_id
+            -- Dynamically assign the name based on which join successfully hit
+            IF(ms.scv_id IS NOT NULL, 'submittedConditionSet', 'submittedCondition') AS name,
+            ms.value_submitted_condition_set,
+            s.value_submitted_condition
+          ) AS extensions
+        FROM 
+          {P}.temp_gks_scv_trait_sets gsts
+        LEFT JOIN 
+          multi_sets ms ON ms.scv_id = gsts.scv_id
+        LEFT JOIN 
+          singles s ON s.scv_id = gsts.scv_id
     """, '{S}', rec.schema_name);
     SET query_condition_sets = REPLACE(query_condition_sets, '{CT}', temp_create);
     SET query_condition_sets = REPLACE(query_condition_sets, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+
     EXECUTE IMMEDIATE query_condition_sets;
 
     IF NOT debug THEN
-      DROP TABLE IF EXISTS _SESSION.temp_normalized_trait_mappings;
+
       DROP TABLE IF EXISTS _SESSION.temp_rcv_mapping_traits;
       DROP TABLE IF EXISTS _SESSION.temp_gks_scv_trait_sets;
       DROP TABLE IF EXISTS _SESSION.temp_all_rcv_traits;
-      DROP TABLE IF EXISTS _SESSION.temp_normalized_traits;
       DROP TABLE IF EXISTS _SESSION.temp_scv_trait_name_xrefs;
-      DROP TABLE IF EXISTS _SESSION.temp_all_scv_traits;
-      DROP TABLE IF EXISTS _SESSION.temp_all_mapped_scv_traits;
-      DROP TABLE IF EXISTS _SESSION.temp_rcv_trait_assignment_stage1;
-      DROP TABLE IF EXISTS _SESSION.temp_rcv_trait_assignment_stage2;
-      DROP TABLE IF EXISTS _SESSION.temp_rcv_trait_assignment_stage3;
-      DROP TABLE IF EXISTS _SESSION.temp_rcv_trait_assignment_stage4;
+      DROP TABLE IF EXISTS _SESSION.temp_scv_trait_mappings;  
+      DROP TABLE IF EXISTS _SESSION.temp_scv_trait_assignment_stage1;
+      DROP TABLE IF EXISTS _SESSION.temp_scv_trait_assignment_stage2;
+
     END IF;
 
   END FOR;
