@@ -1,11 +1,11 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_rcv_statement_proc`(on_date DATE, debug BOOL)
 BEGIN
   DECLARE query_condition_data STRING;
-  DECLARE query_grouping_base STRING;
-  DECLARE query_grouping_tier STRING;
+  DECLARE query_classification STRING;
+  DECLARE query_priority STRING;
   DECLARE query_agg_contribution STRING;
-  DECLARE query_grouping_base_pre STRING;
-  DECLARE query_grouping_tier_pre STRING;
+  DECLARE query_classification_pre STRING;
+  DECLARE query_priority_pre STRING;
   DECLARE query_agg_contribution_pre STRING;
   DECLARE query_rcv_pre STRING;
   DECLARE temp_create STRING;
@@ -23,9 +23,9 @@ BEGIN
     IF NOT debug THEN
       CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
         'temp_rcv_condition_data',
-        'temp_rcv_grouping_base_statements', 'temp_rcv_grouping_tier_statements',
+        'temp_rcv_classification_statements', 'temp_rcv_priority_statements',
         'temp_rcv_agg_contribution_statements',
-        'temp_rcv_grouping_base_pre', 'temp_rcv_grouping_tier_pre',
+        'temp_rcv_classification_pre', 'temp_rcv_priority_pre',
         'temp_rcv_agg_contribution_pre'
       ]);
     END IF;
@@ -48,23 +48,11 @@ BEGIN
       )
       SELECT
         rsl.rcv_accession,
-        IF(scs.condition IS NOT NULL,
-          TO_JSON(STRUCT(
-            scs.condition.id,
-            scs.condition.name,
-            scs.condition.conceptType,
-            scs.condition.primaryCoding,
-            scs.condition.mappings
-          )),
-          TO_JSON(STRUCT(
-            'ConceptSet' AS type,
-            scs.conditionSet.id,
-            ARRAY(
-              SELECT AS STRUCT c.id, c.name, c.conceptType, c.primaryCoding, c.mappings
-              FROM UNNEST(scs.conditionSet.conditions) c
-            ) AS conditions,
-            scs.conditionSet.membershipOperator
-          ))
+        COALESCE(
+          scs.extensions.value_submitted_condition.condition,
+          scs.extensions.value_submitted_condition.conditionSet,
+          scs.extensions.value_submitted_condition_set.condition,
+          scs.extensions.value_submitted_condition_set.conditionSet
         ) AS condition_concept
       FROM rcv_scv_link rsl
       JOIN `{S}.gks_scv_condition_sets` scs ON scs.scv_id = rsl.scv_id
@@ -75,10 +63,10 @@ BEGIN
     EXECUTE IMMEDIATE query_condition_data;
 
     -------------------------------------------------------------------------
-    -- GROUPING LAYER: BASE GROUPING
+    -- GROUPING LAYER: CLASSIFICATION GROUPING
     -------------------------------------------------------------------------
-    SET query_grouping_base = REPLACE("""
-      {CT} `{P}.temp_rcv_grouping_base_statements` AS
+    SET query_classification = REPLACE("""
+      {CT} `{P}.temp_rcv_classification_statements` AS
       SELECT
         agg.id,
 
@@ -121,8 +109,22 @@ BEGIN
         STRUCT(
           cpt.gks_type AS type,
           agg.prop_id AS id,
-          FORMAT('clinvar:%s', agg.variation_id) AS subjectVariant,
-          cpt.gks_predicate AS predicate,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
           rcd.condition_concept AS objectCondition
         ) AS proposition,
 
@@ -138,27 +140,27 @@ BEGIN
             'supports' AS directionOfEvidenceProvided,
             'contributing' AS strengthOfEvidenceProvided,
             ARRAY(
-              SELECT TO_JSON(STRUCT(scv_id AS id))
+              SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
               FROM UNNEST(agg.full_scv_ids) AS scv_id
             ) AS evidenceItems
           )
         ] AS evidenceLines
 
-      FROM `{S}.gks_rcv_grouping_base_agg` agg
+      FROM `{S}.gks_rcv_classification_agg` agg
       LEFT JOIN `{P}.temp_rcv_condition_data` rcd ON rcd.rcv_accession = agg.rcv_accession
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
-    SET query_grouping_base = REPLACE(query_grouping_base, '{CT}', temp_create);
-    SET query_grouping_base = REPLACE(query_grouping_base, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_grouping_base;
+    SET query_classification = REPLACE(query_classification, '{CT}', temp_create);
+    SET query_classification = REPLACE(query_classification, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_classification;
 
 
     -------------------------------------------------------------------------
-    -- GROUPING LAYER: TIER GROUPING (Somatic only)
+    -- GROUPING LAYER: PRIORITY GROUPING (Somatic only)
     -------------------------------------------------------------------------
-    SET query_grouping_tier = REPLACE("""
-      {CT} `{P}.temp_rcv_grouping_tier_statements` AS
+    SET query_priority = REPLACE("""
+      {CT} `{P}.temp_rcv_priority_statements` AS
       SELECT
         agg.id,
 
@@ -193,8 +195,22 @@ BEGIN
         STRUCT(
           cpt.gks_type AS type,
           agg.prop_id AS id,
-          FORMAT('clinvar:%s', agg.variation_id) AS subjectVariant,
-          cpt.gks_predicate AS predicate,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
           rcd.condition_concept AS objectCondition
         ) AS proposition,
 
@@ -211,7 +227,7 @@ BEGIN
               'supports' AS directionOfEvidenceProvided,
               'contributing' AS strengthOfEvidenceProvided,
               ARRAY(
-                SELECT TO_JSON(STRUCT(stmt_id AS id))
+                SELECT FORMAT('#/rcv/%s', stmt_id)
                 FROM UNNEST(agg.contributing_statement_ids) AS stmt_id
               ) AS evidenceItems
             ),
@@ -220,7 +236,7 @@ BEGIN
               'neutral' AS directionOfEvidenceProvided,
               'non-contributing' AS strengthOfEvidenceProvided,
               ARRAY(
-                SELECT TO_JSON(STRUCT(stmt_id AS id))
+                SELECT FORMAT('#/rcv/%s', stmt_id)
                 FROM UNNEST(agg.non_contributing_statement_ids) AS stmt_id
               ) AS evidenceItems
             )
@@ -229,14 +245,14 @@ BEGIN
              OR ARRAY_LENGTH(val.evidenceItems) > 0
         ) AS evidenceLines
 
-      FROM `{S}.gks_rcv_grouping_tier_agg` agg
+      FROM `{S}.gks_rcv_priority_agg` agg
       LEFT JOIN `{P}.temp_rcv_condition_data` rcd ON rcd.rcv_accession = agg.rcv_accession
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
-    SET query_grouping_tier = REPLACE(query_grouping_tier, '{CT}', temp_create);
-    SET query_grouping_tier = REPLACE(query_grouping_tier, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_grouping_tier;
+    SET query_priority = REPLACE(query_priority, '{CT}', temp_create);
+    SET query_priority = REPLACE(query_priority, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_priority;
 
     -------------------------------------------------------------------------
     -- AGGREGATE CONTRIBUTION LAYER
@@ -277,8 +293,22 @@ BEGIN
         STRUCT(
           cpt.gks_type AS type,
           agg.prop_id AS id,
-          FORMAT('clinvar:%s', agg.variation_id) AS subjectVariant,
-          cpt.gks_predicate AS predicate,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
           rcd.condition_concept AS objectCondition
         ) AS proposition,
 
@@ -294,14 +324,14 @@ BEGIN
               'EvidenceLine' AS type,
               'supports' AS directionOfEvidenceProvided,
               'contributing' AS strengthOfEvidenceProvided,
-              [TO_JSON(STRUCT(agg.contributing_layer_id AS id))] AS evidenceItems
+              [FORMAT('#/rcv/%s', agg.contributing_layer_id)] AS evidenceItems
             ),
             STRUCT(
               'EvidenceLine' AS type,
               'neutral' AS directionOfEvidenceProvided,
               'non-contributing' AS strengthOfEvidenceProvided,
               ARRAY(
-                SELECT TO_JSON(STRUCT(nc.layer_id AS id))
+                SELECT FORMAT('#/rcv/%s', nc.layer_id)
                 FROM UNNEST(agg.non_contributing_details) AS nc
               ) AS evidenceItems
             )
@@ -322,8 +352,8 @@ BEGIN
     -- GROUPING BASE PRE: Base Grouping statements with inlined SCV evidence items
     -- All submission levels (PG, EP, CP, NOCP, NOCL, FLAG) use the same flow.
     -------------------------------------------------------------------------
-    SET query_grouping_base_pre = REPLACE("""
-      {CT} `{P}.temp_rcv_grouping_base_pre` AS
+    SET query_classification_pre = REPLACE("""
+      {CT} `{P}.temp_rcv_classification_pre` AS
       SELECT
         l1.id, l1.type, l1.direction, l1.strength, l1.confidence,
         l1.classification_mappableConcept,
@@ -335,23 +365,23 @@ BEGIN
             'supports' AS directionOfEvidenceProvided,
             'contributing' AS strengthOfEvidenceProvided,
             ARRAY(
-              SELECT TO_JSON(STRUCT(FORMAT('clinvar.submission:%s', scv_id) AS id))
+              SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
               FROM UNNEST(agg.full_scv_ids) AS scv_id
             ) AS evidenceItems
           )
         ] AS evidenceLines
-      FROM `{P}.temp_rcv_grouping_base_statements` l1
-      JOIN `{S}.gks_rcv_grouping_base_agg` agg ON l1.id = agg.id
+      FROM `{P}.temp_rcv_classification_statements` l1
+      JOIN `{S}.gks_rcv_classification_agg` agg ON l1.id = agg.id
     """, '{S}', rec.schema_name);
-    SET query_grouping_base_pre = REPLACE(query_grouping_base_pre, '{CT}', temp_create);
-    SET query_grouping_base_pre = REPLACE(query_grouping_base_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_grouping_base_pre;
+    SET query_classification_pre = REPLACE(query_classification_pre, '{CT}', temp_create);
+    SET query_classification_pre = REPLACE(query_classification_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_classification_pre;
 
     -------------------------------------------------------------------------
     -- GROUPING TIER PRE: Tier Grouping statements with inlined Base Grouping evidence items
     -------------------------------------------------------------------------
-    SET query_grouping_tier_pre = REPLACE("""
-      {CT} `{P}.temp_rcv_grouping_tier_pre` AS
+    SET query_priority_pre = REPLACE("""
+      {CT} `{P}.temp_rcv_priority_pre` AS
       WITH
       l2_contributing AS (
         SELECT l2.id, ARRAY_AGG(TO_JSON(
@@ -359,10 +389,10 @@ BEGIN
             l1.classification_mappableConcept,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
-        FROM `{P}.temp_rcv_grouping_tier_statements` l2
+        FROM `{P}.temp_rcv_priority_statements` l2
         CROSS JOIN UNNEST(l2.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
-        JOIN `{P}.temp_rcv_grouping_base_pre` l1 ON l1.id = JSON_VALUE(item, '$.id')
+        JOIN `{P}.temp_rcv_classification_pre` l1 ON l1.id = REGEXP_EXTRACT(item, r'#/rcv/(.+)')
         WHERE el.strengthOfEvidenceProvided = 'contributing'
         GROUP BY l2.id
       ),
@@ -372,10 +402,10 @@ BEGIN
             l1.classification_mappableConcept,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
-        FROM `{P}.temp_rcv_grouping_tier_statements` l2
+        FROM `{P}.temp_rcv_priority_statements` l2
         CROSS JOIN UNNEST(l2.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
-        JOIN `{P}.temp_rcv_grouping_base_pre` l1 ON l1.id = JSON_VALUE(item, '$.id')
+        JOIN `{P}.temp_rcv_classification_pre` l1 ON l1.id = REGEXP_EXTRACT(item, r'#/rcv/(.+)')
         WHERE el.strengthOfEvidenceProvided = 'non-contributing'
         GROUP BY l2.id
       )
@@ -394,13 +424,13 @@ BEGIN
             CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
           )
         ) AS evidenceLines
-      FROM `{P}.temp_rcv_grouping_tier_statements` l2
+      FROM `{P}.temp_rcv_priority_statements` l2
       LEFT JOIN l2_contributing c ON l2.id = c.id
       LEFT JOIN l2_non_contributing nc ON l2.id = nc.id
     """, '{S}', rec.schema_name);
-    SET query_grouping_tier_pre = REPLACE(query_grouping_tier_pre, '{CT}', temp_create);
-    SET query_grouping_tier_pre = REPLACE(query_grouping_tier_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_grouping_tier_pre;
+    SET query_priority_pre = REPLACE(query_priority_pre, '{CT}', temp_create);
+    SET query_priority_pre = REPLACE(query_priority_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_priority_pre;
 
     -------------------------------------------------------------------------
     -- AGGREGATE CONTRIBUTION PRE: Aggregate Contribution statements with inlined Tier Grouping/Base Grouping evidence items
@@ -408,41 +438,38 @@ BEGIN
     SET query_agg_contribution_pre = REPLACE("""
       {CT} `{P}.temp_rcv_agg_contribution_pre` AS
       WITH
+      all_layer_statements AS (
+        SELECT id, type, direction, strength, confidence,
+          classification_mappableConcept, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
+        FROM `{P}.temp_rcv_priority_pre`
+        UNION ALL
+        SELECT id, type, direction, strength, confidence,
+          classification_mappableConcept, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
+        FROM `{P}.temp_rcv_classification_pre`
+      ),
       l3_contributing AS (
         SELECT l3.id, ARRAY_AGG(TO_JSON(
-          COALESCE(
-            (SELECT AS STRUCT l2p.type, l2p.id, l2p.direction, l2p.strength, l2p.confidence,
-              l2p.classification_mappableConcept,
-              l2p.proposition, l2p.extensions, l2p.evidenceLines
-             FROM `{P}.temp_rcv_grouping_tier_pre` l2p WHERE l2p.id = JSON_VALUE(item, '$.id')),
-            (SELECT AS STRUCT l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
-              l1.classification_mappableConcept,
-              l1.proposition, l1.extensions, l1.evidenceLines
-             FROM `{P}.temp_rcv_grouping_base_pre` l1 WHERE l1.id = JSON_VALUE(item, '$.id'))
-          )
+          STRUCT(als.type, als.id, als.direction, als.strength, als.confidence,
+            als.classification_mappableConcept,
+            als.proposition, als.extensions, als.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_rcv_agg_contribution_statements` l3
         CROSS JOIN UNNEST(l3.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
+        JOIN all_layer_statements als ON als.id = REGEXP_EXTRACT(item, r'#/rcv/(.+)')
         WHERE el.strengthOfEvidenceProvided = 'contributing'
         GROUP BY l3.id
       ),
       l3_non_contributing AS (
         SELECT l3.id, ARRAY_AGG(TO_JSON(
-          COALESCE(
-            (SELECT AS STRUCT l2p.type, l2p.id, l2p.direction, l2p.strength, l2p.confidence,
-              l2p.classification_mappableConcept,
-              l2p.proposition, l2p.extensions, l2p.evidenceLines
-             FROM `{P}.temp_rcv_grouping_tier_pre` l2p WHERE l2p.id = JSON_VALUE(item, '$.id')),
-            (SELECT AS STRUCT l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
-              l1.classification_mappableConcept,
-              l1.proposition, l1.extensions, l1.evidenceLines
-             FROM `{P}.temp_rcv_grouping_base_pre` l1 WHERE l1.id = JSON_VALUE(item, '$.id'))
-          )
+          STRUCT(als.type, als.id, als.direction, als.strength, als.confidence,
+            als.classification_mappableConcept,
+            als.proposition, als.extensions, als.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_rcv_agg_contribution_statements` l3
         CROSS JOIN UNNEST(l3.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
+        JOIN all_layer_statements als ON als.id = REGEXP_EXTRACT(item, r'#/rcv/(.+)')
         WHERE el.strengthOfEvidenceProvided = 'non-contributing'
         GROUP BY l3.id
       )
@@ -482,11 +509,11 @@ BEGIN
     -- Drop temp tables when not in debug mode
     IF NOT debug THEN
       DROP TABLE _SESSION.temp_rcv_condition_data;
-      DROP TABLE _SESSION.temp_rcv_grouping_base_statements;
-      DROP TABLE _SESSION.temp_rcv_grouping_tier_statements;
+      DROP TABLE _SESSION.temp_rcv_classification_statements;
+      DROP TABLE _SESSION.temp_rcv_priority_statements;
       DROP TABLE _SESSION.temp_rcv_agg_contribution_statements;
-      DROP TABLE _SESSION.temp_rcv_grouping_base_pre;
-      DROP TABLE _SESSION.temp_rcv_grouping_tier_pre;
+      DROP TABLE _SESSION.temp_rcv_classification_pre;
+      DROP TABLE _SESSION.temp_rcv_priority_pre;
       DROP TABLE _SESSION.temp_rcv_agg_contribution_pre;
     END IF;
 
