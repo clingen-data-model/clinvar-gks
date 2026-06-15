@@ -596,11 +596,12 @@ BEGIN
     SET dict_submitter_query = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_dict_submitter`
       AS
-      SELECT DISTINCT
+      SELECT
         scv.submitter.id as key,
-        JSON_STRIP_NULLS(TO_JSON(scv.submitter), remove_empty => TRUE) as value
+        ANY_VALUE(JSON_STRIP_NULLS(TO_JSON(scv.submitter), remove_empty => TRUE)) as value
       FROM {P}.temp_gks_scv scv
       WHERE scv.submitter.id IS NOT NULL
+      GROUP BY scv.submitter.id
     """, '{S}', rec.schema_name);
     SET dict_submitter_query = REPLACE(dict_submitter_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE dict_submitter_query;
