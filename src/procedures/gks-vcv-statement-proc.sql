@@ -73,27 +73,7 @@ BEGIN
           ) AS extension
         ) AS classification_mappableConcept,
 
-        STRUCT(
-          cpt.gks_type AS type,
-          agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
-          CASE cpt.gks_type
-            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
-            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
-            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
-            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
-            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
-            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
-            ELSE 'isClinvarUndefinedAssociationFor'
-          END AS predicate,
-          agg.unique_conditions AS objectCondition
-        ) AS proposition,
+        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -115,7 +95,6 @@ BEGIN
 
       FROM `{S}.gks_vcv_classification_agg` agg
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
-      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_classification = REPLACE(query_classification, '{CT}', temp_create);
     SET query_classification = REPLACE(query_classification, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -158,27 +137,7 @@ BEGIN
           ) AS extension
         ) AS classification_mappableConcept,
 
-        STRUCT(
-          cpt.gks_type AS type,
-          agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
-          CASE cpt.gks_type
-            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
-            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
-            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
-            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
-            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
-            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
-            ELSE 'isClinvarUndefinedAssociationFor'
-          END AS predicate,
-          agg.unique_conditions AS objectCondition
-        ) AS proposition,
+        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -213,7 +172,6 @@ BEGIN
 
       FROM `{S}.gks_vcv_priority_agg` agg
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
-      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_priority = REPLACE(query_priority, '{CT}', temp_create);
     SET query_priority = REPLACE(query_priority, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -255,27 +213,7 @@ BEGIN
           ) AS extension
         ) AS classification_mappableConcept,
 
-        STRUCT(
-          cpt.gks_type AS type,
-          agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
-          CASE cpt.gks_type
-            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
-            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
-            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
-            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
-            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
-            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
-            ELSE 'isClinvarUndefinedAssociationFor'
-          END AS predicate,
-          agg.unique_conditions AS objectCondition
-        ) AS proposition,
+        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -306,7 +244,6 @@ BEGIN
         ) AS evidenceLines
 
       FROM `{S}.gks_vcv_aggregate_contribution` agg
-      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_agg_contribution = REPLACE(query_agg_contribution, '{CT}', temp_create);
     SET query_agg_contribution = REPLACE(query_agg_contribution, '{P}', IF(debug, rec.schema_name, '_SESSION'));
