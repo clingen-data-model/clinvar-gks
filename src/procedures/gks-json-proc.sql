@@ -15,35 +15,10 @@ BEGIN
     -------------------------------------------------------------------------
     IF output_type IN ('catvar', 'all') THEN
 
-      -- Dict: sequence references (keyed JSON object)
-      EXECUTE IMMEDIATE REPLACE("""
-        CREATE OR REPLACE TABLE `{S}.gks_catvar_dict_sequence_reference` AS
-        SELECT JSON_OBJECT(ARRAY_AGG(key), ARRAY_AGG(value)) as rec
-        FROM `{S}.gks_dict_sequence_reference`
-      """, '{S}', rec.schema_name);
-
-      -- Dict: locations (keyed JSON object)
-      EXECUTE IMMEDIATE REPLACE("""
-        CREATE OR REPLACE TABLE `{S}.gks_catvar_dict_location` AS
-        SELECT JSON_OBJECT(ARRAY_AGG(key), ARRAY_AGG(value)) as rec
-        FROM `{S}.gks_dict_location`
-      """, '{S}', rec.schema_name);
-
-      -- Dict: alleles (keyed JSON object)
-      EXECUTE IMMEDIATE REPLACE("""
-        CREATE OR REPLACE TABLE `{S}.gks_catvar_dict_allele` AS
-        SELECT JSON_OBJECT(ARRAY_AGG(key), ARRAY_AGG(value)) as rec
-        FROM `{S}.gks_dict_allele`
-      """, '{S}', rec.schema_name);
-
-      -- Dict: genes (keyed JSON object)
-      EXECUTE IMMEDIATE REPLACE("""
-        CREATE OR REPLACE TABLE `{S}.gks_catvar_dict_gene` AS
-        SELECT JSON_OBJECT(ARRAY_AGG(key), ARRAY_AGG(value)) as rec
-        FROM `{S}.gks_dict_gene`
-      """, '{S}', rec.schema_name);
-
-      -- Dict: variations (keyed JSON object, per-variation for NDJSON export)
+      -- Dict: variations (per-row NDJSON export)
+      -- The gks_dict_* tables (sequence_reference, location, allele, gene)
+      -- are already created by gks_catvar_proc as per-row key/value tables.
+      -- Assembly into keyed JSON dictionaries happens at export time.
       SET gks_catvar_query = REPLACE("""
         CREATE OR REPLACE TABLE `{S}.gks_catvar`
         AS
