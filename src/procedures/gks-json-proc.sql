@@ -2,6 +2,7 @@ CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_json_proc`(on_date DATE, output_
 BEGIN
 
   DECLARE gks_catvar_query STRING;
+  DECLARE query_statement_scv STRING;
   DECLARE query_statement_vcv STRING;
   DECLARE query_statement_rcv STRING;
 
@@ -35,6 +36,32 @@ BEGIN
         FROM x
       """, '{S}', rec.schema_name);
       EXECUTE IMMEDIATE gks_catvar_query;
+
+    END IF;
+
+    -------------------------------------------------------------------------
+    -- SCV statement JSON output
+    -------------------------------------------------------------------------
+    IF output_type IN ('scv', 'all') THEN
+
+      SET query_statement_scv = REPLACE("""
+        CREATE OR REPLACE TABLE `{S}.gks_scv_statement`
+        AS
+        WITH json_draft AS (
+          SELECT
+            tv.id,
+            JSON_STRIP_NULLS(
+              TO_JSON(tv),
+            remove_empty => TRUE
+            ) AS rec
+          FROM `{S}.gks_scv_statement_pre` AS tv
+        )
+        SELECT
+          json_draft.id,
+          `clinvar_ingest.normalizeAndKeyById`(json_draft.rec, true) as rec
+        FROM json_draft
+      """, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_statement_scv;
 
     END IF;
 
