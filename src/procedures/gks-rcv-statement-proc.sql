@@ -7,6 +7,7 @@ BEGIN
   DECLARE query_classification_pre STRING;
   DECLARE query_priority_pre STRING;
   DECLARE query_agg_contribution_pre STRING;
+  DECLARE dict_rcv_proposition_query STRING;
   DECLARE query_rcv_pre STRING;
   DECLARE temp_create STRING;
 
@@ -106,27 +107,7 @@ BEGIN
           ) AS extension
         ) AS classification_mappableConcept,
 
-        STRUCT(
-          cpt.gks_type AS type,
-          agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
-          CASE cpt.gks_type
-            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
-            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
-            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
-            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
-            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
-            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
-            ELSE 'isClinvarUndefinedAssociationFor'
-          END AS predicate,
-          rcd.condition_concept AS objectCondition
-        ) AS proposition,
+        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -147,9 +128,7 @@ BEGIN
         ] AS evidenceLines
 
       FROM `{S}.gks_rcv_classification_agg` agg
-      LEFT JOIN `{P}.temp_rcv_condition_data` rcd ON rcd.rcv_accession = agg.rcv_accession
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
-      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_classification = REPLACE(query_classification, '{CT}', temp_create);
     SET query_classification = REPLACE(query_classification, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -192,27 +171,7 @@ BEGIN
           ) AS extension
         ) AS classification_mappableConcept,
 
-        STRUCT(
-          cpt.gks_type AS type,
-          agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
-          CASE cpt.gks_type
-            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
-            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
-            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
-            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
-            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
-            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
-            ELSE 'isClinvarUndefinedAssociationFor'
-          END AS predicate,
-          rcd.condition_concept AS objectCondition
-        ) AS proposition,
+        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -246,9 +205,7 @@ BEGIN
         ) AS evidenceLines
 
       FROM `{S}.gks_rcv_priority_agg` agg
-      LEFT JOIN `{P}.temp_rcv_condition_data` rcd ON rcd.rcv_accession = agg.rcv_accession
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
-      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_priority = REPLACE(query_priority, '{CT}', temp_create);
     SET query_priority = REPLACE(query_priority, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -290,27 +247,7 @@ BEGIN
           ) AS extension
         ) AS classification_mappableConcept,
 
-        STRUCT(
-          cpt.gks_type AS type,
-          agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
-          CASE cpt.gks_type
-            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
-            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
-            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
-            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
-            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
-            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
-            ELSE 'isClinvarUndefinedAssociationFor'
-          END AS predicate,
-          rcd.condition_concept AS objectCondition
-        ) AS proposition,
+        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -341,8 +278,6 @@ BEGIN
         ) AS evidenceLines
 
       FROM `{S}.gks_rcv_aggregate_contribution` agg
-      LEFT JOIN `{P}.temp_rcv_condition_data` rcd ON rcd.rcv_accession = agg.rcv_accession
-      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_agg_contribution = REPLACE(query_agg_contribution, '{CT}', temp_create);
     SET query_agg_contribution = REPLACE(query_agg_contribution, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -495,6 +430,97 @@ BEGIN
     SET query_agg_contribution_pre = REPLACE(query_agg_contribution_pre, '{CT}', temp_create);
     SET query_agg_contribution_pre = REPLACE(query_agg_contribution_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_agg_contribution_pre;
+
+    -------------------------------------------------------------------------
+    -- Dictionary table - RCV propositions (global, keyed by proposition id)
+    -- Collects propositions from all 3 layers (classification, priority, agg)
+    -------------------------------------------------------------------------
+    SET dict_rcv_proposition_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_rcv_proposition`
+      AS
+      SELECT
+        agg.prop_id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          cpt.gks_type AS type,
+          agg.prop_id AS id,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
+          rcd.condition_concept AS objectCondition
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gks_rcv_classification_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
+      LEFT JOIN {P}.temp_rcv_condition_data rcd ON rcd.rcv_accession = agg.rcv_accession
+      UNION ALL
+      SELECT
+        agg.prop_id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          cpt.gks_type AS type,
+          agg.prop_id AS id,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
+          rcd.condition_concept AS objectCondition
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gks_rcv_priority_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
+      LEFT JOIN {P}.temp_rcv_condition_data rcd ON rcd.rcv_accession = agg.rcv_accession
+      UNION ALL
+      SELECT
+        agg.prop_id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          cpt.gks_type AS type,
+          agg.prop_id AS id,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
+          rcd.condition_concept AS objectCondition
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gks_rcv_aggregate_contribution` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
+      LEFT JOIN {P}.temp_rcv_condition_data rcd ON rcd.rcv_accession = agg.rcv_accession
+    """, '{S}', rec.schema_name);
+    SET dict_rcv_proposition_query = REPLACE(dict_rcv_proposition_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE dict_rcv_proposition_query;
 
     -------------------------------------------------------------------------
     -- FINAL: RCV statement pre (all Aggregate Contribution statements)
