@@ -104,7 +104,7 @@ BEGIN
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-          ) AS extension
+          ) AS extensions
         ) AS classification,
 
         FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
@@ -113,7 +113,7 @@ BEGIN
           agg.aggregate_review_status IS NOT NULL,
           [STRUCT('clinvarReviewStatus' AS name, agg.aggregate_review_status AS value)],
           CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-        ) AS extensions,
+        ) AS extensionss,
 
         [
           STRUCT(
@@ -168,7 +168,7 @@ BEGIN
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-          ) AS extension
+          ) AS extensions
         ) AS classification,
 
         FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
@@ -177,7 +177,7 @@ BEGIN
           agg.aggregate_review_status IS NOT NULL,
           [STRUCT('clinvarReviewStatus' AS name, agg.aggregate_review_status AS value)],
           CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-        ) AS extensions,
+        ) AS extensionss,
 
         ARRAY(
           SELECT AS STRUCT val.* FROM UNNEST([
@@ -244,7 +244,7 @@ BEGIN
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-          ) AS extension
+          ) AS extensions
         ) AS classification,
 
         FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
@@ -253,7 +253,7 @@ BEGIN
           agg.aggregate_review_status IS NOT NULL,
           [STRUCT('clinvarReviewStatus' AS name, agg.aggregate_review_status AS value)],
           CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-        ) AS extensions,
+        ) AS extensionss,
 
         ARRAY(
           SELECT AS STRUCT val.* FROM UNNEST([
