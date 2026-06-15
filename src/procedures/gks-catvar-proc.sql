@@ -172,24 +172,24 @@ BEGIN
         GROUP BY vrs.out.id
       )
       SELECT
-        vrs.out.id as key,
+        vrs.id as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          vrs.out.id as id,
-          vrs.out.type,
-          vrs.out.digest,
+          vrs.id,
+          vrs.type,
+          vrs.digest,
           ex.expressions[SAFE_OFFSET(0)].value as name,
-          vrs.out.state,
-          vrs.out.copies,
-          vrs.out.copyChange,
+          vrs.state,
+          vrs.copies,
+          vrs.copyChange,
           ex.expressions,
-          FORMAT('#/location/%s', vrs.out.location.id) as location
+          FORMAT('#/location/%s', vrs.location.id) as location
         )), remove_empty => TRUE) as value
       FROM (
         SELECT DISTINCT out.*
         FROM `{S}.gks_vrs`
         WHERE out.id IS NOT NULL
       ) vrs
-      LEFT JOIN allele_expressions ex ON ex.allele_id = vrs.out.id
+      LEFT JOIN allele_expressions ex ON ex.allele_id = vrs.id
     """, '{S}', rec.schema_name);
     EXECUTE IMMEDIATE dict_allele_query;
 
