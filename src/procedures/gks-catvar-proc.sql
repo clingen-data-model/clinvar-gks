@@ -841,7 +841,7 @@ BEGIN
         cv.type,
         cv.name,
         cvc.constraints,
-        [FORMAT('#/allele/%s', cv.vrs_allele_id)] as members,
+        IF(cv.vrs_allele_id IS NOT NULL, [FORMAT('#/allele/%s', cv.vrs_allele_id)], []) as members,
         cvext.extensions,
         vm.mappings
       FROM catvar cv
