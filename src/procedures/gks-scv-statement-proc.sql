@@ -83,6 +83,7 @@ BEGIN
               END
           END as evidence_line_target_proposition,
 
+          cpt.code as proposition_type_code,
           scv.date_created,
           scv.date_last_updated,
           scv.local_key,
@@ -336,21 +337,7 @@ BEGIN
       AS
         SELECT
           scv.id as scv_id,
-          FORMAT('%s-%s', scv.id, CASE scv.proposition.type
-            WHEN 'VariantPathogenicityProposition' THEN 'PATH'
-            WHEN 'VariantOncogenicityProposition' THEN 'ONCO'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'CS'
-            WHEN 'ClinvarAffectsProposition' THEN 'AFF'
-            WHEN 'ClinvarAssociationProposition' THEN 'ASSOC'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'SENS'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'CONF'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'DR'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'NP'
-            WHEN 'ClinvarOtherProposition' THEN 'OTH'
-            WHEN 'ClinvarProtectiveProposition' THEN 'PROT'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'RF'
-            ELSE 'UNDEF'
-          END) as id,
+          FORMAT('%s-%s', scv.id, UPPER(IFNULL(scv.proposition_type_code, 'UNDEF'))) as id,
           scv.proposition.type as type,
           FORMAT('#/variation/clinvar:%s', scv.variation_id) as subjectVariant,
           scv.proposition.pred as predicate,
@@ -418,11 +405,7 @@ BEGIN
         )
         SELECT
           scv.id as scv_id,
-          FORMAT('%s-%s', scv.id, CASE scv.clinical_impact_assertion_type
-            WHEN 'prognostic' THEN 'PROG'
-            WHEN 'diagnostic' THEN 'DIAG'
-            WHEN 'therapeutic' THEN 'TR'
-          END) as id,
+          FORMAT('%s-%s', scv.id, UPPER(tp.code)) as id,
           scv.evidence_line_target_proposition.type as type,
           FORMAT('#/variation/clinvar:%s', scv.variation_id) as subjectVariant,
           scv.evidence_line_target_proposition.pred as predicate,
@@ -471,6 +454,9 @@ BEGIN
         LEFT JOIN scv_drugs sd
         ON
           sd.scv_id = scv.id
+        LEFT JOIN `clinvar_ingest.clinvar_proposition_types` tp
+        ON
+          tp.gks_type = scv.evidence_line_target_proposition.type
         WHERE
           scv.evidence_line_target_proposition IS NOT NULL
     """, '{S}', rec.schema_name);
