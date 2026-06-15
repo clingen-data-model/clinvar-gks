@@ -2,24 +2,56 @@
 """
 Assemble GKS dictionary NDJSON files into a single keyed JSON file.
 
-Each input file contains rows of {"key": "...", "value": {...}} which are
-assembled into a root-level keyed dictionary per section.
+Supports reading from local files or streaming directly from GCS.
 
 Usage:
-  python3 assemble-gks-dicts.py <input_dir> <output_file>
+  # From local files
+  python3 assemble-gks-dicts.py ./gks-dicts/ ./clinvar-gks.json.gz
 
-Example:
-  python3 assemble-gks-dicts.py ./gks-dicts/ ./clinvar-gks-2025-06-08.json.gz
+  # Stream from GCS (no download needed — run in Cloud Shell for best perf)
+  python3 assemble-gks-dicts.py gs://bucket/gks-dicts/2026-05-10/ ./clinvar-gks.json.gz
+
+  # Stream from GCS and upload result to GCS
+  python3 assemble-gks-dicts.py gs://bucket/gks-dicts/2026-05-10/ gs://bucket/release/clinvar-gks.json.gz
+
+Dependencies:
+  pip install orjson  # optional, 10-50x faster JSON; falls back to stdlib json
 """
 import gzip
-import json
+import io
+import subprocess
 import sys
+import time
+from fnmatch import fnmatch
 from pathlib import Path
+
+try:
+    import orjson
+
+    def json_loads(s):
+        return orjson.loads(s)
+
+    def json_dumps_key(key):
+        return orjson.dumps(key).decode()
+
+    def json_dumps_value(value):
+        return orjson.dumps(value).decode()
+
+except ImportError:
+    import json
+
+    def json_loads(s):
+        return json.loads(s)
+
+    def json_dumps_key(key):
+        return json.dumps(key)
+
+    def json_dumps_value(value):
+        return json.dumps(value, separators=(",", ":"))
 
 
 # Dictionary sections in output order.
 # Each tuple is (section_name, glob_pattern, key_field, value_field).
-# Glob patterns match sharded exports (e.g., allele-*.ndjson.gz).
 SECTIONS = [
     ("sequenceReference", "sequenceReference-*.ndjson.gz", "key", "value"),
     ("location", "location-*.ndjson.gz", "key", "value"),
@@ -37,87 +69,155 @@ SECTIONS = [
     ("rcv", "rcv-*.ndjson.gz", "id", None),
 ]
 
+WRITE_BUFFER_SIZE = 8 * 1024 * 1024  # 8MB write buffer
 
-def open_file(path):
-    """Open a file, handling gzip transparently."""
+
+def list_gcs_files(gcs_prefix):
+    """List files in a GCS prefix using gcloud storage."""
+    result = subprocess.run(
+        ["gcloud", "storage", "ls", gcs_prefix],
+        capture_output=True, text=True, check=True,
+    )
+    return [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
+
+
+def open_gcs_file(gcs_path):
+    """Stream a GCS file through gcloud storage cat, decompressing if gzipped."""
+    proc = subprocess.Popen(
+        ["gcloud", "storage", "cat", gcs_path],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    if gcs_path.endswith(".gz"):
+        return io.TextIOWrapper(gzip.open(proc.stdout, "rb"), encoding="utf-8")
+    return io.TextIOWrapper(proc.stdout, encoding="utf-8")
+
+
+def open_local_file(path):
+    """Open a local file, handling gzip transparently."""
     if str(path).endswith(".gz"):
         return gzip.open(path, "rt", encoding="utf-8")
     return open(path, "r", encoding="utf-8")
 
 
-def stream_dict(ndjson_path, key_field="key", value_field="value"):
+def resolve_files(source, glob_pattern):
     """
-    Yield (key, value_json_string) pairs from an NDJSON file.
+    Resolve files matching a glob pattern from local dir or GCS prefix.
+    Returns list of (path_or_uri, opener_fn) tuples.
+    """
+    if source.startswith("gs://"):
+        prefix = source.rstrip("/") + "/"
+        all_files = list_gcs_files(prefix)
+        # Match the glob pattern against the filename portion
+        matched = []
+        for uri in all_files:
+            filename = uri.split("/")[-1]
+            if fnmatch(filename, glob_pattern):
+                matched.append(uri)
+        return sorted(matched), open_gcs_file
+    else:
+        local_dir = Path(source)
+        files = sorted(local_dir.glob(glob_pattern))
+        return [str(f) for f in files], open_local_file
 
-    If value_field is None, the entire record (minus the key field) is the value.
-    If value_field is specified and its content is a JSON string, it is parsed.
-    """
-    with open_file(ndjson_path) as f:
+
+def stream_dict(filepath, opener_fn, key_field="key", value_field="value"):
+    """Yield (key, value) pairs from an NDJSON file."""
+    with opener_fn(filepath) as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            rec = json.loads(line)
+            rec = json_loads(line)
             key = rec[key_field]
 
             if value_field is None:
-                # Use the whole record as the value
                 value = rec
             else:
                 raw = rec[value_field]
-                # If the value is a JSON string, parse it
                 if isinstance(raw, str):
-                    value = json.loads(raw)
+                    value = json_loads(raw)
                 else:
                     value = raw
 
             yield key, value
 
 
-def assemble(input_dir, output_path):
-    """Assemble all dictionary NDJSON files into a single keyed JSON file."""
-    input_dir = Path(input_dir)
-    is_gzip = str(output_path).endswith(".gz")
-    opener = gzip.open if is_gzip else open
+def open_output(output_path):
+    """Open output file — supports local or GCS paths."""
+    if output_path.startswith("gs://"):
+        # Pipe through gcloud storage cp
+        proc = subprocess.Popen(
+            ["gcloud", "storage", "cp", "-", output_path],
+            stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        if output_path.endswith(".gz"):
+            return gzip.open(proc.stdin, "wt", encoding="utf-8"), proc
+        return io.TextIOWrapper(proc.stdin, encoding="utf-8"), proc
+    else:
+        is_gzip = output_path.endswith(".gz")
+        opener = gzip.open if is_gzip else open
+        return opener(output_path, "wt", encoding="utf-8"), None
 
+
+def assemble(source, output_path):
+    """Assemble all dictionary NDJSON files into a single keyed JSON file."""
     section_count = 0
     total_entries = 0
+    start_time = time.time()
 
-    with opener(output_path, "wt", encoding="utf-8") as out:
-        out.write("{\n")
+    out, proc = open_output(output_path)
+    buf = io.StringIO()
+
+    try:
+        buf.write("{\n")
 
         first_section = True
         for section_name, glob_pattern, key_field, value_field in SECTIONS:
-            files = sorted(input_dir.glob(glob_pattern))
+            files, opener_fn = resolve_files(source, glob_pattern)
             if not files:
                 print(f"  Skipping {section_name} (no files matching {glob_pattern})")
                 continue
 
             if not first_section:
-                out.write(",\n")
+                buf.write(",\n")
             first_section = False
 
-            print(f"  Assembling {section_name} from {len(files)} file(s)...")
-            out.write(f'  "{section_name}": {{\n')
+            section_start = time.time()
+            print(f"  Assembling {section_name} from {len(files)} file(s)...", end="", flush=True)
+            buf.write(f'  "{section_name}": {{\n')
 
             entry_count = 0
             first_entry = True
             for filepath in files:
-                for key, value in stream_dict(filepath, key_field, value_field):
+                for key, value in stream_dict(filepath, opener_fn, key_field, value_field):
                     if not first_entry:
-                        out.write(",\n")
+                        buf.write(",\n")
                     first_entry = False
-                    out.write(f"    {json.dumps(key)}: {json.dumps(value, separators=(',', ':'))}")
+                    buf.write(f"    {json_dumps_key(key)}: {json_dumps_value(value)}")
                     entry_count += 1
 
-            out.write("\n  }")
+                    # Flush buffer periodically
+                    if buf.tell() >= WRITE_BUFFER_SIZE:
+                        out.write(buf.getvalue())
+                        buf.seek(0)
+                        buf.truncate()
+
+            buf.write("\n  }")
             section_count += 1
             total_entries += entry_count
-            print(f"    -> {entry_count:,} entries")
+            elapsed = time.time() - section_start
+            print(f" {entry_count:,} entries ({elapsed:.1f}s)")
 
-        out.write("\n}\n")
+        buf.write("\n}\n")
+        out.write(buf.getvalue())
 
-    print(f"\nDone: {section_count} sections, {total_entries:,} total entries -> {output_path}")
+    finally:
+        out.close()
+        if proc:
+            proc.wait()
+
+    elapsed = time.time() - start_time
+    print(f"\nDone: {section_count} sections, {total_entries:,} total entries in {elapsed:.1f}s -> {output_path}")
 
 
 def main():
@@ -125,15 +225,19 @@ def main():
         print(__doc__)
         sys.exit(1)
 
-    input_dir = sys.argv[1]
+    source = sys.argv[1]
     output_path = sys.argv[2]
 
-    if not Path(input_dir).is_dir():
-        print(f"Error: {input_dir} is not a directory")
+    if not source.startswith("gs://") and not Path(source).is_dir():
+        print(f"Error: {source} is not a directory or GCS path")
         sys.exit(1)
 
-    print(f"Assembling GKS dictionaries from {input_dir}")
-    assemble(input_dir, output_path)
+    print(f"Assembling GKS dictionaries from {source}")
+    if "orjson" in sys.modules:
+        print("  Using orjson for fast JSON processing")
+    else:
+        print("  Using stdlib json (pip install orjson for 10-50x speedup)")
+    assemble(source, output_path)
 
 
 if __name__ == "__main__":
