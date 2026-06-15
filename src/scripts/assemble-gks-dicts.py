@@ -82,20 +82,26 @@ def list_gcs_files(gcs_prefix):
 
 
 def open_gcs_file(gcs_path):
-    """Stream a GCS file through gsutil cat, decompressing if gzipped."""
-    # Use gsutil cat -h which auto-decompresses gzipped content
-    proc = subprocess.Popen(
-        ["gsutil", "cat", gcs_path],
-        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-    )
+    """Stream a GCS file via gcloud storage cat with auto-decompression."""
+    # --raw avoids transcoding; pipe through zcat if gzipped
     if gcs_path.endswith(".gz"):
-        return io.TextIOWrapper(gzip.open(proc.stdout, "rb"), encoding="utf-8")
+        proc = subprocess.Popen(
+            f'gcloud storage cat "{gcs_path}" | zcat',
+            shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        )
+    else:
+        proc = subprocess.Popen(
+            ["gcloud", "storage", "cat", gcs_path],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        )
     return io.TextIOWrapper(proc.stdout, encoding="utf-8")
 
 
 def open_local_file(path):
-    """Open a local file, handling gzip transparently."""
-    if str(path).endswith(".gz"):
+    """Open a local file, auto-detecting gzip by magic bytes."""
+    with open(path, "rb") as f:
+        magic = f.read(2)
+    if magic == b'\x1f\x8b':
         return gzip.open(path, "rt", encoding="utf-8")
     return open(path, "r", encoding="utf-8")
 
