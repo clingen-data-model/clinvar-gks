@@ -73,19 +73,20 @@ WRITE_BUFFER_SIZE = 8 * 1024 * 1024  # 8MB write buffer
 
 
 def list_gcs_files(gcs_prefix):
-    """List files in a GCS prefix using gcloud storage."""
+    """List files in a GCS prefix."""
     result = subprocess.run(
-        ["gcloud", "storage", "ls", gcs_prefix],
+        ["gsutil", "ls", gcs_prefix],
         capture_output=True, text=True, check=True,
     )
     return [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
 
 
 def open_gcs_file(gcs_path):
-    """Stream a GCS file through gcloud storage cat, decompressing if gzipped."""
+    """Stream a GCS file through gsutil cat, decompressing if gzipped."""
+    # Use gsutil cat -h which auto-decompresses gzipped content
     proc = subprocess.Popen(
-        ["gcloud", "storage", "cat", gcs_path],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        ["gsutil", "cat", gcs_path],
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
     )
     if gcs_path.endswith(".gz"):
         return io.TextIOWrapper(gzip.open(proc.stdout, "rb"), encoding="utf-8")
@@ -145,10 +146,10 @@ def stream_dict(filepath, opener_fn, key_field="key", value_field="value"):
 def open_output(output_path):
     """Open output file — supports local or GCS paths."""
     if output_path.startswith("gs://"):
-        # Pipe through gcloud storage cp
+        # Pipe through gsutil cp
         proc = subprocess.Popen(
-            ["gcloud", "storage", "cp", "-", output_path],
-            stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+            ["gsutil", "cp", "-", output_path],
+            stdin=subprocess.PIPE, stderr=subprocess.DEVNULL,
         )
         if output_path.endswith(".gz"):
             return gzip.open(proc.stdin, "wt", encoding="utf-8"), proc
