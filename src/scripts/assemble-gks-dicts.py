@@ -61,9 +61,7 @@ SECTIONS = [
     ("condition", "condition-*.ndjson.gz", "id", None),
     ("conditionSet", "conditionSet-*.ndjson.gz", "id", None),
     ("submitter", "submitter-*.ndjson.gz", "key", "value"),
-    ("proposition", "proposition-*.ndjson.gz", "key", "value"),
-    ("vcv_proposition", "vcv_proposition-*.ndjson.gz", "key", "value"),
-    ("rcv_proposition", "rcv_proposition-*.ndjson.gz", "key", "value"),
+    ("proposition", ["proposition-*.ndjson.gz", "vcv_proposition-*.ndjson.gz", "rcv_proposition-*.ndjson.gz"], "key", "value"),
     ("scv", "scv-*.ndjson.gz", "id", None),
     ("vcv", "vcv-*.ndjson.gz", "id", None),
     ("rcv", "rcv-*.ndjson.gz", "id", None),
@@ -106,25 +104,30 @@ def open_local_file(path):
     return open(path, "r", encoding="utf-8")
 
 
-def resolve_files(source, glob_pattern):
+def resolve_files(source, glob_patterns):
     """
-    Resolve files matching a glob pattern from local dir or GCS prefix.
-    Returns list of (path_or_uri, opener_fn) tuples.
+    Resolve files matching glob pattern(s) from local dir or GCS prefix.
+    glob_patterns can be a string or list of strings.
+    Returns list of paths/URIs and an opener function.
     """
+    if isinstance(glob_patterns, str):
+        glob_patterns = [glob_patterns]
+
     if source.startswith("gs://"):
         prefix = source.rstrip("/") + "/"
         all_files = list_gcs_files(prefix)
-        # Match the glob pattern against the filename portion
         matched = []
         for uri in all_files:
             filename = uri.split("/")[-1]
-            if fnmatch(filename, glob_pattern):
+            if any(fnmatch(filename, p) for p in glob_patterns):
                 matched.append(uri)
         return sorted(matched), open_gcs_file
     else:
         local_dir = Path(source)
-        files = sorted(local_dir.glob(glob_pattern))
-        return [str(f) for f in files], open_local_file
+        matched = []
+        for pattern in glob_patterns:
+            matched.extend(local_dir.glob(pattern))
+        return sorted(set(str(f) for f in matched)), open_local_file
 
 
 def stream_dict(filepath, opener_fn, key_field="key", value_field="value"):
