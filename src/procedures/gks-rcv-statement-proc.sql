@@ -105,7 +105,7 @@ BEGIN
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
           ) AS extension
-        ) AS classification_mappableConcept,
+        ) AS classification,
 
         FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
@@ -169,7 +169,7 @@ BEGIN
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
           ) AS extension
-        ) AS classification_mappableConcept,
+        ) AS classification,
 
         FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
@@ -245,7 +245,7 @@ BEGIN
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
           ) AS extension
-        ) AS classification_mappableConcept,
+        ) AS classification,
 
         FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
@@ -291,7 +291,7 @@ BEGIN
       {CT} `{P}.temp_rcv_classification_pre` AS
       SELECT
         l1.id, l1.type, l1.direction, l1.strength, l1.confidence,
-        l1.classification_mappableConcept,
+        l1.classification,
         l1.proposition,
         l1.extensions,
         [
@@ -321,7 +321,7 @@ BEGIN
       l2_contributing AS (
         SELECT l2.id, ARRAY_AGG(TO_JSON(
           STRUCT(l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
-            l1.classification_mappableConcept,
+            l1.classification,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_rcv_priority_statements` l2
@@ -334,7 +334,7 @@ BEGIN
       l2_non_contributing AS (
         SELECT l2.id, ARRAY_AGG(TO_JSON(
           STRUCT(l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
-            l1.classification_mappableConcept,
+            l1.classification,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_rcv_priority_statements` l2
@@ -346,7 +346,7 @@ BEGIN
       )
       SELECT
         l2.id, l2.type, l2.direction, l2.strength, l2.confidence,
-        l2.classification_mappableConcept,
+        l2.classification,
         l2.proposition,
         l2.extensions,
         ARRAY_CONCAT(
@@ -375,17 +375,17 @@ BEGIN
       WITH
       all_layer_statements AS (
         SELECT id, type, direction, strength, confidence,
-          classification_mappableConcept, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
+          classification, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
         FROM `{P}.temp_rcv_priority_pre`
         UNION ALL
         SELECT id, type, direction, strength, confidence,
-          classification_mappableConcept, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
+          classification, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
         FROM `{P}.temp_rcv_classification_pre`
       ),
       l3_contributing AS (
         SELECT l3.id, ARRAY_AGG(TO_JSON(
           STRUCT(als.type, als.id, als.direction, als.strength, als.confidence,
-            als.classification_mappableConcept,
+            als.classification,
             als.proposition, als.extensions, als.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_rcv_agg_contribution_statements` l3
@@ -398,7 +398,7 @@ BEGIN
       l3_non_contributing AS (
         SELECT l3.id, ARRAY_AGG(TO_JSON(
           STRUCT(als.type, als.id, als.direction, als.strength, als.confidence,
-            als.classification_mappableConcept,
+            als.classification,
             als.proposition, als.extensions, als.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_rcv_agg_contribution_statements` l3
@@ -410,7 +410,7 @@ BEGIN
       )
       SELECT
         l3.id, l3.type, l3.direction, l3.strength, l3.confidence,
-        l3.classification_mappableConcept,
+        l3.classification,
         l3.proposition,
         l3.extensions,
         ARRAY_CONCAT(
