@@ -6,6 +6,7 @@ BEGIN
   DECLARE query_classification_pre STRING;
   DECLARE query_priority_pre STRING;
   DECLARE query_agg_contribution_pre STRING;
+  DECLARE dict_vcv_proposition_query STRING;
   DECLARE query_vcv_pre STRING;
   DECLARE temp_create STRING;
 
@@ -458,6 +459,34 @@ BEGIN
     SET query_agg_contribution_pre = REPLACE(query_agg_contribution_pre, '{CT}', temp_create);
     SET query_agg_contribution_pre = REPLACE(query_agg_contribution_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_agg_contribution_pre;
+
+    -------------------------------------------------------------------------
+    -- Dictionary table - VCV propositions (global, keyed by proposition id)
+    -- Collects propositions from all 3 layers (classification, priority, agg)
+    -------------------------------------------------------------------------
+    SET dict_vcv_proposition_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_vcv_proposition`
+      AS
+      SELECT
+        s.proposition.id as key,
+        ANY_VALUE(JSON_STRIP_NULLS(TO_JSON(s.proposition), remove_empty => TRUE)) as value
+      FROM `{P}.temp_vcv_classification_statements` s
+      GROUP BY s.proposition.id
+      UNION ALL
+      SELECT
+        s.proposition.id as key,
+        ANY_VALUE(JSON_STRIP_NULLS(TO_JSON(s.proposition), remove_empty => TRUE)) as value
+      FROM `{P}.temp_vcv_priority_statements` s
+      GROUP BY s.proposition.id
+      UNION ALL
+      SELECT
+        s.proposition.id as key,
+        ANY_VALUE(JSON_STRIP_NULLS(TO_JSON(s.proposition), remove_empty => TRUE)) as value
+      FROM `{P}.temp_vcv_agg_contribution_statements` s
+      GROUP BY s.proposition.id
+    """, '{S}', rec.schema_name);
+    SET dict_vcv_proposition_query = REPLACE(dict_vcv_proposition_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE dict_vcv_proposition_query;
 
     -------------------------------------------------------------------------
     -- FINAL: VCV statement pre (all Aggregate Contribution statements)
