@@ -16,10 +16,13 @@ echo "Exporting GKS dictionaries from ${DATASET} to ${GCS_PATH}"
 
 extract() {
   local table="$1"
-  local filename="$2"
-  echo "  Exporting ${table} -> ${filename}"
+  local basename="$2"
+  # Use wildcard sharding to handle large tables
+  # e.g., allele.ndjson.gz -> allele-*.ndjson.gz
+  local sharded="${basename%.ndjson.gz}-*.ndjson.gz"
+  echo "  Exporting ${table} -> ${sharded}"
   bq extract --destination_format NEWLINE_DELIMITED_JSON \
-    "${DATASET}.${table}" "${GCS_PATH}/${filename}"
+    "${DATASET}.${table}" "${GCS_PATH}/${sharded}"
 }
 
 # Cat-VRS dictionaries (from gks_catvar_proc)

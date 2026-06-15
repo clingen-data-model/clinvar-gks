@@ -18,22 +18,23 @@ from pathlib import Path
 
 
 # Dictionary sections in output order.
-# Each tuple is (section_name, filename, key_field, value_field).
+# Each tuple is (section_name, glob_pattern, key_field, value_field).
+# Glob patterns match sharded exports (e.g., allele-*.ndjson.gz).
 SECTIONS = [
-    ("sequenceReference", "sequenceReference.ndjson.gz", "key", "value"),
-    ("location", "location.ndjson.gz", "key", "value"),
-    ("allele", "allele.ndjson.gz", "key", "value"),
-    ("gene", "gene.ndjson.gz", "key", "value"),
-    ("variation", "variation.ndjson.gz", "key", "value"),
-    ("condition", "condition.ndjson.gz", "id", None),
-    ("conditionSet", "conditionSet.ndjson.gz", "id", None),
-    ("submitter", "submitter.ndjson.gz", "key", "value"),
-    ("proposition", "proposition.ndjson.gz", "key", "value"),
-    ("vcv_proposition", "vcv_proposition.ndjson.gz", "key", "value"),
-    ("rcv_proposition", "rcv_proposition.ndjson.gz", "key", "value"),
-    ("scv", "scv.ndjson.gz", "id", None),
-    ("vcv", "vcv.ndjson.gz", "id", None),
-    ("rcv", "rcv.ndjson.gz", "id", None),
+    ("sequenceReference", "sequenceReference-*.ndjson.gz", "key", "value"),
+    ("location", "location-*.ndjson.gz", "key", "value"),
+    ("allele", "allele-*.ndjson.gz", "key", "value"),
+    ("gene", "gene-*.ndjson.gz", "key", "value"),
+    ("variation", "variation-*.ndjson.gz", "key", "value"),
+    ("condition", "condition-*.ndjson.gz", "id", None),
+    ("conditionSet", "conditionSet-*.ndjson.gz", "id", None),
+    ("submitter", "submitter-*.ndjson.gz", "key", "value"),
+    ("proposition", "proposition-*.ndjson.gz", "key", "value"),
+    ("vcv_proposition", "vcv_proposition-*.ndjson.gz", "key", "value"),
+    ("rcv_proposition", "rcv_proposition-*.ndjson.gz", "key", "value"),
+    ("scv", "scv-*.ndjson.gz", "id", None),
+    ("vcv", "vcv-*.ndjson.gz", "id", None),
+    ("rcv", "rcv-*.ndjson.gz", "id", None),
 ]
 
 
@@ -86,27 +87,28 @@ def assemble(input_dir, output_path):
         out.write("{\n")
 
         first_section = True
-        for section_name, filename, key_field, value_field in SECTIONS:
-            filepath = input_dir / filename
-            if not filepath.exists():
-                print(f"  Skipping {section_name} ({filename} not found)")
+        for section_name, glob_pattern, key_field, value_field in SECTIONS:
+            files = sorted(input_dir.glob(glob_pattern))
+            if not files:
+                print(f"  Skipping {section_name} (no files matching {glob_pattern})")
                 continue
 
             if not first_section:
                 out.write(",\n")
             first_section = False
 
-            print(f"  Assembling {section_name} from {filename}...")
+            print(f"  Assembling {section_name} from {len(files)} file(s)...")
             out.write(f'  "{section_name}": {{\n')
 
             entry_count = 0
             first_entry = True
-            for key, value in stream_dict(filepath, key_field, value_field):
-                if not first_entry:
-                    out.write(",\n")
-                first_entry = False
-                out.write(f"    {json.dumps(key)}: {json.dumps(value, separators=(',', ':'))}")
-                entry_count += 1
+            for filepath in files:
+                for key, value in stream_dict(filepath, key_field, value_field):
+                    if not first_entry:
+                        out.write(",\n")
+                    first_entry = False
+                    out.write(f"    {json.dumps(key)}: {json.dumps(value, separators=(',', ':'))}")
+                    entry_count += 1
 
             out.write("\n  }")
             section_count += 1
