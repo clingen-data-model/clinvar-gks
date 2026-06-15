@@ -405,22 +405,82 @@ BEGIN
       CREATE OR REPLACE TABLE `{S}.gks_dict_vcv_proposition`
       AS
       SELECT
-        s.proposition.id as key,
-        ANY_VALUE(JSON_STRIP_NULLS(TO_JSON(s.proposition), remove_empty => TRUE)) as value
-      FROM `{P}.temp_vcv_classification_statements` s
-      GROUP BY s.proposition.id
+        agg.prop_id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          cpt.gks_type AS type,
+          agg.prop_id AS id,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
+          agg.unique_conditions AS objectCondition
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gks_vcv_classification_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
       UNION ALL
       SELECT
-        s.proposition.id as key,
-        ANY_VALUE(JSON_STRIP_NULLS(TO_JSON(s.proposition), remove_empty => TRUE)) as value
-      FROM `{P}.temp_vcv_priority_statements` s
-      GROUP BY s.proposition.id
+        agg.prop_id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          cpt.gks_type AS type,
+          agg.prop_id AS id,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
+          agg.unique_conditions AS objectCondition
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gks_vcv_priority_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
       UNION ALL
       SELECT
-        s.proposition.id as key,
-        ANY_VALUE(JSON_STRIP_NULLS(TO_JSON(s.proposition), remove_empty => TRUE)) as value
-      FROM `{P}.temp_vcv_agg_contribution_statements` s
-      GROUP BY s.proposition.id
+        agg.prop_id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          cpt.gks_type AS type,
+          agg.prop_id AS id,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
+          agg.unique_conditions AS objectCondition
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gks_vcv_aggregate_contribution` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET dict_vcv_proposition_query = REPLACE(dict_vcv_proposition_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE dict_vcv_proposition_query;
