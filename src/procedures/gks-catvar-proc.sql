@@ -155,45 +155,6 @@ BEGIN
     EXECUTE IMMEDIATE dict_location_query;
 
     -------------------------------------------------------------------------
-    -- Step 1e: Dictionary table - alleles (global, keyed by VRS allele id)
-    -------------------------------------------------------------------------
-    SET dict_allele_query = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_dict_allele`
-      AS
-      WITH allele_expressions AS (
-        SELECT
-          vrs.out.id as allele_id,
-          ARRAY_AGG(STRUCT(
-            vrs.in.fmt as syntax,
-            vrs.in.source as value
-          )) as expressions
-        FROM `{S}.gks_vrs` vrs
-        WHERE vrs.out.id IS NOT NULL
-        GROUP BY vrs.out.id
-      )
-      SELECT
-        vrs.id as key,
-        JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          vrs.id,
-          vrs.type,
-          vrs.digest,
-          ex.expressions[SAFE_OFFSET(0)].value as name,
-          vrs.state,
-          vrs.copies,
-          vrs.copyChange,
-          ex.expressions,
-          FORMAT('#/location/%s', vrs.location.id) as location
-        )), remove_empty => TRUE) as value
-      FROM (
-        SELECT DISTINCT out.*
-        FROM `{S}.gks_vrs`
-        WHERE out.id IS NOT NULL
-      ) vrs
-      LEFT JOIN allele_expressions ex ON ex.allele_id = vrs.id
-    """, '{S}', rec.schema_name);
-    EXECUTE IMMEDIATE dict_allele_query;
-
-    -------------------------------------------------------------------------
     -- Step 2: Contextual variant expressions with precedence-ranked naming
     -------------------------------------------------------------------------
     SET temp_ctxvar_expr_query = REPLACE("""
@@ -316,6 +277,42 @@ BEGIN
     SET temp_ctxvar_expr_query = REPLACE(temp_ctxvar_expr_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE temp_ctxvar_expr_query;
+
+    -------------------------------------------------------------------------
+    -- Step 2b: Dictionary table - alleles (global, keyed by VRS allele id)
+    -- Uses temp_ctxvar_expression for full expression set (spdi + hgvs + gnomad)
+    -------------------------------------------------------------------------
+    SET dict_allele_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_allele`
+      AS
+      SELECT
+        vrs.id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          vrs.id,
+          vrs.type,
+          vrs.digest,
+          exp.name,
+          vrs.state,
+          vrs.copies,
+          vrs.copyChange,
+          exp.expressions,
+          FORMAT('#/location/%s', vrs.location.id) as location
+        )), remove_empty => TRUE) as value
+      FROM (
+        SELECT DISTINCT out.*
+        FROM `{S}.gks_vrs`
+        WHERE out.id IS NOT NULL
+      ) vrs
+      LEFT JOIN {P}.temp_ctxvar_expression exp
+      ON
+        exp.variation_id = (
+          SELECT ANY_VALUE(v.in.variation_id)
+          FROM `{S}.gks_vrs` v
+          WHERE v.out.id = vrs.id
+        )
+    """, '{S}', rec.schema_name);
+    SET dict_allele_query = REPLACE(dict_allele_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE dict_allele_query;
 
     -------------------------------------------------------------------------
     -- Step 3: Contextual variants with VRS type mapping
