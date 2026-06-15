@@ -21,7 +21,7 @@ extract() {
   # e.g., allele.ndjson.gz -> allele-*.ndjson.gz
   local sharded="${basename%.ndjson.gz}-*.ndjson.gz"
   echo "  Exporting ${table} -> ${sharded}"
-  bq extract --destination_format NEWLINE_DELIMITED_JSON \
+  bq extract --destination_format NEWLINE_DELIMITED_JSON --compression GZIP \
     "${DATASET}.${table}" "${GCS_PATH}/${sharded}"
 }
 
