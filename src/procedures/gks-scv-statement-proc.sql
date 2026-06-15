@@ -674,6 +674,7 @@ BEGIN
         'Statement' as type,
         FORMAT('#/proposition/%s', sp.id) as proposition,
         STRUCT(
+          'Classification' AS conceptType,
           scv.submitted_classification as name,
           IF(
             scv.classification_code IS NOT NULL,
