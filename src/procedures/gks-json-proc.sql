@@ -25,7 +25,7 @@ BEGIN
               TO_JSON(cv),
               remove_empty => TRUE
             ) AS json_data
-          FROM `{S}.gks_catvar_pre` cv
+          FROM `{S}.gks_dict_variation` cv
         )
         SELECT
           x.id,
@@ -75,7 +75,7 @@ BEGIN
             scv.proposition.* EXCEPT (subjectVariant),
             var AS subjectVariant
           FROM `{S}.gks_scv_statement_pre` AS scv
-          JOIN `clingen-dev.{S}.gks_catvar_pre` AS var
+          JOIN `clingen-dev.{S}.gks_dict_variation` AS var
           ON
             scv.proposition.subjectVariant = var.id
         ),
