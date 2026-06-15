@@ -2,11 +2,15 @@ CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_catvar_proc`(on_date DATE, debug
 BEGIN
   DECLARE temp_seqref_query STRING;
   DECLARE temp_seqloc_query STRING;
+  DECLARE dict_seqref_query STRING;
+  DECLARE dict_location_query STRING;
+  DECLARE dict_allele_query STRING;
   DECLARE temp_ctxvar_expr_query STRING;
   DECLARE temp_ctxvar_query STRING;
   DECLARE temp_catvar_ext_query STRING;
+  DECLARE dict_gene_query STRING;
   DECLARE temp_catvar_map_query STRING;
-  DECLARE gks_catvar_pre_query STRING;
+  DECLARE dict_variation_query STRING;
 
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
@@ -105,6 +109,89 @@ BEGIN
     SET temp_seqloc_query = REPLACE(temp_seqloc_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE temp_seqloc_query;
+
+    -------------------------------------------------------------------------
+    -- Step 1c: Dictionary table - sequence references (global, keyed by refgetAccession)
+    -------------------------------------------------------------------------
+    SET dict_seqref_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_sequence_reference`
+      AS
+      SELECT
+        sq.refgetAccession as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          'SequenceReference' as type,
+          sq.refgetAccession,
+          sq.name,
+          sq.moleculeType,
+          sq.residueAlphabet,
+          sq.extensions
+        )), remove_empty => TRUE) as value
+      FROM {P}.temp_seqref sq
+    """, '{S}', rec.schema_name);
+    SET dict_seqref_query = REPLACE(dict_seqref_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE dict_seqref_query;
+
+    -------------------------------------------------------------------------
+    -- Step 1d: Dictionary table - locations (global, keyed by location id)
+    -------------------------------------------------------------------------
+    SET dict_location_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_location`
+      AS
+      SELECT
+        sl.id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          sl.id,
+          sl.type,
+          sl.digest,
+          sl.start,
+          sl.end,
+          sl.start_range,
+          sl.end_range,
+          FORMAT('#/sequenceReference/%s', sl.sequenceReference.refgetAccession) as sequenceReference
+        )), remove_empty => TRUE) as value
+      FROM {P}.temp_seqloc sl
+    """, '{S}', rec.schema_name);
+    SET dict_location_query = REPLACE(dict_location_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE dict_location_query;
+
+    -------------------------------------------------------------------------
+    -- Step 1e: Dictionary table - alleles (global, keyed by VRS allele id)
+    -------------------------------------------------------------------------
+    SET dict_allele_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_allele`
+      AS
+      WITH allele_expressions AS (
+        SELECT
+          vrs.out.id as allele_id,
+          ARRAY_AGG(STRUCT(
+            vrs.in.fmt as syntax,
+            vrs.in.source as value
+          )) as expressions
+        FROM `{S}.gks_vrs` vrs
+        WHERE vrs.out.id IS NOT NULL
+        GROUP BY vrs.out.id
+      )
+      SELECT
+        vrs.out.id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          vrs.out.id as id,
+          vrs.out.type,
+          vrs.out.digest,
+          ex.expressions[SAFE_OFFSET(0)].value as name,
+          vrs.out.state,
+          vrs.out.copies,
+          vrs.out.copyChange,
+          ex.expressions,
+          FORMAT('#/location/%s', vrs.out.location.id) as location
+        )), remove_empty => TRUE) as value
+      FROM (
+        SELECT DISTINCT out.*
+        FROM `{S}.gks_vrs`
+        WHERE out.id IS NOT NULL
+      ) vrs
+      LEFT JOIN allele_expressions ex ON ex.allele_id = vrs.out.id
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE dict_allele_query;
 
     -------------------------------------------------------------------------
     -- Step 2: Contextual variant expressions with precedence-ranked naming
@@ -404,29 +491,12 @@ BEGIN
           ga.variation_id,
           ARRAY_AGG(
             STRUCT(
-              g.id as entrez_gene_id,
-              g.hgnc_id,
-              g.symbol,
+              FORMAT('#/gene/ncbigene:%s', ga.gene_id) as gene,
               ga.relationship_type,
-              ga.source,
-              IF(
-                g.hgnc_id is null,
-                [
-                  FORMAT('https://identifiers.org/ncbigene:%s',g.id),
-                  FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s',g.id)
-                ],
-                [
-                  FORMAT('https://identifiers.org/%s',LOWER(g.hgnc_id)),
-                  FORMAT('https://identifiers.org/ncbigene:%s',g.id),
-                  FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s',g.id)
-                ]
-              ) as iris
+              ga.source
             )
           ) as genes
         FROM `{S}.gene_association` ga
-        JOIN `{S}.gene` g
-        ON
-          g.id = ga.gene_id
         GROUP BY
           ga.variation_id
       ),
@@ -553,6 +623,36 @@ BEGIN
     EXECUTE IMMEDIATE temp_catvar_ext_query;
 
     -------------------------------------------------------------------------
+    -- Step 4b: Dictionary table - genes (global, keyed by ncbigene:{id})
+    -------------------------------------------------------------------------
+    SET dict_gene_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_gene`
+      AS
+      SELECT
+        FORMAT('ncbigene:%s', g.id) as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          g.id as entrez_gene_id,
+          g.hgnc_id,
+          g.symbol,
+          IF(
+            g.hgnc_id is null,
+            [
+              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
+              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
+            ],
+            [
+              FORMAT('https://identifiers.org/%s', LOWER(g.hgnc_id)),
+              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
+              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
+            ]
+          ) as iris
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gene` g
+      WHERE g.id IN (SELECT DISTINCT gene_id FROM `{S}.gene_association`)
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE dict_gene_query;
+
+    -------------------------------------------------------------------------
     -- Step 5: Cross-reference mappings for categorical variants
     -------------------------------------------------------------------------
     SET temp_catvar_map_query = REPLACE("""
@@ -611,8 +711,8 @@ BEGIN
     -------------------------------------------------------------------------
     -- Step 6: Assemble preliminary categorical variant records with constraints
     -------------------------------------------------------------------------
-    SET gks_catvar_pre_query = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_catvar_pre`
+    SET dict_variation_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_variation`
       AS
       WITH catvar AS (
         SELECT
@@ -621,17 +721,11 @@ BEGIN
           FORMAT('clinvar:%s', ctx.variation_id) as id,
           'CategoricalVariant' as type,
           ctx.catvar_name as name,
-          STRUCT(
-            ctx.name,
-            ctx.id,
-            ctx.digest,
-            ctx.type,
-            ctx.location,
-            ctx.state,
-            ctx.copies,
-            ctx.copyChange,
-            ctx.expressions
-          ) as member
+          -- Store allele/location refs for constraints
+          ctx.id as vrs_allele_id,
+          ctx.location.id as vrs_location_id,
+          ctx.copies,
+          ctx.copyChange
         FROM {P}.temp_ctxvar ctx
         -- safe guard for upstream vrs process that returns bad records
         WHERE ctx.variation_id is not null
@@ -641,7 +735,7 @@ BEGIN
         SELECT
           ctx.variation_id,
           'DefiningAlleleConstraint' as type,
-          '2/members/0/' as allele,
+          FORMAT('#/allele/%s', ctx.vrs_allele_id) as allele,
           null as location,
           null as matchCharacteristic,
           [ STRUCT(
@@ -670,7 +764,7 @@ BEGIN
           ctx.variation_id,
           'DefiningLocationConstraint' as type,
           null as allele,
-          '2/members/0/location/' as location,
+          FORMAT('#/location/%s', ctx.vrs_location_id) as location,
           STRUCT(
             STRUCT(
               'is_within' as code,
@@ -700,7 +794,7 @@ BEGIN
           null as location,
           null as matchCharacteristic,
           null as relations,
-          ctx.member.copies,
+          ctx.copies,
           null as copyChange
         FROM catvar ctx
         WHERE
@@ -715,7 +809,7 @@ BEGIN
           null as matchCharacteristic,
           null as relations,
           CAST(null as INTEGER) as copies,
-          ctx.member.copyChange
+          ctx.copyChange
         FROM catvar ctx
         WHERE
           ctx.catvar_type = 'CategoricalCnvChange'
@@ -747,7 +841,7 @@ BEGIN
         cv.type,
         cv.name,
         cvc.constraints,
-        [cv.member] as members,
+        [FORMAT('#/allele/%s', cv.vrs_allele_id)] as members,
         cvext.extensions,
         vm.mappings
       FROM catvar cv
@@ -761,9 +855,9 @@ BEGIN
       ON
         vm.variation_id = cv.variation_id
     """, '{S}', rec.schema_name);
-    SET gks_catvar_pre_query = REPLACE(gks_catvar_pre_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET dict_variation_query = REPLACE(dict_variation_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
-    EXECUTE IMMEDIATE gks_catvar_pre_query;
+    EXECUTE IMMEDIATE dict_variation_query;
 
     IF NOT debug THEN
       DROP TABLE _SESSION.temp_seqref;
