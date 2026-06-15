@@ -285,6 +285,13 @@ BEGIN
     SET dict_allele_query = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_dict_allele`
       AS
+      WITH allele_to_variation AS (
+        SELECT DISTINCT
+          vrs.out.id as allele_id,
+          vrs.in.variation_id
+        FROM `{S}.gks_vrs` vrs
+        WHERE vrs.out.id IS NOT NULL
+      )
       SELECT
         vrs.id as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
@@ -303,13 +310,8 @@ BEGIN
         FROM `{S}.gks_vrs`
         WHERE out.id IS NOT NULL
       ) vrs
-      LEFT JOIN {P}.temp_ctxvar_expression exp
-      ON
-        exp.variation_id = (
-          SELECT ANY_VALUE(v.in.variation_id)
-          FROM `{S}.gks_vrs` v
-          WHERE v.out.id = vrs.id
-        )
+      LEFT JOIN allele_to_variation atv ON atv.allele_id = vrs.id
+      LEFT JOIN {P}.temp_ctxvar_expression exp ON exp.variation_id = atv.variation_id
     """, '{S}', rec.schema_name);
     SET dict_allele_query = REPLACE(dict_allele_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE dict_allele_query;
