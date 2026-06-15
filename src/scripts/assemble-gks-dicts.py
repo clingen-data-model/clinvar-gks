@@ -57,7 +57,7 @@ SECTIONS = [
     ("location", "location-*.ndjson.gz", "key", "value"),
     ("allele", "allele-*.ndjson.gz", "key", "value"),
     ("gene", "gene-*.ndjson.gz", "key", "value"),
-    ("variation", "variation-*.ndjson.gz", "key", "value"),
+    ("variation", "variation-*.ndjson.gz", "id", None),
     ("condition", "condition-*.ndjson.gz", "id", None),
     ("conditionSet", "conditionSet-*.ndjson.gz", "id", None),
     ("submitter", "submitter-*.ndjson.gz", "key", "value"),
