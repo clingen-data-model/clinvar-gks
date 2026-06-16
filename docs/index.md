@@ -10,7 +10,7 @@ ClinVar-GKS addresses these challenges by transforming every ClinVar release int
 
 - **Normalized variant identifiers** — Every variant receives a computable [VRS](https://vrs.ga4gh.org/) identifier, enabling unambiguous cross-system matching
 - **Categorical variant representations** — Variants are represented as [Cat-VRS](https://cat-vrs.readthedocs.io/) categorical variants with defining allele constraints and expressions
-- **Structured classification statements** — Every submitted (SCV), aggregate (VCV), and condition-level (RCV) classification is represented as a [VA-Spec](https://va-spec.readthedocs.io/) statement with explicit propositions, evidence, and provenance
+- **Structured classification statements** — Every submitted (SCV), aggregate (VCV), and condition-level (RCV) classification is represented as a [VA-Spec](https://va-spec.ga4gh.org/) statement with explicit propositions, evidence, and provenance
 - **Semantic consistency** — Classifications, propositions, conditions, genes, and cross-references use standardized structures with typed references
 
 ## What It Covers
