@@ -1,8 +1,8 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_vcv_proc`(on_date DATE, debug BOOL)
 BEGIN
   DECLARE query_base STRING;
-  DECLARE query_grouping_base STRING;
-  DECLARE query_grouping_tier STRING;
+  DECLARE query_classification STRING;
+  DECLARE query_priority STRING;
   DECLARE query_agg_contribution STRING;
   DECLARE temp_create STRING;
 
@@ -42,7 +42,7 @@ BEGIN
 
           cct.label AS classif_label,
           cct.code as classif_type,
-          cct.original_description_order as classif_type_order,
+          cct.description_order as classif_type_order,
           cct.significance,
           cct.direction as scv_direction,
           cct.strength_label as scv_strength_name,
@@ -56,8 +56,10 @@ BEGIN
       JOIN `{S}.variation_archive` AS va ON ss.variation_id = va.variation_id
 
       JOIN `clinvar_ingest.clinvar_statement_types` AS cst ON cst.code = ss.statement_type
-      JOIN `clinvar_ingest.clinvar_clinsig_types` AS cct ON cct.code = ss.classif_type AND cct.statement_type = ss.statement_type
-      JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON cpt.code = ss.original_proposition_type
+      JOIN (
+        `clinvar_ingest.clinvar_clinsig_types` AS cct
+        JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON cpt.code = cct.proposition_type
+      ) ON cct.code = ss.classif_type AND cpt.statement_type_code = ss.statement_type
       LEFT JOIN `clinvar_ingest.submission_level` sl ON sl.rank = ss.rank
     """, '{S}', rec.schema_name);
     SET query_base = REPLACE(query_base, '{CT}', temp_create);
@@ -65,12 +67,12 @@ BEGIN
     EXECUTE IMMEDIATE query_base;
 
     -------------------------------------------------------------------------
-    -- GROUPING LAYER: BASE GROUPING
+    -- GROUPING LAYER: CLASSIFICATION GROUPING
     -- Only matching submission_levels aggregate together (PG with PG,
     -- EP with EP, CP with CP, etc.). No PGEP grouping.
     -------------------------------------------------------------------------
-    SET query_grouping_base = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_vcv_grouping_base_agg` AS
+    SET query_classification = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_vcv_classification_agg` AS
       WITH
       core_agg AS (
           SELECT
@@ -113,43 +115,25 @@ BEGIN
           WHERE b.prop_type = 'sci'
           GROUP BY 1, 2, 3, 4, 5
       ),
-      vcv_conditions_deduped AS (
-          -- Preserve top-level identity: single conditions keyed by trait_id,
-          -- conditionSets keyed by trait_set_id. Never flatten sets into traits.
-          SELECT variation_id, statement_group, prop_type, submission_level, tier_grouping,
-                 condition_ref, ANY_VALUE(condition_json) as condition_json
-          FROM (
-            -- Single conditions: reference by trait_id
-            SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level,
-                   IF(b.prop_type = 'sci', b.classif_type, CAST(NULL AS STRING)) as tier_grouping,
-                   scs.condition.id as condition_ref,
-                   TO_JSON(STRUCT(
-                     scs.condition.id as id,
-                     scs.condition.name, scs.condition.conceptType,
-                     scs.condition.primaryCoding, scs.condition.mappings
-                   )) as condition_json
-            FROM `{P}.temp_vcv_base_data` b
-            JOIN `{S}.gks_scv_condition_sets` scs ON b.scv_id = scs.scv_id
-            WHERE scs.condition IS NOT NULL
-            UNION ALL
-            -- ConditionSets: reference by trait_set_id (kept as atomic unit)
-            SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level,
-                   IF(b.prop_type = 'sci', b.classif_type, CAST(NULL AS STRING)) as tier_grouping,
-                   scs.conditionSet.id as condition_ref,
-                   TO_JSON(STRUCT(
-                     scs.conditionSet.id as id,
-                     scs.conditionSet.membershipOperator
-                   )) as condition_json
-            FROM `{P}.temp_vcv_base_data` b
-            JOIN `{S}.gks_scv_condition_sets` scs ON b.scv_id = scs.scv_id
-            WHERE scs.conditionSet IS NOT NULL
-          )
-          GROUP BY 1, 2, 3, 4, 5, 6
-      ),
       vcv_conditions AS (
-          SELECT variation_id, statement_group, prop_type, submission_level, tier_grouping,
-                 ARRAY_AGG(condition_json) as unique_conditions
-          FROM vcv_conditions_deduped
+          -- Collect unique condition/conditionSet IRI strings per grouping.
+          -- COALESCE across single/multi paths to handle SCV-RCV mismatches.
+          SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level,
+                 IF(b.prop_type = 'sci', b.classif_type, CAST(NULL AS STRING)) as tier_grouping,
+                 ARRAY_AGG(DISTINCT condition_ref IGNORE NULLS) as unique_conditions
+          FROM `{P}.temp_vcv_base_data` b
+          JOIN `{S}.gks_scv_condition_sets` scs ON b.scv_id = scs.scv_id
+          CROSS JOIN UNNEST([
+            COALESCE(
+              scs.extensions.value_submitted_condition.condition,
+              scs.extensions.value_submitted_condition_set.condition
+            ),
+            COALESCE(
+              scs.extensions.value_submitted_condition.conditionSet,
+              scs.extensions.value_submitted_condition_set.conditionSet
+            )
+          ]) AS condition_ref
+          WHERE condition_ref IS NOT NULL
           GROUP BY 1, 2, 3, 4, 5
       ),
       final_prep AS (
@@ -157,7 +141,7 @@ BEGIN
             c.variation_id, c.vcv_accession, c.full_vcv_id, c.statement_group, c.prop_type,
             c.submission_level, c.submission_level_label, c.tier_grouping, c.full_scv_ids,
             c.tier_priority, c.prop_display_order, COALESCE(sc.unique_traits, []) as unique_traits,
-            COALESCE(vc.unique_conditions, CAST([] AS ARRAY<JSON>)) as unique_conditions,
+            COALESCE(vc.unique_conditions, CAST([] AS ARRAY<STRING>)) as unique_conditions,
             c.scv_direction, c.scv_strength_name,
 
             -- Conflict explanation: suppressed for PG, EP, and FLAG (single-source levels)
@@ -216,14 +200,14 @@ BEGIN
         *
       FROM final_prep
     """, '{S}', rec.schema_name);
-    SET query_grouping_base = REPLACE(query_grouping_base, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_grouping_base;
+    SET query_classification = REPLACE(query_classification, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_classification;
 
     -------------------------------------------------------------------------
-    -- GROUPING LAYER: TIER GROUPING (Somatic only)
+    -- GROUPING LAYER: PRIORITY GROUPING (Somatic only)
     -------------------------------------------------------------------------
-    SET query_grouping_tier = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_vcv_grouping_tier_agg` AS
+    SET query_priority = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_vcv_priority_agg` AS
       WITH statement_base AS (
           SELECT
             variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
@@ -232,7 +216,7 @@ BEGIN
               tier_priority, prop_display_order, actual_agg_classif_label,
               agg_label_conflicting_explanation, unique_traits, unique_conditions, full_scv_ids, id, tier_grouping
             ) ORDER BY tier_priority ASC, ARRAY_LENGTH(full_scv_ids) DESC) as findings
-          FROM `{S}.gks_vcv_grouping_base_agg`
+          FROM `{S}.gks_vcv_classification_agg`
           WHERE tier_grouping IS NOT NULL
           GROUP BY 1, 2, 3, 4, 5, 6
       ),
@@ -269,7 +253,7 @@ BEGIN
         CAST(NULL AS STRING) AS aggregate_review_status
       FROM final_state_prep
     """, '{S}', rec.schema_name);
-    EXECUTE IMMEDIATE query_grouping_tier;
+    EXECUTE IMMEDIATE query_priority;
 
     -------------------------------------------------------------------------
     -- AGGREGATE CONTRIBUTION LAYER
@@ -283,15 +267,15 @@ BEGIN
             submission_level_label,
             agg_label, agg_label_conflicting_explanation, prop_display_order,
             aggregate_review_status, unique_conditions
-          FROM `{S}.gks_vcv_grouping_tier_agg`
-          LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `{S}.gks_vcv_grouping_base_agg` GROUP BY 1) ON prop_type = pt
+          FROM `{S}.gks_vcv_priority_agg`
+          LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `{S}.gks_vcv_classification_agg` GROUP BY 1) ON prop_type = pt
           UNION ALL
           SELECT
             id as source_id, variation_id, vcv_accession, full_vcv_id, statement_group, prop_type, submission_level,
             submission_level_label,
             actual_agg_classif_label as agg_label, agg_label_conflicting_explanation, prop_display_order,
             aggregate_review_status, unique_conditions
-          FROM `{S}.gks_vcv_grouping_base_agg`
+          FROM `{S}.gks_vcv_classification_agg`
           WHERE tier_grouping IS NULL
       ),
       ranked_levels AS (

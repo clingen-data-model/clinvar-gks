@@ -1,8 +1,8 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_rcv_proc`(on_date DATE, debug BOOL)
 BEGIN
   DECLARE query_base STRING;
-  DECLARE query_grouping_base STRING;
-  DECLARE query_grouping_tier STRING;
+  DECLARE query_classification STRING;
+  DECLARE query_priority STRING;
   DECLARE query_agg_contribution STRING;
   DECLARE temp_create STRING;
 
@@ -42,7 +42,7 @@ BEGIN
 
           cct.label AS classif_label,
           cct.code as classif_type,
-          cct.original_description_order as classif_type_order,
+          cct.description_order as classif_type_order,
           cct.significance,
           cct.direction as scv_direction,
           cct.strength_label as scv_strength_name,
@@ -60,8 +60,10 @@ BEGIN
       JOIN `{S}.rcv_accession` AS ra ON rm.rcv_accession = ra.id
 
       JOIN `clinvar_ingest.clinvar_statement_types` AS cst ON cst.code = ss.statement_type
-      JOIN `clinvar_ingest.clinvar_clinsig_types` AS cct ON cct.code = ss.classif_type AND cct.statement_type = ss.statement_type
-      JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON cpt.code = ss.original_proposition_type
+      JOIN (
+        `clinvar_ingest.clinvar_clinsig_types` AS cct
+        JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON cpt.code = cct.proposition_type
+      ) ON cct.code = ss.classif_type AND cpt.statement_type_code = ss.statement_type
       LEFT JOIN `clinvar_ingest.submission_level` sl ON sl.rank = ss.rank
     """, '{S}', rec.schema_name);
     SET query_base = REPLACE(query_base, '{CT}', temp_create);
@@ -69,10 +71,10 @@ BEGIN
     EXECUTE IMMEDIATE query_base;
 
     -------------------------------------------------------------------------
-    -- GROUPING LAYER: BASE GROUPING
+    -- GROUPING LAYER: CLASSIFICATION GROUPING
     -------------------------------------------------------------------------
-    SET query_grouping_base = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_rcv_grouping_base_agg` AS
+    SET query_classification = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_rcv_classification_agg` AS
       WITH
       core_agg AS (
           SELECT
@@ -181,14 +183,14 @@ BEGIN
         *
       FROM final_prep
     """, '{S}', rec.schema_name);
-    SET query_grouping_base = REPLACE(query_grouping_base, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_grouping_base;
+    SET query_classification = REPLACE(query_classification, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_classification;
 
     -------------------------------------------------------------------------
-    -- GROUPING LAYER: TIER GROUPING (Somatic only)
+    -- GROUPING LAYER: PRIORITY GROUPING (Somatic only)
     -------------------------------------------------------------------------
-    SET query_grouping_tier = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_rcv_grouping_tier_agg` AS
+    SET query_priority = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_rcv_priority_agg` AS
       WITH statement_base AS (
           SELECT
             variation_id, rcv_accession, full_rcv_id, trait_set_id, statement_group, prop_type, submission_level,
@@ -197,7 +199,7 @@ BEGIN
               tier_priority, prop_display_order, actual_agg_classif_label,
               agg_label_conflicting_explanation, unique_traits, full_scv_ids, id, tier_grouping
             ) ORDER BY tier_priority ASC, ARRAY_LENGTH(full_scv_ids) DESC) as findings
-          FROM `{S}.gks_rcv_grouping_base_agg`
+          FROM `{S}.gks_rcv_classification_agg`
           WHERE tier_grouping IS NOT NULL
           GROUP BY 1, 2, 3, 4, 5, 6, 7
       ),
@@ -232,7 +234,7 @@ BEGIN
         CAST(NULL AS STRING) AS aggregate_review_status
       FROM final_state_prep
     """, '{S}', rec.schema_name);
-    EXECUTE IMMEDIATE query_grouping_tier;
+    EXECUTE IMMEDIATE query_priority;
 
     -------------------------------------------------------------------------
     -- AGGREGATE CONTRIBUTION LAYER
@@ -245,15 +247,15 @@ BEGIN
             submission_level_label,
             agg_label, agg_label_conflicting_explanation, prop_display_order,
             aggregate_review_status
-          FROM `{S}.gks_rcv_grouping_tier_agg`
-          LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `{S}.gks_rcv_grouping_base_agg` GROUP BY 1) ON prop_type = pt
+          FROM `{S}.gks_rcv_priority_agg`
+          LEFT JOIN (SELECT DISTINCT prop_type as pt, MIN(prop_display_order) as prop_display_order FROM `{S}.gks_rcv_classification_agg` GROUP BY 1) ON prop_type = pt
           UNION ALL
           SELECT
             id as source_id, variation_id, rcv_accession, full_rcv_id, trait_set_id, statement_group, prop_type, submission_level,
             submission_level_label,
             actual_agg_classif_label as agg_label, agg_label_conflicting_explanation, prop_display_order,
             aggregate_review_status
-          FROM `{S}.gks_rcv_grouping_base_agg`
+          FROM `{S}.gks_rcv_classification_agg`
           WHERE tier_grouping IS NULL
       ),
       ranked_levels AS (
