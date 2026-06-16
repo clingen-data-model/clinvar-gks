@@ -81,6 +81,7 @@ nav:
       - RCV Extensions: pipeline/rcv-statements/rcv-extensions.md
   - Output Reference:
     - output-reference/index.md
+    - Output Format: output-reference/overview.md
     - Categorical Variants: output-reference/cat-vrs.md
     - SCV Statements: output-reference/scv-statements.md
     - VCV Statements: output-reference/vcv-statements.md
