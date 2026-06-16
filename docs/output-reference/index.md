@@ -60,4 +60,4 @@ The output conforms to these GA4GH standards:
 
 - **[VRS 2.0](https://vrs.ga4gh.org/)** — Variation Representation Specification for allele and copy number representations
 - **[Cat-VRS](https://cat-vrs.readthedocs.io/)** — Categorical Variation for grouping variants at a higher categorical level
-- **[VA-Spec](https://va-spec.readthedocs.io/)** — Variant Annotation Specification for clinical variant statements
+- **[VA-Spec](https://va-spec.ga4gh.org/)** — Variant Annotation Specification for clinical variant statements
