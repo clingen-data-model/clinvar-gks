@@ -1,40 +1,56 @@
 # Output Reference
 
-The ClinVar-GKS pipeline produces several JSONL files distributed via a public Google Cloud Storage bucket. Each file contains one JSON record per line, compressed with gzip.
+The ClinVar-GKS pipeline produces a single compressed JSON file per release, containing all variant representations, clinical classification statements, and supporting reference data. This section documents the output from a **consumer perspective** — how the file is structured, what each section contains, and how to interpret the data.
 
-This section documents the JSON output from a **consumer perspective** — what each file contains, the structure of its records, and how to interpret the fields. For details on how these files are built, see the [Pipeline](../pipeline/index.md) documentation.
+For details on how the output is built, see the [Pipeline](../pipeline/index.md) documentation.
 
 ---
 
-## Output Files
+## Release Format
 
-| File | Content | Records | Pipeline Source |
-| --- | --- | --- | --- |
-| `variation.jsonl.gz` | [Categorical Variants](cat-vrs.md) | One per ClinVar variation with a resolved VRS identity | `gks_catvar` table via [Cat-VRS](../pipeline/cat-vrs/index.md) |
-| `scv_by_ref.jsonl.gz` | [SCV Statements (by reference)](scv-statements.md#by-reference-format) | One per submitted clinical assertion | `gks_scv_statement_by_ref` table via [SCV Statements](../pipeline/scv-statements/index.md) |
-| `scv_inline.jsonl.gz` | [SCV Statements (inline)](scv-statements.md#inline-format) | One per submitted clinical assertion | `gks_scv_statement_inline` table via [SCV Statements](../pipeline/scv-statements/index.md) |
-| `vcv.jsonl.gz` | [VCV Statements](vcv-statements.md) | One per variant-level aggregate classification | `gks_vcv_statement` table via [VCV Statements](../pipeline/vcv-statements/index.md) |
-| `rcv.jsonl.gz` | [RCV Statements](rcv-statements.md) | One per condition-level aggregate classification | `gks_rcv_statement` table via [RCV Statements](../pipeline/rcv-statements/index.md) |
+Each release is a single gzip-compressed JSON file (`.json.gz`) containing a root-level object with **bundle sections**. Each section is a keyed collection — the key is the object's unique identifier, and the value is the complete object.
+
+See [Output Format Overview](overview.md) for a detailed guide to the bundle structure, reference patterns, and how to navigate between sections.
+
+---
+
+## Sections
+
+| Section | Content | Key Format |
+| --- | --- | --- |
+| [`sequenceReference`](cat-vrs.md) | VRS sequence references | `SQ.{digest}` |
+| [`location`](cat-vrs.md) | VRS sequence locations | `ga4gh:SL.{digest}` |
+| [`allele`](cat-vrs.md) | VRS alleles with expressions | `ga4gh:VA.{digest}` |
+| [`gene`](cat-vrs.md) | Gene records | `ncbigene:{id}` |
+| [`variation`](cat-vrs.md) | Cat-VRS categorical variants | `clinvar:{variation_id}` |
+| `condition` | Trait/disease concepts | `clinvar.trait:{id}` |
+| `conditionSet` | Multi-condition groupings | `clinvar.traitset:{id}` |
+| `submitter` | Submitting organizations | `clinvar.submitter:{id}` |
+| [`proposition`](scv-statements.md) | Classification propositions | `{scv_id}-{CODE}` / `{vcv_id}-{group}-{prop}-{level}` |
+| [`scv`](scv-statements.md) | Submitted classifications | `clinvar.submission:{scv_id}.{version}` |
+| [`vcv`](vcv-statements.md) | Variation-level aggregates | `{vcv_id}-{group}-{prop}-{level}` |
+| [`rcv`](rcv-statements.md) | Condition-level aggregates | `{rcv_id}-{group}-{prop}-{level}` |
 
 ---
 
 ## Format Conventions
 
-All output files share these conventions:
-
-- **JSONL** — one JSON object per line, no surrounding array
-- **gzip compressed** — decompress with `gunzip` or read directly with libraries that support gzip streams
-- **Null stripping** — null-valued fields and empty arrays are omitted from the output
+- **Null stripping** — null-valued fields and empty arrays/objects are omitted from the output
 - **GA4GH identifiers** — VRS identifiers use the `ga4gh:` prefix (e.g., `ga4gh:VA.abc123`)
 - **ClinVar identifiers** — ClinVar-scoped identifiers use the `clinvar:` prefix (e.g., `clinvar:12345`)
+- **JSON pointer references** — objects reference each other using `#/{section}/{key}` strings (e.g., `#/allele/ga4gh:VA.abc123`)
 
 ---
 
-## Cross-File References
+## Cross-Section References
 
-Records in different output files reference each other by ID. For example, a VCV or RCV statement's leaf-level evidence items contain `{"id": "clinvar.submission:SCV000123.1"}` references that resolve to full SCV records in `scv_by_ref.jsonl.gz`, and `proposition.subjectVariant` references resolve to categorical variants in `variation.jsonl.gz`.
+Objects reference each other using `#/` JSON pointer strings rather than embedding full objects. This keeps the file compact and avoids duplication. For example:
 
-See [ID References and Cross-File Resolution](id-references.md) for the complete reference resolution guide, identifier formats, and code examples.
+- A **variation** references its allele as `#/allele/ga4gh:VA.abc123`
+- An **SCV statement** references its proposition as `#/proposition/SCV001234567-PATH`
+- A **VCV evidence line** references its contributing SCVs as `#/scv/clinvar.submission:SCV001234567.1`
+
+See [ID References](id-references.md) for the complete reference format guide, identifier patterns, and resolution rules.
 
 ---
 
@@ -44,4 +60,4 @@ The output conforms to these GA4GH standards:
 
 - **[VRS 2.0](https://vrs.ga4gh.org/)** — Variation Representation Specification for allele and copy number representations
 - **[Cat-VRS](https://cat-vrs.readthedocs.io/)** — Categorical Variation for grouping variants at a higher categorical level
-- **[VA-Spec](https://va-spec.readthedocs.io/)** — Variant Annotation Specification for clinical variant statements
+- **[VA-Spec](https://va-spec.ga4gh.org/)** — Variant Annotation Specification for clinical variant statements

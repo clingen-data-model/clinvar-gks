@@ -1,10 +1,22 @@
-# Categorical Variants
+# Variations
 
 ## Overview
 
-The `variation.jsonl.gz` file contains one JSON record per ClinVar variation that successfully resolved to a VRS identity. Each record is a `CategoricalVariant` conforming to the Cat-VRS specification — a higher-level grouping that associates a ClinVar variation with its resolved VRS allele or copy number variant, along with expressions, cross-references, and ClinVar metadata.
+The `variation` bundle section contains one record per ClinVar variation. Each record represents a ClinVar variation and its relationship to a resolved VRS genomic identity, along with expressions, cross-references, gene associations, and ClinVar metadata.
 
-This file is produced by the [Cat-VRS procedure](../pipeline/cat-vrs/index.md).
+ClinVar variations are represented using the GA4GH [Cat-VRS](https://cat-vrs.readthedocs.io/) (Categorical Variation) specification. Cat-VRS defines categorical variant types that group variants at a higher level than individual VRS alleles — bridging the gap between ClinVar's variation concept and VRS's precise genomic representations.
+
+This section is produced by the [Cat-VRS procedure](../pipeline/cat-vrs/index.md).
+
+### Variation Types
+
+ClinVar variations map to three Cat-VRS representation types:
+
+- **CanonicalAllele** — The vast majority of ClinVar variations. ClinVar identifies each variation by mapping submitted variant attributes to a GRCh38 genomic allele (falling back to GRCh37 or NCBI36 for historical data). This *defining allele* becomes the `DefiningAlleleConstraint`, and the same genomic allele generates the VRS allele referenced via `#/allele/`. See the [Cat-VRS CanonicalAllele](https://cat-vrs.readthedocs.io/) specification.
+
+- **CategoricalCnvCount / CategoricalCnvChange** — Copy number variants use a `DefiningLocationConstraint` following the same identification approach, with an additional `CopyCountConstraint` when an absolute copy count is provided, or a `CopyChangeConstraint` when only gain/loss is indicated.
+
+- **Generalized Categorical Variant** — Haplotypes, genotypes, and other complex or ambiguously defined variants that cannot yet be mapped to a specific VRS allele or location. These rely solely on the ClinVar variation ID to distinguish them. Work continues within the GA4GH GKS workstream to expand VRS and Cat-VRS coverage for these types as community need arises.
 
 ---
 
@@ -21,7 +33,7 @@ Each record is a `CategoricalVariant` with the following top-level fields:
 | `name` | string | Best available HGVS expression for the variant |
 | `constraints` | array | Defining constraints linking to the resolved VRS variant. See [Constraints](#constraints) |
 | `mappings` | array | Cross-references to external databases. See [Mappings](#mappings) |
-| `members` | array | JSON pointer references to the defining allele within `constraints` |
+| `members` | array | `#/allele/` references to the defining VRS allele (empty for generalized variants) |
 | `extensions` | array | ClinVar metadata and supplementary data. See [Extensions](#extensions) |
 
 </div>
@@ -30,50 +42,44 @@ Each record is a `CategoricalVariant` with the following top-level fields:
 
 ## Constraints
 
-The `constraints` array defines the relationship between the categorical variant and its resolved VRS representation. The constraint type depends on the variant class:
+The `constraints` array defines the relationship between the variation and its resolved VRS representation. The constraint type depends on the variant class:
 
-| Categorical Type | Constraint Type | Key Fields |
+| Variation Type | Constraint Type | Key Fields |
 | --- | --- | --- |
-| `CanonicalAllele` | `DefiningAlleleConstraint` | `allele` — a VRS `Allele` with `id`, `location`, `state`, and `expressions` |
-| `CategoricalCnvChange` | `DefiningLocationConstraint` + `CopyChangeConstraint` | `location` — a VRS `SequenceLocation`; `copyChange` — gain/loss designation |
-| `CategoricalCnvCount` | `DefiningLocationConstraint` + `CopyCountConstraint` | `location` — a VRS `SequenceLocation`; `copies` — integer or range |
+| CanonicalAllele | `DefiningAlleleConstraint` | `allele` — `#/allele/{id}` reference to a VRS Allele |
+| CategoricalCnvChange | `DefiningLocationConstraint` + `CopyChangeConstraint` | `location` — `#/location/{id}` reference; `copyChange` — gain/loss |
+| CategoricalCnvCount | `DefiningLocationConstraint` + `CopyCountConstraint` | `location` — `#/location/{id}` reference; `copies` — integer or range |
+| Generalized | None | No VRS constraint — identified by ClinVar variation ID only |
 
 ### Allele Constraint Example
 
-The `DefiningAlleleConstraint` contains a fully resolved VRS `Allele`:
+The `DefiningAlleleConstraint` references a VRS Allele in the `allele` bundle section:
 
 ```json
 {
   "type": "DefiningAlleleConstraint",
-  "allele": {
-    "id": "ga4gh:VA.PN-6_l2_yI1UPBRCtFnWkR52iZXKVJ8b",
-    "type": "Allele",
-    "name": "NC_000001.11:g.11128044_11128045del",
-    "digest": "PN-6_l2_yI1UPBRCtFnWkR52iZXKVJ8b",
-    "location": {
-      "id": "ga4gh:SL.5-SKfXZ941W7JbZW3UmQKtijyUfd6d7z",
-      "type": "SequenceLocation",
-      "sequenceReference": {
-        "type": "SequenceReference",
-        "refgetAccession": "SQ.Ya6Rs7DHhDeg7YaOSg1EoNi3U_nQ9SvO",
-        "residueAlphabet": "na",
-        "molecularType": "genomic"
-      },
-      "start": 11128043,
-      "end": 11128045
-    },
-    "state": {
-      "type": "ReferenceLengthExpression",
-      "length": 0,
-      "sequence": "",
-      "repeatSubunitLength": 2
-    },
-    "expressions": [
-      { "syntax": "hgvs.g", "value": "NC_000001.11:g.11128044_11128045del" },
-      { "syntax": "spdi", "value": "NC_000001.11:11128043:AT:ATAT" },
-      { "syntax": "gnomad", "value": "1-11128043-CAT-C" }
-    ]
-  }
+  "allele": "#/allele/ga4gh:VA.ELQCnIBGqaTl0AEE0Az18XZ2cgIHAQIY",
+  "relations": [
+    { "primaryCoding": { "code": "liftover_to", "system": "ga4gh-gks-term:allele-relation" } },
+    { "primaryCoding": { "code": "transcribed_to", "system": "http://www.sequenceontology.org" } }
+  ]
+}
+```
+
+### Location Constraint Example
+
+The `DefiningLocationConstraint` for copy number variants references a VRS Location:
+
+```json
+{
+  "type": "DefiningLocationConstraint",
+  "location": "#/location/ga4gh:SL.5-SKfXZ941W7JbZW3UmQKtijyUfd6d7z",
+  "matchCharacteristic": {
+    "primaryCoding": { "code": "is_within", "system": "ga4gh-gks-term:location-match" }
+  },
+  "relations": [
+    { "primaryCoding": { "code": "liftover_to", "system": "ga4gh-gks-term:allele-relation" } }
+  ]
 }
 ```
 
@@ -94,12 +100,9 @@ The `mappings` array contains cross-references to external databases. Each mappi
 ```json
 {
   "coding": {
-    "system": "https://www.ncbi.nlm.nih.gov/snp",
-    "code": "rs1570942058",
-    "iris": [
-      "https://identifiers.org/dbsnp:rs1570942058",
-      "https://www.ncbi.nlm.nih.gov/snp/rs1570942058"
-    ]
+    "system": "dbSNP",
+    "code": "1799945",
+    "iris": ["https://identifiers.org/dbsnp:rs1799945"]
   },
   "relation": "relatedMatch"
 }
@@ -115,17 +118,17 @@ Common extensions:
 
 | Extension Name | Value Type | Description |
 | --- | --- | --- |
-| `categorical variation type` | string | The Cat-VRS type — `CanonicalAllele`, `CategoricalCnvChange`, `CategoricalCnvCount` |
-| `clinvar variation type` | string | ClinVar's variant type (e.g., `Deletion`, `single nucleotide variant`) |
-| `clinvar variation subtype` | string | ClinVar's subclass type (e.g., `SimpleAllele`, `Haplotype`) |
-| `clinvar cytogenetic location` | string | Chromosomal band location (e.g., `1p36.22`) |
-| `clinvar assembly` | string | Reference genome assembly (e.g., `GRCh38`) |
-| `hgvs list` | array | All HGVS expressions with molecular consequences and MANE designations |
+| `categoricalVariationType` | string | The Cat-VRS type — `CanonicalAllele`, `CategoricalCnvChange`, `CategoricalCnvCount` |
+| `clinvarVariationType` | string | ClinVar's variant type (e.g., `Deletion`, `single nucleotide variant`) |
+| `clinvarSubclassType` | string | ClinVar's subclass type (e.g., `SimpleAllele`, `Haplotype`) |
+| `clinvarCytogeneticLocation` | string | Chromosomal band location (e.g., `1p36.22`) |
+| `clinvarGeneList` | array | Gene associations with `#/gene/` references, relationship type, and source |
+| `clinvarHgvsList` | array | All HGVS expressions with molecular consequences and MANE designations |
 
 ---
 
 ## Examples
 
-Annotated JSONC examples of categorical variant records are available in the repository:
+Annotated JSONC examples of variation records are available in the repository:
 
-- [Cat-VRS examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/cat-vrs) — `CanonicalAllele` records for ClinVar variations
+- [Cat-VRS examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/cat-vrs) — CanonicalAllele records for ClinVar variations

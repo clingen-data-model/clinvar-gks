@@ -235,4 +235,4 @@ These need formalization as part of the VA-Spec terminological standards.
 - [Statement Types](../../profiles/statement-types.md) — ClinVar-GKS statement type mappings
 - [Classifications](../../profiles/classifications.md) — classification values with direction/strength
 - [Propositions](../../profiles/propositions.md) — proposition type mappings
-- [VA-Spec](https://va-spec.readthedocs.io/) — GA4GH Variant Annotation Specification
+- [VA-Spec](https://va-spec.ga4gh.org/) — GA4GH Variant Annotation Specification
