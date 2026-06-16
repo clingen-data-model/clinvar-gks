@@ -2,9 +2,9 @@
 
 ## Overview
 
-The VCV statement output contains one JSON record per variant-level aggregate classification. Each record is a `Statement` that aggregates individual SCV submissions into a hierarchical summary — combining classifications across conditions and submission levels to produce a single variant-level result.
+The `vcv` bundle section contains one record per variation-level aggregate classification. Each record is a `Statement` that aggregates individual SCV submissions into a hierarchical summary — combining classifications across submission levels to produce a single variation-level result.
 
-VCV statements are produced by the [VCV Procedures](../pipeline/vcv-statements/vcv-proc.md) and serialized via the [JSON proc](../pipeline/scv-statements/index.md). The output table is `gks_vcv_statement`.
+VCV statements use `#/` references for propositions, contributing SCVs, and lower-level VCV groupings. They are produced by the [VCV Procedures](../pipeline/vcv-statements/vcv-proc.md).
 
 ---
 
@@ -16,15 +16,15 @@ Each record is a `Statement` with the following top-level fields:
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `id` | string | VCV accession with version and aggregation path — e.g., `VCV000012582.63-G` |
+| `id` | string | VCV layer ID — e.g., `VCV000012582.63-G-PATH-CP` |
 | `type` | string | Always `Statement` |
-| `confidence` | string | The submission level label (e.g., `"expert panel"`, `"assertion criteria provided"`) |
-| `direction` | string | Derived from the aggregate classification label; passed through from the contributing SCV for single-SCV aggregations |
-| `strength` | string | Derived from the aggregate classification label; passed through from the contributing SCV for single-SCV aggregations |
-| `classification` | object | Aggregate classification label. See [Classification](#classification) |
-| `proposition` | object | The aggregate proposition with variant, objectCondition, and SCV-matching type/predicate. See [Proposition](#proposition) |
-| `extensions` | array | Aggregate metadata — `clinvarReviewStatus`. See [Extensions](#extensions) |
-| `evidenceLines` | array | Contributing and non-contributing evidence from lower aggregation layers. See [Evidence Lines](#evidence-lines) |
+| `proposition` | string | `#/proposition/{id}` reference to the aggregate proposition |
+| `classification` | object | MappableConcept — the aggregate classification label. See [Classification](#classification) |
+| `strength` | object | MappableConcept — the aggregate evidence strength. See [Strength](#strength) |
+| `direction` | string | `supports`, `disputes`, or `neutral` — derived from the aggregate classification |
+| `confidence` | string | Submission level label (e.g., `criteria provided`, `expert panel`) |
+| `extensions` | array | Aggregate metadata — `clinvarReviewStatus` |
+| `evidenceLines` | array | Contributing and non-contributing evidence. See [Evidence Lines](#evidence-lines) |
 
 </div>
 
@@ -32,88 +32,110 @@ Each record is a `Statement` with the following top-level fields:
 
 ## Classification
 
-All VCV statements use a single `classification` attribute for the aggregate classification.
-
-### classification
-
-Used by all submission levels (PG, EP, CP, NOCP, NOCL, FLAG). Contains a single aggregate label with an optional `conflictingExplanation` extension when the classification is conflicting.
+The `classification` field is a MappableConcept with the aggregate classification label:
 
 ```json
 {
-  "classification": {
-    "conceptType": "Classification",
-    "name": "Pathogenic/Likely pathogenic",
-    "extension": [
-      {"name": "conflictingExplanation", "value": "Pathogenic(3); Likely pathogenic(2)"}
-    ]
-  }
+  "conceptType": "Classification",
+  "name": "Pathogenic/Likely pathogenic",
+  "extensions": [
+    {"name": "conflictingExplanation", "value": "Pathogenic(3); Likely pathogenic(2)"}
+  ]
 }
 ```
+
+The `extensions` array includes a `conflictingExplanation` when multiple contributing submissions have different clinical significance values. This extension is only present for CP-level aggregations with conflicts.
+
+---
+
+## Strength
+
+The `strength` field is a MappableConcept derived from the aggregate classification:
+
+```json
+{
+  "conceptType": "Strength",
+  "name": "Definitive"
+}
+```
+
+| Classification | Strength |
+| --- | --- |
+| Pathogenic, Benign, Oncogenic | Definitive |
+| Likely pathogenic, Likely benign, Likely Oncogenic | Likely |
+| Tier I (strong clinical significance) | Strong |
+| Tier II (potential clinical significance) | Potential |
+| Tier IV (benign/likely benign) | Likely |
+| Uncertain, Conflicting, Tier III | *null (omitted)* |
+
+For single-SCV aggregations, the strength is passed through from the contributing SCV.
 
 ---
 
 ## Proposition
 
-The `proposition` describes the aggregate classification claim. It uses an SCV-matching proposition `type` and `predicate` (from `clinvar_proposition_types`) and carries an `objectCondition` representing the unique conditions from contributing SCVs.
+VCV propositions are stored in the `proposition` bundle section. Each VCV statement references its proposition via `#/proposition/{id}`.
 
-<div class="field-table" markdown>
+A resolved VCV proposition contains:
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `type` | string | SCV-matching proposition type from `clinvar_proposition_types.gks_type` — e.g., `VariantPathogenicityProposition` |
-| `id` | string | Proposition ID — VCV accession without version, dash-separated (e.g., `VCV000012582-G-PATH-CP`) |
-| `subjectVariant` | string | Reference to the categorical variant — `clinvar:{variation_id}` |
-| `predicate` | string | SCV-matching predicate from `clinvar_proposition_types.gks_predicate` — e.g., `isCausalFor` |
-| `objectCondition` | object | The unique conditions from contributing SCVs — a single MappableConcept when there is one condition, or an OR ConceptSet when there are multiple distinct conditions |
-
-</div>
-
-!!! note
-    PG and EP are separate submission levels; PG outranks EP at the Aggregate Contribution Layer winner-takes-all.
-
----
-
-## Extensions
-
-VCV statements carry a single extension:
-
-| Extension | Type | Description |
-| --- | --- | --- |
-| `clinvarReviewStatus` | string | The aggregate review status reflecting submission level and aggregation outcome. See [Aggregate Review Status](../pipeline/vcv-statements/vcv-aggregation-rules.md#aggregate-review-status) for the complete value table |
+| `type` | string | Proposition type matching the underlying SCVs (e.g., `VariantPathogenicityProposition`) |
+| `id` | string | Proposition ID (e.g., `VCV000012582-G-PATH-CP`) |
+| `subjectVariant` | string | `#/variation/clinvar:{id}` reference |
+| `predicate` | string | Predicate matching the underlying SCVs (e.g., `isCausalFor`) |
+| `objectCondition` | array | Unique condition references from contributing SCVs (`#/condition/` and/or `#/conditionSet/`) |
 
 ---
 
 ## Evidence Lines
 
-Each VCV statement contains `evidenceLines` — an array of evidence line objects that reference the aggregation layer below:
+Each VCV statement contains `evidenceLines` — an array of evidence line objects that reference contributing and non-contributing submissions:
+
+```json
+{
+  "type": "EvidenceLine",
+  "directionOfEvidenceProvided": "supports",
+  "strengthOfEvidenceProvided": {
+    "conceptType": "Strength",
+    "name": "Contributing"
+  },
+  "evidenceItems": [
+    "#/scv/clinvar.submission:SCV001571657.2",
+    "#/scv/clinvar.submission:SCV000329383.7"
+  ]
+}
+```
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `type` | string | Always `EvidenceLine` |
-| `directionOfEvidenceProvided` | string | Always `supports` |
-| `strengthOfEvidenceProvided` | string | `contributing` or `non-contributing` — indicates whether this evidence contributed to the aggregate classification |
-| `evidenceItems` | array | Array of referenced statements from the layer below — either full inlined sub-statements or leaf-level SCV ID references |
+| `directionOfEvidenceProvided` | string | `supports` or `neutral` |
+| `strengthOfEvidenceProvided` | object | MappableConcept — `Contributing` or `Non-contributing` |
+| `evidenceItems` | array | `#/scv/` references (at classification layer) or `#/vcv/` references (at priority/aggregate layers) |
 
-At the top layer (the Aggregate Contribution Layer for both germline and somatic), evidence items contain fully inlined sub-statements with their own classification, proposition, extensions, and nested evidence lines. At the bottom layer (Base Grouping), evidence items are ID-only references to individual SCV submissions:
-
-```json
-{"id": "clinvar.submission:SCV001571657.2"}
-```
-
-These references resolve to full SCV records in `scv_by_ref.jsonl.gz`. See [ID References](id-references.md) for resolution details.
+Contributing evidence lines use `directionOfEvidenceProvided: "supports"`. Non-contributing evidence lines (lower-ranked submission levels) use `directionOfEvidenceProvided: "neutral"`.
 
 ---
 
 ## Layer Hierarchy
 
-VCV statements are built through a 2-layer aggregation hierarchy. The top-level record is the outermost layer; each nested evidence item is one layer deeper.
+VCV statements are built through a multi-layer aggregation hierarchy. The top-level output is the Aggregate Contribution layer; lower layers appear in the `evidenceItems` of higher layers.
 
 | Layer | ID Format | Aggregates By | Scope |
 | --- | --- | --- | --- |
-| Aggregate Contribution | `VCV000012582.63-G-PATH` | Proposition type | All |
-| Tier Grouping | `VCV000012582.63-G-SCI-CP` | Submission level | Somatic only |
-| Base Grouping | `VCV000012582.63-G-SCI-CP-PATHOGENIC` | Submission level + tier | All |
+| Classification | `{VCV}.{ver}-{group}-{PROP}-{level}[-{TIER}]` | Classification label within submission level | All |
+| Priority | `{VCV}.{ver}-{group}-{PROP}-{level}` | Tier priority within submission level | Somatic only |
+| Aggregate Contribution | `{VCV}.{ver}-{group}-{PROP}` | Submission level (winner-takes-all) | All |
 
-Both germline and somatic VCV statements use the Aggregate Contribution Layer as the top level. Tier Grouping tier components are uppercase (e.g., `PATHOGENIC`). Submission level ranking at the Aggregate Contribution Layer is `PG > EP > CP > NOCP > NOCL > FLAG`, with only matching submission levels aggregating together at Base Grouping.
+Submission level ranking at the Aggregate Contribution layer is `PG > EP > CP > NOCP > NOCL > FLAG`, with only matching submission levels aggregating together at the Classification layer.
 
 See [Aggregation Rules](../pipeline/vcv-statements/vcv-aggregation-rules.md) for detailed submission level logic and [VCV Procedures](../pipeline/vcv-statements/vcv-proc.md) for implementation details.
+
+---
+
+## Examples
+
+Annotated JSONC examples of VCV statement records are available in the repository:
+
+- [VCV statement examples](https://github.com/clingen-data-model/clinvar-gks/tree/main/examples/vcv)
