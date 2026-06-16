@@ -1,6 +1,6 @@
 # Output Format Overview
 
-The ClinVar-GKS release file uses a **bundled dictionary format** — a single JSON object with named sections at the root level. Each section is a keyed dictionary where the key is the object's unique identifier and the value is the complete object.
+The ClinVar-GKS release file uses a **bundle format** — a single JSON object with named sections at the root level. A bundle is a dictionary-style approach to organizing a large amount of data across heterogeneous classes in a single file, where each section is a keyed collection of objects of the same class. The key is the object's unique identifier, and the value is the complete object.
 
 This design eliminates duplication (a sequence reference shared by thousands of locations appears once), keeps individual objects compact, and enables efficient lookups by ID.
 
@@ -131,4 +131,4 @@ The `conceptType` identifies the kind of concept. The `name` is the human-readab
 
 ## Future: Inlining Tool
 
-The bundled dictionary format is designed to support a community tool that converts the single compressed file into **inlined output** at various levels of detail — from complete (all references resolved inline) to minimal (references only). This tool is under development and will be documented here when available.
+The bundle format is designed to support a community tool that converts the single compressed file into **inlined output** at various levels of detail — from complete (all references resolved inline) to minimal (references only). This tool is under development and will be documented here when available.

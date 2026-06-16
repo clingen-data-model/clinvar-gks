@@ -18,7 +18,7 @@ Download the latest release:
 curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar-gks-current.json.gz
 ```
 
-Each release file is a single JSON object containing all dictionary sections — variations, statements, propositions, conditions, and supporting reference data. See [Output Format](../output-reference/overview.md) for the complete structure.
+Each release file is a single JSON object containing all bundle sections — variations, statements, propositions, conditions, and supporting reference data. See [Output Format](../output-reference/overview.md) for the complete structure.
 
 ---
 
@@ -61,7 +61,7 @@ Each release — weekly and monthly — is accompanied by a release notes file (
 
 ## File Format
 
-Each release is a **gzip-compressed JSON file** (`.json.gz`). The decompressed content is a single JSON object with dictionary sections at the root level:
+Each release is a **gzip-compressed JSON file** (`.json.gz`). The decompressed content is a single JSON object with bundle sections at the root level:
 
 ```json
 {
@@ -80,7 +80,7 @@ Each release is a **gzip-compressed JSON file** (`.json.gz`). The decompressed c
 }
 ```
 
-Each section is a keyed dictionary — the key is the object's unique identifier, and the value is the complete object. Objects reference each other using `#/` JSON pointer strings.
+Each section is a keyed collection — the key is the object's unique identifier, and the value is the complete object. Objects reference each other using `#/` JSON pointer strings.
 
 See [Output Format](../output-reference/overview.md) for detailed documentation of each section.
 
@@ -88,6 +88,6 @@ See [Output Format](../output-reference/overview.md) for detailed documentation 
 
 ## What's Next
 
-- [Output Format](../output-reference/overview.md) — the bundled dictionary structure and reference patterns
+- [Output Format](../output-reference/overview.md) — the bundle structure and reference patterns
 - [Examples](examples.md) — annotated sample records from each section
 - [Pipeline Overview](../pipeline/index.md) — how the data is produced from ClinVar XML
