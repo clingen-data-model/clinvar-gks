@@ -83,7 +83,15 @@ A gene record with NCBI Entrez gene ID, HGNC ID, symbol, and identifier IRIs. Re
 
 ### [Variation](variation.md)
 
-A Cat-VRS categorical variant that groups a ClinVar variation with its defining VRS allele, constraints, cross-references, HGVS expressions, and gene associations. References alleles via `#/allele/` and genes via `#/gene/`.
+A ClinVar variation — the central entity linking a genomic change to its clinical classifications. Each variation carries cross-references, HGVS expressions, gene associations, and a set of constraints that define its relationship to a VRS allele or location.
+
+ClinVar variations are represented using three GA4GH Cat-VRS recipes:
+
+- **CanonicalAllele** — The vast majority of ClinVar variations. ClinVar identifies each variation by mapping submitted variant attributes to a GRCh38 genomic allele (falling back to GRCh37 or NCBI36 for historical data). This *defining allele* becomes the `DefiningAlleleConstraint`, and the same genomic allele is used to generate the VRS representation referenced via `#/allele/`.
+
+- **CategoricalCnvCount / CategoricalCnvChange** — Copy number variants use a `DefiningLocationConstraint` following the same identification approach, with an additional `CopyCountConstraint` when ClinVar provides an absolute copy count, or a `CopyChangeConstraint` when only gain/loss is indicated.
+
+- **Generalized Categorical Variant** — Haplotypes, genotypes, and other complex or ambiguously defined variants that cannot yet be mapped to a specific VRS allele or location. These rely solely on the ClinVar variation ID to distinguish them. Work continues within the GA4GH GKS workstream to expand VRS and Cat-VRS coverage for these types as community need arises.
 
 **Bundle section:** `variation` — keyed by `clinvar:{variation_id}` (e.g., `clinvar:10`)
 
