@@ -82,7 +82,7 @@ BEGIN
           agg.aggregate_review_status IS NOT NULL,
           [STRUCT('clinvarReviewStatus' AS name, agg.aggregate_review_status AS value)],
           CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-        ) AS extensionss,
+        ) AS extensions,
 
         [
           STRUCT(
@@ -149,7 +149,7 @@ BEGIN
           agg.aggregate_review_status IS NOT NULL,
           [STRUCT('clinvarReviewStatus' AS name, agg.aggregate_review_status AS value)],
           CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-        ) AS extensionss,
+        ) AS extensions,
 
         ARRAY(
           SELECT AS STRUCT val.* FROM UNNEST([
@@ -228,7 +228,7 @@ BEGIN
           agg.aggregate_review_status IS NOT NULL,
           [STRUCT('clinvarReviewStatus' AS name, agg.aggregate_review_status AS value)],
           CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-        ) AS extensionss,
+        ) AS extensions,
 
         ARRAY(
           SELECT AS STRUCT val.* FROM UNNEST([
