@@ -41,7 +41,7 @@ These sections contain the VRS and Cat-VRS variant data:
 
 **`gene`** — Gene records with NCBI gene ID, HGNC ID, symbol, and identifier IRIs. Keyed by `ncbigene:{gene_id}` (e.g., `ncbigene:3077`).
 
-**`variation`** — Cat-VRS categorical variants linking ClinVar variation IDs to their VRS alleles, constraints, cross-references, HGVS expressions, and gene associations. Each variation references its members via `#/allele/{key}` and genes via `#/gene/{key}`. Keyed by `clinvar:{variation_id}` (e.g., `clinvar:10`).
+**`variation`** — ClinVar variations with their defining constraints, cross-references, HGVS expressions, and gene associations. Most variations are represented as CanonicalAlleles with a defining VRS allele (via `#/allele/`); copy number variants use a defining location (via `#/location/`); complex variants use a generalized representation. Keyed by `clinvar:{variation_id}` (e.g., `clinvar:10`).
 
 ### Clinical Data Sections
 
