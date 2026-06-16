@@ -10,6 +10,8 @@ BEGIN
   DECLARE query_scv_condition_names STRING;
   DECLARE query_scv_citations STRING;
   DECLARE query_scv_method STRING;
+  DECLARE dict_submitter_query STRING;
+  DECLARE dict_proposition_query STRING;
   DECLARE query_statement_scv_pre STRING;
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
@@ -589,6 +591,45 @@ BEGIN
     EXECUTE IMMEDIATE query_scv_method;
 
     ---------------------------------------------------------------------------
+    -- Step 7d: Dictionary table - submitters (global, keyed by clinvar.submitter:{id})
+    ---------------------------------------------------------------------------
+    SET dict_submitter_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_submitter`
+      AS
+      SELECT
+        scv.submitter.id as key,
+        ANY_VALUE(JSON_STRIP_NULLS(TO_JSON(scv.submitter), remove_empty => TRUE)) as value
+      FROM {P}.temp_gks_scv scv
+      WHERE scv.submitter.id IS NOT NULL
+      GROUP BY scv.submitter.id
+    """, '{S}', rec.schema_name);
+    SET dict_submitter_query = REPLACE(dict_submitter_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE dict_submitter_query;
+
+    ---------------------------------------------------------------------------
+    -- Step 7e: Dictionary table - propositions (global, keyed by proposition id)
+    ---------------------------------------------------------------------------
+    SET dict_proposition_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_proposition`
+      AS
+      SELECT
+        sp.id as key,
+        JSON_STRIP_NULLS(TO_JSON(
+          (SELECT AS STRUCT sp.* EXCEPT(scv_id))
+        ), remove_empty => TRUE) as value
+      FROM {P}.temp_gks_scv_proposition sp
+      UNION ALL
+      SELECT
+        stp.id as key,
+        JSON_STRIP_NULLS(TO_JSON(
+          (SELECT AS STRUCT stp.* EXCEPT(scv_id))
+        ), remove_empty => TRUE) as value
+      FROM {P}.temp_gks_scv_target_proposition stp
+    """, '{S}', rec.schema_name);
+    SET dict_proposition_query = REPLACE(dict_proposition_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE dict_proposition_query;
+
+    ---------------------------------------------------------------------------
     -- Step 8: Create statement SCV pre table (simple join, no UNNEST)
     ---------------------------------------------------------------------------
     SET query_statement_scv_pre = REPLACE("""
@@ -633,6 +674,7 @@ BEGIN
         'Statement' as type,
         FORMAT('#/proposition/%s', sp.id) as proposition,
         STRUCT(
+          'Classification' AS conceptType,
           scv.submitted_classification as name,
           IF(
             scv.classification_code IS NOT NULL,
@@ -649,6 +691,7 @@ BEGIN
           )] AS extensions
         ) as classification,
          STRUCT(
+          'Strength' AS conceptType,
           scv.strength_name as name,
           IF(
             scv.strength_code IS NOT NULL,
@@ -721,11 +764,11 @@ BEGIN
               'supports' as directionOfEvidenceProvided,
               CASE scv.classification_code
                 WHEN 'tier 1' THEN
-                  STRUCT('Level A/B' as name)
+                  STRUCT('Outcome' as conceptType, 'Level A/B' as name)
                 WHEN 'tier 2' THEN
-                  STRUCT('Level C/D' as name)
+                  STRUCT('Outcome' as conceptType, 'Level C/D' as name)
                 ELSE
-                  STRUCT(scv.classification_code as name)
+                  STRUCT('Outcome' as conceptType, scv.classification_code as name)
               END as evidenceOutcome,
               IF(
                 spc.extensions.value_submitted_condition_set IS NOT NULL,
