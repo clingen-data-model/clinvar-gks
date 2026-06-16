@@ -60,7 +60,7 @@ nav:
     - Output Format: output-reference/overview.md
     - Data Model:
       - output-reference/classes/index.md
-    - Categorical Variants: output-reference/cat-vrs.md
+    - Variations: output-reference/cat-vrs.md
     - SCV Statements: output-reference/scv-statements.md
     - VCV Statements: output-reference/vcv-statements.md
     - RCV Statements: output-reference/rcv-statements.md
