@@ -26,14 +26,18 @@ RCVs and VCVs use only the highest-ranking review status levels in the aggregate
 
 The rank order is a quantification of the review status levels used to appropriately segregate submissions within a single statement type, variant, and condition. Rank order is not a ClinVar concept but is used during the ClinVar-GKS aggregation process.
 
-| Rank | Review Status | Stars |
-| --- | --- | --- |
-| 4 | practice guideline | 4 |
-| 3 | reviewed by expert panel | 3 |
-| 1 | criteria provided, single submitter | 1 |
-| 0 | no assertion criteria provided | 0 |
-| -1 | no classification provided | 0 |
-| -3 | flagged submission | 0 |
+| Rank | Review Status | Stars | Scope |
+| --- | --- | --- | --- |
+| 4 | practice guideline | 4 | Individual / Aggregate |
+| 3 | reviewed by expert panel | 3 | Individual / Aggregate |
+| 2 | criteria provided, multiple submitters, no conflicts | 2 | Aggregate only |
+| 2 | criteria provided, conflicting classifications | 1 | Aggregate only |
+| 1 | criteria provided, single submitter | 1 | Individual / Aggregate |
+| 0 | no assertion criteria provided | 0 | Individual / Aggregate |
+| -1 | no classification provided | 0 | Individual / Aggregate |
+| -3 | flagged submission | 0 | Individual / Aggregate |
+
+Rank 2 statuses only appear on aggregate (VCV/RCV) statements where multiple CP-level submissions exist. A single CP submission produces rank 1. The distinction between "no conflicts" and "conflicting classifications" at rank 2 reflects whether the contributing CP submissions agree on clinical significance.
 
 ## Aggregate Review Status
 
