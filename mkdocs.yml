@@ -22,11 +22,15 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
   features:
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.indexes
+    - navigation.top
     - search.suggest
     - search.highlight
     - content.code.copy
+    - toc.follow
 
 extra_css:
   - stylesheets/extra.css
@@ -36,7 +40,11 @@ markdown_extensions:
   - admonition
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.details
   - attr_list
   - md_in_html
@@ -46,6 +54,25 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
+  - Data Access: data-access/index.md
+  # --- Understanding the Data ---
+  - Understanding the Data:
+    - Output Format: output-reference/overview.md
+    - Data Model:
+      - output-reference/classes/index.md
+    - Variations: output-reference/cat-vrs.md
+    - SCV Statements: output-reference/scv-statements.md
+    - VCV Statements: output-reference/vcv-statements.md
+    - RCV Statements: output-reference/rcv-statements.md
+    - ID References: output-reference/id-references.md
+    - Profiles:
+      - profiles/index.md
+      - Statement Types: profiles/statement-types.md
+      - Classifications: profiles/classifications.md
+      - Propositions: profiles/propositions.md
+      - Review Status: profiles/review-status.md
+    - Examples: data-access/examples.md
+  # --- Pipeline & Technical ---
   - Pipeline:
     - pipeline/index.md
     - Variation Identity:
@@ -79,31 +106,14 @@ nav:
       - pipeline/rcv-statements/index.md
       - RCV Procedures: pipeline/rcv-statements/rcv-proc.md
       - RCV Extensions: pipeline/rcv-statements/rcv-extensions.md
-  - Output Reference:
-    - output-reference/index.md
-    - Categorical Variants: output-reference/cat-vrs.md
-    - SCV Statements: output-reference/scv-statements.md
-    - VCV Statements: output-reference/vcv-statements.md
-    - RCV Statements: output-reference/rcv-statements.md
-    - ID References: output-reference/id-references.md
-  - Profiles:
-    - profiles/index.md
-    - Statement Types: profiles/statement-types.md
-    - Classifications: profiles/classifications.md
-    - Propositions: profiles/propositions.md
-    - Review Status: profiles/review-status.md
-  - Data Access:
-    - data-access/index.md
-    - Output Files: data-access/output-files.md
-    - Downloads: data-access/download.md
-    - Examples: data-access/examples.md
-  - Under Construction:
+  # --- Reference ---
+  - Reference:
+    - GA4GH Standards: reference/gks-standards.md
+    - Known Issues: reference/known-issues.md
+    - Glossary: reference/glossary.md
+  - Drafts:
     - drafts/index.md
     - ACMGv4 Variant Pathogenicity:
       - drafts/acmgv4-variant-pathogenicity/index.md
       - Case Data Model (Notes): drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM.md
       - Case Schema & Matrix: drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM-Schema.md
-  - Reference:
-    - reference/gks-standards.md
-    - Known Issues: reference/known-issues.md
-    - Glossary: reference/glossary.md
