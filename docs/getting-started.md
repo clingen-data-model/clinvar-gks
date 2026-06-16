@@ -4,7 +4,7 @@
 
 The current ClinVar-GKS release is available as a single compressed JSON file:
 
-```
+```text
 https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/
 ```
 
@@ -24,7 +24,7 @@ See [Data Access](data-access/index.md) for the full release schedule, archives,
 
 ## What's in the File
 
-The release file is a single JSON object with **dictionary sections** at the root level. Each section is a keyed collection of objects — the key is the object's unique identifier, and the value is the object itself.
+The release file is a single JSON object with **bundle sections** at the root level. Each section is a keyed collection of objects — the key is the object's unique identifier, and the value is the object itself.
 
 ```json
 {
@@ -91,7 +91,7 @@ The SCV statements for this variant reference it via `#/variation/clinvar:10` in
 
 ## Next Steps
 
-- [Output Format](output-reference/overview.md) — detailed guide to the bundled dictionary structure
+- [Output Format](output-reference/overview.md) — detailed guide to the bundle format
 - [Pipeline Overview](pipeline/index.md) — how the data is produced from ClinVar XML
 - [Statement Profiles](profiles/index.md) — the 14 statement types and their classifications
 - [Examples](data-access/examples.md) — annotated JSON examples

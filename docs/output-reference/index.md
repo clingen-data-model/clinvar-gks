@@ -8,9 +8,9 @@ For details on how the output is built, see the [Pipeline](../pipeline/index.md)
 
 ## Release Format
 
-Each release is a single gzip-compressed JSON file (`.json.gz`) containing a root-level object with **dictionary sections**. Each section is a keyed collection — the key is the object's unique identifier, and the value is the complete object.
+Each release is a single gzip-compressed JSON file (`.json.gz`) containing a root-level object with **bundle sections**. Each section is a keyed collection — the key is the object's unique identifier, and the value is the complete object.
 
-See [Output Format Overview](overview.md) for a detailed guide to the dictionary structure, reference patterns, and how to navigate between sections.
+See [Output Format Overview](overview.md) for a detailed guide to the bundle structure, reference patterns, and how to navigate between sections.
 
 ---
 
