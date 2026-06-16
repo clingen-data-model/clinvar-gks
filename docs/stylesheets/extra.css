@@ -64,42 +64,15 @@
   width: 1px;
 }
 
-/* Compact header and tabs navigation */
-.md-header {
-  box-shadow: none;
-}
-
-.md-header__inner {
-  padding-top: 0.1rem;
-  padding-bottom: 0.1rem;
-  min-height: 0;
-  height: 2.2rem;
-}
-
-.md-header__topic {
-  margin: 0;
-}
-
-.md-header__button.md-logo {
-  padding: 0.1rem 0;
-}
-
+/* Remove padding below tabs navigation */
 .md-tabs {
-  padding: 0;
-  margin: 0;
-  line-height: 1;
-}
-
-.md-tabs__link {
-  padding-top: 0.3rem;
-  padding-bottom: 0.3rem;
-  margin-top: 0;
-  font-size: 0.72rem;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 /* Header logos — fill available height with minimal padding */
 .md-header__button.md-logo img {
-  height: 28px;
+  height: 40px;
 }
 
 .md-header__ga4gh {
@@ -111,7 +84,7 @@
 }
 
 .md-header__ga4gh img {
-  height: 28px;
+  height: 40px;
   width: auto;
   filter: brightness(0) invert(1);
 }
