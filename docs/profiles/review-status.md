@@ -31,7 +31,7 @@ The rank order is a quantification of the review status levels used to appropria
 | 4 | practice guideline | 4 | Individual / Aggregate |
 | 3 | reviewed by expert panel | 3 | Individual / Aggregate |
 | 2 | criteria provided, multiple submitters, no conflicts | 2 | Aggregate only |
-| 2 | criteria provided, conflicting classifications | 1 | Aggregate only |
+| 1 | criteria provided, conflicting classifications | 1 | Aggregate only |
 | 1 | criteria provided, single submitter | 1 | Individual / Aggregate |
 | 0 | no assertion criteria provided | 0 | Individual / Aggregate |
 | -1 | no classification provided | 0 | Individual / Aggregate |
