@@ -211,39 +211,39 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 ## Identifier Formats
 
 **clinvar:{variation_id}**
-:   ClinVar variation identifier. References a CategoricalVariant record in `variation.jsonl.gz`. Example: `clinvar:12582`.
+:   ClinVar variation identifier. References a CategoricalVariant record in the `variation` bundle section. Example: `clinvar:12582`.
 
 **clinvar.submission:SCV{id}.{version}**
-:   SCV submission identifier with version. References an SCV Statement record. Example: `clinvar.submission:SCV001571657.2`.
+:   SCV submission identifier with version. References an SCV Statement record in the `scv` bundle section. Example: `clinvar.submission:SCV001571657.2`.
 
 **clinvar.submitter:{submitter_id}**
-:   Submitter organization identifier. Embedded in SCV records. Example: `clinvar.submitter:508027`.
+:   Submitter organization identifier. References a submitter record in the `submitter` bundle section. Example: `clinvar.submitter:508027`.
+
+**clinvar.trait:{trait_id}**
+:   Condition/trait identifier. References a condition record in the `condition` bundle section. Example: `clinvar.trait:9580`.
+
+**clinvar.traitset:{trait_set_id}**
+:   Condition set identifier. References a condition set in the `conditionSet` bundle section. Example: `clinvar.traitset:1234`.
 
 **ga4gh:{type}.{digest}**
-:   VRS identity digest. Embedded within CategoricalVariant constraints. Example: `ga4gh:VA.xXBYkzzu1AH0oyMKlbBtP2`.
+:   VRS identity digest. References alleles or locations in the corresponding bundle sections. Example: `ga4gh:VA.xXBYkzzu1AH0oyMKlbBtP2`.
 
 ---
 
-## Output Files
+## Output Format
 
-**variation.jsonl.gz**
-:   Output file containing CategoricalVariant records. One record per ClinVar variation with a resolved VRS identity.
+**Bundle**
+:   A single JSON file containing all data for a ClinVar release, organized as named sections at the root level. Each section is a keyed collection of objects of the same class, where the key is the object's unique identifier. Objects reference each other using `#/` JSON pointer strings.
 
-**scv_by_ref.jsonl.gz**
-:   Output file containing SCV statements with variants referenced by ID. Compact format.
+**Bundle Section**
+:   A named top-level key in the bundle file (e.g., `variation`, `scv`, `proposition`) containing a keyed collection of objects.
 
-**scv_inline.jsonl.gz**
-:   Output file containing SCV statements with full variant objects embedded inline. Self-contained format.
-
-**vcv.jsonl.gz**
-:   Output file containing VCV aggregate classification statements with hierarchical evidence structure.
+**JSON Pointer Reference**
+:   A `#/{section}/{key}` string used to reference an object in another bundle section. Example: `#/allele/ga4gh:VA.abc123` resolves to the allele with that key in the `allele` section.
 
 ---
 
 ## Technical Terms
-
-**JSONL**
-:   Newline-delimited JSON format. One complete JSON object per line, no surrounding array. Used for all ClinVar-GKS output files.
 
 **Null Stripping**
 :   Technique where null-valued fields and empty arrays are omitted from JSON output via `JSON_STRIP_NULLS(remove_empty => TRUE)`.

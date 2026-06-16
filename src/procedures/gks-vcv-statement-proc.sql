@@ -6,6 +6,7 @@ BEGIN
   DECLARE query_classification_pre STRING;
   DECLARE query_priority_pre STRING;
   DECLARE query_agg_contribution_pre STRING;
+  DECLARE dict_vcv_proposition_query STRING;
   DECLARE query_vcv_pre STRING;
   DECLARE temp_create STRING;
 
@@ -30,7 +31,7 @@ BEGIN
 
     -------------------------------------------------------------------------
     -- GROUPING LAYER: CLASSIFICATION GROUPING
-    -- All submission levels use classification_mappableConcept (no PGEP
+    -- All submission levels use classification (no PGEP
     -- per-SCV expansion).
     -------------------------------------------------------------------------
     SET query_classification = REPLACE("""
@@ -51,13 +52,19 @@ BEGIN
           END
         ) AS direction,
 
-        IF(ARRAY_LENGTH(agg.full_scv_ids) = 1,
-          agg.scv_strength_name,
-          CASE
-            WHEN agg.actual_agg_classif_label IN ('Pathogenic', 'Benign') THEN 'definitive'
-            WHEN agg.actual_agg_classif_label IN ('Likely pathogenic', 'Likely benign') THEN 'likely'
-            ELSE CAST(NULL AS STRING)
-          END
+        STRUCT(
+          'Strength' AS conceptType,
+          IF(ARRAY_LENGTH(agg.full_scv_ids) = 1,
+            agg.scv_strength_name,
+            CASE
+              WHEN agg.actual_agg_classif_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'Definitive'
+              WHEN agg.actual_agg_classif_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'Likely'
+              WHEN agg.actual_agg_classif_label LIKE 'Tier I%' THEN 'Strong'
+              WHEN agg.actual_agg_classif_label LIKE 'Tier II%' THEN 'Potential'
+              WHEN agg.actual_agg_classif_label LIKE 'Tier IV%' THEN 'Likely'
+              ELSE CAST(NULL AS STRING)
+            END
+          ) AS name
         ) AS strength,
 
         sl.label AS confidence,
@@ -69,30 +76,10 @@ BEGIN
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-          ) AS extension
-        ) AS classification_mappableConcept,
+          ) AS extensions
+        ) AS classification,
 
-        STRUCT(
-          cpt.gks_type AS type,
-          agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
-          CASE cpt.gks_type
-            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
-            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
-            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
-            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
-            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
-            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
-            ELSE 'isClinvarUndefinedAssociationFor'
-          END AS predicate,
-          agg.unique_conditions AS objectCondition
-        ) AS proposition,
+        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -104,7 +91,7 @@ BEGIN
           STRUCT(
             'EvidenceLine' AS type,
             'supports' AS directionOfEvidenceProvided,
-            'contributing' AS strengthOfEvidenceProvided,
+            STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
             ARRAY(
               SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
               FROM UNNEST(agg.full_scv_ids) AS scv_id
@@ -114,7 +101,6 @@ BEGIN
 
       FROM `{S}.gks_vcv_classification_agg` agg
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
-      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_classification = REPLACE(query_classification, '{CT}', temp_create);
     SET query_classification = REPLACE(query_classification, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -139,11 +125,17 @@ BEGIN
           ELSE 'supports'
         END AS direction,
 
-        CASE
-          WHEN agg.agg_label IN ('Pathogenic', 'Benign') THEN 'definitive'
-          WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign') THEN 'likely'
-          ELSE CAST(NULL AS STRING)
-        END AS strength,
+        STRUCT(
+          'Strength' AS conceptType,
+          CASE
+            WHEN agg.agg_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'Definitive'
+            WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'Likely'
+            WHEN agg.agg_label LIKE 'Tier I%' THEN 'Strong'
+            WHEN agg.agg_label LIKE 'Tier II%' THEN 'Potential'
+            WHEN agg.agg_label LIKE 'Tier IV%' THEN 'Likely'
+            ELSE CAST(NULL AS STRING)
+          END AS name
+        ) AS strength,
 
         sl.label AS confidence,
 
@@ -154,30 +146,10 @@ BEGIN
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-          ) AS extension
-        ) AS classification_mappableConcept,
+          ) AS extensions
+        ) AS classification,
 
-        STRUCT(
-          cpt.gks_type AS type,
-          agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
-          CASE cpt.gks_type
-            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
-            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
-            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
-            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
-            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
-            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
-            ELSE 'isClinvarUndefinedAssociationFor'
-          END AS predicate,
-          agg.unique_conditions AS objectCondition
-        ) AS proposition,
+        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -190,7 +162,7 @@ BEGIN
             STRUCT(
               'EvidenceLine' AS type,
               'supports' AS directionOfEvidenceProvided,
-              'contributing' AS strengthOfEvidenceProvided,
+              STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
               ARRAY(
                 SELECT FORMAT('#/vcv/%s', stmt_id)
                 FROM UNNEST(agg.contributing_statement_ids) AS stmt_id
@@ -199,20 +171,19 @@ BEGIN
             STRUCT(
               'EvidenceLine' AS type,
               'neutral' AS directionOfEvidenceProvided,
-              'non-contributing' AS strengthOfEvidenceProvided,
+              STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
               ARRAY(
                 SELECT FORMAT('#/vcv/%s', stmt_id)
                 FROM UNNEST(agg.non_contributing_statement_ids) AS stmt_id
               ) AS evidenceItems
             )
           ]) AS val
-          WHERE val.strengthOfEvidenceProvided = 'contributing'
+          WHERE val.strengthOfEvidenceProvided.name = 'Contributing'
              OR ARRAY_LENGTH(val.evidenceItems) > 0
         ) AS evidenceLines
 
       FROM `{S}.gks_vcv_priority_agg` agg
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
-      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_priority = REPLACE(query_priority, '{CT}', temp_create);
     SET query_priority = REPLACE(query_priority, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -236,11 +207,17 @@ BEGIN
           ELSE 'supports'
         END AS direction,
 
-        CASE
-          WHEN agg.agg_label IN ('Pathogenic', 'Benign') THEN 'definitive'
-          WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign') THEN 'likely'
-          ELSE CAST(NULL AS STRING)
-        END AS strength,
+        STRUCT(
+          'Strength' AS conceptType,
+          CASE
+            WHEN agg.agg_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'Definitive'
+            WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'Likely'
+            WHEN agg.agg_label LIKE 'Tier I%' THEN 'Strong'
+            WHEN agg.agg_label LIKE 'Tier II%' THEN 'Potential'
+            WHEN agg.agg_label LIKE 'Tier IV%' THEN 'Likely'
+            ELSE CAST(NULL AS STRING)
+          END AS name
+        ) AS strength,
 
         agg.contributing_submission_level_label AS confidence,
 
@@ -251,30 +228,10 @@ BEGIN
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
             [STRUCT('conflictingExplanation' AS name, agg.agg_label_conflicting_explanation AS value)],
             CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
-          ) AS extension
-        ) AS classification_mappableConcept,
+          ) AS extensions
+        ) AS classification,
 
-        STRUCT(
-          cpt.gks_type AS type,
-          agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
-          CASE cpt.gks_type
-            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
-            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
-            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
-            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
-            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
-            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
-            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
-            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
-            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
-            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
-            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
-            ELSE 'isClinvarUndefinedAssociationFor'
-          END AS predicate,
-          agg.unique_conditions AS objectCondition
-        ) AS proposition,
+        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -287,25 +244,24 @@ BEGIN
             STRUCT(
               'EvidenceLine' AS type,
               'supports' AS directionOfEvidenceProvided,
-              'contributing' AS strengthOfEvidenceProvided,
+              STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
               [FORMAT('#/vcv/%s', agg.contributing_layer_id)] AS evidenceItems
             ),
             STRUCT(
               'EvidenceLine' AS type,
               'neutral' AS directionOfEvidenceProvided,
-              'non-contributing' AS strengthOfEvidenceProvided,
+              STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
               ARRAY(
                 SELECT FORMAT('#/vcv/%s', nc.layer_id)
                 FROM UNNEST(agg.non_contributing_details) AS nc
               ) AS evidenceItems
             )
           ]) AS val
-          WHERE val.strengthOfEvidenceProvided = 'contributing'
+          WHERE val.strengthOfEvidenceProvided.name = 'Contributing'
              OR ARRAY_LENGTH(val.evidenceItems) > 0
         ) AS evidenceLines
 
       FROM `{S}.gks_vcv_aggregate_contribution` agg
-      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_agg_contribution = REPLACE(query_agg_contribution, '{CT}', temp_create);
     SET query_agg_contribution = REPLACE(query_agg_contribution, '{P}', IF(debug, rec.schema_name, '_SESSION'));
@@ -319,14 +275,14 @@ BEGIN
       {CT} `{P}.temp_vcv_classification_pre` AS
       SELECT
         l1.id, l1.type, l1.direction, l1.strength, l1.confidence,
-        l1.classification_mappableConcept,
+        l1.classification,
         l1.proposition,
         l1.extensions,
         [
           STRUCT(
             'EvidenceLine' AS type,
             'supports' AS directionOfEvidenceProvided,
-            'contributing' AS strengthOfEvidenceProvided,
+            STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
             ARRAY(
               SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
               FROM UNNEST(agg.full_scv_ids) AS scv_id
@@ -349,42 +305,42 @@ BEGIN
       l2_contributing AS (
         SELECT l2.id, ARRAY_AGG(TO_JSON(
           STRUCT(l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
-            l1.classification_mappableConcept,
+            l1.classification,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_vcv_priority_statements` l2
         CROSS JOIN UNNEST(l2.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         JOIN `{P}.temp_vcv_classification_pre` l1 ON l1.id = REGEXP_EXTRACT(item, r'#/vcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided = 'contributing'
+        WHERE el.strengthOfEvidenceProvided.name = 'Contributing'
         GROUP BY l2.id
       ),
       l2_non_contributing AS (
         SELECT l2.id, ARRAY_AGG(TO_JSON(
           STRUCT(l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
-            l1.classification_mappableConcept,
+            l1.classification,
             l1.proposition, l1.extensions, l1.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_vcv_priority_statements` l2
         CROSS JOIN UNNEST(l2.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         JOIN `{P}.temp_vcv_classification_pre` l1 ON l1.id = REGEXP_EXTRACT(item, r'#/vcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided = 'non-contributing'
+        WHERE el.strengthOfEvidenceProvided.name = 'Non-contributing'
         GROUP BY l2.id
       )
       SELECT
         l2.id, l2.type, l2.direction, l2.strength, l2.confidence,
-        l2.classification_mappableConcept,
+        l2.classification,
         l2.proposition,
         l2.extensions,
         ARRAY_CONCAT(
           IF(c.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, 'contributing' AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
+            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
+            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
           ),
           IF(nc.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, 'non-contributing' AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
+            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
+            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
           )
         ) AS evidenceLines
       FROM `{P}.temp_vcv_priority_statements` l2
@@ -403,52 +359,52 @@ BEGIN
       WITH
       all_layer_statements AS (
         SELECT id, type, direction, strength, confidence,
-          classification_mappableConcept, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
+          classification, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
         FROM `{P}.temp_vcv_priority_pre`
         UNION ALL
         SELECT id, type, direction, strength, confidence,
-          classification_mappableConcept, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
+          classification, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
         FROM `{P}.temp_vcv_classification_pre`
       ),
       l3_contributing AS (
         SELECT l3.id, ARRAY_AGG(TO_JSON(
           STRUCT(als.type, als.id, als.direction, als.strength, als.confidence,
-            als.classification_mappableConcept,
+            als.classification,
             als.proposition, als.extensions, als.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_vcv_agg_contribution_statements` l3
         CROSS JOIN UNNEST(l3.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         JOIN all_layer_statements als ON als.id = REGEXP_EXTRACT(item, r'#/vcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided = 'contributing'
+        WHERE el.strengthOfEvidenceProvided.name = 'Contributing'
         GROUP BY l3.id
       ),
       l3_non_contributing AS (
         SELECT l3.id, ARRAY_AGG(TO_JSON(
           STRUCT(als.type, als.id, als.direction, als.strength, als.confidence,
-            als.classification_mappableConcept,
+            als.classification,
             als.proposition, als.extensions, als.evidenceLines)
         )) AS evidenceItems
         FROM `{P}.temp_vcv_agg_contribution_statements` l3
         CROSS JOIN UNNEST(l3.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         JOIN all_layer_statements als ON als.id = REGEXP_EXTRACT(item, r'#/vcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided = 'non-contributing'
+        WHERE el.strengthOfEvidenceProvided.name = 'Non-contributing'
         GROUP BY l3.id
       )
       SELECT
         l3.id, l3.type, l3.direction, l3.strength, l3.confidence,
-        l3.classification_mappableConcept,
+        l3.classification,
         l3.proposition,
         l3.extensions,
         ARRAY_CONCAT(
           IF(c.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, 'contributing' AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
+            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
+            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
           ),
           IF(nc.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, 'non-contributing' AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
+            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
+            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
           )
         ) AS evidenceLines
       FROM `{P}.temp_vcv_agg_contribution_statements` l3
@@ -458,6 +414,94 @@ BEGIN
     SET query_agg_contribution_pre = REPLACE(query_agg_contribution_pre, '{CT}', temp_create);
     SET query_agg_contribution_pre = REPLACE(query_agg_contribution_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_agg_contribution_pre;
+
+    -------------------------------------------------------------------------
+    -- Dictionary table - VCV propositions (global, keyed by proposition id)
+    -- Collects propositions from all 3 layers (classification, priority, agg)
+    -------------------------------------------------------------------------
+    SET dict_vcv_proposition_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_vcv_proposition`
+      AS
+      SELECT
+        agg.prop_id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          cpt.gks_type AS type,
+          agg.prop_id AS id,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
+          agg.unique_conditions AS objectCondition
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gks_vcv_classification_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
+      UNION ALL
+      SELECT
+        agg.prop_id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          cpt.gks_type AS type,
+          agg.prop_id AS id,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
+          agg.unique_conditions AS objectCondition
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gks_vcv_priority_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
+      UNION ALL
+      SELECT
+        agg.prop_id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          cpt.gks_type AS type,
+          agg.prop_id AS id,
+          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          CASE cpt.gks_type
+            WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
+            WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
+            WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
+            WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
+            WHEN 'ClinvarConflictingDataFromSubmitterProposition' THEN 'isConflictingDataFromSubmittersFor'
+            WHEN 'ClinvarDrugResponseProposition' THEN 'hasDrugResponseFor'
+            WHEN 'ClinvarNotProvidedProposition' THEN 'hasNoProvidedClassificationFor'
+            WHEN 'ClinvarOtherProposition' THEN 'isClinvarOtherAssociationFor'
+            WHEN 'ClinvarProtectiveProposition' THEN 'isProtectiveFor'
+            WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
+            ELSE 'isClinvarUndefinedAssociationFor'
+          END AS predicate,
+          agg.unique_conditions AS objectCondition
+        )), remove_empty => TRUE) as value
+      FROM `{S}.gks_vcv_aggregate_contribution` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
+    """, '{S}', rec.schema_name);
+    SET dict_vcv_proposition_query = REPLACE(dict_vcv_proposition_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE dict_vcv_proposition_query;
 
     -------------------------------------------------------------------------
     -- FINAL: VCV statement pre (all Aggregate Contribution statements)
