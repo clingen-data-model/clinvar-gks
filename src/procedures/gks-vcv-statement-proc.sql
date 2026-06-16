@@ -91,7 +91,7 @@ BEGIN
           STRUCT(
             'EvidenceLine' AS type,
             'supports' AS directionOfEvidenceProvided,
-            'contributing' AS strengthOfEvidenceProvided,
+            STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
             ARRAY(
               SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
               FROM UNNEST(agg.full_scv_ids) AS scv_id
@@ -162,7 +162,7 @@ BEGIN
             STRUCT(
               'EvidenceLine' AS type,
               'supports' AS directionOfEvidenceProvided,
-              'contributing' AS strengthOfEvidenceProvided,
+              STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
               ARRAY(
                 SELECT FORMAT('#/vcv/%s', stmt_id)
                 FROM UNNEST(agg.contributing_statement_ids) AS stmt_id
@@ -171,14 +171,14 @@ BEGIN
             STRUCT(
               'EvidenceLine' AS type,
               'neutral' AS directionOfEvidenceProvided,
-              'non-contributing' AS strengthOfEvidenceProvided,
+              STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
               ARRAY(
                 SELECT FORMAT('#/vcv/%s', stmt_id)
                 FROM UNNEST(agg.non_contributing_statement_ids) AS stmt_id
               ) AS evidenceItems
             )
           ]) AS val
-          WHERE val.strengthOfEvidenceProvided = 'contributing'
+          WHERE val.strengthOfEvidenceProvided.name = 'Contributing'
              OR ARRAY_LENGTH(val.evidenceItems) > 0
         ) AS evidenceLines
 
@@ -244,20 +244,20 @@ BEGIN
             STRUCT(
               'EvidenceLine' AS type,
               'supports' AS directionOfEvidenceProvided,
-              'contributing' AS strengthOfEvidenceProvided,
+              STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
               [FORMAT('#/vcv/%s', agg.contributing_layer_id)] AS evidenceItems
             ),
             STRUCT(
               'EvidenceLine' AS type,
               'neutral' AS directionOfEvidenceProvided,
-              'non-contributing' AS strengthOfEvidenceProvided,
+              STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
               ARRAY(
                 SELECT FORMAT('#/vcv/%s', nc.layer_id)
                 FROM UNNEST(agg.non_contributing_details) AS nc
               ) AS evidenceItems
             )
           ]) AS val
-          WHERE val.strengthOfEvidenceProvided = 'contributing'
+          WHERE val.strengthOfEvidenceProvided.name = 'Contributing'
              OR ARRAY_LENGTH(val.evidenceItems) > 0
         ) AS evidenceLines
 
@@ -282,7 +282,7 @@ BEGIN
           STRUCT(
             'EvidenceLine' AS type,
             'supports' AS directionOfEvidenceProvided,
-            'contributing' AS strengthOfEvidenceProvided,
+            STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
             ARRAY(
               SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
               FROM UNNEST(agg.full_scv_ids) AS scv_id
@@ -312,7 +312,7 @@ BEGIN
         CROSS JOIN UNNEST(l2.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         JOIN `{P}.temp_vcv_classification_pre` l1 ON l1.id = REGEXP_EXTRACT(item, r'#/vcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided = 'contributing'
+        WHERE el.strengthOfEvidenceProvided.name = 'Contributing'
         GROUP BY l2.id
       ),
       l2_non_contributing AS (
@@ -325,7 +325,7 @@ BEGIN
         CROSS JOIN UNNEST(l2.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         JOIN `{P}.temp_vcv_classification_pre` l1 ON l1.id = REGEXP_EXTRACT(item, r'#/vcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided = 'non-contributing'
+        WHERE el.strengthOfEvidenceProvided.name = 'Non-contributing'
         GROUP BY l2.id
       )
       SELECT
@@ -335,12 +335,12 @@ BEGIN
         l2.extensions,
         ARRAY_CONCAT(
           IF(c.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, 'contributing' AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
+            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
+            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
           ),
           IF(nc.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, 'non-contributing' AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
+            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
+            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
           )
         ) AS evidenceLines
       FROM `{P}.temp_vcv_priority_statements` l2
@@ -376,7 +376,7 @@ BEGIN
         CROSS JOIN UNNEST(l3.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         JOIN all_layer_statements als ON als.id = REGEXP_EXTRACT(item, r'#/vcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided = 'contributing'
+        WHERE el.strengthOfEvidenceProvided.name = 'Contributing'
         GROUP BY l3.id
       ),
       l3_non_contributing AS (
@@ -389,7 +389,7 @@ BEGIN
         CROSS JOIN UNNEST(l3.evidenceLines) AS el
         CROSS JOIN UNNEST(el.evidenceItems) AS item
         JOIN all_layer_statements als ON als.id = REGEXP_EXTRACT(item, r'#/vcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided = 'non-contributing'
+        WHERE el.strengthOfEvidenceProvided.name = 'Non-contributing'
         GROUP BY l3.id
       )
       SELECT
@@ -399,12 +399,12 @@ BEGIN
         l3.extensions,
         ARRAY_CONCAT(
           IF(c.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, 'contributing' AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
+            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
+            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
           ),
           IF(nc.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, 'non-contributing' AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRING, evidenceItems ARRAY<JSON>>>)
+            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
+            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
           )
         ) AS evidenceLines
       FROM `{P}.temp_vcv_agg_contribution_statements` l3
