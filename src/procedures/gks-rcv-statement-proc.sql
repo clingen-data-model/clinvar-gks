@@ -88,8 +88,11 @@ BEGIN
         IF(ARRAY_LENGTH(agg.full_scv_ids) = 1,
           agg.scv_strength_name,
           CASE
-            WHEN agg.actual_agg_classif_label IN ('Pathogenic', 'Benign') THEN 'definitive'
-            WHEN agg.actual_agg_classif_label IN ('Likely pathogenic', 'Likely benign') THEN 'likely'
+            WHEN agg.actual_agg_classif_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'definitive'
+            WHEN agg.actual_agg_classif_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'likely'
+            WHEN agg.actual_agg_classif_label LIKE 'Tier I%' THEN 'strong'
+            WHEN agg.actual_agg_classif_label LIKE 'Tier II%' THEN 'potential'
+            WHEN agg.actual_agg_classif_label LIKE 'Tier IV%' THEN 'likely'
             ELSE CAST(NULL AS STRING)
           END
         ) AS strength,
@@ -154,8 +157,11 @@ BEGIN
         END AS direction,
 
         CASE
-          WHEN agg.agg_label IN ('Pathogenic', 'Benign') THEN 'definitive'
-          WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign') THEN 'likely'
+          WHEN agg.agg_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'definitive'
+          WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'likely'
+          WHEN agg.agg_label LIKE 'Tier I%' THEN 'strong'
+          WHEN agg.agg_label LIKE 'Tier II%' THEN 'potential'
+          WHEN agg.agg_label LIKE 'Tier IV%' THEN 'likely'
           ELSE CAST(NULL AS STRING)
         END AS strength,
 
@@ -230,8 +236,11 @@ BEGIN
         END AS direction,
 
         CASE
-          WHEN agg.agg_label IN ('Pathogenic', 'Benign') THEN 'definitive'
-          WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign') THEN 'likely'
+          WHEN agg.agg_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'definitive'
+          WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'likely'
+          WHEN agg.agg_label LIKE 'Tier I%' THEN 'strong'
+          WHEN agg.agg_label LIKE 'Tier II%' THEN 'potential'
+          WHEN agg.agg_label LIKE 'Tier IV%' THEN 'likely'
           ELSE CAST(NULL AS STRING)
         END AS strength,
 
