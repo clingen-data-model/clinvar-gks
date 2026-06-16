@@ -15,14 +15,26 @@ ClinVar-GKS addresses these challenges by transforming every ClinVar release int
 
 ## What It Covers
 
-The pipeline processes the **entirety** of each ClinVar XML release:
+The pipeline processes the **entirety** of each ClinVar XML release — every variation, submitted classification, and aggregate record is represented. While 100% of variant, SCV, VCV, and RCV records from the corresponding ClinVar XML release are included, some data types within ClinVar are not yet part of the v1 release.
 
-- **Every variation** with VRS-normalized alleles and locations
-- **Every submitted clinical classification** (SCV) across germline, somatic, and oncogenicity statement types
-- **Every aggregate variation classification** (VCV) with multi-layer aggregation
-- **Every condition-level aggregate classification** (RCV)
+| ClinVar Data Type | v1 Status |
+| --- | --- |
+| Variation Aggregate Classifications (VCVs) | Included |
+| Variation-Condition Aggregate Classifications (RCVs) | Included |
+| Germline and Somatic Submissions (SCVs) | Included |
+| Variations (incl. Genes, HGVS, SPDI and VCF extensions) | Included |
+| [Submitters](https://www.ncbi.nlm.nih.gov/clinvar/docs/submitter_list/) | Included |
+| Aggregate & Case-level observations ([example](https://www.ncbi.nlm.nih.gov/clinvar/variation/1185392/#new-submission-germline)) | Planned |
+| Functional data submissions ([example](https://www.ncbi.nlm.nih.gov/clinvar/variation/548447/#new-submission-functional-data)) | Planned |
 
-New releases are produced weekly, synchronized with ClinVar's release schedule.
+Items marked **Planned** are not currently included in the v1 release. If this data is requested by the community, it will be added as demand indicates.
+
+!!! note "Functional Data Submissions"
+    Functional data is submitted to ClinVar as an SCV and may or may not be associated with a germline or somatic classification record. Functional data SCVs are excluded from the v1 release regardless of whether they are linked to a classification SCV. They will be included in a future release when functional data support is added.
+
+Feedback and feature requests are welcome via the [GitHub issue tracker](https://github.com/clingen-data-model/clinvar-gks/issues).
+
+New releases are produced within a day or two after ClinVar's XML releases and are intended to be synchronized with ClinVar's release dates.
 
 ## Who It's For
 
