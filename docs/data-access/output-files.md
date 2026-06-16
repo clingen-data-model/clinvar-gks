@@ -1,98 +1,114 @@
-# Output Files
+# Output File
 
-!!! warning "Early Adopter Release"
-    Output file contents and structure may change as the project incorporates
-    feedback and aligns with evolving GA4GH GKS specifications.
-
-The ClinVar-GKS pipeline produces gzip-compressed JSONL files — one JSON object per line, each representing a single record. Files are published weekly in sync with ClinVar XML releases.
+Each ClinVar-GKS release is published as a **single gzip-compressed JSON file** containing all data for the corresponding ClinVar XML release in the bundle format.
 
 ---
 
-## File Summary
+## File Format
 
-| File | Record Type | GA4GH Spec | Typical Size |
-| --- | --- | --- | --- |
-| `clinvar_gks_variation.jsonl.gz` | `CategoricalVariant` | Cat-VRS | ~1.5 GB |
-| `clinvar_gks_scv_by_ref.jsonl.gz` | `Statement` | VA-Spec | ~2.0 GB |
-
----
-
-## Categorical Variants (`variation`)
-
-Each line is a Cat-VRS `CategoricalVariant` object representing a single ClinVar variation. The record includes VRS-normalized identifiers, genomic expressions (HGVS, SPDI, gnomAD), cross-references, gene associations, and assembly mappings.
-
-**Record count:** ~2.8 million per release (one per ClinVar variation)
-
-**Key fields:**
-
-- `id` — VRS-computed categorical variant identifier
-- `type` — Cat-VRS type (e.g., `CanonicalAllele`)
-- `members` — VRS allele definitions with sequence locations
-- `mappings` — cross-references to external databases (ClinVar, ClinGen, OMIM)
-- `extensions` — HGVS expressions, gene context, molecular consequences
-
-See [Categorical Variants output reference](../output-reference/cat-vrs.md) for full field documentation and [Cat-VRS examples](examples.md#categorical-variants-cat-vrs) for annotated samples.
-
----
-
-## SCV Statements (`scv_by_ref`)
-
-Each line is a VA-Spec `Statement` object representing a single ClinVar submitted classification (SCV). Variations are referenced by their VRS ID rather than embedded inline, keeping file size manageable.
-
-**Record count:** ~4.1 million per release (one per ClinVar SCV)
-
-**Key fields:**
-
-- `id` — statement identifier derived from the SCV accession
-- `type` — VA-Spec statement type (e.g., `Statement`)
-- `classification` — the submitted clinical classification
-- `proposition` — the clinical assertion (variant, condition, predicate)
-- `strength` — review status and assertion criteria
-- `direction` — whether the evidence supports or disputes the proposition
-- `extensions` — submission metadata, submitter details, review status
-
-See [SCV Statements output reference](../output-reference/scv-statements.md) for full field documentation and [SCV examples](examples.md#scv-statements) for annotated samples.
-
----
-
-## File Format Details
-
-### JSONL Structure
-
-Files use newline-delimited JSON (JSONL) format — each line is a complete, self-contained JSON object. No wrapper array or document-level metadata.
+The release file is a `.json.gz` file. The decompressed content is a single JSON object with named bundle sections at the root level — each section is a keyed collection of objects of the same class.
 
 ```bash
-# Inspect the first record
-gunzip -c clinvar_gks_variation.jsonl.gz | head -1 | python3 -m json.tool
+# Decompress and inspect the top-level keys
+gunzip -c clinvar-gks-current.json.gz | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for key in data:
+    print(f'{key}: {len(data[key]):,} entries')
+"
 ```
 
-### Compression
+See [Output Format](../output-reference/overview.md) for the full bundle structure, section inventory, and reference patterns.
 
-All files are gzip-compressed. Standard tools handle decompression transparently:
+---
 
-```bash
-# Stream without decompressing to disk
-gunzip -c clinvar_gks_scv_by_ref.jsonl.gz | wc -l
+## File Naming Convention
 
-# Python
-import gzip, json
-with gzip.open('clinvar_gks_variation.jsonl.gz', 'rt') as f:
-    for line in f:
-        record = json.loads(line)
-```
+### Current Release
 
-### File Naming Convention
-
-Published files follow this naming pattern:
+The `current/` endpoint uses a stable filename:
 
 ```text
-clinvar_gks_{dataset}_{YYYY_MM_DD}_{version}.jsonl.gz
+clinvar-gks-current.json.gz
 ```
 
-| Component | Description | Example |
-| --- | --- | --- |
-| `dataset` | Output type identifier | `variation`, `scv_by_ref` |
-| `YYYY_MM_DD` | ClinVar release date | `2026_03_15` |
-| `version` | Dataset schema version | `v2_4_3` |
+### Weekly Releases
 
-The `current/` directory uses stable filenames without the date or version suffix — see [Downloads](download.md) for details.
+Weekly releases within the current month include the release date:
+
+```text
+clinvar-gks-{YYYY-MM-DD}.json.gz
+```
+
+### Monthly Archives
+
+Archived monthly releases include the year and month:
+
+```text
+clinvar-gks_{YYYY}_{MM}.json.gz
+```
+
+---
+
+## Working with the File
+
+### Python
+
+```python
+import gzip
+import json
+
+with gzip.open('clinvar-gks-current.json.gz', 'rt') as f:
+    bundle = json.load(f)
+
+# Look up a specific variation
+variant = bundle['variation']['clinvar:10']
+print(variant['name'])
+
+# Resolve a reference
+allele_ref = variant['members'][0]  # e.g., "#/allele/ga4gh:VA.abc123"
+section, key = allele_ref.lstrip('#/').split('/', 1)
+allele = bundle[section][key]
+```
+
+### Command Line
+
+```bash
+# Count entries per section
+gunzip -c clinvar-gks-current.json.gz | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for key in data:
+    print(f'{key}: {len(data[key]):,}')
+"
+
+# Extract a single variation as pretty-printed JSON
+gunzip -c clinvar-gks-current.json.gz | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+print(json.dumps(data['variation']['clinvar:10'], indent=2))
+"
+```
+
+---
+
+## Sections Included
+
+Each release file contains the following bundle sections:
+
+| Section | Content |
+| --- | --- |
+| `sequenceReference` | VRS reference sequences with refget accessions |
+| `location` | VRS sequence locations with coordinates |
+| `allele` | VRS alleles with state and expressions |
+| `gene` | Gene records with identifiers and symbols |
+| `variation` | Cat-VRS categorical variants |
+| `condition` | Trait and disease concepts |
+| `conditionSet` | Multi-condition groupings |
+| `submitter` | Submitting organizations |
+| `proposition` | Classification propositions (SCV, VCV, and RCV) |
+| `scv` | Submitted classification statements |
+| `vcv` | Variation-level aggregate statements |
+| `rcv` | Condition-level aggregate statements |
+
+See [Data Model](../output-reference/classes/index.md) for class descriptions and relationship diagrams.
