@@ -43,7 +43,7 @@ BEGIN
           scv.version,
           IF(
             cpt.gks_type IS NOT NULL,
-            STRUCT(cpt.gks_type as type, cpt.gks_predicate as pred),
+            STRUCT(cpt.gks_type as type, cct.final_predicate as pred),
             STRUCT('ClinvarUndefinedProposition' as type, 'isClinvarUndefinedAssociationFor' as pred)
           ) as proposition,
 
@@ -83,6 +83,7 @@ BEGIN
               END
           END as evidence_line_target_proposition,
 
+          cpt.code as proposition_type_code,
           scv.date_created,
           scv.date_last_updated,
           scv.local_key,
@@ -136,14 +137,14 @@ BEGIN
         JOIN `{S}.scv_summary` scv
         ON
           scv.id = ca.id
-        LEFT JOIN `clinvar_ingest.clinvar_clinsig_types` cct
-          ON
+        LEFT JOIN (
+          `clinvar_ingest.clinvar_clinsig_types` cct
+          JOIN `clinvar_ingest.clinvar_proposition_types` cpt
+            ON cpt.code = cct.proposition_type
+        ) ON
             cct.code = scv.classif_type
             AND
-            cct.statement_type = scv.statement_type
-        LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt
-          ON
-            cpt.code = scv.original_proposition_type
+            cpt.statement_type_code = scv.statement_type
         LEFT JOIN `clinvar_ingest.submission_level` sl
           ON
             sl.rank = scv.rank
@@ -335,8 +336,8 @@ BEGIN
       {CT} {P}.temp_gks_scv_proposition
       AS
         SELECT
-          scv.id as scv_id,          
-          FORMAT('clinvar.submission:%s', scv.id) as id,
+          scv.id as scv_id,
+          FORMAT('%s-%s', scv.id, UPPER(IFNULL(scv.proposition_type_code, 'UNDEF'))) as id,
           scv.proposition.type as type,
           FORMAT('#/variation/clinvar:%s', scv.variation_id) as subjectVariant,
           scv.proposition.pred as predicate,
@@ -404,7 +405,7 @@ BEGIN
         )
         SELECT
           scv.id as scv_id,
-          FORMAT('clinvar.submission:%s', scv.id) as id,
+          FORMAT('%s-%s', scv.id, UPPER(tp.code)) as id,
           scv.evidence_line_target_proposition.type as type,
           FORMAT('#/variation/clinvar:%s', scv.variation_id) as subjectVariant,
           scv.evidence_line_target_proposition.pred as predicate,
@@ -453,6 +454,9 @@ BEGIN
         LEFT JOIN scv_drugs sd
         ON
           sd.scv_id = scv.id
+        LEFT JOIN `clinvar_ingest.clinvar_proposition_types` tp
+        ON
+          tp.gks_type = scv.evidence_line_target_proposition.type
         WHERE
           scv.evidence_line_target_proposition IS NOT NULL
     """, '{S}', rec.schema_name);
@@ -627,7 +631,7 @@ BEGIN
       SELECT
         FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
         'Statement' as type,
-        FORMAT('#/proposition/clinvar.submission:%s', scv.id) as proposition,
+        FORMAT('#/proposition/%s', sp.id) as proposition,
         STRUCT(
           scv.submitted_classification as name,
           IF(
@@ -713,7 +717,7 @@ BEGIN
             STRUCT(
               FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
               'EvidenceLine' as type,
-              FORMAT('#/proposition/clinvar.submission:%s', scv.id) as proposition,
+              FORMAT('#/proposition/%s', stp.id) as proposition,
               'supports' as directionOfEvidenceProvided,
               CASE scv.classification_code
                 WHEN 'tier 1' THEN
