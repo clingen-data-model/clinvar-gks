@@ -17,10 +17,10 @@ ClinVar-GKS addresses these challenges by transforming every ClinVar release int
 
 The pipeline processes the **entirety** of each ClinVar XML release:
 
-- **~2.8 million** variations with VRS-normalized alleles and locations
-- **~4.1 million** submitted clinical classifications (SCVs) across germline, somatic, and oncogenicity statement types
-- **~870,000** aggregate variation classifications (VCVs) with multi-layer aggregation
-- **~1.1 million** condition-level aggregate classifications (RCVs)
+- **Every variation** with VRS-normalized alleles and locations
+- **Every submitted clinical classification** (SCV) across germline, somatic, and oncogenicity statement types
+- **Every aggregate variation classification** (VCV) with multi-layer aggregation
+- **Every condition-level aggregate classification** (RCV)
 
 New releases are produced weekly, synchronized with ClinVar's release schedule.
 

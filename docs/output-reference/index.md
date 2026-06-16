@@ -16,20 +16,20 @@ See [Output Format Overview](overview.md) for a detailed guide to the dictionary
 
 ## Sections
 
-| Section | Content | Key Format | Records |
-| --- | --- | --- | --- |
-| [`sequenceReference`](cat-vrs.md) | VRS sequence references | `SQ.{digest}` | ~200 |
-| [`location`](cat-vrs.md) | VRS sequence locations | `ga4gh:SL.{digest}` | ~4M |
-| [`allele`](cat-vrs.md) | VRS alleles with expressions | `ga4gh:VA.{digest}` | ~4.5M |
-| [`gene`](cat-vrs.md) | Gene records | `ncbigene:{id}` | ~90K |
-| [`variation`](cat-vrs.md) | Cat-VRS categorical variants | `clinvar:{variation_id}` | ~2.8M |
-| `condition` | Trait/disease concepts | `clinvar.trait:{id}` | ~40K |
-| `conditionSet` | Multi-condition groupings | `clinvar.traitset:{id}` | ~30K |
-| `submitter` | Submitting organizations | `clinvar.submitter:{id}` | ~2.5K |
-| [`proposition`](scv-statements.md) | Classification propositions | `{scv_id}-{CODE}` / `{vcv_id}-{group}-{prop}-{level}` | ~4M+ |
-| [`scv`](scv-statements.md) | Submitted classifications | `clinvar.submission:{scv_id}.{version}` | ~4.1M |
-| [`vcv`](vcv-statements.md) | Variation-level aggregates | `{vcv_id}-{group}-{prop}-{level}` | ~870K |
-| [`rcv`](rcv-statements.md) | Condition-level aggregates | `{rcv_id}-{group}-{prop}-{level}` | ~1.1M |
+| Section | Content | Key Format |
+| --- | --- | --- |
+| [`sequenceReference`](cat-vrs.md) | VRS sequence references | `SQ.{digest}` |
+| [`location`](cat-vrs.md) | VRS sequence locations | `ga4gh:SL.{digest}` |
+| [`allele`](cat-vrs.md) | VRS alleles with expressions | `ga4gh:VA.{digest}` |
+| [`gene`](cat-vrs.md) | Gene records | `ncbigene:{id}` |
+| [`variation`](cat-vrs.md) | Cat-VRS categorical variants | `clinvar:{variation_id}` |
+| `condition` | Trait/disease concepts | `clinvar.trait:{id}` |
+| `conditionSet` | Multi-condition groupings | `clinvar.traitset:{id}` |
+| `submitter` | Submitting organizations | `clinvar.submitter:{id}` |
+| [`proposition`](scv-statements.md) | Classification propositions | `{scv_id}-{CODE}` / `{vcv_id}-{group}-{prop}-{level}` |
+| [`scv`](scv-statements.md) | Submitted classifications | `clinvar.submission:{scv_id}.{version}` |
+| [`vcv`](vcv-statements.md) | Variation-level aggregates | `{vcv_id}-{group}-{prop}-{level}` |
+| [`rcv`](rcv-statements.md) | Condition-level aggregates | `{rcv_id}-{group}-{prop}-{level}` |
 
 ---
 
