@@ -691,6 +691,7 @@ BEGIN
           )] AS extensions
         ) as classification,
          STRUCT(
+          'Strength' AS conceptType,
           scv.strength_name as name,
           IF(
             scv.strength_code IS NOT NULL,
