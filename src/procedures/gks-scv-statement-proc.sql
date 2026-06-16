@@ -764,11 +764,11 @@ BEGIN
               'supports' as directionOfEvidenceProvided,
               CASE scv.classification_code
                 WHEN 'tier 1' THEN
-                  STRUCT('Level A/B' as name)
+                  STRUCT('Classification' as conceptType, 'Level A/B' as name)
                 WHEN 'tier 2' THEN
-                  STRUCT('Level C/D' as name)
+                  STRUCT('Classification' as conceptType, 'Level C/D' as name)
                 ELSE
-                  STRUCT(scv.classification_code as name)
+                  STRUCT('Classification' as conceptType, scv.classification_code as name)
               END as evidenceOutcome,
               IF(
                 spc.extensions.value_submitted_condition_set IS NOT NULL,
