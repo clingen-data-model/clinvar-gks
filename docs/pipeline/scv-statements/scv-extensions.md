@@ -4,90 +4,84 @@
 
 SCV statement records contain `extensions` arrays at three structural levels — on the top-level `Statement`, on the `classification` object, and on proposition qualifier objects (`geneContextQualifier`, `modeOfInheritanceQualifier`, `penetranceQualifier`). Extensions carry ClinVar-specific metadata, submitter-provided values, and formatted descriptions that are not part of the GA4GH VA-Spec statement model but are essential for tracing how each SCV was processed.
 
-All extensions follow the structure `{ "name": "<extension_name>", "value_string": "<value>" }` for statement-level and qualifier-level extensions, and `{ "name": "<extension_name>", "value_string": "<value>" }` for classification extensions. Note that SCV extensions use `value_string` (not `value`) to match the VA-Spec extension convention for string-typed values.
+All extensions follow the structure `{ "name": "<extension_name>", "value": <value> }`, where the value type varies by extension. Most extensions carry simple string values. Extensions with complex value types — structured condition provenance objects — are documented as custom extension structures in a [dedicated section](#custom-extension-structures) below.
 
 ---
 
 ## Statement Extensions
 
-Extensions on the top-level `Statement` record, built in Step 7 of the [SCV Statement procedure](index.md).
+Extensions on the top-level `Statement` record.
 
-<table>
-  <thead>
-    <tr>
-      <th style="white-space: nowrap; width: 30%;">Extension (section, type)</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>clinvarScvId</code><br><em>Statement</em><br>string</td>
-      <td>The ClinVar SCV accession without version (e.g., <code>SCV001571657</code>). Always present.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "clinvarScvId", "value_string": "SCV001571657" }</code></pre></td>
-    </tr>
-    <tr>
-      <td><code>clinvarScvVersion</code><br><em>Statement</em><br>string</td>
-      <td>The version number of the SCV submission (e.g., <code>2</code>). Always present.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "clinvarScvVersion", "value_string": "2" }</code></pre></td>
-    </tr>
-    <tr>
-      <td><code>clinvarScvReviewStatus</code><br><em>Statement</em><br>string</td>
-      <td>The ClinVar review status of this submission (e.g., <code>criteria provided, single submitter</code>, <code>no assertion criteria provided</code>). Present when the SCV has a review status.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "clinvarScvReviewStatus", "value_string": "no assertion criteria provided" }</code></pre></td>
-    </tr>
-    <tr>
-      <td><code>submittedScvClassification</code><br><em>Statement</em><br>string</td>
-      <td>The original classification text submitted by the submitter, preserved when it differs from the normalized classification name. Present only when the submitted classification differs from the mapped value.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "submittedScvClassification", "value_string": "Pathogenic/Likely pathogenic" }</code></pre></td>
-    </tr>
-    <tr>
-      <td><code>submittedScvLocalKey</code><br><em>Statement</em><br>string</td>
-      <td>The unique local key provided by the submitter for this submission. Often contains variant and condition identifiers. Present only when the submitter provided a local key.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "submittedScvLocalKey", "value_string": "NM_004985.5:c.35G>A|Acute myeloid leukemia" }</code></pre></td>
-    </tr>
-    <tr>
-      <td><code>submissionLevel</code><br><em>Statement</em><br>string</td>
-      <td>The submission level code derived from the SCV's review status rank. Values: <code>PG</code> (practice guideline), <code>EP</code> (expert panel), <code>CP</code> (criteria provided), <code>NOCP</code> (no assertion criteria provided), <code>NOCL</code> (no classification provided), <code>FLAG</code> (flagged). Present when the submission level can be determined.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "submissionLevel", "value_string": "CP" }</code></pre></td>
-    </tr>
-  </tbody>
-</table>
+<div class="field-table" markdown>
+
+| Extension | Type | Description |
+|---|---|---|
+| `clinvarScvId` | string | The ClinVar SCV accession without version (e.g., `SCV001571657`). Always present. |
+| `clinvarScvVersion` | string | The version number of the SCV submission (e.g., `2`). Always present. |
+| `submittedCondition` | [SubmittedCondition](#submitted-condition) | Submitted condition provenance with normalization details, trait mapping, and `#/condition/` references. Present when the SCV maps to a single condition. See [Submitted Condition](#submitted-condition) below. |
+| `submittedConditionSet` | [SubmittedConditionSet](#submitted-condition-set) | Submitted condition set provenance with multiple condition concepts. Present when the SCV maps to multiple conditions. See [Submitted Condition Set](#submitted-condition-set) below. |
+| `clinvarScvReviewStatus` | string | The ClinVar review status (e.g., `criteria provided, single submitter`). Present when the SCV has a review status. |
+| `submittedScvClassification` | string | The original classification text submitted by the submitter, preserved when it differs from the normalized classification name. |
+| `submittedScvLocalKey` | string | The unique local key provided by the submitter for this submission. Present only when the submitter provided a local key. |
+| `submissionLevel` | string | The submission level code: `PG`, `EP`, `CP`, `NOCP`, `NOCL`, or `FLAG`. Present when the submission level can be determined. |
+
+</div>
+
+### Example
+
+A typical germline SCV statement extensions array:
+
+```json
+[
+  { "name": "clinvarScvId", "value": "SCV002769510" },
+  { "name": "clinvarScvVersion", "value": "1" },
+  {
+    "name": "submittedCondition",
+    "value": {
+      "condition": "#/condition/clinvar.trait:9582",
+      "id": "SCV002769510.0",
+      "name": "Hemochromatosis",
+      "type": "Disease",
+      "medgen_id": "C3469186",
+      "normalized_match": "#/condition/clinvar.trait:9582",
+      "normalized_resolution": "tm reftype xref omim",
+      "xrefs": [{ "code": "235200", "system": "OMIM" }],
+      "mapping": { "type": "XRef", "ref": "omim", "value": "235200" }
+    }
+  },
+  { "name": "clinvarScvReviewStatus", "value": "criteria provided, single submitter" },
+  { "name": "submittedScvLocalKey", "value": "vcgs/unit_1/hg38_NM_000410_3_HFE_c_187C_G" },
+  { "name": "submissionLevel", "value": "CP" }
+]
+```
+
+!!! note
+    Only one of `submittedCondition` or `submittedConditionSet` is present per SCV — never both. The `submittedScvClassification` extension is omitted when the submitted classification matches the normalized label exactly.
 
 ---
 
 ## Classification Extensions
 
-Extensions on the `classification` object within the Statement, providing a formatted summary of the classification context.
+Extensions on the `classification` object within the Statement.
 
-<table>
-  <thead>
-    <tr>
-      <th style="white-space: nowrap; width: 30%;">Extension (section, type)</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>description</code><br><em>classification</em><br>string</td>
-      <td>A formatted multi-line description summarizing the classification context. Template:<br><code>for &lt;condition_name&gt;\nClassification is based on the &lt;submission_level_label&gt; submission\n&lt;evaluated_date&gt; by &lt;submitter_name&gt;</code><br>Where <code>condition_name</code> is the condition name (or "<em>N</em> conditions" for multi-condition sets), <code>submission_level_label</code> is the full label (e.g., "criteria provided"), <code>evaluated_date</code> is formatted as <code>Mon YYYY</code> or <code>(-)</code>, and <code>submitter_name</code> is the submitting organization. Always present.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "description", "value_string": "for Acute myeloid leukemia\nClassification is based on the no assertion criteria provided submission\nMar 2018 by Hematopathology, MDACC" }</code></pre></td>
-    </tr>
-  </tbody>
-</table>
+<div class="field-table" markdown>
+
+| Extension | Type | Description |
+|---|---|---|
+| `description` | string | A formatted multi-line description summarizing the classification context: condition name, submission level, evaluation date, and submitter name. Always present. |
+
+</div>
+
+### Example
+
+```json
+{
+  "name": "description",
+  "value": "for Hemochromatosis\nClassification is based on the criteria provided submission\nMay 2021 by Victorian Clinical Genetics Services, Murdoch Childrens Research Institute"
+}
+```
+
+The description template is: `for <condition_name>\nClassification is based on the <submission_level_label> submission\n<evaluated_date> by <submitter_name>`. When the condition is a multi-condition set, `<condition_name>` is replaced with `<N> conditions`. The date is formatted as `Mon YYYY` or `(-)` when not available.
 
 ---
 
@@ -95,34 +89,69 @@ Extensions on the `classification` object within the Statement, providing a form
 
 Extensions on proposition qualifier objects, preserving the original submitter-provided values.
 
-<table>
-  <thead>
-    <tr>
-      <th style="white-space: nowrap; width: 30%;">Extension (section, type)</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>submittedGeneSymbols</code><br><em>geneContextQualifier</em><br>array&lt;string&gt;</td>
-      <td>The gene symbols originally submitted by the submitter for this assertion, extracted from the clinical assertion variation XML. Present when the submitter provided gene information. May differ from the normalized gene symbol if the submitted genes were not matched to a single-gene variation.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "submittedGeneSymbols", "value_string": ["KRAS"] }</code></pre></td>
-    </tr>
-    <tr>
-      <td><code>submittedModeOfInheritance</code><br><em>modeOfInheritanceQualifier</em><br>string</td>
-      <td>The mode of inheritance text as originally submitted by the submitter. Present on all MOI qualifiers. Preserved alongside the normalized HPO coding.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "submittedModeOfInheritance", "value_string": "Autosomal dominant inheritance" }</code></pre></td>
-    </tr>
-    <tr>
-      <td><code>submittedClassification</code><br><em>penetranceQualifier</em><br>string</td>
-      <td>The original submitted classification text that triggered the penetrance qualifier derivation. Present on all penetrance qualifiers. Used to trace why a <code>low</code> or <code>risk</code> penetrance value was assigned (e.g., "Pathogenic, low penetrance" → penetrance: low).</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "submittedClassification", "value_string": "Pathogenic, low penetrance" }</code></pre></td>
-    </tr>
-  </tbody>
-</table>
+<div class="field-table" markdown>
+
+| Extension | Type | Description |
+|---|---|---|
+| `submittedGeneSymbols` | array&lt;string&gt; | Gene symbols originally submitted by the submitter. Present on `geneContextQualifier` when the submitter provided gene information. May differ from the normalized gene symbol. |
+| `submittedModeOfInheritance` | string | Mode of inheritance text as originally submitted. Present on all `modeOfInheritanceQualifier` objects. Preserved alongside the normalized HPO coding. |
+| `submittedClassification` | string | Original submitted classification text that triggered the penetrance qualifier derivation. Present on all `penetranceQualifier` objects. |
+
+</div>
+
+### Example
+
+Gene context qualifier with submitted gene symbols:
+
+```json
+{
+  "conceptType": "gene",
+  "name": "KRAS",
+  "primaryCoding": { "code": "3845", "name": "KRAS", "system": "https://www.ncbi.nlm.nih.gov/gene/" },
+  "extensions": [
+    { "name": "submittedGeneSymbols", "value": ["KRAS"] }
+  ]
+}
+```
+
+---
+
+## Custom Extension Structures
+
+Extensions with complex value types use structured objects rather than simple scalars. The structures below define the shape of each custom extension's `value` field.
+
+### Submitted Condition
+
+The `submittedCondition` extension captures the provenance of how a single submitted condition was mapped to the normalized ClinVar trait. Present when the SCV maps to exactly one condition.
+
+<div class="field-table" markdown>
+
+| Field | Type | Description |
+|---|---|---|
+| `condition` | string | `#/condition/clinvar.trait:{id}` reference to the normalized condition in the bundle |
+| `conditionSet` | string | `#/conditionSet/clinvar.traitset:{id}` reference (present when the RCV trait set has one trait but the reference uses the set) |
+| `id` | string | The submitted clinical assertion trait ID (e.g., `SCV002769510.0`) |
+| `name` | string | The submitted condition name |
+| `type` | string | The submitted condition type (e.g., `Disease`, `Finding`) |
+| `medgen_id` | string | The submitted or resolved MedGen concept ID |
+| `normalized_match` | string | `#/condition/` reference to the matched normalized trait |
+| `normalized_resolution` | string | The resolution method used to match the submitted condition (e.g., `tm reftype xref omim`, `random trait assignment`) |
+| `xrefs` | array | Submitted cross-references with `code` and `system` |
+| `mapping` | object | The trait mapping entry used for resolution: `type`, `ref`, `value` |
+
+</div>
+
+### Submitted Condition Set
+
+The `submittedConditionSet` extension captures provenance for multi-condition submissions. Present when the SCV maps to more than one condition.
+
+<div class="field-table" markdown>
+
+| Field | Type | Description |
+|---|---|---|
+| `conditionSet` | string | `#/conditionSet/clinvar.traitset:{id}` reference |
+| `condition` | string | `#/condition/clinvar.trait:{id}` reference (present when the RCV set resolves to a single trait) |
+| `multiple_condition_explanation` | string | ClinVar's explanation for the multi-condition grouping |
+| `concepts` | array | Array of individual condition provenance objects, each with the same fields as [Submitted Condition](#submitted-condition) |
+
+</div>
