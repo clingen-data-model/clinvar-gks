@@ -142,7 +142,7 @@ A resolved proposition contains:
 | `ClinvarDrugResponseProposition` | `DR` | `hasDrugResponseFor` | Drug response |
 | `ClinvarProtectiveProposition` | `PROT` | `isProtectiveFor` | Protective |
 | `ClinvarAffectsProposition` | `AFF` | `hasAffectFor` | Affects |
-| `ClinvarConfersSensitivityProposition` | `SENS` | `confersSensitivityFor` | Confers sensitivity |
+| `ClinvarConfersSensitivityProposition` | `CS` | `confersSensitivityFor` | Confers sensitivity |
 | `ClinvarOtherProposition` | `OTH` | `isClinvarOtherAssociationFor` | Other |
 | `ClinvarNotProvidedProposition` | `NP` | `hasNoProvidedClassificationFor` | Not provided |
 | `ClinvarConflictingDataFromSubmitterProposition` | `CONF` | `isConflictingDataFromSubmittersFor` | Conflicting data |
