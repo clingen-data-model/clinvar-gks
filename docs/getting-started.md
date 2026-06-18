@@ -2,20 +2,20 @@
 
 ## Download the Latest Release
 
-The current ClinVar-GKS release is available as a single compressed JSON file:
+The latest ClinVar-GKS release is available as a single compressed JSON file:
 
 ```text
-https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/
+https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/
 ```
 
 Download and decompress:
 
 ```bash
-# Download the latest release
-curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar-gks-current.json.gz
+# Download the latest monthly release
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz
 
 # Decompress
-gunzip clinvar-gks-current.json.gz
+gunzip clinvar-gks_00-latest.json.gz
 ```
 
 See [Data Access](data-access/index.md) for the full release schedule, archives, and file naming conventions.

@@ -4,18 +4,18 @@ ClinVar-GKS releases are published weekly as a single gzip-compressed JSON file,
 
 ---
 
-## Current Release
+## Latest Release
 
-The most recent weekly releases for the current month are available at:
-
-```text
-https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/
-```
-
-Download the latest release:
+Download the most recent monthly release:
 
 ```bash
-curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar-gks-current.json.gz
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz
+```
+
+Download the most recent weekly release:
+
+```bash
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz
 ```
 
 Each release file is a single JSON object containing all bundle sections — variations, statements, propositions, conditions, and supporting reference data. See [Output Format](../output-reference/overview.md) for the complete structure.
@@ -24,38 +24,38 @@ Each release file is a single JSON object containing all bundle sections — var
 
 ## Release Schedule
 
-- **Weekly releases** are published within the current month, one per ClinVar XML release
-- **Monthly archives** retain one release per prior month, based on the last release of that month
+- **Weekly releases** are published to `datasets/weekly/`, one per ClinVar XML release
+- **Monthly releases** are created from the first weekly release of each month and published to `datasets/`
+- At the start of each month, the previous month's weekly files move to `archives/`
+- At the start of each year, the previous year's monthly files move to `archives/`
 
-All weekly releases for the current month are available at the `current/` endpoint. As a new month begins, the prior month's final release moves to the archive.
+The stable filenames `clinvar-gks_00-latest.json.gz` and `clinvar-gks_00-latest_weekly.json.gz` always point to the most recent monthly and weekly releases respectively.
 
 ---
 
-## Archives
-
-Monthly archived releases are available at:
+## Directory Structure
 
 ```text
-https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/archive/{year}/
-```
+datasets/
+  clinvar-gks_00-latest.json.gz         latest monthly release
+  clinvar-gks_yyyy-mm.json.gz           monthly releases (current year)
 
-Archive files include the year and month in the filename — for example, `clinvar-gks_2025_02.json.gz` for the February 2025 archive release.
+datasets/weekly/
+  clinvar-gks_00-latest_weekly.json.gz  latest weekly release
+  clinvar-gks_yyyy-mmdd.json.gz         weekly releases (current month)
 
-Example — download the February 2025 archive:
+archives/{yyyy}/
+  clinvar-gks_yyyy-mm.json.gz           monthly releases from prior years
 
-```bash
-curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/archive/2025/clinvar-gks_2025_02.json.gz
+archives/{yyyy}/weekly/
+  clinvar-gks_yyyy-mmdd.json.gz         weekly releases from prior months
 ```
 
 ---
 
 ## Release Notes
 
-Each release — weekly and monthly — is accompanied by a release notes file (`.md` or `.txt`) in the same directory. Release notes include:
-
-- The ClinVar XML release date and version
-- Record counts per section (variations, SCVs, VCVs, RCVs)
-- Known issues or changes specific to the release
+Pipeline changes that affect the structure or content of the output are documented in the `release_notes/` directory. These notes cover additions, bug fixes, or schema changes specific to the ClinVar-GKS pipeline — they do not replicate ClinVar's own release notes.
 
 ---
 

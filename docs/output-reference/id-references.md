@@ -75,7 +75,7 @@ import gzip
 import json
 
 # Load the bundle
-with gzip.open("clinvar-gks-current.json.gz", "rt") as f:
+with gzip.open("clinvar-gks_00-latest.json.gz", "rt") as f:
     bundle = json.load(f)
 
 def resolve(bundle, ref):
