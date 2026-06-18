@@ -46,7 +46,7 @@ New releases are produced within a day or two after ClinVar's XML releases and a
 
 The latest release is available as a single compressed JSON file:
 
-**Current release:** [`https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/`](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/)
+**Latest release:** [`https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/`](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/)
 
 See [Data Access](data-access/index.md) for the full release schedule, archive policy, and file format details.
 

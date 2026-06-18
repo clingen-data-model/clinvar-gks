@@ -106,6 +106,7 @@ nav:
       - pipeline/rcv-statements/index.md
       - RCV Procedures: pipeline/rcv-statements/rcv-proc.md
       - RCV Extensions: pipeline/rcv-statements/rcv-extensions.md
+    - Export & Distribute: pipeline/export.md
   # --- Reference ---
   - Reference:
     - GA4GH Standards: reference/gks-standards.md

@@ -6,22 +6,42 @@ ClinVar-GKS releases are hosted on Cloudflare R2 object storage. All downloads a
 
 ## Latest Release
 
-The `current/` directory contains the most recent weekly releases with stable filenames:
+The stable "latest" files always point to the most recent release:
 
 ```bash
-# Download the latest release
-curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/current/clinvar-gks-current.json.gz
+# Download the latest monthly release
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz
+
+# Download the latest weekly release
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz
 ```
 
 ---
 
-## Monthly Archives
+## Specific Releases
 
-Archived releases are available by year, one per month:
+Download a specific monthly or weekly release by date:
 
 ```bash
-# Download the February 2025 archive
-curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/archive/2025/clinvar-gks_2025_02.json.gz
+# Download the June 2026 monthly release
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_2026-06.json.gz
+
+# Download the June 14, 2026 weekly release
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_2026-0614.json.gz
+```
+
+---
+
+## Archives
+
+Prior years' releases are available in the `archives/` directory:
+
+```bash
+# Download the March 2025 monthly archive
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/archives/2025/clinvar-gks_2025-03.json.gz
+
+# Download a specific weekly archive
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/archives/2025/weekly/clinvar-gks_2025-0315.json.gz
 ```
 
 ---
@@ -33,10 +53,16 @@ import urllib.request
 
 BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev"
 
-# Download current release
+# Download latest monthly release
 urllib.request.urlretrieve(
-    f"{BASE}/current/clinvar-gks-current.json.gz",
-    "clinvar-gks-current.json.gz"
+    f"{BASE}/datasets/clinvar-gks_00-latest.json.gz",
+    "clinvar-gks-latest.json.gz"
+)
+
+# Download latest weekly release
+urllib.request.urlretrieve(
+    f"{BASE}/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz",
+    "clinvar-gks-latest-weekly.json.gz"
 )
 ```
 

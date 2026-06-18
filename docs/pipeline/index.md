@@ -52,15 +52,15 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
                │
 ┌──────────────▼───────────────┐
 │ 8. JSON Output               │  gks_json_proc
-│    Convert pre-tables to     │  → gks_catvar, gks_scv_statement
-│    final JSON artifacts      │    _by_ref, _inline, gks_vcv_statement,
-│                              │    gks_rcv_statement
+│    Build dictionary tables   │  → gks_dict_* tables
+│    for bundle assembly       │
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 9. Export                    │  export-gks-files-to-gcs.sh
-│     Export to GCS &          │  → public bucket
-│     public bucket            │
+│ 9. Export & Distribute       │  export-gks-dicts.sh
+│    Export dicts to GCS,      │  assemble-gks-dicts.py
+│    assemble bundle, upload   │  upload-gks-to-r2.sh
+│    to Cloudflare R2          │  → R2 public bucket
 └──────────────────────────────┘
 ```
 
@@ -78,7 +78,7 @@ CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE(), FALSE);
 
 Export, process externally with vrs-python, and load back. See [VRS Processing](vrs-processing.md).
 
-### Step 3: Cat-VRS through RCV Statements
+### Step 3: Cat-VRS through JSON Output
 
 From the BigQuery console:
 
@@ -93,13 +93,22 @@ CALL `clinvar_ingest.gks_rcv_statement_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all');
 ```
 
-### Step 4: Export
+### Step 4: Export & Distribute
 
 ```bash
-./src/scripts/export-gks-files-to-gcs.sh
+# Export dictionary tables from BigQuery to GCS as NDJSON
+./src/scripts/export-gks-dicts.sh clinvar_2026_06_14_v2_5_0 clingen-dev-clinvar-gks gks-dicts
+
+# Assemble NDJSON files into a single bundled JSON
+python3 ./src/scripts/assemble-gks-dicts.py \
+  gs://clingen-dev-clinvar-gks/gks-dicts/ \
+  gs://clingen-public/clinvar-gks/2026-06-14/release/clinvar-gks-2026-06-14.json.gz
+
+# Upload bundle to Cloudflare R2
+./src/scripts/upload-gks-to-r2.sh 2026-06-14 v2_5_0
 ```
 
-See [Export](export.md) for configuration and naming details.
+See [Export](export.md) for details on each step.
 
 ## Documentation Tracks
 
@@ -121,4 +130,4 @@ Each pipeline step has its own documentation page:
 - [SCV Statements](scv-statements/index.md) — SCV records, propositions, final statements
 - [VCV Statements](vcv-statements/index.md) — aggregate variant-level VCV statements
 - [RCV Statements](rcv-statements/index.md) — aggregate condition-level RCV statements
-- [Export](export.md) — export to Google Cloud Storage
+- [Export & Distribute](export.md) — export to GCS, assemble bundle, upload to R2
