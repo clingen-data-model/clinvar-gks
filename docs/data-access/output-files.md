@@ -10,7 +10,7 @@ The release file is a `.json.gz` file. The decompressed content is a single JSON
 
 ```bash
 # Decompress and inspect the top-level keys
-gunzip -c clinvar-gks-current.json.gz | python3 -c "
+gunzip -c clinvar-gks_00-latest.json.gz | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 for key in data:
@@ -24,29 +24,36 @@ See [Output Format](../output-reference/overview.md) for the full bundle structu
 
 ## File Naming Convention
 
-### Current Release
+### Latest Release
 
-The `current/` endpoint uses a stable filename:
+Stable filenames that always point to the most recent release:
 
 ```text
-clinvar-gks-current.json.gz
+clinvar-gks_00-latest.json.gz           (latest monthly)
+clinvar-gks_00-latest_weekly.json.gz    (latest weekly)
 ```
+
+The `00-` prefix ensures these sort before dated files in directory listings.
 
 ### Weekly Releases
 
-Weekly releases within the current month include the release date:
+Weekly releases include the ClinVar release year, month, and day:
 
 ```text
-clinvar-gks-{YYYY-MM-DD}.json.gz
+clinvar-gks_yyyy-mmdd.json.gz
 ```
 
-### Monthly Archives
+For example, `clinvar-gks_2026-0614.json.gz` for the June 14, 2026 release.
 
-Archived monthly releases include the year and month:
+### Monthly Releases
+
+Monthly releases include the year and month:
 
 ```text
-clinvar-gks_{YYYY}_{MM}.json.gz
+clinvar-gks_yyyy-mm.json.gz
 ```
+
+For example, `clinvar-gks_2026-06.json.gz` for the June 2026 release.
 
 ---
 
@@ -58,7 +65,7 @@ clinvar-gks_{YYYY}_{MM}.json.gz
 import gzip
 import json
 
-with gzip.open('clinvar-gks-current.json.gz', 'rt') as f:
+with gzip.open('clinvar-gks_00-latest.json.gz', 'rt') as f:
     bundle = json.load(f)
 
 # Look up a specific variation
@@ -75,7 +82,7 @@ allele = bundle[section][key]
 
 ```bash
 # Count entries per section
-gunzip -c clinvar-gks-current.json.gz | python3 -c "
+gunzip -c clinvar-gks_00-latest.json.gz | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 for key in data:
@@ -83,7 +90,7 @@ for key in data:
 "
 
 # Extract a single variation as pretty-printed JSON
-gunzip -c clinvar-gks-current.json.gz | python3 -c "
+gunzip -c clinvar-gks_00-latest.json.gz | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 print(json.dumps(data['variation']['clinvar:10'], indent=2))
