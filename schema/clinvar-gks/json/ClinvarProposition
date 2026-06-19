@@ -1,0 +1,45 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarProposition",
+   "title": "ClinvarProposition",
+   "description": "Any proposition type valid in ClinVar-GKS statements. Includes the GA4GH standard proposition types (pathogenicity, oncogenicity, clinical significance) and ClinVar-specific proposition types for submission categories not covered by the GA4GH specifications.",
+   "maturity": "draft",
+   "oneOf": [
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarAffectsProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarAssociationProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarConfersSensitivityProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarConflictingDataFromSubmitterProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarDrugResponseProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarNotProvidedProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarOtherProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarProtectiveProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarRiskFactorProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantClinicalSignificanceProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantOncogenicityProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantPathogenicityProposition"
+      }
+   ]
+}

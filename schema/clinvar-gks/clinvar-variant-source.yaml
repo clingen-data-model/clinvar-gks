@@ -16,10 +16,9 @@ $defs:
   HgvsListItem:
     description: >-
       A complex structure for sharing individual HGVS entries associated with Clinvar
-      Variations including nucleotide expressions, protein expressions, 
-      molecular consequence and mane select/plus settings for the specific aligned and 
+      Variations including nucleotide expressions, protein expressions,
+      molecular consequence and mane select/plus settings for the specific aligned and
       projected forms of the clinvar variant.
-    protectedClassOf: ClinvarCategoricalVariant
     type: object
     maturity: draft
     properties:
@@ -66,9 +65,8 @@ $defs:
   GeneListItem:
     description: >-
       A complex structure for sharing individual Gene entries associated with Clinvar
-      Variations including `entrez_gene_id`, `hgnc_id`, `symbol`, `relationship_type`, 
+      Variations including `entrez_gene_id`, `hgnc_id`, `symbol`, `relationship_type`,
       `source`, and `iris`.
-    protectedClassOf: ClinvarCategoricalVariant
     type: object
     maturity: draft
     properties:
@@ -319,7 +317,7 @@ $defs:
     properties:
       name:
         type: string
-        const: assembly8
+        const: assembly
         description: >-
           Must be 'assembly'.
       value:
@@ -410,6 +408,7 @@ $defs:
     properties:
       extensions:
         type: array
+        ordered: false
         items:
           oneOf:
             - $ref: "#/$defs/ExtensionAssembly"
@@ -438,9 +437,11 @@ $defs:
         description: >-
           The reference sequence for the location.
       extensions:
-        type: 
+        type: array
         ordered: false
         maxItems: 0
+        items:
+          $ref: "/ga4gh/schema/gks-core/1.1.0/json/Extension"
     additionalProperties: true
 
   ClinvarSequenceLocation:
@@ -537,42 +538,49 @@ $defs:
 
   ClinvarCanonicalAllele:
     maturity: draft
-    description: >
-      The GA4GH Allele Representation(AR) profile specific to Clinvar.
-    protectedClassOf: ClinvarCategoricalVariant
+    description: >-
+      A ClinVar canonical allele — the most common variant type. ClinVar
+      identifies each variation by mapping submitted attributes to a GRCh38
+      genomic allele, which becomes the defining allele constraint. Carries
+      ClinVar-specific extensions (HGVS list, gene list, cytogenetic location,
+      variation type, etc.) alongside the Cat-VRS CanonicalAllele structure.
     allOf:
       - $ref: "/ga4gh/schema/cat-vrs/1.0.0/json/CanonicalAllele"
-      - $ref: "#/$defs/ClinvarCanonicalAlleleProperties" 
+      - $ref: "#/$defs/ClinvarCanonicalAlleleProperties"
       - $ref: "#/$defs/ClinvarCategoricalVariantProperties"
 
   ClinvarCategoricalCnvChange:
     maturity: draft
     description: >-
-      The Clinvar specific representations of described variants.
-    protectedClassOf: ClinvarCategoricalVariant
+      A ClinVar copy number variant with a qualitative change indication
+      (gain or loss). Uses a DefiningLocationConstraint with a
+      CopyChangeConstraint from Cat-VRS CategoricalCnv.
     allOf:
       - $ref: "/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalCnv"
-      # - $ref: "#/$defs/ClinvarCategoricalCnvProperties" 
+      # - $ref: "#/$defs/ClinvarCategoricalCnvProperties"
       - $ref: "#/$defs/ClinvarCategoricalVariantProperties"
 
   ClinvarCategoricalCnvCount:
     maturity: draft
     description: >-
-      The Clinvar specific representations of described variants.
-    protectedClassOf: ClinvarCategoricalVariant
+      A ClinVar copy number variant with an absolute copy count. Uses a
+      DefiningLocationConstraint with a CopyCountConstraint from Cat-VRS
+      CategoricalCnv.
     allOf:
       - $ref: "/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalCnv"
-      # - $ref: "#/$defs/ClinvarCategoricalCnvProperties" 
+      # - $ref: "#/$defs/ClinvarCategoricalCnvProperties"
       - $ref: "#/$defs/ClinvarCategoricalVariantProperties"
 
   ClinvarNonConstrainedVariant:
     maturity: draft
     description: >-
-      The Clinvar specific representations of described variants.
-    protectedClassOf: ClinvarCategoricalVariant
+      A ClinVar variant that cannot be mapped to a specific VRS allele or
+      location — haplotypes, genotypes, and other complex or ambiguously
+      defined variants. These rely solely on the ClinVar variation ID and
+      use the generalized Cat-VRS CategoricalVariant without VRS constraints.
     allOf:
       - $ref: "/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalVariant"
-      # - $ref: "#/$defs/ClinvarDescribedVariationProperties" 
+      # - $ref: "#/$defs/ClinvarDescribedVariationProperties"
       - $ref: "#/$defs/ClinvarCategoricalVariantProperties"
 
   ClinvarCategoricalVariant:

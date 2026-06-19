@@ -1,0 +1,67 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/clinvar-evidence-source.yaml"
+title: ClinVar-GKS evidence line profiles
+description: >-
+  Profiles of the VA-Spec EvidenceLine type for ClinVar somatic clinical
+  impact (SCI) statements. SCI evidence lines carry target propositions
+  (therapeutic response, diagnostic, prognostic) and evidence outcomes
+  based on the AMP/ASCO/CAP tiered classification system.
+strict: true
+
+imports:
+  va-core: ../va-spec/base/va-core-source.yaml
+  domain-entities: ../va-spec/base/domain-entities-source.yaml
+  cat-vrs: ../cat-vrs/cat-vrs-source.yaml
+  vrs: ../vrs/vrs-source.yaml
+  gks-core: ../gks-core/gks-core-source.yaml
+
+namespaces:
+  gks.core: /ga4gh/schema/gks-core/1.1.0/json/
+  va-spec: /ga4gh/schema/va-spec/1.0.1/base/json/
+
+$defs:
+  ClinvarSomaticEvidenceLineProperties:
+    type: object
+    maturity: draft
+    description: >-
+      ClinVar-specific properties for somatic clinical impact evidence lines.
+    protectedClassOf: ClinvarSomaticEvidenceLine
+    properties:
+      evidenceOutcome:
+        $refCurie: gks.core:MappableConcept
+        description: >-
+          The evidence level outcome for the somatic clinical impact assertion,
+          based on the AMP/ASCO/CAP tiered evidence framework. Values reflect
+          the tier mapping (e.g., "Level A/B" for Tier I, "Level C/D" for
+          Tier II). Present only on somatic clinical impact evidence lines.
+      proposition:
+        description: >-
+          The target proposition for this evidence line. For somatic clinical
+          impact statements, this is one of the specific assertion type
+          propositions: VariantTherapeuticResponseProposition (TR),
+          VariantDiagnosticProposition (DIAG), or
+          VariantPrognosticProposition (PROG).
+        oneOf:
+          - $refCurie: va-spec:VariantTherapeuticResponseProposition
+          - $refCurie: va-spec:VariantDiagnosticProposition
+          - $refCurie: va-spec:VariantPrognosticProposition
+          - $refCurie: gks.core:iriReference
+    additionalProperties: true
+    $comment: >-
+      Somatic evidence lines also carry submittedCondition or
+      submittedConditionSet extensions (defined in clinvar-statement-source.yaml)
+      providing the submitter's original condition details. These are permitted
+      via additionalProperties.
+
+  ClinvarSomaticEvidenceLine:
+    maturity: draft
+    description: >-
+      An evidence line for ClinVar somatic clinical impact (SCI) statements.
+      Carries a target proposition (therapeutic response, diagnostic, or
+      prognostic) and an evidence outcome reflecting the AMP/ASCO/CAP
+      tiered classification. SCI statements use this evidence line to
+      link the parent VariantClinicalSignificanceProposition to specific
+      clinical assertion types.
+    allOf:
+      - $refCurie: va-spec:EvidenceLine
+      - $ref: "#/$defs/ClinvarSomaticEvidenceLineProperties"
