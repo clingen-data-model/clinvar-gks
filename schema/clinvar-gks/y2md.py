@@ -51,7 +51,7 @@ def resolve_type(prop_def: dict) -> str:
         parts = []
         for item in prop_def[kw]:
             parts.append(resolve_type(item))
-        return " | ".join(parts)
+        return " \\| ".join(parts)
     return "_unspecified_"
 
 
