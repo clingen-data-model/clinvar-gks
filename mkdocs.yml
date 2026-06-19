@@ -1,4 +1,4 @@
-site_name: ClinVar-GKS Documentation
+site_name: ClinVar-GKS
 site_description: ClinVar data transformation pipeline to GA4GH GKS format
 site_url: https://clingen-data-model.github.io/clinvar-gks/
 repo_url: https://github.com/clingen-data-model/clinvar-gks
