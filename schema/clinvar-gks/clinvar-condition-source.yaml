@@ -1,0 +1,216 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/clinvar-condition-source.yaml"
+title: ClinVar-GKS condition profiles
+description: >-
+  Profiles of the VA-Spec Condition and ConditionSet types for ClinVar,
+  including ClinVar-specific extensions for trait metadata, submission
+  assignments, and cross-references.
+strict: true
+
+imports:
+  va-core: ../va-spec/base/va-core-source.yaml
+  domain-entities: ../va-spec/base/domain-entities-source.yaml
+  cat-vrs: ../cat-vrs/cat-vrs-source.yaml
+  vrs: ../vrs/vrs-source.yaml
+  gks-core: ../gks-core/gks-core-source.yaml
+
+namespaces:
+  gks.core: /ga4gh/schema/gks-core/1.1.0/json/
+  va-spec: /ga4gh/schema/va-spec/1.0.1/base/json/
+
+$defs:
+  # ─── Condition Extension Types ───
+
+  ExtensionClinvarTraitId:
+    type: object
+    maturity: draft
+    description: >-
+      The ClinVar internal trait identifier (e.g., "6752").
+    protectedClassOf: ClinvarCondition
+    properties:
+      name:
+        type: string
+        const: clinvarTraitId
+        description: Must be 'clinvarTraitId'.
+      value:
+        type: string
+        description: The ClinVar trait identifier.
+
+  ExtensionClinvarTraitType:
+    type: object
+    maturity: draft
+    description: >-
+      The type of trait as classified by ClinVar (e.g., "Disease",
+      "Finding", "DrugResponse").
+    protectedClassOf: ClinvarCondition
+    properties:
+      name:
+        type: string
+        const: clinvarTraitType
+        description: Must be 'clinvarTraitType'.
+      value:
+        type: string
+        enum:
+          - "Disease"
+          - "DrugResponse"
+          - "Finding"
+          - "NamedProteinVariant"
+          - "PhenotypeInstruction"
+        description: The ClinVar trait type.
+
+  ExtensionAliases:
+    type: object
+    maturity: draft
+    description: >-
+      Alternative names or synonyms for the condition as reported in ClinVar.
+    protectedClassOf: ClinvarCondition
+    properties:
+      name:
+        type: string
+        const: aliases
+        description: Must be 'aliases'.
+      value:
+        type: string
+        description: Comma-separated alternative names for the condition.
+
+  ExtensionSubmittedScvXrefs:
+    type: object
+    maturity: draft
+    description: >-
+      Cross-references submitted by the SCV submitter for this condition.
+      Each entry contains a code and system identifying the condition in
+      an external terminology.
+    protectedClassOf: ClinvarCondition
+    properties:
+      name:
+        type: string
+        const: submittedScvXrefs
+        description: Must be 'submittedScvXrefs'.
+      value:
+        type: array
+        ordered: false
+        items:
+          $refCurie: gks.core:Coding
+        description: >-
+          Array of Coding objects with code and system for each cross-reference.
+
+  ExtensionSubmittedScvTraitAssignment:
+    type: object
+    maturity: draft
+    description: >-
+      Describes how the SCV submission's trait was assigned to a ClinVar
+      trait (e.g., "scv trait: preferred name 'cystic fibrosis'",
+      "scv trait: medgen id 'c0406612'").
+    protectedClassOf: ClinvarCondition
+    properties:
+      name:
+        type: string
+        const: submittedScvTraitAssignment
+        description: Must be 'submittedScvTraitAssignment'.
+      value:
+        type: string
+        description: The trait assignment description.
+
+  ExtensionClinvarScvTraitAssignment:
+    type: object
+    maturity: draft
+    description: >-
+      Describes the ClinVar-side trait mapping method used for this SCV
+      (e.g., "rcv-tm medgen id", "rcv-tm preferred name").
+    protectedClassOf: ClinvarCondition
+    properties:
+      name:
+        type: string
+        const: clinvarScvTraitAssignment
+        description: Must be 'clinvarScvTraitAssignment'.
+      value:
+        type: string
+        description: The ClinVar trait mapping method.
+
+  ExtensionClinvarScvTraitMappingType:
+    type: object
+    maturity: draft
+    description: >-
+      The detailed trait mapping type and reference value used by ClinVar
+      to map the SCV's submitted trait to a ClinVar trait
+      (e.g., "xref:medgen(c0406612)", "name:preferred(cystic fibrosis)").
+    protectedClassOf: ClinvarCondition
+    properties:
+      name:
+        type: string
+        const: "clinvarScvTraitMappingType:ref(val)"
+        description: Must be 'clinvarScvTraitMappingType:ref(val)'.
+      value:
+        type: string
+        description: The mapping type with reference field and value.
+
+  ExtensionClinvarTraitSetType:
+    type: object
+    maturity: draft
+    description: >-
+      The ClinVar trait set type (e.g., "Disease", "DrugResponse", "Finding").
+    protectedClassOf: ClinvarCondition
+    properties:
+      name:
+        type: string
+        const: clinvarTraitSetType
+        description: Must be 'clinvarTraitSetType'.
+      value:
+        type: string
+        description: The ClinVar trait set type.
+
+  ExtensionClinvarTraitSetId:
+    type: object
+    maturity: draft
+    description: >-
+      The ClinVar internal trait set identifier (e.g., "25780").
+    protectedClassOf: ClinvarCondition
+    properties:
+      name:
+        type: string
+        const: clinvarTraitSetId
+        description: Must be 'clinvarTraitSetId'.
+      value:
+        type: string
+        description: The ClinVar trait set identifier.
+
+  # ─── Condition Profiles ───
+
+  ClinvarConditionProperties:
+    type: object
+    maturity: draft
+    description: >-
+      ClinVar-specific extensions for conditions (diseases, phenotypes, traits).
+      These extensions capture ClinVar trait metadata and submission-level
+      trait assignment information.
+    protectedClassOf: ClinvarCondition
+    properties:
+      extensions:
+        type: array
+        ordered: false
+        items:
+          oneOf:
+            - $ref: "#/$defs/ExtensionClinvarTraitId"
+            - $ref: "#/$defs/ExtensionClinvarTraitType"
+            - $ref: "#/$defs/ExtensionAliases"
+            - $ref: "#/$defs/ExtensionSubmittedScvXrefs"
+            - $ref: "#/$defs/ExtensionSubmittedScvTraitAssignment"
+            - $ref: "#/$defs/ExtensionClinvarScvTraitAssignment"
+            - $ref: "#/$defs/ExtensionClinvarScvTraitMappingType"
+            - $ref: "#/$defs/ExtensionClinvarTraitSetType"
+            - $ref: "#/$defs/ExtensionClinvarTraitSetId"
+        description: >-
+          ClinVar condition extensions including trait identifiers, type, aliases,
+          cross-references, and submission-level trait assignment metadata.
+    additionalProperties: true
+
+  ClinvarCondition:
+    maturity: draft
+    description: >-
+      A ClinVar condition (disease, phenotype, or trait) represented as a
+      MappableConcept with ClinVar-specific extensions. The primaryCoding
+      uses MedGen as the canonical coding system with cross-mappings to
+      OMIM, MONDO, Orphanet, HPO, MeSH, and SNOMED CT.
+    allOf:
+      - $refCurie: gks.core:MappableConcept
+      - $ref: "#/$defs/ClinvarConditionProperties"

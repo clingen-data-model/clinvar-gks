@@ -1,0 +1,49 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarSomaticEvidenceLine",
+   "title": "ClinvarSomaticEvidenceLine",
+   "description": "An evidence line for ClinVar somatic clinical impact (SCI) statements. Carries a target proposition (therapeutic response, diagnostic, or prognostic) and an evidence outcome reflecting the AMP/ASCO/CAP tiered classification. SCI statements use this evidence line to link the parent VariantClinicalSignificanceProposition to specific clinical assertion types.",
+   "$defs": {
+      "ClinvarSomaticEvidenceLineProperties": {
+         "type": "object",
+         "maturity": "draft",
+         "description": "ClinVar-specific properties for somatic clinical impact evidence lines.",
+         "protectedClassOf": "ClinvarSomaticEvidenceLine",
+         "properties": {
+            "evidenceOutcome": {
+               "description": "The evidence level outcome for the somatic clinical impact assertion, based on the AMP/ASCO/CAP tiered evidence framework. Values reflect the tier mapping (e.g., \"Level A/B\" for Tier I, \"Level C/D\" for Tier II). Present only on somatic clinical impact evidence lines.",
+               "$ref": "/ga4gh/schema/gks-core/1.1.0/json/MappableConcept"
+            },
+            "proposition": {
+               "description": "The target proposition for this evidence line. For somatic clinical impact statements, this is one of the specific assertion type propositions: VariantTherapeuticResponseProposition (TR), VariantDiagnosticProposition (DIAG), or VariantPrognosticProposition (PROG).",
+               "oneOf": [
+                  {
+                     "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantTherapeuticResponseProposition"
+                  },
+                  {
+                     "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantDiagnosticProposition"
+                  },
+                  {
+                     "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantPrognosticProposition"
+                  },
+                  {
+                     "$ref": "/ga4gh/schema/gks-core/1.1.0/json/iriReference"
+                  }
+               ]
+            }
+         },
+         "additionalProperties": false,
+         "$comment": "Somatic evidence lines also carry submittedCondition or submittedConditionSet extensions (defined in clinvar-statement-source.yaml) providing the submitter's original condition details. These are permitted via additionalProperties.",
+         "required": []
+      }
+   },
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/EvidenceLine"
+      },
+      {
+         "$ref": "#/$defs/ClinvarSomaticEvidenceLineProperties"
+      }
+   ]
+}

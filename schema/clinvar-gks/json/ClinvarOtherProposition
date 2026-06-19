@@ -1,0 +1,43 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarOtherProposition",
+   "title": "ClinvarOtherProposition",
+   "description": "A proposition for ClinVar submissions classified as \"other\" that do not fit any standard or named classification category. ClinVar has stopped accepting new submissions with this classification, but historical submissions remain.",
+   "type": "object",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$refCurie": "va-spec:ClinicalVariantProposition"
+      }
+   ],
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "ClinvarOtherProposition",
+         "default": "ClinvarOtherProposition",
+         "description": "MUST be \"ClinvarOtherProposition\"."
+      },
+      "predicate": {
+         "type": "string",
+         "const": "isClinvarOtherAssociationFor",
+         "default": "isClinvarOtherAssociationFor",
+         "description": "The relationship the Proposition describes between the subject variant and object condition. MUST be \"isClinvarOtherAssociationFor\"."
+      },
+      "objectCondition": {
+         "oneOf": [
+            {
+               "$ref": "/ga4gh/schema/gks-core/1.1.0/json/iriReference"
+            },
+            {
+               "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/Condition"
+            }
+         ],
+         "description": "The condition associated with the variant."
+      }
+   },
+   "required": [
+      "objectCondition",
+      "predicate"
+   ],
+   "additionalProperties": false
+}

@@ -319,7 +319,7 @@ $defs:
     properties:
       name:
         type: string
-        const: assembly8
+        const: assembly
         description: >-
           Must be 'assembly'.
       value:
@@ -410,6 +410,7 @@ $defs:
     properties:
       extensions:
         type: array
+        ordered: false
         items:
           oneOf:
             - $ref: "#/$defs/ExtensionAssembly"
@@ -438,9 +439,11 @@ $defs:
         description: >-
           The reference sequence for the location.
       extensions:
-        type: 
+        type: array
         ordered: false
         maxItems: 0
+        items:
+          $ref: "/ga4gh/schema/gks-core/1.1.0/json/Extension"
     additionalProperties: true
 
   ClinvarSequenceLocation:

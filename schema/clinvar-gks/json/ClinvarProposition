@@ -1,0 +1,36 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarProposition",
+   "title": "ClinvarProposition",
+   "description": "A ClinVar-specific proposition type. Covers all custom proposition types defined for ClinVar submission categories that do not have corresponding GA4GH VA-Spec proposition types.",
+   "maturity": "draft",
+   "oneOf": [
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarAffectsProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarAssociationProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarConfersSensitivityProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarConflictingDataFromSubmitterProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarDrugResponseProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarNotProvidedProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarOtherProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarProtectiveProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarRiskFactorProposition"
+      }
+   ]
+}
