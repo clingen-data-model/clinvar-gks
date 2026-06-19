@@ -24,6 +24,9 @@ from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
 # Cache of loaded processors keyed by resolved source file path
 _processor_cache: dict[str, YamlSchemaProcessor] = {}
 
+# Set of class names that have local pages (populated at build time)
+_local_classes: set[str] = set()
+
 
 def _get_processor(source_path: Path) -> YamlSchemaProcessor:
     """Get or create a cached YamlSchemaProcessor for a source file."""
@@ -31,6 +34,13 @@ def _get_processor(source_path: Path) -> YamlSchemaProcessor:
     if key not in _processor_cache:
         _processor_cache[key] = YamlSchemaProcessor(source_path)
     return _processor_cache[key]
+
+
+def _format_type_ref(identifier: str) -> str:
+    """Format a type reference — linked if local, plain code if external."""
+    if identifier in _local_classes:
+        return f"[{identifier}]({identifier}.md)"
+    return f"`{identifier}`"
 
 
 def resolve_type(prop_def: dict) -> str:
@@ -42,10 +52,10 @@ def resolve_type(prop_def: dict) -> str:
         return f"`{prop_def['type']}`"
     elif "$ref" in prop_def:
         identifier = prop_def["$ref"].split("/")[-1]
-        return f"[{identifier}]({identifier}.md)"
+        return _format_type_ref(identifier)
     elif "$refCurie" in prop_def:
         identifier = prop_def["$refCurie"].split(":")[-1]
-        return f"[{identifier}]({identifier}.md)"
+        return _format_type_ref(identifier)
     elif "oneOf" in prop_def or "anyOf" in prop_def:
         kw = "oneOf" if "oneOf" in prop_def else "anyOf"
         parts = []
@@ -229,10 +239,25 @@ def write_class_md(class_name: str, class_def: dict, proc_schema, out_dir: Path,
         f.write("\n")
 
 
+def _load_local_classes(build_dir: Path):
+    """Load all local class names from .classes files in the build directory."""
+    if not build_dir.exists():
+        return
+    for classes_file in build_dir.glob("*.classes"):
+        for line in classes_file.read_text().splitlines():
+            name = line.strip()
+            if name:
+                _local_classes.add(name)
+
+
 def main(proc_schema):
     """Generate Markdown files for all public classes."""
     md_dir = proc_schema.def_fp.parent / "md"
     os.makedirs(md_dir, exist_ok=True)
+
+    # Load all local class names for link resolution
+    build_dir = proc_schema.def_fp.parent / "build"
+    _load_local_classes(build_dir)
 
     # Cache the main processor
     _processor_cache[str(proc_schema.schema_fp.resolve())] = proc_schema
