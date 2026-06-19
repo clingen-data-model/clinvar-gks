@@ -1,0 +1,4791 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="ClinVar data transformation pipeline to GA4GH GKS format">
+      
+      
+      
+        <link rel="canonical" href="https://clingen-data-model.github.io/clinvar-gks/superpowers/plans/2026-04-14-aggregation-layer-refactor/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Aggregation Layer Refactor Implementation Plan - ClinVar-GKS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#aggregation-layer-refactor-implementation-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="ClinVar-GKS" class="md-header__button md-logo" aria-label="ClinVar-GKS" data-md-component="logo">
+      <img src="../../../assets/images/clingen-logo-white.svg" alt="ClinVar-GKS" height="40">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <a href="../../.." class="md-header__topic" style="text-decoration: none; color: inherit;">
+          <span class="md-ellipsis">
+            ClinVar-GKS
+          </span>
+        </a>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Aggregation Layer Refactor Implementation Plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    <a href="https://www.ga4gh.org" title="GA4GH" target="_blank" rel="noopener" class="md-header__ga4gh">
+      <img src="../../../assets/images/ga4gh-logo.svg" alt="GA4GH" height="40">
+    </a>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../data-access/download/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Downloads
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../output-reference/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Data Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../output-reference/classes/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Data Model
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../pipeline/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Pipeline
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../reference/gks-standards/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../drafts/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Drafts
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="ClinVar-GKS" class="md-nav__button md-logo" aria-label="ClinVar-GKS" data-md-component="logo">
+      
+  <img src="../../../assets/images/clingen-logo-white.svg" alt="logo">
+
+    </a>
+    ClinVar-GKS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downloads
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/cat-vrs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/scv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/vcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/rcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/id-references/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ID References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../output-reference/classes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Model
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/variations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalVariant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalVariant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCanonicalAllele/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCanonicalAllele
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalCnvChange/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalCnvChange
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalCnvCount/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalCnvCount
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarNonConstrainedVariant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarNonConstrainedVariant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/HgvsListItem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HgvsListItem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/GeneListItem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GeneListItem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Propositions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarRiskFactorProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarRiskFactorProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarProtectiveProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarProtectiveProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarDrugResponseProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarDrugResponseProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarAffectsProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarAffectsProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarAssociationProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarAssociationProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarConfersSensitivityProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarConfersSensitivityProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarOtherProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarOtherProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarNotProvidedProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarNotProvidedProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarConflictingDataFromSubmitterProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarConflictingDataFromSubmitterProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statements
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarScvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarScvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarVcvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarVcvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarRcvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarRcvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/SubmittedConditionMapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SubmittedConditionMapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Evidence
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Lines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarSomaticEvidenceLine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarSomaticEvidenceLine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../profiles/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiles
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/statement-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statement Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/classifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/review-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/variation-identity/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variation Identity
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-loc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequence Locations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-hgvs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HGVS Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-xref/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cross-References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-identity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity Table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vrs-processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VRS Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/cat-vrs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cat-VRS
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cat-VRS
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/cat-vrs/catvar-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Categorical Variant Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/conditions-and-traits/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditions & Traits
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Conditions & Traits
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/traits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Traits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-sets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/scv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    SCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Records
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/final-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Final Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/vcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    VCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-aggregation-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aggregation Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/rcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export & Distribute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/gks-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GA4GH Standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/known-issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../drafts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drafts
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Drafts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../drafts/acmgv4-variant-pathogenicity/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ACMGv4 Variant Pathogenicity
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ACMGv4 Variant Pathogenicity
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Case Data Model (Notes)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM-Schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Case Schema & Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary-of-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary of Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Summary of Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#whats-removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's Removed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whats-renamed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's Renamed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#behavioral-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavioral Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files-affected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Affected
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Files Affected">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sql-procedures-core-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQL Procedures (core implementation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-1-vcv-aggregation-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 1: VCV Aggregation Procedure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 1: VCV Aggregation Procedure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-1-remove-layer-4-from-gks-vcv-procsql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1: Remove Layer 4 from gks-vcv-proc.sql
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-2-remove-layer-4-from-gks-vcv-statement-procsql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2: Remove Layer 4 from gks-vcv-statement-proc.sql
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-2-rcv-aggregation-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 2: RCV Aggregation Procedure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 2: RCV Aggregation Procedure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-3-remove-layer-4-from-gks-rcv-procsql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 3: Remove Layer 4 from gks-rcv-proc.sql
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-4-remove-layer-4-from-gks-rcv-statement-procsql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4: Remove Layer 4 from gks-rcv-statement-proc.sql
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-3-documentation-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 3: Documentation Updates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 3: Documentation Updates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-5-update-vcv-aggregation-rules-doc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 5: Update VCV aggregation rules doc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-6-update-vcv-procedures-doc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 6: Update VCV procedures doc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-7-update-vcv-index-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 7: Update VCV index page
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-8-update-rcv-procedures-doc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 8: Update RCV procedures doc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-9-update-rcv-index-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 9: Update RCV index page
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-10-update-glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 10: Update glossary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-11-update-output-reference-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 11: Update output reference docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-4-example-file-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 4: Example File Updates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 4: Example File Updates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-12-rename-and-rewrite-vcv-germline-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 12: Rename and rewrite VCV germline example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-13-update-vcv-pgep-example-comments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 13: Update VCV PG/EP example comments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-14-update-rcv-example-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 14: Update RCV example files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-15-update-examples-doc-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 15: Update examples doc references
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-5-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 5: Validation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 5: Validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-16-final-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 16: Final validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="aggregation-layer-refactor-implementation-plan">Aggregation Layer Refactor Implementation Plan<a class="headerlink" href="#aggregation-layer-refactor-implementation-plan" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Remove Layer 4 (group aggregator) from VCV/RCV pipelines, rebrand the remaining layers as a two-layer conceptual model: "Grouping Layer" (L1+L2) and "Aggregate Contribution Layer" (L3).</p>
+<p><strong>Architecture:</strong> The current 4-layer hierarchy (L1 Base → L2 Tier → L3 Submission Level → L4 Group) becomes a 2-conceptual-layer model. L1 and L2 are unified under "Grouping Layer" (separate SQL steps, single conceptual layer). L3 becomes the "Aggregate Contribution Layer" — the terminal layer for both germline and somatic. L4 is deleted entirely. Germline variants with multiple proposition types will now produce separate final statements per proposition type instead of one combined statement.</p>
+<p><strong>Tech Stack:</strong> BigQuery SQL stored procedures, MkDocs documentation (Markdown), JSONC example files</p>
+<hr />
+<h2 id="summary-of-changes">Summary of Changes<a class="headerlink" href="#summary-of-changes" title="Permanent link">&para;</a></h2>
+<h3 id="whats-removed">What's Removed<a class="headerlink" href="#whats-removed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Layer 4 aggregation</strong> (<code>gks_vcv_layer4_group_agg</code>, <code>gks_rcv_layer4_group_agg</code>) — the germline-only cross-proposition-type aggregation is eliminated</li>
+<li><strong>Layer 4 statement generation</strong> (BASE + PRE) in both VCV and RCV statement procs</li>
+<li>The FINAL union changes from "germline L4 + somatic L3" to just "all L3" (no filtering needed)</li>
+</ul>
+<h3 id="whats-renamed">What's Renamed<a class="headerlink" href="#whats-renamed" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Old Name</th>
+<th>New Conceptual Name</th>
+<th>Table Name Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Layer 1 (Base Aggregator)</td>
+<td>Grouping Layer — Base Grouping</td>
+<td><code>gks_{x}cv_layer1_base_agg</code> → <code>gks_{x}cv_grouping_base_agg</code></td>
+</tr>
+<tr>
+<td>Layer 2 (Tier Aggregator)</td>
+<td>Grouping Layer — Tier Grouping</td>
+<td><code>gks_{x}cv_layer2_tier_agg</code> → <code>gks_{x}cv_grouping_tier_agg</code></td>
+</tr>
+<tr>
+<td>Layer 3 (Submission Level Aggregator)</td>
+<td>Aggregate Contribution Layer</td>
+<td><code>gks_{x}cv_layer3_prop_agg</code> → <code>gks_{x}cv_aggregate_contribution</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="behavioral-changes">Behavioral Changes<a class="headerlink" href="#behavioral-changes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Germline output</strong>: Instead of one VCV/RCV statement per <code>(variation, statement_group)</code> combining all prop types, there will be one statement per <code>(variation, statement_group, prop_type)</code> — e.g., <code>VCV000012582.63-G-PATH</code>, <code>VCV000012582.63-G-ASSOC</code>, <code>VCV000012582.63-G-NP</code> as separate final statements</li>
+<li><strong>Somatic output</strong>: No change — somatic already terminated at L3</li>
+<li><strong>JSON nesting depth</strong>: Drops from 4 levels to 3 levels for germline statements</li>
+<li><strong>Statement IDs</strong>: The shortest ID format changes from <code>VCV.ver-G</code> (L4) to <code>VCV.ver-G-PROP</code> (new terminal). No more IDs without a proposition type component</li>
+<li><strong>Proposition aggregateQualifiers</strong>: The terminal layer now always has <code>[AssertionGroup, PropositionType]</code> instead of just <code>[AssertionGroup]</code></li>
+</ul>
+<hr />
+<h2 id="files-affected">Files Affected<a class="headerlink" href="#files-affected" title="Permanent link">&para;</a></h2>
+<h3 id="sql-procedures-core-implementation">SQL Procedures (core implementation)<a class="headerlink" href="#sql-procedures-core-implementation" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/procedures/gks-vcv-proc.sql</code></td>
+<td>Remove L4 block, rename L1/L2/L3 variables and table names, update comments</td>
+</tr>
+<tr>
+<td><code>src/procedures/gks-vcv-statement-proc.sql</code></td>
+<td>Remove L4 BASE+PRE blocks, rename L1/L2/L3 variables and table names, simplify FINAL union, update cleanup</td>
+</tr>
+<tr>
+<td><code>src/procedures/gks-rcv-proc.sql</code></td>
+<td>Remove L4 block, rename L1/L2/L3 variables and table names, update comments</td>
+</tr>
+<tr>
+<td><code>src/procedures/gks-rcv-statement-proc.sql</code></td>
+<td>Remove L4 BASE+PRE blocks, rename L1/L2/L3 variables and table names, simplify FINAL union, update cleanup</td>
+</tr>
+</tbody>
+</table>
+<h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/pipeline/vcv-statements/vcv-aggregation-rules.md</code></td>
+<td>Rewrite Layer Hierarchy section with new 2-layer model</td>
+</tr>
+<tr>
+<td><code>docs/pipeline/vcv-statements/vcv-proc.md</code></td>
+<td>Remove L4 steps, rename all layer references, update output tables</td>
+</tr>
+<tr>
+<td><code>docs/pipeline/vcv-statements/index.md</code></td>
+<td>Update pipeline flow diagram and key concepts</td>
+</tr>
+<tr>
+<td><code>docs/pipeline/rcv-statements/rcv-proc.md</code></td>
+<td>Remove L4 steps, rename all layer references, update output tables</td>
+</tr>
+<tr>
+<td><code>docs/pipeline/rcv-statements/index.md</code></td>
+<td>Update pipeline flow diagram and key concepts</td>
+</tr>
+<tr>
+<td><code>docs/reference/glossary.md</code></td>
+<td>Update VCV Aggregation section with new layer names</td>
+</tr>
+<tr>
+<td><code>docs/data-access/examples.md</code></td>
+<td>Update VCV examples table (descriptions reference layer counts)</td>
+</tr>
+<tr>
+<td><code>docs/output-reference/vcv-statements.md</code></td>
+<td>Rewrite Layer Hierarchy section, remove L4, update all layer references</td>
+</tr>
+<tr>
+<td><code>docs/output-reference/rcv-statements.md</code></td>
+<td>Rewrite Layer Hierarchy section, remove L4, update all layer references</td>
+</tr>
+<tr>
+<td><code>docs/pipeline/vcv-statements/vcv-extensions.md</code></td>
+<td>Rename "Layer 1" reference to "Base Grouping"</td>
+</tr>
+<tr>
+<td><code>docs/pipeline/rcv-statements/rcv-extensions.md</code></td>
+<td>Rename "Layer 1" and "four layers" references to new naming</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-files">Example Files<a class="headerlink" href="#example-files" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>examples/vcv/VCV000012582.63-G.jsonc</code></td>
+<td><strong>Rename to <code>VCV000012582.63-G-PATH.jsonc</code></strong> and replace with Aggregate Contribution terminal format</td>
+</tr>
+<tr>
+<td><code>examples/vcv/VCV-PG-example.jsonc</code></td>
+<td>Update layer comments</td>
+</tr>
+<tr>
+<td><code>examples/vcv/VCV-EP-example.jsonc</code></td>
+<td>Update layer comments</td>
+</tr>
+<tr>
+<td><code>examples/rcv/RCV001781420.1-G-PATH.jsonc</code></td>
+<td><strong>Replace entirely</strong> with Aggregate Contribution layer terminal format</td>
+</tr>
+<tr>
+<td><code>examples/rcv/RCV006254391.1-S-SCI.jsonc</code></td>
+<td>Update layer comments</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="chunk-1-vcv-aggregation-procedure">Chunk 1: VCV Aggregation Procedure<a class="headerlink" href="#chunk-1-vcv-aggregation-procedure" title="Permanent link">&para;</a></h2>
+<h3 id="task-1-remove-layer-4-from-gks-vcv-procsql">Task 1: Remove Layer 4 from gks-vcv-proc.sql<a class="headerlink" href="#task-1-remove-layer-4-from-gks-vcv-procsql" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-vcv-proc.sql</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Remove Layer 4 DECLARE and the Layer 4 SQL block</strong></li>
+</ul>
+<p>Remove the <code>DECLARE query_layer4 STRING;</code> declaration (line 7) and the entire Layer 4 block (lines 283-331: from <code>-- LAYER 4: FINAL GROUP AGGREGATOR</code> through <code>EXECUTE IMMEDIATE query_layer4;</code>).</p>
+<ul>
+<li>[ ] <strong>Step 2: Rename Layer 1-3 variables and table names</strong></li>
+</ul>
+<p>Rename throughout the file:
+- <code>query_layer1</code> → <code>query_grouping_base</code>
+- <code>query_layer2</code> → <code>query_grouping_tier</code>
+- <code>query_layer3</code> → <code>query_agg_contribution</code>
+- <code>gks_vcv_layer1_base_agg</code> → <code>gks_vcv_grouping_base_agg</code>
+- <code>gks_vcv_layer2_tier_agg</code> → <code>gks_vcv_grouping_tier_agg</code>
+- <code>gks_vcv_layer3_prop_agg</code> → <code>gks_vcv_aggregate_contribution</code></p>
+<ul>
+<li>[ ] <strong>Step 3: Update SQL comments</strong></li>
+</ul>
+<p>Replace the section comment headers:
+- <code>LAYER 1: MATERIALIZE BASE DATA</code> → <code>GROUPING LAYER: MATERIALIZE BASE DATA</code>
+- <code>LAYER 1: BASE AGGREGATION</code> → <code>GROUPING LAYER: BASE GROUPING</code>
+- <code>LAYER 2: TIER AGGREGATOR</code> → <code>GROUPING LAYER: TIER GROUPING (Somatic only)</code>
+- <code>LAYER 3: SUBMISSION LEVEL AGGREGATOR</code> → <code>AGGREGATE CONTRIBUTION LAYER</code></p>
+<p>References to Layer 1/Layer 2 within the Aggregate Contribution Layer SQL (the <code>unified_input</code> CTE that unions L2 and L1) should reference the new table names only — the SQL logic itself doesn't change.</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-vcv-proc.sql
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Remove Layer 4 and rename layers in gks_vcv_proc&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-2-remove-layer-4-from-gks-vcv-statement-procsql">Task 2: Remove Layer 4 from gks-vcv-statement-proc.sql<a class="headerlink" href="#task-2-remove-layer-4-from-gks-vcv-statement-procsql" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-vcv-statement-proc.sql</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Remove Layer 4 DECLARE variables</strong></li>
+</ul>
+<p>Remove:
+- <code>DECLARE query_layer4 STRING;</code> (line 6)
+- <code>DECLARE query_l4_pre STRING;</code> (line 10)</p>
+<ul>
+<li>[ ] <strong>Step 2: Remove Layer 4 from cleanup_temp_tables call</strong></li>
+</ul>
+<p>Remove <code>'temp_vcv_layer4_statements'</code> and <code>'temp_vcv_layer4_pre'</code> from the cleanup array (lines 27-30).</p>
+<ul>
+<li>[ ] <strong>Step 3: Remove Layer 4 BASE block</strong></li>
+</ul>
+<p>Delete the entire Layer 4 BASE section (lines 254-325: from <code>-- LAYER 4: FINAL GROUP AGGREGATOR</code> through <code>EXECUTE IMMEDIATE query_layer4;</code>).</p>
+<ul>
+<li>[ ] <strong>Step 4: Remove Layer 4 PRE block</strong></li>
+</ul>
+<p>Delete the entire Layer 4 PRE section (lines 478-531: from <code>-- LAYER 4 PRE:</code> through <code>EXECUTE IMMEDIATE query_l4_pre;</code>).</p>
+<ul>
+<li>[ ] <strong>Step 5: Simplify the FINAL union</strong></li>
+</ul>
+<p>Replace the FINAL block. The old logic was:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">temp_vcv_layer4_pre</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">UNION</span><span class="w"> </span><span class="k">ALL</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">temp_vcv_layer3_pre</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;%-S-%&#39;</span>
+</code></pre></div></p>
+<p>The new logic is simply:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="err">{</span><span class="n">P</span><span class="err">}</span><span class="p">.</span><span class="n">temp_vcv_agg_contribution_pre</span>
+</code></pre></div></p>
+<p>No UNION needed — the Aggregate Contribution Layer is now terminal for both germline and somatic.</p>
+<ul>
+<li>[ ] <strong>Step 6: Remove Layer 4 DROP TABLE statements</strong></li>
+</ul>
+<p>Remove:
+- <code>DROP TABLE _SESSION.temp_vcv_layer4_statements;</code>
+- <code>DROP TABLE _SESSION.temp_vcv_layer4_pre;</code></p>
+<ul>
+<li>[ ] <strong>Step 7: Rename all Layer 1-3 variables and table references</strong></li>
+</ul>
+<p>Rename throughout the file:
+- <code>query_layer1</code> → <code>query_grouping_base</code>
+- <code>query_layer2</code> → <code>query_grouping_tier</code>
+- <code>query_layer3</code> → <code>query_agg_contribution</code>
+- <code>query_l1_pre</code> → <code>query_grouping_base_pre</code>
+- <code>query_l2_pre</code> → <code>query_grouping_tier_pre</code>
+- <code>query_l3_pre</code> → <code>query_agg_contribution_pre</code>
+- <code>temp_vcv_layer1_statements</code> → <code>temp_vcv_grouping_base_statements</code>
+- <code>temp_vcv_layer2_statements</code> → <code>temp_vcv_grouping_tier_statements</code>
+- <code>temp_vcv_layer3_statements</code> → <code>temp_vcv_agg_contribution_statements</code>
+- <code>temp_vcv_layer1_pre</code> → <code>temp_vcv_grouping_base_pre</code>
+- <code>temp_vcv_layer2_pre</code> → <code>temp_vcv_grouping_tier_pre</code>
+- <code>temp_vcv_layer3_pre</code> → <code>temp_vcv_agg_contribution_pre</code>
+- <code>gks_vcv_layer1_base_agg</code> → <code>gks_vcv_grouping_base_agg</code>
+- <code>gks_vcv_layer2_tier_agg</code> → <code>gks_vcv_grouping_tier_agg</code>
+- <code>gks_vcv_layer3_prop_agg</code> → <code>gks_vcv_aggregate_contribution</code></p>
+<ul>
+<li>[ ] <strong>Step 8: Update SQL comment headers</strong></li>
+</ul>
+<p>Replace section comments to match the new naming convention (same pattern as Task 1 Step 3), plus:
+- <code>LAYER 1 PRE:</code> → <code>GROUPING BASE PRE:</code>
+- <code>LAYER 2 PRE:</code> → <code>GROUPING TIER PRE:</code>
+- <code>LAYER 3 PRE:</code> → <code>AGGREGATE CONTRIBUTION PRE:</code>
+- <code>FINAL: Combined VCV statement pre (germline L4 + somatic L3)</code> → <code>FINAL: VCV statement pre (all Aggregate Contribution statements)</code></p>
+<ul>
+<li>[ ] <strong>Step 9: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-vcv-statement-proc.sql
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Remove Layer 4 and rename layers in gks_vcv_statement_proc&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="chunk-2-rcv-aggregation-procedure">Chunk 2: RCV Aggregation Procedure<a class="headerlink" href="#chunk-2-rcv-aggregation-procedure" title="Permanent link">&para;</a></h2>
+<h3 id="task-3-remove-layer-4-from-gks-rcv-procsql">Task 3: Remove Layer 4 from gks-rcv-proc.sql<a class="headerlink" href="#task-3-remove-layer-4-from-gks-rcv-procsql" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-rcv-proc.sql</code></p>
+<p>Same pattern as Task 1, with RCV-specific names:</p>
+<ul>
+<li>[ ] <strong>Step 1: Remove Layer 4 DECLARE and the Layer 4 SQL block</strong></li>
+</ul>
+<p>Remove <code>DECLARE query_layer4 STRING;</code> and the entire Layer 4 block (lines 290-338).</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 2: Rename Layer 1-3 variables and table names</strong></p>
+</li>
+<li>
+<p><code>query_layer1</code> → <code>query_grouping_base</code></p>
+</li>
+<li><code>query_layer2</code> → <code>query_grouping_tier</code></li>
+<li><code>query_layer3</code> → <code>query_agg_contribution</code></li>
+<li><code>gks_rcv_layer1_base_agg</code> → <code>gks_rcv_grouping_base_agg</code></li>
+<li><code>gks_rcv_layer2_tier_agg</code> → <code>gks_rcv_grouping_tier_agg</code></li>
+<li>
+<p><code>gks_rcv_layer3_prop_agg</code> → <code>gks_rcv_aggregate_contribution</code></p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Update SQL comments</strong></p>
+</li>
+</ul>
+<p>Same comment header pattern as Task 1 Step 3.</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-rcv-proc.sql
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Remove Layer 4 and rename layers in gks_rcv_proc&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-4-remove-layer-4-from-gks-rcv-statement-procsql">Task 4: Remove Layer 4 from gks-rcv-statement-proc.sql<a class="headerlink" href="#task-4-remove-layer-4-from-gks-rcv-statement-procsql" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/gks-rcv-statement-proc.sql</code></p>
+<p>Same pattern as Task 2, with RCV-specific names:</p>
+<ul>
+<li>[ ] <strong>Step 1: Remove Layer 4 DECLARE variables</strong></li>
+</ul>
+<p>Remove <code>DECLARE query_layer4 STRING;</code> and <code>DECLARE query_l4_pre STRING;</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Remove Layer 4 from cleanup_temp_tables call</strong></li>
+</ul>
+<p>Remove <code>'temp_rcv_layer4_statements'</code> and <code>'temp_rcv_layer4_pre'</code> from the cleanup array.</p>
+<ul>
+<li>[ ] <strong>Step 3: Remove Layer 4 BASE block</strong></li>
+</ul>
+<p>Delete the entire Layer 4 BASE section (lines 325-404).</p>
+<ul>
+<li>[ ] <strong>Step 4: Remove Layer 4 PRE block</strong></li>
+</ul>
+<p>Delete the entire Layer 4 PRE section (lines 557-610).</p>
+<ul>
+<li>[ ] <strong>Step 5: Simplify the FINAL union</strong></li>
+</ul>
+<p>Replace:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">temp_rcv_layer4_pre</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">UNION</span><span class="w"> </span><span class="k">ALL</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">temp_rcv_layer3_pre</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;%-S-%&#39;</span>
+</code></pre></div></p>
+<p>With:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="err">{</span><span class="n">P</span><span class="err">}</span><span class="p">.</span><span class="n">temp_rcv_agg_contribution_pre</span>
+</code></pre></div></p>
+<ul>
+<li>[ ] <strong>Step 6: Remove Layer 4 DROP TABLE statements</strong></li>
+</ul>
+<p>Remove:
+- <code>DROP TABLE _SESSION.temp_rcv_layer4_statements;</code>
+- <code>DROP TABLE _SESSION.temp_rcv_layer4_pre;</code></p>
+<ul>
+<li>[ ] <strong>Step 7: Rename all Layer 1-3 variables and table references</strong></li>
+</ul>
+<p>Same pattern as Task 2 Step 7 but with <code>rcv</code> prefix.</p>
+<ul>
+<li>[ ] <strong>Step 8: Update SQL comment headers</strong></li>
+</ul>
+<p>Same pattern as Task 2 Step 8.</p>
+<ul>
+<li>[ ] <strong>Step 9: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/gks-rcv-statement-proc.sql
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Remove Layer 4 and rename layers in gks_rcv_statement_proc&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="chunk-3-documentation-updates">Chunk 3: Documentation Updates<a class="headerlink" href="#chunk-3-documentation-updates" title="Permanent link">&para;</a></h2>
+<h3 id="task-5-update-vcv-aggregation-rules-doc">Task 5: Update VCV aggregation rules doc<a class="headerlink" href="#task-5-update-vcv-aggregation-rules-doc" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>docs/pipeline/vcv-statements/vcv-aggregation-rules.md</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Rewrite the Layer Hierarchy section (lines 153-169)</strong></li>
+</ul>
+<p>Replace the "Layer Hierarchy" section with the new 2-layer model:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="gu">## Aggregation Hierarchy</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>VCV aggregation builds statements through a two-layer hierarchy. Each layer may consist of multiple SQL steps, but conceptually there are two aggregation layers.
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="gu">### Grouping Layer</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>The Grouping Layer produces the initial aggregation of individual SCVs into groups. It consists of two steps that run as separate SQL operations but form a single conceptual layer:
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>| Step | Name | Aggregates By | Description |
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>| --- | --- | --- | --- |
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>| Base Grouping | <span class="sb">`gks_vcv_grouping_base_agg`</span> | Variation + Statement Group + Proposition Type + Submission Level (+ Tier) | Lowest-level aggregation of individual SCVs. Applies submission-level-specific classification and conflict detection logic |
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>| Tier Grouping | <span class="sb">`gks_vcv_grouping_tier_agg`</span> | Variation + Statement Group + Proposition Type + Submission Level | Combines tier-level groups (somatic sci only). Ranks tiers by priority, designates top tier as contributing |
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>Tier Grouping applies only to somatic tiered records (<span class="sb">`tier_grouping IS NOT NULL`</span>). Non-tiered records (all germline and non-sci somatic) flow directly from Base Grouping to the Aggregate Contribution Layer.
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="gu">### Aggregate Contribution Layer</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>| Step | Name | Aggregates By | Description |
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>| --- | --- | --- | --- |
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>| Aggregate Contribution | <span class="sb">`gks_vcv_aggregate_contribution`</span> | Variation + Statement Group + Proposition Type | Winner-takes-all across submission levels. This is the terminal layer for both germline and somatic statements |
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>Submission levels are ranked <span class="sb">`PG &gt; EP &gt; CP &gt; NOCP &gt; NOCL &gt; FLAG`</span>. The highest-ranked submission level becomes the &quot;contributing&quot; result; all others become &quot;non-contributing&quot; evidence.
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>
+<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>Each layer&#39;s output includes <span class="sb">`evidenceLines`</span> that reference the layer below, creating a nested structure in the final JSON output.
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Update any other references in the file</strong></li>
+</ul>
+<p>Check for and update any mentions of "four-layer", "Layer 4", "L4", "Group Aggregator" elsewhere in the document.</p>
+<ul>
+<li>[ ] <strong>Step 3: Run mkdocs build --strict to validate</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">cd</span><span class="w"> </span>/Users/lbabb/Development/gks/clinvar-gks<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git<span class="w"> </span>add<span class="w"> </span>docs/pipeline/vcv-statements/vcv-aggregation-rules.md
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update VCV aggregation rules for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-6-update-vcv-procedures-doc">Task 6: Update VCV procedures doc<a class="headerlink" href="#task-6-update-vcv-procedures-doc" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>docs/pipeline/vcv-statements/vcv-proc.md</code></p>
+<ul>
+<li>
+<p>[ ] <strong>Step 1: Update gks_vcv_proc section</strong></p>
+</li>
+<li>
+<p>Change "builds aggregation tables through a four-layer hierarchy" → "builds aggregation tables through a two-layer aggregation hierarchy"</p>
+</li>
+<li>Rename Step 2 header: "Build gks_vcv_layer1_base_agg" → "Build gks_vcv_grouping_base_agg"</li>
+<li>Rename Step 3 header: "Build gks_vcv_layer2_tier_agg" → "Build gks_vcv_grouping_tier_agg"</li>
+<li>Rename Step 4 header: "Build gks_vcv_layer3_prop_agg" → "Build gks_vcv_aggregate_contribution"</li>
+<li>Delete Step 5 entirely (Layer 4 section)</li>
+<li>
+<p>Update all table name references throughout</p>
+</li>
+<li>
+<p>[ ] <strong>Step 2: Update gks_vcv_statement_proc section</strong></p>
+</li>
+<li>
+<p>Change "9 sections: four BASE layers, four PRE layers" → "7 sections: three BASE steps, three PRE steps"</p>
+</li>
+<li>Rename "Layers 1--4 BASE" → "BASE Statement Steps"</li>
+<li>Remove Layer 4 BASE description</li>
+<li>Rename Layer 1/2/3 BASE descriptions with new names</li>
+<li>Remove "Layer 4 PRE" section entirely</li>
+<li>Rename Layer 1/2/3 PRE sections with new names</li>
+<li>
+<p>Update FINAL section: "Combines Layer 4 PRE (germline) and Layer 3 PRE (somatic)" → "Selects all Aggregate Contribution PRE statements"</p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Update Output Tables table</strong></p>
+</li>
+</ul>
+<p>Replace all table names with new names and remove Layer 4 rows.</p>
+<ul>
+<li>[ ] <strong>Step 4: Update Dependencies section</strong></li>
+</ul>
+<p>Replace aggregation table references in the <code>gks_vcv_statement_proc</code> dependencies with new names.</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 5: Run mkdocs build --strict</strong></p>
+</li>
+<li>
+<p>[ ] <strong>Step 6: Commit</strong></p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>git<span class="w"> </span>add<span class="w"> </span>docs/pipeline/vcv-statements/vcv-proc.md
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update VCV procedures doc for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-7-update-vcv-index-page">Task 7: Update VCV index page<a class="headerlink" href="#task-7-update-vcv-index-page" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>docs/pipeline/vcv-statements/index.md</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Update key concepts and pipeline flow diagram</strong></li>
+</ul>
+<p>Replace "Four-layer hierarchy — L1 (base) through L4 (group)" with description of the two-layer model.</p>
+<p>Update the pipeline flow diagram:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>SCV Statements (gks_scv_statement_pre)
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>         │
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>         ▼
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>┌──────────────────────────────────┐
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>│  gks_vcv_proc                    │
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>│  Grouping: Base                  │  Group by variation + group + prop + level [+ tier]
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>│  Grouping: Tier                  │  Aggregate tiers within level (somatic only)
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>│  Aggregate Contribution          │  Winner-takes-all across submission levels
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>└───────────────┬──────────────────┘
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>                │
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>                ▼
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>┌──────────────────────────────────┐
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>│  gks_vcv_statement_proc          │
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>│  BASE statements (3 steps)       │  Build statement structures from agg tables
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>│  PRE: inline evidence (3 steps)  │  Propagate evidence through layers
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>│  FINAL: select all               │  All Aggregate Contribution statements
+<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>└───────────────┬──────────────────┘
+<a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>                │
+<a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>                ▼
+<a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>         gks_vcv_statement_pre
+</code></pre></div></p>
+<ul>
+<li>
+<p>[ ] <strong>Step 2: Run mkdocs build --strict</strong></p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Commit</strong></p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>git<span class="w"> </span>add<span class="w"> </span>docs/pipeline/vcv-statements/index.md
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update VCV index page for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-8-update-rcv-procedures-doc">Task 8: Update RCV procedures doc<a class="headerlink" href="#task-8-update-rcv-procedures-doc" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>docs/pipeline/rcv-statements/rcv-proc.md</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Apply same changes as Task 6 but for RCV</strong></li>
+</ul>
+<p>Same pattern as Task 6. Key differences:
+- Table names use <code>rcv</code> prefix
+- Partition key is <code>rcv_accession</code> not <code>variation_id</code>
+- RCV has condition data resolution step (unchanged, but step numbering may shift)
+- Layer 4 PRE and Layer 4 BASE sections reference <code>rcv_accession</code> and <code>trait_set_id</code></p>
+<p>Delete the entire Step 5 (Layer 4 group aggregator for RCV).</p>
+<ul>
+<li>[ ] <strong>Step 2: Update output tables</strong></li>
+</ul>
+<p>Replace table names and remove Layer 4 rows.</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 3: Run mkdocs build --strict</strong></p>
+</li>
+<li>
+<p>[ ] <strong>Step 4: Commit</strong></p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>git<span class="w"> </span>add<span class="w"> </span>docs/pipeline/rcv-statements/rcv-proc.md
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update RCV procedures doc for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-9-update-rcv-index-page">Task 9: Update RCV index page<a class="headerlink" href="#task-9-update-rcv-index-page" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>docs/pipeline/rcv-statements/index.md</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Apply same changes as Task 7 but for RCV</strong></li>
+</ul>
+<p>Update the pipeline flow diagram and key concepts to match the 2-layer model.</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 2: Run mkdocs build --strict</strong></p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Commit</strong></p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>git<span class="w"> </span>add<span class="w"> </span>docs/pipeline/rcv-statements/index.md
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update RCV index page for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-10-update-glossary">Task 10: Update glossary<a class="headerlink" href="#task-10-update-glossary" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>docs/reference/glossary.md</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Rewrite the VCV Aggregation section (lines 173-203)</strong></li>
+</ul>
+<p>Replace Layer 1-4 definitions with:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="gs">**Grouping Layer**</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>:   First conceptual aggregation layer. Consists of Base Grouping and Tier Grouping steps. Produces initial aggregation of SCVs into groups by submission level.
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="gs">**Base Grouping**</span> (Grouping Layer)
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>:   First step of the Grouping Layer. Groups SCVs by variation + statement group + proposition type + submission level [+ tier]. Applies submission-level-specific classification and conflict detection logic.
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="gs">**Tier Grouping**</span> (Grouping Layer)
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>:   Second step of the Grouping Layer (somatic sci only). Aggregates tier-level groups within each submission level.
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="gs">**Aggregate Contribution Layer**</span>
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>:   Second and final aggregation layer. Applies winner-takes-all ranking across submission levels. Terminal layer for both germline and somatic statements.
+</code></pre></div>
+<p>Remove definitions for "Layer 4 (Statement Group)" and "Tier Grouping" (replaced by the above).</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 2: Run mkdocs build --strict</strong></p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Commit</strong></p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>git<span class="w"> </span>add<span class="w"> </span>docs/reference/glossary.md
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update glossary for 2-layer aggregation model&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-11-update-output-reference-docs">Task 11: Update output reference docs<a class="headerlink" href="#task-11-update-output-reference-docs" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>docs/output-reference/vcv-statements.md</code>
+- Modify: <code>docs/output-reference/rcv-statements.md</code>
+- Modify: <code>docs/pipeline/vcv-statements/vcv-extensions.md</code>
+- Modify: <code>docs/pipeline/rcv-statements/rcv-extensions.md</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Rewrite Layer Hierarchy in vcv-statements.md (output-reference)</strong></li>
+</ul>
+<p>Replace the "Layer Hierarchy" section (lines 107-120) with the new 2-layer model:
+- Remove L4 row from the table
+- Change "4-layer aggregation hierarchy" to "2-layer"
+- Update "L4 for germline, L3 for somatic" (line 97) to "Aggregate Contribution Layer is the top level for both germline and somatic"
+- Rename L1/L2/L3 references to new names</p>
+<ul>
+<li>[ ] <strong>Step 2: Rewrite Layer Hierarchy in rcv-statements.md (output-reference)</strong></li>
+</ul>
+<p>Same changes as Step 1, applied to the RCV version (lines 176-187):
+- Remove L4 row, update "same 4-layer" to "same 2-layer"
+- Remove "Germline RCV statements use Layer 4 as the top level"</p>
+<ul>
+<li>[ ] <strong>Step 3: Update vcv-extensions.md</strong></li>
+</ul>
+<p>Change "Present only at Layer 1 for somatic clinical impact propositions" (line 108) to "Present only at the Base Grouping step for somatic clinical impact propositions".</p>
+<ul>
+<li>[ ] <strong>Step 4: Update rcv-extensions.md</strong></li>
+</ul>
+<p>Change "Present only at Layer 1 for somatic clinical impact propositions" (line 141) to "Present only at the Base Grouping step for somatic clinical impact propositions".
+Change "all four layers" (line 102) to "all aggregation steps".</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 5: Run mkdocs build --strict</strong></p>
+</li>
+<li>
+<p>[ ] <strong>Step 6: Commit</strong></p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>git<span class="w"> </span>add<span class="w"> </span>docs/output-reference/<span class="w"> </span>docs/pipeline/vcv-statements/vcv-extensions.md<span class="w"> </span>docs/pipeline/rcv-statements/rcv-extensions.md
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update output reference and extension docs for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="chunk-4-example-file-updates">Chunk 4: Example File Updates<a class="headerlink" href="#chunk-4-example-file-updates" title="Permanent link">&para;</a></h2>
+<h3 id="task-12-rename-and-rewrite-vcv-germline-example">Task 12: Rename and rewrite VCV germline example<a class="headerlink" href="#task-12-rename-and-rewrite-vcv-germline-example" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Delete: <code>examples/vcv/VCV000012582.63-G.jsonc</code>
+- Create: <code>examples/vcv/VCV000012582.63-G-PATH.jsonc</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Rename VCV000012582.63-G.jsonc to VCV000012582.63-G-PATH.jsonc</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>git<span class="w"> </span>mv<span class="w"> </span>examples/vcv/VCV000012582.63-G.jsonc<span class="w"> </span>examples/vcv/VCV000012582.63-G-PATH.jsonc
+</code></pre></div>
+<p>The old filename (<code>-G</code>) matched the L4 group aggregator ID format which no longer exists. The new filename (<code>-G-PATH</code>) matches the Aggregate Contribution Layer ID format.</p>
+<ul>
+<li>[ ] <strong>Step 2: Replace file content with Aggregate Contribution Layer format</strong></li>
+</ul>
+<p>The new structure is the content of what is currently the first nested evidence item (the L3 PATH statement) extracted as the top-level object. It should have:
+- ID: <code>VCV000012582.63-G-PATH</code>
+- <code>aggregateQualifiers: [AssertionGroup: "Germline", PropositionType: "Pathogenicity"]</code>
+- Contributing evidence: the CP-level Base Grouping statement (<code>VCV000012582.63-G-PATH-CP</code>)
+- Non-contributing evidence: the NOCP-level Base Grouping statement (<code>VCV000012582.63-G-PATH-NOCP</code>)
+- Top comment: <code>// Aggregate Contribution Layer — Germline Pathogenicity</code></p>
+<p>The JSON structure is already present in the current file as the first <code>evidenceItems[0]</code> of the first <code>evidenceLines[0]</code>. Extract it and update comments.</p>
+<ul>
+<li>[ ] <strong>Step 3: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>git<span class="w"> </span>add<span class="w"> </span>examples/vcv/
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Rename and rewrite VCV germline example for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-13-update-vcv-pgep-example-comments">Task 13: Update VCV PG/EP example comments<a class="headerlink" href="#task-13-update-vcv-pgep-example-comments" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>examples/vcv/VCV-PG-example.jsonc</code>
+- Modify: <code>examples/vcv/VCV-EP-example.jsonc</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Update layer comments in PG/EP examples</strong></li>
+</ul>
+<p>In each file, update comment references:
+- "Layer 1 Base" → "Grouping Layer — Base Grouping"
+- "Layer 3" → "Aggregate Contribution Layer"</p>
+<ul>
+<li>[ ] <strong>Step 2: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>git<span class="w"> </span>add<span class="w"> </span>examples/vcv/VCV-PG-example.jsonc<span class="w"> </span>examples/vcv/VCV-EP-example.jsonc
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update VCV PG/EP example comments for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-14-update-rcv-example-files">Task 14: Update RCV example files<a class="headerlink" href="#task-14-update-rcv-example-files" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>examples/rcv/RCV001781420.1-G-PATH.jsonc</code> (structural rewrite)
+- Modify: <code>examples/rcv/RCV006254391.1-S-SCI.jsonc</code> (comment updates)</p>
+<ul>
+<li>[ ] <strong>Step 1: Rewrite RCV001781420.1-G-PATH.jsonc</strong></li>
+</ul>
+<p>This file currently shows the L4 group aggregator output (comment says "RCV Layer 4 (Terminal for germline)"). Replace with the Aggregate Contribution Layer terminal format — the content of what is currently the L3 statement nested inside it.</p>
+<p>The new top-level should have <code>aggregateQualifiers: [AssertionGroup, PropositionType]</code> and ID format <code>RCV001781420.1-G-PATH</code>. Top comment: <code>// Aggregate Contribution Layer — Germline Pathogenicity</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Update layer comments in somatic example</strong></li>
+</ul>
+<p>In <code>RCV006254391.1-S-SCI.jsonc</code>, update:
+- "RCV Layer 3 (Terminal for somatic)" → "Aggregate Contribution Layer"
+- "Layer 2 (tier aggregator)" → "Grouping Layer — Tier Grouping"
+- "Layer 1" → "Grouping Layer — Base Grouping"</p>
+<ul>
+<li>[ ] <strong>Step 3: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>git<span class="w"> </span>add<span class="w"> </span>examples/rcv/
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update RCV example files for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="task-15-update-examples-doc-references">Task 15: Update examples doc references<a class="headerlink" href="#task-15-update-examples-doc-references" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>docs/data-access/examples.md</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Update VCV examples table</strong></li>
+</ul>
+<p>Update descriptions that reference layer counts:
+- Germline row: update filename reference from <code>VCV000012582.63-G.jsonc</code> to <code>VCV000012582.63-G-PATH.jsonc</code>, change description from "Full 4-layer germline hierarchy (L4→L3→L1)" to describe the new Aggregate Contribution terminal format
+- <code>VCV000012582.63-S-sci.jsonc</code>: Change "3-layer somatic hierarchy (L3→L2→L1)" to use new naming (Aggregate Contribution → Grouping Tier → Grouping Base)
+- <code>VCV000012582.63-S-onco.jsonc</code>: Change "(L3→L1)" to use new naming
+- Update PG/EP descriptions that mention "Layer 1" or "Layer 3"</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 2: Run mkdocs build --strict</strong></p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Commit</strong></p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>git<span class="w"> </span>add<span class="w"> </span>docs/data-access/examples.md
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update examples doc for 2-layer model&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="chunk-5-validation">Chunk 5: Validation<a class="headerlink" href="#chunk-5-validation" title="Permanent link">&para;</a></h2>
+<h3 id="task-16-final-validation">Task 16: Final validation<a class="headerlink" href="#task-16-final-validation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] <strong>Step 1: Run mkdocs build --strict</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="nb">cd</span><span class="w"> </span>/Users/lbabb/Development/gks/clinvar-gks<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict
+</code></pre></div>
+<p>Verify no broken links or build errors.</p>
+<ul>
+<li>[ ] <strong>Step 2: Grep for stale references</strong></li>
+</ul>
+<p>Search entire codebase for any remaining references to old names:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>grep<span class="w"> </span>-rn<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;layer[1-4]|Layer [1-4]|\bL[1-4]\b|four.layer|4.layer|layer1_base_agg|layer2_tier_agg|layer3_prop_agg|layer4_group_agg&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">  </span>--include<span class="o">=</span><span class="s2">&quot;*.sql&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.md&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.jsonc&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">  </span>src/<span class="w"> </span>docs/<span class="w"> </span>examples/
+</code></pre></div>
+<p>Any hits (excluding <code>archive/</code> and <code>docs/superpowers/plans/</code>) indicate missed renames.</p>
+<ul>
+<li>[ ] <strong>Step 3: Verify SQL consistency</strong></li>
+</ul>
+<p>For each of the 4 SQL procedures, verify:</p>
+<ol>
+<li>All DECLARE'd variables are used</li>
+<li>All table names in CREATE match table names in subsequent references</li>
+<li>No dangling references to removed Layer 4 tables</li>
+<li>
+<p>The cleanup_temp_tables arrays match the temp tables actually created</p>
+</li>
+<li>
+<p>[ ] <strong>Step 4: Commit any fixes and final commit</strong></p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>git<span class="w"> </span>add<span class="w"> </span>-A
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Final validation fixes for aggregation layer refactor&quot;</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
