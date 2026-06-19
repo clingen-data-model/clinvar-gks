@@ -107,7 +107,7 @@ The SCV statements for this variant reference it via `#/variation/clinvar:10` in
 
 ### Key Concepts
 
-**Statements** are the core unit of ClinVar-GKS. Each statement represents a clinical classification — either submitted (SCV), aggregated per variation (VCV), or aggregated per condition (RCV). Statements carry:
+**Statements** are the core unit of ClinVar-GKS. Each statement represents a classification — either submitted (SCV), aggregated per variation (VCV), or aggregated per condition (RCV). Statements carry:
 
 - A **classification** — the clinical significance label (e.g., Pathogenic, Likely benign)
 - A **proposition** — what the classification asserts (variant X causes condition Y)

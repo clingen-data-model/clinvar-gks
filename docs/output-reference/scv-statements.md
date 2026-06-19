@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `scv` bundle section contains one record per ClinVar submitted clinical assertion (SCV). Each record is a VA-Spec `Statement` that captures a submitter's clinical interpretation of a variant — including the classification, evidence, condition, variant, and method.
+The `scv` bundle section contains one record per ClinVar submission (SCV). Each record is a VA-Spec `Statement` that captures a submitter's interpretation of a variant — including the classification, evidence, condition, variant, and method.
 
 SCV statements use `#/` references to link to propositions, submitters, and conditions in their respective bundle sections rather than embedding full objects inline.
 
@@ -21,7 +21,7 @@ Each record is a VA-Spec `Statement` with the following top-level fields:
 | `id` | string | SCV accession with version — `clinvar.submission:SCV000123456.1` |
 | `type` | string | Always `Statement` |
 | `proposition` | string | `#/proposition/{id}` reference to the classification proposition |
-| `classification` | object | MappableConcept — the submitter's clinical classification. See [Classification](#classification) |
+| `classification` | object | MappableConcept — the submitter's classification. See [Classification](#classification) |
 | `strength` | object | MappableConcept — the evidence strength. See [Strength](#strength) |
 | `direction` | string | Whether the evidence `supports`, `disputes`, or is `neutral` toward the proposition |
 | `confidence` | string | Submission level label (e.g., `criteria provided`, `practice guideline`) |
@@ -38,7 +38,7 @@ Each record is a VA-Spec `Statement` with the following top-level fields:
 
 ## Classification
 
-The `classification` field is a MappableConcept with the submitted clinical significance:
+The `classification` field is a MappableConcept with the submitted classification:
 
 ```json
 {

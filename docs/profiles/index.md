@@ -4,7 +4,7 @@ This section describes the fundamental aspects of how ClinVar data is organized 
 
 ## Overview
 
-ClinVar submissions (SCVs) are the baseline statements submitted to ClinVar by clinical laboratories, expert panels, and other organizations. ClinVar aggregates these submissions using different rules for specific statement types to produce higher-order statements (RCVs and VCVs).
+ClinVar submissions (SCVs) are the baseline statements submitted to ClinVar by laboratories, expert panels, research groups, locus-specific databases (LSDBs), and other organizations. ClinVar aggregates these submissions using different rules for specific statement types to produce higher-order statements (RCVs and VCVs).
 
 ClinVar-GKS maps each submission to a specific **statement type**, **proposition profile**, and **classification** with corresponding **direction** and **strength** values conforming to the GA4GH VA-Spec standard.
 
