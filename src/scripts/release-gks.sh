@@ -61,7 +61,11 @@ BQ_DATASET="clinvar_${DATE_UNDERSCORED}_${DATASET_VERSION}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-PYTHON="${PROJECT_ROOT}/venv/3.12/bin/python3"
+if [[ -x "${PROJECT_ROOT}/venv/3.12/bin/python3" ]]; then
+  PYTHON="${PROJECT_ROOT}/venv/3.12/bin/python3"
+else
+  PYTHON="python3"
+fi
 
 echo "=== ClinVar-GKS Release Pipeline ==="
 echo "  Release date:  ${EXPORT_DATE}"
