@@ -60,6 +60,37 @@ nav:
     - Output Format: output-reference/overview.md
     - Data Model:
       - output-reference/classes/index.md
+      - Variations:
+        - output-reference/classes/variations.md
+        - ClinvarCategoricalVariant: output-reference/classes/ClinvarCategoricalVariant.md
+        - ClinvarCanonicalAllele: output-reference/classes/ClinvarCanonicalAllele.md
+        - ClinvarCategoricalCnvChange: output-reference/classes/ClinvarCategoricalCnvChange.md
+        - ClinvarCategoricalCnvCount: output-reference/classes/ClinvarCategoricalCnvCount.md
+        - ClinvarNonConstrainedVariant: output-reference/classes/ClinvarNonConstrainedVariant.md
+        - HgvsListItem: output-reference/classes/HgvsListItem.md
+        - GeneListItem: output-reference/classes/GeneListItem.md
+      - Propositions:
+        - output-reference/classes/propositions.md
+        - ClinvarProposition: output-reference/classes/ClinvarProposition.md
+        - ClinvarRiskFactorProposition: output-reference/classes/ClinvarRiskFactorProposition.md
+        - ClinvarProtectiveProposition: output-reference/classes/ClinvarProtectiveProposition.md
+        - ClinvarDrugResponseProposition: output-reference/classes/ClinvarDrugResponseProposition.md
+        - ClinvarAffectsProposition: output-reference/classes/ClinvarAffectsProposition.md
+        - ClinvarAssociationProposition: output-reference/classes/ClinvarAssociationProposition.md
+        - ClinvarConfersSensitivityProposition: output-reference/classes/ClinvarConfersSensitivityProposition.md
+        - ClinvarOtherProposition: output-reference/classes/ClinvarOtherProposition.md
+        - ClinvarNotProvidedProposition: output-reference/classes/ClinvarNotProvidedProposition.md
+        - ClinvarConflictingDataFromSubmitterProposition: output-reference/classes/ClinvarConflictingDataFromSubmitterProposition.md
+      - Statements:
+        - output-reference/classes/statements.md
+        - ClinvarStatement: output-reference/classes/ClinvarStatement.md
+        - ClinvarScvStatement: output-reference/classes/ClinvarScvStatement.md
+        - ClinvarVcvStatement: output-reference/classes/ClinvarVcvStatement.md
+        - ClinvarRcvStatement: output-reference/classes/ClinvarRcvStatement.md
+        - SubmittedConditionMapping: output-reference/classes/SubmittedConditionMapping.md
+      - Evidence:
+        - output-reference/classes/evidence.md
+        - ClinvarSomaticEvidenceLine: output-reference/classes/ClinvarSomaticEvidenceLine.md
     - Variations: output-reference/cat-vrs.md
     - SCV Statements: output-reference/scv-statements.md
     - VCV Statements: output-reference/vcv-statements.md

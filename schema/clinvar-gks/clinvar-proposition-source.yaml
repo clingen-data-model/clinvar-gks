@@ -1,0 +1,331 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/clinvar-proposition-source.yaml"
+title: ClinVar-GKS custom proposition types
+description: >-
+  Custom proposition types for ClinVar submission categories that do not have
+  corresponding GA4GH VA-Spec proposition types. Standard GA4GH types
+  (VariantPathogenicityProposition, VariantOncogenicityProposition,
+  VariantClinicalSignificanceProposition, VariantDiagnosticProposition,
+  VariantPrognosticProposition, VariantTherapeuticResponseProposition)
+  are imported from VA-Spec and used directly.
+strict: true
+
+imports:
+  va-core: ../va-spec/base/va-core-source.yaml
+  domain-entities: ../va-spec/base/domain-entities-source.yaml
+  cat-vrs: ../cat-vrs/cat-vrs-source.yaml
+  vrs: ../vrs/vrs-source.yaml
+  gks-core: ../gks-core/gks-core-source.yaml
+
+namespaces:
+  gks.core: /ga4gh/schema/gks-core/1.1.0/json/
+  vrs: /ga4gh/schema/vrs/2.0.1/json/
+  cat-vrs: /ga4gh/schema/cat-vrs/1.0.0/json/
+  va-spec: /ga4gh/schema/va-spec/1.0.1/base/json/
+
+$defs:
+  ClinvarRiskFactorProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A proposition describing the role of a variant as a risk factor for a condition.
+      Used for ClinVar submissions classified as "risk factor". ClinVar has stopped
+      accepting new submissions with this classification in favor of standard
+      pathogenicity terms, but historical submissions remain.
+    allOf:
+      - $refCurie: va-spec:ClinicalVariantProposition
+    properties:
+      type:
+        type: string
+        const: ClinvarRiskFactorProposition
+        default: ClinvarRiskFactorProposition
+        description: MUST be "ClinvarRiskFactorProposition".
+      predicate:
+        type: string
+        const: isRiskFactorFor
+        default: isRiskFactorFor
+        description: >-
+          The relationship the Proposition describes between the subject variant
+          and object condition. MUST be "isRiskFactorFor".
+      objectCondition:
+        oneOf:
+          - $ref: Condition
+          - $refCurie: gks.core:iriReference
+        description: The condition for which the variant is a risk factor.
+    required:
+      - predicate
+      - objectCondition
+
+  ClinvarProtectiveProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A proposition describing the protective role of a variant against a condition.
+      Used for ClinVar submissions classified as "protective". ClinVar has stopped
+      accepting new submissions with this classification, but historical submissions
+      remain.
+    allOf:
+      - $refCurie: va-spec:ClinicalVariantProposition
+    properties:
+      type:
+        type: string
+        const: ClinvarProtectiveProposition
+        default: ClinvarProtectiveProposition
+        description: MUST be "ClinvarProtectiveProposition".
+      predicate:
+        type: string
+        const: isProtectiveFor
+        default: isProtectiveFor
+        description: >-
+          The relationship the Proposition describes between the subject variant
+          and object condition. MUST be "isProtectiveFor".
+      objectCondition:
+        oneOf:
+          - $ref: Condition
+          - $refCurie: gks.core:iriReference
+        description: The condition against which the variant is protective.
+    required:
+      - predicate
+      - objectCondition
+
+  ClinvarDrugResponseProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A proposition describing the role of a variant in modulating drug response.
+      Used for ClinVar submissions classified as "drug response". Distinct from
+      the GA4GH VariantTherapeuticResponseProposition which is used for somatic
+      clinical impact therapeutic response assertions.
+    allOf:
+      - $refCurie: va-spec:ClinicalVariantProposition
+    properties:
+      type:
+        type: string
+        const: ClinvarDrugResponseProposition
+        default: ClinvarDrugResponseProposition
+        description: MUST be "ClinvarDrugResponseProposition".
+      predicate:
+        type: string
+        const: hasDrugResponseFor
+        default: hasDrugResponseFor
+        description: >-
+          The relationship the Proposition describes between the subject variant
+          and object condition. MUST be "hasDrugResponseFor".
+      objectCondition:
+        oneOf:
+          - $ref: Condition
+          - $refCurie: gks.core:iriReference
+        description: The condition context in which the drug response is observed.
+    required:
+      - predicate
+      - objectCondition
+
+  ClinvarAffectsProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A proposition describing a variant that affects a condition without implying
+      causality. Used for ClinVar submissions classified as "affects". ClinVar has
+      stopped accepting new submissions with this classification, but historical
+      submissions remain.
+    allOf:
+      - $refCurie: va-spec:ClinicalVariantProposition
+    properties:
+      type:
+        type: string
+        const: ClinvarAffectsProposition
+        default: ClinvarAffectsProposition
+        description: MUST be "ClinvarAffectsProposition".
+      predicate:
+        type: string
+        const: hasAffectFor
+        default: hasAffectFor
+        description: >-
+          The relationship the Proposition describes between the subject variant
+          and object condition. MUST be "hasAffectFor".
+      objectCondition:
+        oneOf:
+          - $ref: Condition
+          - $refCurie: gks.core:iriReference
+        description: The condition that is affected by the variant.
+    required:
+      - predicate
+      - objectCondition
+
+  ClinvarAssociationProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A proposition describing a statistical or observational association between
+      a variant and a condition. Used for ClinVar submissions classified as
+      "association". Does not imply a causal relationship.
+    allOf:
+      - $refCurie: va-spec:ClinicalVariantProposition
+    properties:
+      type:
+        type: string
+        const: ClinvarAssociationProposition
+        default: ClinvarAssociationProposition
+        description: MUST be "ClinvarAssociationProposition".
+      predicate:
+        type: string
+        const: isAssociatedWith
+        default: isAssociatedWith
+        description: >-
+          The relationship the Proposition describes between the subject variant
+          and object condition. MUST be "isAssociatedWith".
+      objectCondition:
+        oneOf:
+          - $ref: Condition
+          - $refCurie: gks.core:iriReference
+        description: The condition with which the variant is associated.
+    required:
+      - predicate
+      - objectCondition
+
+  ClinvarConfersSensitivityProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A proposition describing a variant that confers sensitivity to a condition
+      or environmental factor. Used for ClinVar submissions classified as
+      "confers sensitivity". ClinVar has stopped accepting new submissions with
+      this classification, but historical submissions remain.
+    allOf:
+      - $refCurie: va-spec:ClinicalVariantProposition
+    properties:
+      type:
+        type: string
+        const: ClinvarConfersSensitivityProposition
+        default: ClinvarConfersSensitivityProposition
+        description: MUST be "ClinvarConfersSensitivityProposition".
+      predicate:
+        type: string
+        const: confersSensitivityFor
+        default: confersSensitivityFor
+        description: >-
+          The relationship the Proposition describes between the subject variant
+          and object condition. MUST be "confersSensitivityFor".
+      objectCondition:
+        oneOf:
+          - $ref: Condition
+          - $refCurie: gks.core:iriReference
+        description: The condition or factor to which the variant confers sensitivity.
+    required:
+      - predicate
+      - objectCondition
+
+  ClinvarOtherProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A proposition for ClinVar submissions classified as "other" that do not fit
+      any standard or named classification category. ClinVar has stopped accepting
+      new submissions with this classification, but historical submissions remain.
+    allOf:
+      - $refCurie: va-spec:ClinicalVariantProposition
+    properties:
+      type:
+        type: string
+        const: ClinvarOtherProposition
+        default: ClinvarOtherProposition
+        description: MUST be "ClinvarOtherProposition".
+      predicate:
+        type: string
+        const: isClinvarOtherAssociationFor
+        default: isClinvarOtherAssociationFor
+        description: >-
+          The relationship the Proposition describes between the subject variant
+          and object condition. MUST be "isClinvarOtherAssociationFor".
+      objectCondition:
+        oneOf:
+          - $ref: Condition
+          - $refCurie: gks.core:iriReference
+        description: The condition associated with the variant.
+    required:
+      - predicate
+      - objectCondition
+
+  ClinvarNotProvidedProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A proposition for ClinVar submissions where the submitter did not provide
+      a clinical classification. These submissions still carry variant-condition
+      associations but lack a formal pathogenicity or clinical significance
+      assessment.
+    allOf:
+      - $refCurie: va-spec:ClinicalVariantProposition
+    properties:
+      type:
+        type: string
+        const: ClinvarNotProvidedProposition
+        default: ClinvarNotProvidedProposition
+        description: MUST be "ClinvarNotProvidedProposition".
+      predicate:
+        type: string
+        const: hasNoProvidedClassificationFor
+        default: hasNoProvidedClassificationFor
+        description: >-
+          The relationship the Proposition describes between the subject variant
+          and object condition. MUST be "hasNoProvidedClassificationFor".
+      objectCondition:
+        oneOf:
+          - $ref: Condition
+          - $refCurie: gks.core:iriReference
+        description: The condition for which no classification was provided.
+    required:
+      - predicate
+      - objectCondition
+
+  ClinvarConflictingDataFromSubmitterProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A proposition for ClinVar submissions where the submitter's data conflicts
+      with other submitters' data for the same variant-condition pair. Used for
+      submissions classified as "conflicting data from submitters".
+    allOf:
+      - $refCurie: va-spec:ClinicalVariantProposition
+    properties:
+      type:
+        type: string
+        const: ClinvarConflictingDataFromSubmitterProposition
+        default: ClinvarConflictingDataFromSubmitterProposition
+        description: MUST be "ClinvarConflictingDataFromSubmitterProposition".
+      predicate:
+        type: string
+        const: isConflictingDataFromSubmittersFor
+        default: isConflictingDataFromSubmittersFor
+        description: >-
+          The relationship the Proposition describes between the subject variant
+          and object condition. MUST be "isConflictingDataFromSubmittersFor".
+      objectCondition:
+        oneOf:
+          - $ref: Condition
+          - $refCurie: gks.core:iriReference
+        description: The condition for which conflicting data exists.
+    required:
+      - predicate
+      - objectCondition
+
+  ClinvarProposition:
+    maturity: draft
+    description: >-
+      Any proposition type valid in ClinVar-GKS statements. Includes the
+      GA4GH standard proposition types (pathogenicity, oncogenicity, clinical
+      significance) and ClinVar-specific proposition types for submission
+      categories not covered by the GA4GH specifications.
+    oneOf:
+      - $refCurie: va-spec:VariantPathogenicityProposition
+      - $refCurie: va-spec:VariantOncogenicityProposition
+      - $refCurie: va-spec:VariantClinicalSignificanceProposition
+      - $ref: "#/$defs/ClinvarRiskFactorProposition"
+      - $ref: "#/$defs/ClinvarProtectiveProposition"
+      - $ref: "#/$defs/ClinvarDrugResponseProposition"
+      - $ref: "#/$defs/ClinvarAffectsProposition"
+      - $ref: "#/$defs/ClinvarAssociationProposition"
+      - $ref: "#/$defs/ClinvarConfersSensitivityProposition"
+      - $ref: "#/$defs/ClinvarOtherProposition"
+      - $ref: "#/$defs/ClinvarNotProvidedProposition"
+      - $ref: "#/$defs/ClinvarConflictingDataFromSubmitterProposition"

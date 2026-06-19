@@ -1,0 +1,43 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarProtectiveProposition",
+   "title": "ClinvarProtectiveProposition",
+   "description": "A proposition describing the protective role of a variant against a condition. Used for ClinVar submissions classified as \"protective\". ClinVar has stopped accepting new submissions with this classification, but historical submissions remain.",
+   "type": "object",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$refCurie": "va-spec:ClinicalVariantProposition"
+      }
+   ],
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "ClinvarProtectiveProposition",
+         "default": "ClinvarProtectiveProposition",
+         "description": "MUST be \"ClinvarProtectiveProposition\"."
+      },
+      "predicate": {
+         "type": "string",
+         "const": "isProtectiveFor",
+         "default": "isProtectiveFor",
+         "description": "The relationship the Proposition describes between the subject variant and object condition. MUST be \"isProtectiveFor\"."
+      },
+      "objectCondition": {
+         "oneOf": [
+            {
+               "$ref": "/ga4gh/schema/gks-core/1.1.0/json/iriReference"
+            },
+            {
+               "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/Condition"
+            }
+         ],
+         "description": "The condition against which the variant is protective."
+      }
+   },
+   "required": [
+      "objectCondition",
+      "predicate"
+   ],
+   "additionalProperties": false
+}

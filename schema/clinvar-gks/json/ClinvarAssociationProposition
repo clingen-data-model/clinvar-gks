@@ -1,0 +1,43 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarAssociationProposition",
+   "title": "ClinvarAssociationProposition",
+   "description": "A proposition describing a statistical or observational association between a variant and a condition. Used for ClinVar submissions classified as \"association\". Does not imply a causal relationship.",
+   "type": "object",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$refCurie": "va-spec:ClinicalVariantProposition"
+      }
+   ],
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "ClinvarAssociationProposition",
+         "default": "ClinvarAssociationProposition",
+         "description": "MUST be \"ClinvarAssociationProposition\"."
+      },
+      "predicate": {
+         "type": "string",
+         "const": "isAssociatedWith",
+         "default": "isAssociatedWith",
+         "description": "The relationship the Proposition describes between the subject variant and object condition. MUST be \"isAssociatedWith\"."
+      },
+      "objectCondition": {
+         "oneOf": [
+            {
+               "$ref": "/ga4gh/schema/gks-core/1.1.0/json/iriReference"
+            },
+            {
+               "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/Condition"
+            }
+         ],
+         "description": "The condition with which the variant is associated."
+      }
+   },
+   "required": [
+      "objectCondition",
+      "predicate"
+   ],
+   "additionalProperties": false
+}

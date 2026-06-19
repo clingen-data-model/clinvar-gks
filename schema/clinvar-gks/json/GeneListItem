@@ -1,0 +1,48 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/GeneListItem",
+   "title": "GeneListItem",
+   "description": "A complex structure for sharing individual Gene entries associated with Clinvar Variations including `entrez_gene_id`, `hgnc_id`, `symbol`, `relationship_type`, `source`, and `iris`.",
+   "type": "object",
+   "maturity": "draft",
+   "properties": {
+      "entrez_gene_id": {
+         "type": "string",
+         "description": "NCBI Entrez Gene identifier."
+      },
+      "hgnc_id": {
+         "type": "string",
+         "description": "HGNC gene identifier (e.g., `HGNC:1234`). May be null for genes without an HGNC assignment."
+      },
+      "symbol": {
+         "type": "string",
+         "description": "The gene symbol (e.g., `BRCA1`, `MTOR`)."
+      },
+      "relationship_type": {
+         "type": "string",
+         "enum": [
+            "asserted, but not computed",
+            "genes overlapped by variant",
+            "near gene, downstream",
+            "near gene, upstream",
+            "within multiple genes by overlap",
+            "within single gene"
+         ],
+         "description": "The relationship between the variation and the gene as reported by ClinVar (e.g.,  `within single gene`, `genes overlapped by variant`)."
+      },
+      "source": {
+         "type": "string",
+         "description": "The source of the gene association (e.g., `submitted`, `calculated`)."
+      },
+      "iris": {
+         "type": "array",
+         "ordered": false,
+         "items": {
+            "$ref": "/ga4gh/schema/gks-core/1.1.0/json/iriReference"
+         },
+         "description": "Identifier IRIs for the gene, including links to identifiers.org (HGNC and/or NCBI Gene) and NCBI Gene pages.        "
+      }
+   },
+   "required": [],
+   "additionalProperties": false
+}
