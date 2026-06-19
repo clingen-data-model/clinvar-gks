@@ -25,7 +25,7 @@ Each record is a `Statement` with the following top-level fields:
 | `strength` | object | MappableConcept — the aggregate evidence strength |
 | `direction` | string | `supports`, `disputes`, or `neutral` — derived from the aggregate classification |
 | `confidence` | string | Submission level label (e.g., `criteria provided`, `expert panel`) |
-| `extensions` | array | Aggregate metadata — `clinvarReviewStatus` |
+| `extensions` | array of [Extension](#extensions) | ClinVar-specific aggregate metadata (0..*). See [Extensions](#extensions) |
 | `evidenceLines` | array | Contributing and non-contributing evidence. See [Evidence Lines](#evidence-lines) |
 
 </div>
@@ -92,6 +92,46 @@ Evidence lines work identically to VCV. Each evidence line references contributi
 At the Classification layer, evidence items reference SCVs via `#/scv/`. At the Priority and Aggregate Contribution layers, evidence items reference lower-level RCV groupings via `#/rcv/`.
 
 See [VCV Evidence Lines](vcv-statements.md#evidence-lines) for the full field reference.
+
+---
+
+## Extensions
+
+Extensions carry aggregate metadata not part of the GA4GH VA-Spec statement model. Each extension follows the GA4GH Extension structure: `{ "name": "<name>", "value": <value> }`. Extensions appear at two structural levels — on the top-level `Statement` and on the `classification` object.
+
+RCV extensions follow the same patterns as [VCV extensions](vcv-statements.md#extensions). See [RCV Extensions (Pipeline)](../pipeline/rcv-statements/rcv-extensions.md) for details on how these extensions are built during pipeline processing.
+
+### Statement Extensions
+
+<div class="field-table" markdown>
+
+| Extension Name | Value Type | Description |
+|---|---|---|
+| `clinvarReviewStatus` | `string` | The aggregate review status derived from the submission level and aggregation outcome. Same value set as [VCV Statement Extensions](vcv-statements.md#statement-extensions). Always present. |
+
+</div>
+
+### Classification Extensions
+
+Extensions on the `classification` MappableConcept within the Statement.
+
+<div class="field-table" markdown>
+
+| Extension Name | Value Type | Description |
+|---|---|---|
+| `conflictingExplanation` | `string` | A formatted breakdown of conflicting classification counts (e.g., `Pathogenic(3); Likely pathogenic(2)`). Present only when the classification is conflicting. |
+
+</div>
+
+### SCI Classification Label Format
+
+For somatic clinical impact (SCI) propositions, the RCV aggregate classification label includes the tier, assertion type, and clinical significance:
+
+```text
+<tier_label> - <assertion_type> - <clinical_significance> (<scv_count>)
+```
+
+Examples: `Tier I - Strong - diagnostic - supports diagnosis (1)`, `Tier II - Potential - prognostic - poor outcome (1)`
 
 ---
 

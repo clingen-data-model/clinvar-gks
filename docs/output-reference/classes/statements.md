@@ -6,7 +6,7 @@ The [ClinvarStatement](ClinvarStatement.md) union type encompasses all three:
 
 | Level | Profile | Bundle Section | Description |
 | --- | --- | --- | --- |
-| Submission | [ClinvarScvStatement](ClinvarScvStatement.md) | `scv` | A single submitter's clinical classification |
+| Submission | [ClinvarScvStatement](ClinvarScvStatement.md) | `scv` | A single submitter's classification |
 | Variant aggregate | [ClinvarVcvStatement](ClinvarVcvStatement.md) | `vcv` | Aggregate across all submissions for a variant + proposition type |
 | Condition aggregate | [ClinvarRcvStatement](ClinvarRcvStatement.md) | `rcv` | Aggregate scoped to a specific variant + condition pair |
 
@@ -16,7 +16,7 @@ The [ClinvarStatement](ClinvarStatement.md) union type encompasses all three:
 
 Each SCV represents one submitter's assertion about a variant-condition relationship. SCV statements carry:
 
-- **Classification** — the submitter's clinical classification (e.g., Pathogenic, Likely benign, Tier I - Strong)
+- **Classification** — the submitter's classification (e.g., Pathogenic, Likely benign, Tier I - Strong)
 - **Direction** — whether the evidence `supports`, `disputes`, or is `neutral` toward the proposition
 - **Strength** — the strength of the assessment (e.g., definitive, likely)
 - **Contributions** — submitter identity and dates (submitted, created, evaluated) with `#/submitter/` references
