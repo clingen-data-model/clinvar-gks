@@ -3,22 +3,27 @@
 Assemble GKS dictionary NDJSON files into a single keyed JSON file.
 
 Supports reading from local files or streaming directly from GCS.
+Output is placed in {bucket}/{date}/release/clinvar-gks-{date}.json.gz.
+Source files are removed after successful assembly unless --keep-source is used.
 
 Usage:
-  # From local files
-  python3 assemble-gks-dicts.py ./gks-dicts/ ./clinvar-gks.json.gz
-
   # Stream from GCS (no download needed — run in Cloud Shell for best perf)
-  python3 assemble-gks-dicts.py gs://bucket/gks-dicts/2026-05-10/ ./clinvar-gks.json.gz
+  python3 assemble-gks-dicts.py gs://bucket/gks-dicts/ 2026-05-03
 
-  # Stream from GCS and upload result to GCS
-  python3 assemble-gks-dicts.py gs://bucket/gks-dicts/2026-05-10/ gs://bucket/release/clinvar-gks.json.gz
+  # Keep source files for debugging
+  python3 assemble-gks-dicts.py gs://bucket/gks-dicts/ 2026-05-03 --keep-source
+
+  # From local files (output goes to ./2026-05-03/release/)
+  python3 assemble-gks-dicts.py ./gks-dicts/ 2026-05-03
 
 Dependencies:
   pip install orjson  # optional, 10-50x faster JSON; falls back to stdlib json
 """
+import argparse
 import gzip
 import io
+import re
+import shutil
 import subprocess
 import sys
 import time
@@ -230,24 +235,89 @@ def assemble(source, output_path):
     print(f"\nDone: {section_count} sections, {total_entries:,} total entries in {elapsed:.1f}s -> {output_path}")
 
 
+def derive_output_path(source, date):
+    """Derive output path from source bucket and date."""
+    filename = f"clinvar-gks-{date}.json.gz"
+    if source.startswith("gs://"):
+        # Extract bucket: gs://bucket-name/prefix/ -> bucket-name
+        bucket = source.split("/")[2]
+        return f"gs://{bucket}/{date}/release/{filename}"
+    else:
+        return str(Path(date) / "release" / filename)
+
+
+def cleanup_source(source):
+    """Remove the source directory after successful assembly."""
+    if source.startswith("gs://"):
+        print(f"\nCleaning up source: {source}")
+        subprocess.run(
+            ["gsutil", "-m", "rm", "-r", source],
+            check=True,
+        )
+    else:
+        print(f"\nCleaning up source: {source}")
+        shutil.rmtree(source)
+    print("  Source removed.")
+
+
 def main():
-    if len(sys.argv) != 3:
-        print(__doc__)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Assemble GKS dictionary NDJSON files "
+        "into a single keyed JSON file.",
+    )
+    parser.add_argument(
+        "source",
+        help="Source directory (local path or gs:// URI)",
+    )
+    parser.add_argument(
+        "date",
+        help="ClinVar release date (YYYY-MM-DD)",
+    )
+    parser.add_argument(
+        "--keep-source",
+        action="store_true",
+        help="Keep source files after assembly (for debugging)",
+    )
+    args = parser.parse_args()
 
-    source = sys.argv[1]
-    output_path = sys.argv[2]
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", args.date):
+        parser.error(
+            f"date must be YYYY-MM-DD format, got '{args.date}'"
+        )
 
-    if not source.startswith("gs://") and not Path(source).is_dir():
-        print(f"Error: {source} is not a directory or GCS path")
-        sys.exit(1)
+    source = args.source
+    if (
+        not source.startswith("gs://")
+        and not Path(source).is_dir()
+    ):
+        parser.error(
+            f"{source} is not a directory or GCS path"
+        )
+
+    output_path = derive_output_path(source, args.date)
+
+    # Create local output directory if needed
+    if not output_path.startswith("gs://"):
+        Path(output_path).parent.mkdir(
+            parents=True, exist_ok=True
+        )
 
     print(f"Assembling GKS dictionaries from {source}")
+    print(f"  Output: {output_path}")
     if "orjson" in sys.modules:
         print("  Using orjson for fast JSON processing")
     else:
-        print("  Using stdlib json (pip install orjson for 10-50x speedup)")
+        print(
+            "  Using stdlib json "
+            "(pip install orjson for 10-50x speedup)"
+        )
+
     assemble(source, output_path)
+
+    if not args.keep_source:
+        cleanup_source(source)
+    else:
+        print(f"\n  Source retained: {source}")
 
 
 if __name__ == "__main__":
