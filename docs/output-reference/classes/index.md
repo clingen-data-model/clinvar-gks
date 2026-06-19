@@ -8,62 +8,148 @@ This page provides a visual overview of how the classes relate to each other, wi
 
 ## Class Relationship Diagram
 
-The diagram below shows how the bundle classes relate to each other. Arrows indicate reference direction — for example, a Variation references its Allele members, and an SCV Statement references its Proposition.
+The diagram below shows how the bundle classes relate to each other in a UML-style view. Each class shows its key attributes. Lines indicate reference relationships — navigable from the class with the arrow. Multiplicity is shown on each end.
 
 ```mermaid
-flowchart LR
-    subgraph "<b>Genomic</b>"
-        direction TB
-        SR(["SequenceReference<br/><small>SQ.{digest}</small>"])
-        LOC(["Location<br/><small>ga4gh:SL.{digest}</small>"])
-        AL(["Allele<br/><small>ga4gh:VA.{digest}</small>"])
-        G(["Gene<br/><small>ncbigene:{id}</small>"])
-        V(["<b>Variation</b><br/><small>clinvar:{id}</small>"])
-    end
+classDiagram
+    direction TB
 
-    subgraph "<b>Clinical</b>"
-        direction TB
-        COND(["Condition<br/><small>clinvar.trait:{id}</small>"])
-        CS(["ConditionSet<br/><small>clinvar.traitset:{id}</small>"])
-        SUB(["Submitter<br/><small>clinvar.submitter:{id}</small>"])
-        PROP(["<b>Proposition</b><br/><small>{scv}-{CODE}</small>"])
-    end
+    namespace Variation {
+        class SequenceReference {
+            refgetAccession : string
+            residueAlphabet : string
+            molecularType : string
+            extensions : Extension[0..*]
+        }
+        class Location {
+            id : ga4gh:SL.digest
+            start : integer
+            end : integer
+        }
+        class Allele {
+            id : ga4gh:VA.digest
+            state : object
+            expressions : Expression[0..*]
+        }
+        class Gene {
+            id : ncbigene:id
+            symbol : string
+            hgnc_id : string
+        }
+        class CategoricalVariant {
+            id : clinvar:id
+            type : string
+            name : string
+            constraints : Constraint[0..*]
+            mappings : Mapping[0..*]
+            extensions : Extension[0..*]
+        }
+    }
 
-    subgraph "<b>Statements</b>"
-        direction TB
-        SCV(["<b>SCV</b><br/><small>clinvar.submission:{id}.{ver}</small>"])
-        VCV(["<b>VCV</b><br/><small>{vcv}-{group}-{prop}-{level}</small>"])
-        RCV(["<b>RCV</b><br/><small>{rcv}-{group}-{prop}-{level}</small>"])
-    end
+    namespace Supporting {
+        class Condition {
+            id : clinvar.trait:id
+            name : string
+            primaryCoding : Coding
+            mappings : Mapping[0..*]
+        }
+        class ConditionSet {
+            id : clinvar.traitset:id
+            operator : AND | OR
+        }
+        class Submitter {
+            id : clinvar.submitter:id
+            name : string
+        }
+        class Proposition {
+            id : string
+            type : string
+            predicate : string
+            geneContextQualifier : Concept[0..1]
+            modeOfInheritanceQualifier : Concept[0..1]
+            penetranceQualifier : Concept[0..1]
+        }
+    }
 
-    %% Genomic chain
-    LOC -- "#/sequenceReference/" --> SR
-    AL -- "#/location/" --> LOC
-    V -- "#/allele/" --> AL
-    V -. "#/gene/" .-> G
+    namespace Statements {
+        class ScvStatement {
+            id : clinvar.submission:id.ver
+            type : Statement
+            classification : MappableConcept
+            strength : MappableConcept
+            direction : string
+            confidence : string
+            contributions : Contribution[1..*]
+            specifiedBy : Method[0..1]
+            reportedIn : Publication[0..*]
+            extensions : Extension[0..*]
+        }
+        class VcvStatement {
+            id : VCV.ver-group-PROP-level
+            type : Statement
+            classification : MappableConcept
+            strength : MappableConcept
+            direction : string
+            confidence : string
+            extensions : Extension[0..*]
+        }
+        class RcvStatement {
+            id : RCV.ver-group-PROP-level
+            type : Statement
+            classification : MappableConcept
+            strength : MappableConcept
+            direction : string
+            confidence : string
+            extensions : Extension[0..*]
+        }
+        class EvidenceLine {
+            type : EvidenceLine
+            directionOfEvidenceProvided : string
+            strengthOfEvidenceProvided : MappableConcept
+        }
+    }
 
-    %% Clinical links
-    CS -- "#/condition/" --> COND
-    PROP -- "#/variation/" --> V
-    PROP -- "#/condition/" --> COND
-    PROP -. "#/conditionSet/" .-> CS
+    %% Variation relationships
+    Location "1" --> "1" SequenceReference : sequenceReference
+    Allele "1" --> "1" Location : location
+    CategoricalVariant "*" --> "0..*" Allele : members
+    CategoricalVariant "*" ..> "0..*" Gene : extensions.clinvarGeneList
 
-    %% Statement links
-    SCV -- "#/proposition/" --> PROP
-    SCV -- "#/submitter/" --> SUB
-    VCV -- "#/proposition/" --> PROP
-    VCV -- "#/scv/" --> SCV
-    VCV -. "#/vcv/" .-> VCV
-    RCV -- "#/proposition/" --> PROP
-    RCV -- "#/scv/" --> SCV
-    RCV -. "#/rcv/" .-> RCV
+    %% Supporting relationships
+    ConditionSet "1" --> "1..*" Condition : members
+    Proposition "*" --> "1" CategoricalVariant : subjectVariant
+    Proposition "*" --> "0..1" Condition : objectCondition
+    Proposition "*" --> "0..1" ConditionSet : objectCondition
+
+    %% Statement → Proposition
+    ScvStatement "1" --> "1" Proposition : proposition
+    VcvStatement "1" --> "1" Proposition : proposition
+    RcvStatement "1" --> "1" Proposition : proposition
+
+    %% Statement → Submitter
+    ScvStatement "*" --> "1..*" Submitter : contributions
+
+    %% Evidence lines
+    ScvStatement "1" --> "0..*" EvidenceLine : hasEvidenceLines
+    VcvStatement "1" --> "1..*" EvidenceLine : evidenceLines
+    RcvStatement "1" --> "1..*" EvidenceLine : evidenceLines
+
+    %% Evidence items (what evidence lines reference)
+    EvidenceLine "*" --> "1..*" ScvStatement : evidenceItems
+    EvidenceLine "*" ..> "0..*" VcvStatement : evidenceItems
+    EvidenceLine "*" ..> "0..*" RcvStatement : evidenceItems
 ```
 
-Solid arrows represent primary references. Dashed arrows represent optional or self-referencing relationships (e.g., VCV statements can reference lower-level VCV groupings, and genes are referenced from variation extensions).
+**Reading the diagram:**
+
+- **Solid lines** are primary associations — always present when the parent object exists
+- **Dashed lines** are optional or conditional associations (e.g., gene list from extensions, VCV/RCV self-referencing through evidence lines)
+- **Multiplicity** on each end indicates cardinality (e.g., `1` = exactly one, `0..*` = zero or more, `1..*` = one or more)
+- **Labels** on lines show the field name or JSON pointer path used for the reference
 
 ---
 
-## Genomic Classes
+## Variation Classes
 
 These classes represent the variant and its genomic context. VRS types (SequenceReference, Location, Allele) use their upstream GA4GH schemas directly. ClinVar-specific profiles are documented under [Variations](variations.md).
 
@@ -79,9 +165,9 @@ See [Variations](variations.md) for the full variant type hierarchy and extensio
 
 ---
 
-## Clinical Classes
+## Supporting Classes
 
-These classes represent the conditions, submitters, and propositions that support clinical classification statements. Conditions and submitters use upstream GA4GH types. ClinVar-specific proposition types are documented under [Propositions](propositions.md).
+These classes represent the conditions, submitters, and propositions that support classification statements. Conditions and submitters use upstream GA4GH types. ClinVar-specific proposition types are documented under [Propositions](propositions.md).
 
 | Class | Bundle Section | Key Pattern | Description |
 | --- | --- | --- | --- |
@@ -96,11 +182,11 @@ See [Propositions](propositions.md) for the full type/code/predicate reference.
 
 ## Statement Classes
 
-These classes represent clinical classification statements at different levels of aggregation. All are profiles of the VA-Spec Statement type documented under [Statements](statements.md).
+These classes represent classification statements at different levels of aggregation. All are profiles of the VA-Spec Statement type documented under [Statements](statements.md).
 
 | Class | Bundle Section | Key Pattern | Description |
 | --- | --- | --- | --- |
-| [ClinvarScvStatement](ClinvarScvStatement.md) | `scv` | `clinvar.submission:{id}.{ver}` | Submitted clinical classification |
+| [ClinvarScvStatement](ClinvarScvStatement.md) | `scv` | `clinvar.submission:{id}.{ver}` | Submitted classification |
 | [ClinvarVcvStatement](ClinvarVcvStatement.md) | `vcv` | `{vcv}-{group}-{prop}-{level}` | Variant-level aggregate |
 | [ClinvarRcvStatement](ClinvarRcvStatement.md) | `rcv` | `{rcv}-{group}-{prop}-{level}` | Condition-level aggregate |
 | [ClinvarSomaticEvidenceLine](ClinvarSomaticEvidenceLine.md) | (nested) | — | Somatic clinical impact evidence line |

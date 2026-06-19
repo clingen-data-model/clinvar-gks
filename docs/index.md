@@ -42,19 +42,152 @@ New releases are produced within a day or two after ClinVar's XML releases and a
 - **Platform engineers** building systems that consume ClinVar data and need a structured, well-documented format for integration
 - **GA4GH implementers** using ClinVar-GKS as a real-world validation of VRS, Cat-VRS, and VA-Spec schemas
 
-## How to Get the Data
+---
 
-The latest release is available as a single compressed JSON file:
+## Getting Started
 
-**Latest release:** [`https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/`](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/)
+### Download the Latest Release
 
-See [Data Access](data-access/index.md) for the full release schedule, archive policy, and file format details.
+The latest ClinVar-GKS release is available as a single compressed JSON file:
+
+```bash
+# Download the latest monthly release
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz
+
+# Decompress
+gunzip clinvar-gks_00-latest.json.gz
+```
+
+### What's in the File
+
+The release file is a single JSON object with **bundle sections** at the root level. Each section is a keyed collection of objects — the key is the object's unique identifier, and the value is the object itself.
+
+```json
+{
+  "sequenceReference": { "SQ.abc123": { ... } },
+  "location":          { "ga4gh:SL.xyz789": { ... } },
+  "allele":            { "ga4gh:VA.def456": { ... } },
+  "gene":              { "ncbigene:3077": { ... } },
+  "variation":         { "clinvar:10": { ... } },
+  "condition":         { "clinvar.trait:9580": { ... } },
+  "conditionSet":      { "clinvar.traitset:1234": { ... } },
+  "submitter":         { "clinvar.submitter:500139": { ... } },
+  "proposition":       { "SCV001234567-PATH": { ... } },
+  "scv":               { "clinvar.submission:SCV001234567.1": { ... } },
+  "vcv":               { "VCV000012582.63-G-PATH-CP": { ... } },
+  "rcv":               { "RCV000012345.8-G-PATH-CP": { ... } }
+}
+```
+
+Objects reference each other using `#/` JSON pointer strings. For example, an allele references its location as `"#/location/ga4gh:SL.xyz789"`, and an SCV statement references its proposition as `"#/proposition/SCV001234567-PATH"`.
+
+See [Output Format](output-reference/overview.md) for the full structure and reference patterns.
+
+### Quick Example
+
+To find the classification statements for a specific variant, start with the variation ID. ClinVar variation 10 (the HFE p.His63Asp variant) has the key `clinvar:10` in the `variation` section:
+
+```json
+{
+  "variation": {
+    "clinvar:10": {
+      "id": "clinvar:10",
+      "type": "CategoricalVariant",
+      "name": "NM_000410.4(HFE):c.187C>G (p.His63Asp)",
+      "members": ["#/allele/ga4gh:VA.ELQCnIBGqaTl0AEE0Az18XZ2cgIHAQIY"],
+      "constraints": [ ... ],
+      "extensions": [ ... ],
+      "mappings": [ ... ]
+    }
+  }
+}
+```
+
+The SCV statements for this variant reference it via `#/variation/clinvar:10` in their propositions. To find them, look for entries in the `proposition` section where `subjectVariant` matches, then find the corresponding `scv` entries that reference those propositions.
+
+### Key Concepts
+
+**Statements** are the core unit of ClinVar-GKS. Each statement represents a classification — either submitted (SCV), aggregated per variation (VCV), or aggregated per condition (RCV). Statements carry:
+
+- A **classification** — the clinical significance label (e.g., Pathogenic, Likely benign)
+- A **proposition** — what the classification asserts (variant X causes condition Y)
+- **Direction** and **strength** — whether the evidence supports, disputes, or is neutral toward the proposition
+- **Evidence lines** — links to the contributing submissions or lower-level aggregations
+- **Extensions** — provenance metadata including submitted conditions, review status, and submission details
+
+**Propositions** define the relationship being classified — a variant's causal role for a condition, its oncogenic potential, or its clinical impact. Each proposition has a type (e.g., `VariantPathogenicityProposition`), a predicate (e.g., `isCausalFor`), a subject variant, and an object condition.
+
+**Conditions** represent the diseases or phenotypes that classifications are made against. Single conditions reference `#/condition/clinvar.trait:{id}`, while multi-condition sets reference `#/conditionSet/clinvar.traitSet:{id}`.
+
+---
+
+## Data Access
+
+ClinVar-GKS releases are published weekly as a single gzip-compressed JSON file, synchronized with each ClinVar XML release. The files are freely available for download from Cloudflare R2 object storage with no authentication required and no egress fees.
+
+### Release Schedule
+
+- **Weekly releases** are published to `datasets/weekly/`, one per ClinVar XML release
+- **Monthly releases** are created from the first weekly release of each month and published to `datasets/`
+- At the start of each month, the previous month's weekly files move to `archives/`
+- At the start of each year, the previous year's monthly files move to `archives/`
+
+The stable filenames `clinvar-gks_00-latest.json.gz` and `clinvar-gks_00-latest_weekly.json.gz` always point to the most recent monthly and weekly releases respectively.
+
+### Downloads
+
+Download the most recent monthly release:
+
+```bash
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz
+```
+
+Download the most recent weekly release:
+
+```bash
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz
+```
+
+### Directory Structure
+
+```text
+datasets/
+  clinvar-gks_00-latest.json.gz         latest monthly release
+  clinvar-gks_yyyy-mm.json.gz           monthly releases (current year)
+
+datasets/weekly/
+  clinvar-gks_00-latest_weekly.json.gz  latest weekly release
+  clinvar-gks_yyyy-mmdd.json.gz         weekly releases (current month)
+
+archives/{yyyy}/
+  clinvar-gks_yyyy-mm.json.gz           monthly releases from prior years
+
+archives/{yyyy}/weekly/
+  clinvar-gks_yyyy-mmdd.json.gz         weekly releases from prior months
+```
+
+### Release Notes
+
+Pipeline changes that affect the structure or content of the output are documented in the `release_notes/` directory. These notes cover additions, bug fixes, or schema changes specific to the ClinVar-GKS pipeline — they do not replicate ClinVar's own release notes.
+
+---
 
 ## How It Works
 
 The pipeline runs on **Google BigQuery** using SQL stored procedures, with an external VRS Python processing step. Each release is fully reprocessed from the source ClinVar XML — there is no incremental state between releases.
 
-See the [Pipeline Overview](pipeline/index.md) for the full workflow, or jump to [Getting Started](getting-started.md) for a quick introduction to the output format.
+See the [Pipeline Overview](pipeline/index.md) for the full workflow.
+
+---
+
+## Next Steps
+
+- [Output Format](output-reference/overview.md) — detailed guide to the bundle format
+- [Variations](output-reference/cat-vrs.md) — how ClinVar variations are represented
+- [SCV Statements](output-reference/scv-statements.md) — submitted classification statements
+- [Data Model](output-reference/classes/index.md) — class hierarchy and schema reference
+- [Pipeline Overview](pipeline/index.md) — how the data is produced from ClinVar XML
+- [Examples](data-access/examples.md) — annotated JSON examples
 
 ## License
 
