@@ -341,18 +341,7 @@ $defs:
           (risk factor, protective, drug response, affects, association,
           confers sensitivity, other, not provided, conflicting data).
         oneOf:
-          - $refCurie: va-spec:VariantPathogenicityProposition
-          - $refCurie: va-spec:VariantOncogenicityProposition
-          - $refCurie: va-spec:VariantClinicalSignificanceProposition
-          - $ref: ClinvarRiskFactorProposition
-          - $ref: ClinvarProtectiveProposition
-          - $ref: ClinvarDrugResponseProposition
-          - $ref: ClinvarAffectsProposition
-          - $ref: ClinvarAssociationProposition
-          - $ref: ClinvarConfersSensitivityProposition
-          - $ref: ClinvarOtherProposition
-          - $ref: ClinvarNotProvidedProposition
-          - $ref: ClinvarConflictingDataFromSubmitterProposition
+          - $ref: ClinvarProposition
           - $refCurie: gks.core:iriReference
       hasEvidenceLines:
         type: array
@@ -427,18 +416,7 @@ $defs:
           at the aggregate level represents the consensus or highest-priority
           classification across contributing submissions.
         oneOf:
-          - $refCurie: va-spec:VariantPathogenicityProposition
-          - $refCurie: va-spec:VariantOncogenicityProposition
-          - $refCurie: va-spec:VariantClinicalSignificanceProposition
-          - $ref: ClinvarRiskFactorProposition
-          - $ref: ClinvarProtectiveProposition
-          - $ref: ClinvarDrugResponseProposition
-          - $ref: ClinvarAffectsProposition
-          - $ref: ClinvarAssociationProposition
-          - $ref: ClinvarConfersSensitivityProposition
-          - $ref: ClinvarOtherProposition
-          - $ref: ClinvarNotProvidedProposition
-          - $ref: ClinvarConflictingDataFromSubmitterProposition
+          - $ref: ClinvarProposition
           - $refCurie: gks.core:iriReference
       hasEvidenceLines:
         type: array

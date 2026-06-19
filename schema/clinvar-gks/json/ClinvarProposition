@@ -2,7 +2,7 @@
    "$schema": "https://json-schema.org/draft/2020-12/schema",
    "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarProposition",
    "title": "ClinvarProposition",
-   "description": "A ClinVar-specific proposition type. Covers all custom proposition types defined for ClinVar submission categories that do not have corresponding GA4GH VA-Spec proposition types.",
+   "description": "Any proposition type valid in ClinVar-GKS statements. Includes the GA4GH standard proposition types (pathogenicity, oncogenicity, clinical significance) and ClinVar-specific proposition types for submission categories not covered by the GA4GH specifications.",
    "maturity": "draft",
    "oneOf": [
       {
@@ -31,6 +31,15 @@
       },
       {
          "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarRiskFactorProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantClinicalSignificanceProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantOncogenicityProposition"
+      },
+      {
+         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantPathogenicityProposition"
       }
    ]
 }
