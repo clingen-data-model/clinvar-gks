@@ -53,6 +53,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Downloads: data-access/download.md
   # --- Data Guide: narrative topic pages ---
   - Data Guide:
     - Output Format: output-reference/overview.md
