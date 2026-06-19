@@ -10,7 +10,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   International consortium developing standards for genomic data representation and exchange.
 
 **GKS** (Genomic Knowledge Standards)
-:   Collective term for GA4GH standards — VRS, Cat-VRS, and VA-Spec — for representing genomic variants and clinical assertions.
+:   Collective term for GA4GH standards — VRS, Cat-VRS, and VA-Spec — for representing genomic variants and variant assertions.
 
 **VRS** (Variation Representation Specification)
 :   GA4GH standard for normalized, computable variant identifiers. Defines how variants are represented with sequence references, locations, and states.
@@ -19,7 +19,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   GA4GH standard for categorical variant representations that group variants at a higher level — CanonicalAlleles, CategoricalCnvChange, CategoricalCnvCount.
 
 **VA-Spec** (Variant Annotation Specification)
-:   GA4GH standard for clinical variant statements. Defines the Statement, Proposition, and EvidenceLine structures used by SCV and VCV outputs.
+:   GA4GH standard for variant annotation statements. Defines the Statement, Proposition, and EvidenceLine structures used by SCV and VCV outputs.
 
 **ACMG** (American College of Medical Genetics and Genomics)
 :   Organization that publishes pathogenicity classification guidelines (2015, v4) used by ClinVar submitters.
@@ -32,10 +32,10 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 ## ClinVar Concepts
 
 **ClinVar**
-:   NCBI database of clinically relevant variant submissions and aggregate classifications.
+:   NCBI database of variant submissions and aggregate classifications from clinical, research, and community sources.
 
 **SCV** (Submitted Clinical Variant)
-:   Individual submission from a laboratory or organization reporting their clinical interpretation of a variant. Each SCV contains one classification for one variant and condition combination.
+:   Individual submission from a laboratory, research group, or other organization reporting their interpretation of a variant. Each SCV contains one classification for one variant and condition combination.
 
 **VCV** (Variant-level Clinical Variant)
 :   Aggregate classification combining all SCV submissions for the same variant across all conditions. Represents the variant-level summary.
@@ -82,10 +82,10 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 ## Data Model
 
 **Statement** (VA-Spec)
-:   A complete clinical assertion containing classification, proposition, evidence, contributions, and metadata. Both SCV and VCV records are Statements.
+:   A complete assertion containing classification, proposition, evidence, contributions, and metadata. Both SCV and VCV records are Statements.
 
 **Proposition** (VA-Spec)
-:   The core clinical claim being asserted. Contains a subject (variant), predicate (relationship), object (condition/therapy), and optional qualifiers.
+:   The core claim being asserted. Contains a subject (variant), predicate (relationship), object (condition/therapy), and optional qualifiers.
 
 **EvidenceLine** (VA-Spec)
 :   Links a proposition to evidence items with direction and strength assessments. SCV statements use `hasEvidenceLines`; VCV statements use nested `evidenceLines`.
@@ -103,7 +103,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   Defining relationship between a categorical variant and its VRS representation. Types: DefiningAlleleConstraint, DefiningLocationConstraint, CopyChangeConstraint, CopyCountConstraint.
 
 **Extension**
-:   Name/value pair carrying metadata not part of core GA4GH specifications but essential for clinical interpretation. Present on statements, classifications, propositions, conditions, and categorical variants.
+:   Name/value pair carrying metadata not part of core GA4GH specifications but essential for interpreting the data. Present on statements, classifications, propositions, conditions, and categorical variants.
 
 ---
 

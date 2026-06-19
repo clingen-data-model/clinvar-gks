@@ -1,4 +1,4 @@
-# Output Format Overview
+# Output "Bundle" Format Overview
 
 The ClinVar-GKS release file uses a **bundle format** — a single JSON object with named sections at the root level. A bundle is a dictionary-style approach to organizing a large amount of data across heterogeneous classes in a single file, where each section is a keyed collection of objects of the same class. The key is the object's unique identifier, and the value is the complete object.
 
@@ -29,7 +29,7 @@ This design eliminates duplication (a sequence reference shared by thousands of 
 
 ## Sections
 
-### Genomic Data Sections
+### Variation Data Sections
 
 These sections contain the VRS and Cat-VRS variant data:
 
@@ -43,7 +43,7 @@ These sections contain the VRS and Cat-VRS variant data:
 
 **`variation`** — ClinVar variations with their defining constraints, cross-references, HGVS expressions, and gene associations. Most variations are represented as CanonicalAlleles with a defining VRS allele (via `#/allele/`); copy number variants use a defining location (via `#/location/`); complex variants use a generalized representation. Keyed by `clinvar:{variation_id}` (e.g., `clinvar:10`).
 
-### Clinical Data Sections
+### Supporting Data Sections
 
 These sections contain the condition, submitter, and proposition reference data:
 
@@ -57,9 +57,9 @@ These sections contain the condition, submitter, and proposition reference data:
 
 ### Statement Sections
 
-These sections contain the clinical classification statements:
+These sections contain the classification statements:
 
-**`scv`** — Submitted clinical classification statements. Each SCV carries a classification, strength, direction, proposition reference, contributions (with submitter references), evidence lines, citations, assertion method, and extensions with submitted condition provenance. Keyed by `clinvar.submission:{scv_id}.{version}`.
+**`scv`** — Submitted classification statements. Each SCV carries a classification, strength, direction, proposition reference, contributions (with submitter references), evidence lines, citations, assertion method, and extensions with submitted condition provenance. Keyed by `clinvar.submission:{scv_id}.{version}`.
 
 **`vcv`** — Variation-level aggregate classification statements. VCVs aggregate SCVs across a variation by classification, priority (somatic tiers), and submission level contribution. Evidence lines reference contributing SCVs via `#/scv/` or lower-level VCV groupings via `#/vcv/`. Keyed by the VCV layer ID.
 
