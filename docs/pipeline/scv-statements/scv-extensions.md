@@ -2,6 +2,9 @@
 
 ## Overview
 
+!!! tip "Schema Reference"
+    For the canonical extension reference tables (extension names, value types, and descriptions), see [SCV Statements — Extensions](../../output-reference/scv-statements.md#extensions).
+
 SCV statement records contain `extensions` arrays at three structural levels — on the top-level `Statement`, on the `classification` object, and on proposition qualifier objects (`geneContextQualifier`, `modeOfInheritanceQualifier`, `penetranceQualifier`). Extensions carry ClinVar-specific metadata, submitter-provided values, and formatted descriptions that are not part of the GA4GH VA-Spec statement model but are essential for tracing how each SCV was processed.
 
 All extensions follow the structure `{ "name": "<extension_name>", "value": <value> }`, where the value type varies by extension. Most extensions carry simple string values. Extensions with complex value types — structured condition provenance objects — are documented as custom extension structures in a [dedicated section](#custom-extension-structures) below.
