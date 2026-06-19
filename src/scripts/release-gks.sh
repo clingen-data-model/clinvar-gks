@@ -8,21 +8,23 @@
 #   3. upload-gks-to-r2.sh  — upload bundle from GCS to Cloudflare R2
 #
 # Usage:
-#   ./release-gks.sh <export_date> <dataset_version> [--keep-source] [--dry-run] [--skip-export]
+#   ./release-gks.sh <export_date> <dataset_version> [--start-step=N] [--keep-source] [--dry-run]
 #
 # Examples:
 #   ./release-gks.sh 2026-05-03 v2_5_0
 #   ./release-gks.sh 2026-05-03 v2_5_0 --dry-run
 #   ./release-gks.sh 2026-05-03 v2_5_0 --keep-source
-#   ./release-gks.sh 2026-05-03 v2_5_0 --skip-export   # re-run from assemble step
+#   ./release-gks.sh 2026-05-03 v2_5_0 --start-step=2  # re-run from assemble step
+#   ./release-gks.sh 2026-05-03 v2_5_0 --start-step=3  # re-run upload only
 
 set -e
 
 # --- Positional arguments ---
 if [[ $# -lt 2 ]]; then
-  echo "Usage: $0 <export_date> <dataset_version> [--keep-source] [--dry-run] [--skip-export]"
+  echo "Usage: $0 <export_date> <dataset_version> [--start-step=N] [--keep-source] [--dry-run]"
   echo "  export_date      ClinVar release date (YYYY-MM-DD)"
   echo "  dataset_version  Dataset version (e.g. v2_5_0)"
+  echo "  --start-step=N   Start at step N (1=export, 2=assemble, 3=upload)"
   exit 1
 fi
 
@@ -39,18 +41,23 @@ fi
 # --- Parse flags ---
 DRY_RUN=false
 KEEP_SOURCE=false
-SKIP_EXPORT=false
+START_STEP=1
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=true ;;
     --keep-source) KEEP_SOURCE=true ;;
-    --skip-export) SKIP_EXPORT=true ;;
+    --start-step=*) START_STEP="${arg#--start-step=}" ;;
     *)
       echo "ERROR: Unknown argument '${arg}'"
       exit 1
       ;;
   esac
 done
+
+if ! [[ "$START_STEP" =~ ^[1-3]$ ]]; then
+  echo "ERROR: --start-step must be 1, 2, or 3, got '${START_STEP}'"
+  exit 1
+fi
 
 # --- Configuration ---
 GCS_BUCKET="clinvar-gks"
@@ -75,14 +82,14 @@ echo "  GCS dicts:     ${GCS_DICTS_PATH}/"
 echo "  GCS output:    gs://${GCS_BUCKET}/${EXPORT_DATE}/release/clinvar-gks-${EXPORT_DATE}.json.gz"
 $DRY_RUN && echo "  Mode:          DRY RUN"
 $KEEP_SOURCE && echo "  Keep source:   YES"
-$SKIP_EXPORT && echo "  Skip export:   YES"
+[[ "$START_STEP" -gt 1 ]] && echo "  Start step:    ${START_STEP}"
 echo ""
 
 # =====================================================================
 # Step 1: Export dictionary tables from BigQuery to GCS
 # =====================================================================
 
-if ! $SKIP_EXPORT; then
+if [[ "$START_STEP" -le 1 ]]; then
   echo "=== Step 1/3: Exporting dictionary tables ==="
   if $DRY_RUN; then
     echo "  [dry-run] Would run: export-gks-dicts.sh ${BQ_DATASET} ${GCS_BUCKET} ${GCS_DICTS_PREFIX}"
@@ -91,7 +98,7 @@ if ! $SKIP_EXPORT; then
   fi
   echo ""
 else
-  echo "=== Step 1/3: Skipped (--skip-export) ==="
+  echo "=== Step 1/3: Skipped (--start-step=${START_STEP}) ==="
   echo ""
 fi
 
@@ -99,18 +106,23 @@ fi
 # Step 2: Assemble NDJSON into a single JSON bundle
 # =====================================================================
 
-echo "=== Step 2/3: Assembling bundle ==="
-ASSEMBLE_ARGS=("${GCS_DICTS_PATH}/" "${EXPORT_DATE}")
-if $KEEP_SOURCE; then
-  ASSEMBLE_ARGS+=("--keep-source")
-fi
+if [[ "$START_STEP" -le 2 ]]; then
+  echo "=== Step 2/3: Assembling bundle ==="
+  ASSEMBLE_ARGS=("${GCS_DICTS_PATH}/" "${EXPORT_DATE}")
+  if $KEEP_SOURCE; then
+    ASSEMBLE_ARGS+=("--keep-source")
+  fi
 
-if $DRY_RUN; then
-  echo "  [dry-run] Would run: ${PYTHON} assemble-gks-dicts.py ${ASSEMBLE_ARGS[*]}"
+  if $DRY_RUN; then
+    echo "  [dry-run] Would run: ${PYTHON} assemble-gks-dicts.py ${ASSEMBLE_ARGS[*]}"
+  else
+    "${PYTHON}" "${SCRIPT_DIR}/assemble-gks-dicts.py" "${ASSEMBLE_ARGS[@]}"
+  fi
+  echo ""
 else
-  "${PYTHON}" "${SCRIPT_DIR}/assemble-gks-dicts.py" "${ASSEMBLE_ARGS[@]}"
+  echo "=== Step 2/3: Skipped (--start-step=${START_STEP}) ==="
+  echo ""
 fi
-echo ""
 
 # =====================================================================
 # Step 3: Upload bundle from GCS to Cloudflare R2
