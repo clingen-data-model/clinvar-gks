@@ -5,17 +5,20 @@ Assemble GKS dictionary NDJSON files into a single keyed JSON file.
 Supports reading from local files or GCS. For GCS sources, shards are
 bulk-downloaded in parallel first, then processed locally.
 
-Output is placed in {bucket}/{date}/release/clinvar-gks-{date}.json.gz.
+Output is written locally to /tmp/clinvar-gks-{date}.json.gz.
 Source files are removed after successful assembly unless --keep-source is used.
 
 Usage:
   # From GCS (shards downloaded in parallel, then assembled locally)
   python3 assemble-gks-dicts.py gs://bucket/gks-dicts/ 2026-05-03
 
+  # Also copy the bundle to GCS
+  python3 assemble-gks-dicts.py gs://bucket/gks-dicts/ 2026-05-03 --copy-to-gcs
+
   # Keep source files for debugging
   python3 assemble-gks-dicts.py gs://bucket/gks-dicts/ 2026-05-03 --keep-source
 
-  # From local files (output goes to ./2026-05-03/release/)
+  # From local files
   python3 assemble-gks-dicts.py ./gks-dicts/ 2026-05-03
 
 Dependencies:
@@ -146,23 +149,12 @@ def stream_kv(filepath, key_field, value_field):
 
 
 def open_output(output_path):
-    """Open output file — supports local or GCS paths."""
-    if output_path.startswith("gs://"):
-        proc = subprocess.Popen(
-            ["gsutil", "cp", "-", output_path],
-            stdin=subprocess.PIPE, stderr=subprocess.DEVNULL,
+    """Open output file for writing."""
+    if output_path.endswith(".gz"):
+        return gzip.open(
+            output_path, "wb", compresslevel=GZIP_COMPRESS_LEVEL
         )
-        if output_path.endswith(".gz"):
-            return gzip.open(
-                proc.stdin, "wb", compresslevel=GZIP_COMPRESS_LEVEL
-            ), proc
-        return proc.stdin, proc
-    else:
-        if output_path.endswith(".gz"):
-            return gzip.open(
-                output_path, "wb", compresslevel=GZIP_COMPRESS_LEVEL
-            ), None
-        return open(output_path, "wb"), None
+    return open(output_path, "wb")
 
 
 def assemble(local_dir, output_path):
@@ -171,7 +163,7 @@ def assemble(local_dir, output_path):
     total_entries = 0
     start_time = time.time()
 
-    out, proc = open_output(output_path)
+    out = open_output(output_path)
     buf = bytearray()
 
     try:
@@ -236,8 +228,6 @@ def assemble(local_dir, output_path):
 
     finally:
         out.close()
-        if proc:
-            proc.wait()
 
     elapsed = time.time() - start_time
     print(
@@ -247,14 +237,17 @@ def assemble(local_dir, output_path):
     )
 
 
-def derive_output_path(source, date):
-    """Derive output path from source bucket and date."""
+def derive_output_path(date):
+    """Derive local output path from date."""
     filename = f"clinvar-gks-{date}.json.gz"
-    if source.startswith("gs://"):
-        bucket = source.split("/")[2]
-        return f"gs://{bucket}/{date}/release/{filename}"
-    else:
-        return str(Path(date) / "release" / filename)
+    return str(Path("/tmp") / filename)
+
+
+def derive_gcs_path(source, date):
+    """Derive GCS output path from source bucket and date."""
+    filename = f"clinvar-gks-{date}.json.gz"
+    bucket = source.split("/")[2]
+    return f"gs://{bucket}/{date}/release/{filename}"
 
 
 def cleanup_source(source):
@@ -289,6 +282,11 @@ def main():
         action="store_true",
         help="Keep source files after assembly (for debugging)",
     )
+    parser.add_argument(
+        "--copy-to-gcs",
+        action="store_true",
+        help="Copy the assembled bundle to GCS after local assembly",
+    )
     args = parser.parse_args()
 
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", args.date):
@@ -304,13 +302,7 @@ def main():
             f"{source} is not a directory or GCS path"
         )
 
-    output_path = derive_output_path(source, args.date)
-
-    # Create local output directory if needed
-    if not output_path.startswith("gs://"):
-        Path(output_path).parent.mkdir(
-            parents=True, exist_ok=True
-        )
+    output_path = derive_output_path(args.date)
 
     print(f"Assembling GKS dictionaries from {source}")
     print(f"  Output: {output_path}")
@@ -341,6 +333,16 @@ def main():
         # Clean up temp download dir
         if tmp_dir:
             shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    # Optionally copy to GCS
+    if args.copy_to_gcs and is_gcs:
+        gcs_path = derive_gcs_path(source, args.date)
+        print(f"\nCopying bundle to GCS: {gcs_path}")
+        subprocess.run(
+            ["gsutil", "-q", "cp", output_path, gcs_path],
+            check=True,
+        )
+        print("  Done.")
 
     if not args.keep_source:
         cleanup_source(source)

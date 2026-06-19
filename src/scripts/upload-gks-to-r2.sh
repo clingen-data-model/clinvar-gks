@@ -17,25 +17,27 @@
 #   - New year: archives previous monthly files, then performs new-month steps
 #
 # Usage:
-#   ./upload-gks-to-r2.sh <export_date> <dataset_version> [--dry-run]
+#   ./upload-gks-to-r2.sh <export_date> <dataset_version> <bundle_file> [--dry-run]
 #
 # Examples:
-#   ./upload-gks-to-r2.sh 2026-06-14 v2_5_0
-#   ./upload-gks-to-r2.sh 2026-06-14 v2_5_0 --dry-run
+#   ./upload-gks-to-r2.sh 2026-06-14 v2_5_0 /tmp/clinvar-gks-2026-06-14.json.gz
+#   ./upload-gks-to-r2.sh 2026-06-14 v2_5_0 /tmp/clinvar-gks-2026-06-14.json.gz --dry-run
 
 set -e
 
 # --- Positional arguments ---
-if [[ $# -lt 2 ]]; then
-  echo "Usage: $0 <export_date> <dataset_version> [--dry-run]"
+if [[ $# -lt 3 ]]; then
+  echo "Usage: $0 <export_date> <dataset_version> <bundle_file> [--dry-run]"
   echo "  export_date      ClinVar release date (YYYY-MM-DD)"
   echo "  dataset_version  Dataset version (e.g. v2_5_0)"
+  echo "  bundle_file      Local path to the assembled bundle (.json.gz)"
   exit 1
 fi
 
 EXPORT_DATE="$1"
 DATASET_VERSION="$2"
-shift 2
+BUNDLE_FILE="$3"
+shift 3
 
 # Validate date format
 if ! [[ "$EXPORT_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
@@ -63,8 +65,6 @@ R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 R2_PROFILE="r2"
 R2_PUBLIC_URL="https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev"
 
-# --- GCS Source Configuration ---
-GCS_BUCKET="clinvar-gks"
 
 # --- Derived date components ---
 YEAR="${EXPORT_DATE:0:4}"
@@ -233,21 +233,14 @@ if $DRY_RUN; then
 fi
 echo ""
 
-# --- Check GCS for the bundle ---
-GCS_URI="gs://${GCS_BUCKET}/${EXPORT_DATE}/release/clinvar-gks-${EXPORT_DATE}.json.gz"
-echo "Checking GCS: ${GCS_URI}"
-if ! gsutil -q stat "${GCS_URI}" 2>/dev/null; then
-  echo "ERROR: Bundle file not found in GCS at ${GCS_URI}"
+# --- Check bundle file ---
+echo "Checking bundle: ${BUNDLE_FILE}"
+if ! $DRY_RUN && [[ ! -f "${BUNDLE_FILE}" ]]; then
+  echo "ERROR: Bundle file not found at ${BUNDLE_FILE}"
   echo "  Run export-gks-dicts.sh and assemble-gks-dicts.py first."
   exit 1
 fi
-
-# --- Download bundle ---
-LOCAL_TMP="/tmp/clinvar-gks-${EXPORT_DATE}.json.gz"
-echo "Downloading bundle from GCS..."
-if ! $DRY_RUN; then
-  gsutil -o "GSUtil:check_hashes=never" -q cp "${GCS_URI}" "${LOCAL_TMP}"
-fi
+LOCAL_TMP="${BUNDLE_FILE}"
 
 # --- Detect month/year boundaries ---
 echo ""
@@ -373,11 +366,6 @@ INDEXEOF
 }
 
 generate_index
-
-# --- Cleanup ---
-if ! $DRY_RUN; then
-  rm -f "${LOCAL_TMP}"
-fi
 
 # --- Summary ---
 echo ""
