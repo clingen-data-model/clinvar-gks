@@ -4,7 +4,7 @@
 
 **Computational Definition**
 
-A ClinVar-specific proposition type. Covers all custom proposition types defined for ClinVar submission categories that do not have corresponding GA4GH VA-Spec proposition types.
+Any proposition type valid in ClinVar-GKS statements. Includes the GA4GH standard proposition types (pathogenicity, oncogenicity, clinical significance) and ClinVar-specific proposition types for submission categories not covered by the GA4GH specifications.
 
 **Information Model**
 
