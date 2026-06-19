@@ -1,0 +1,15 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarCategoricalCnvCount",
+   "title": "ClinvarCategoricalCnvCount",
+   "description": "A ClinVar copy number variant with an absolute copy count. Uses a DefiningLocationConstraint with a CopyCountConstraint from Cat-VRS CategoricalCnv.",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$ref": "/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalCnv"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarCategoricalVariant#/$defs/ClinvarCategoricalVariantProperties"
+      }
+   ]
+}

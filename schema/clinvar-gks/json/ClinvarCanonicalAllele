@@ -1,0 +1,18 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarCanonicalAllele",
+   "title": "ClinvarCanonicalAllele",
+   "description": "A ClinVar canonical allele \u2014 the most common variant type. ClinVar identifies each variation by mapping submitted attributes to a GRCh38 genomic allele, which becomes the defining allele constraint. Carries ClinVar-specific extensions (HGVS list, gene list, cytogenetic location, variation type, etc.) alongside the Cat-VRS CanonicalAllele structure.",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$ref": "/ga4gh/schema/cat-vrs/1.0.0/json/CanonicalAllele"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarCategoricalVariation#/$defs/ClinvarCanonicalAlleleProperties"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarCategoricalVariant#/$defs/ClinvarCategoricalVariantProperties"
+      }
+   ]
+}

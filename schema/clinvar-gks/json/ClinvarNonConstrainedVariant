@@ -1,0 +1,15 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarNonConstrainedVariant",
+   "title": "ClinvarNonConstrainedVariant",
+   "description": "A ClinVar variant that cannot be mapped to a specific VRS allele or location \u2014 haplotypes, genotypes, and other complex or ambiguously defined variants. These rely solely on the ClinVar variation ID and use the generalized Cat-VRS CategoricalVariant without VRS constraints.",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$ref": "/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalVariant"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarCategoricalVariant#/$defs/ClinvarCategoricalVariantProperties"
+      }
+   ]
+}
