@@ -119,6 +119,15 @@ r2_ls() {
     2>/dev/null | awk '{print $NF}' || true
 }
 
+r2_ls_with_size() {
+  # Returns "SIZE FILENAME" lines for .json.gz files under a prefix
+  local prefix="$1"
+  aws s3 ls "s3://${R2_BUCKET}/${prefix}" \
+    --endpoint-url "${R2_ENDPOINT}" \
+    --profile "${R2_PROFILE}" \
+    2>/dev/null | awk '/\.json\.gz$/ {print $3, $4}' || true
+}
+
 r2_rm() {
   local key="$1"
   if $DRY_RUN; then
@@ -288,6 +297,86 @@ if [[ -f "${README_SRC}" ]]; then
   r2_upload "${README_SRC}" "README.txt" "text/plain"
 fi
 
+# --- Generate and upload index.json ---
+echo ""
+echo "--- Generating index.json ---"
+generate_index() {
+  local index_tmp="/tmp/clinvar-gks-index.json"
+
+  # Helper: build JSON array of file objects from "SIZE FILENAME" lines
+  # Args: prefix (R2 path prefix like "datasets/" or "archives/2025/")
+  #        latest_name (filename to mark with "latest": true, or "" for none)
+  build_file_array() {
+    local prefix="$1" latest_name="$2"
+    local first=true
+    local arr="["
+
+    while IFS=' ' read -r size filename; do
+      [[ -z "$filename" ]] && continue
+      if ! $first; then arr+=","; fi
+      first=false
+
+      local is_latest="false"
+      if [[ -n "$latest_name" && "$filename" == "$latest_name" ]]; then
+        is_latest="true"
+      fi
+
+      arr+=$(printf '{"name":"%s","path":"%s%s","size":%s,"latest":%s}' \
+        "$filename" "$prefix" "$filename" "$size" "$is_latest")
+    done < <(r2_ls_with_size "$prefix")
+
+    arr+="]"
+    echo "$arr"
+  }
+
+  # Build datasets section
+  local ds_monthly
+  ds_monthly=$(build_file_array "datasets/" "${LATEST_MONTHLY}")
+  local ds_weekly
+  ds_weekly=$(build_file_array "datasets/weekly/" "${LATEST_WEEKLY}")
+
+  # Build archives section — discover archive years
+  local archives_json="{"
+  local first_year=true
+  while IFS= read -r year_dir; do
+    year_dir="${year_dir%/}"
+    [[ -z "$year_dir" ]] && continue
+
+    if ! $first_year; then archives_json+=","; fi
+    first_year=false
+
+    local arch_monthly
+    arch_monthly=$(build_file_array "archives/${year_dir}/")
+    local arch_weekly
+    arch_weekly=$(build_file_array "archives/${year_dir}/weekly/")
+
+    archives_json+=$(printf '"%s":{"monthly":%s,"weekly":%s}' \
+      "$year_dir" "$arch_monthly" "$arch_weekly")
+  done < <(r2_ls "archives/" 2>/dev/null)
+  archives_json+="}"
+
+  cat > "$index_tmp" <<INDEXEOF
+{
+  "description": "ClinVar-GKS release index",
+  "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "base_url": "${R2_PUBLIC_URL}",
+  "datasets": {
+    "monthly": ${ds_monthly},
+    "weekly": ${ds_weekly}
+  },
+  "archives": ${archives_json}
+}
+INDEXEOF
+
+  r2_upload "$index_tmp" "index.json" "application/json"
+  if ! $DRY_RUN; then
+    rm -f "$index_tmp"
+  fi
+  echo "  index.json uploaded."
+}
+
+generate_index
+
 # --- Cleanup ---
 if ! $DRY_RUN; then
   rm -f "${LOCAL_TMP}"
@@ -302,3 +391,4 @@ if $IS_NEW_MONTH; then
   echo "  Monthly: ${R2_PUBLIC_URL}/datasets/${MONTHLY_FILE}"
   echo "  Latest:  ${R2_PUBLIC_URL}/datasets/${LATEST_MONTHLY}"
 fi
+echo "  Index:   ${R2_PUBLIC_URL}/index.json"
