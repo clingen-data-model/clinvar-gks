@@ -2,6 +2,9 @@
 
 ## Overview
 
+!!! tip "Schema Reference"
+    For the canonical extension reference tables (extension names, value types, and descriptions), see [VCV Statements — Extensions](../../output-reference/vcv-statements.md#extensions).
+
 VCV aggregate statement records contain `extensions` arrays at two structural levels — on the top-level `Statement` and on the `classification` object. Extensions carry aggregate review status information and classification context that are not part of the GA4GH VA-Spec statement model but are essential for interpreting the aggregation outcome.
 
 All extensions follow the structure `{ "name": "<extension_name>", "value": <value> }`.

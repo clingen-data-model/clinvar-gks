@@ -2,6 +2,9 @@
 
 ## Overview
 
+!!! tip "Schema Reference"
+    For the canonical extension reference tables (extension names, value types, and descriptions), see [Variations — Extensions](../../output-reference/cat-vrs.md#extensions).
+
 Categorical variant records contain `extensions` arrays at multiple levels of the JSON structure. Extensions carry ClinVar-specific information, VRS processing details, and linked data that are not part of the GA4GH Cat-VRS specification but are essential for clinical interpretation.
 
 All extensions follow the structure `{ "name": "<extension_name>", "value": <value> }`, where the value type varies by extension. Most extensions carry simple scalar values (string, boolean, etc.). Extensions with complex value types — arrays of structured objects — are documented as custom extension structures in a [dedicated section](#custom-extension-structures) below.

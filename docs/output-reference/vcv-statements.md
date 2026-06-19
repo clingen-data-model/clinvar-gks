@@ -23,7 +23,7 @@ Each record is a `Statement` with the following top-level fields:
 | `strength` | object | MappableConcept — the aggregate evidence strength. See [Strength](#strength) |
 | `direction` | string | `supports`, `disputes`, or `neutral` — derived from the aggregate classification |
 | `confidence` | string | Submission level label (e.g., `criteria provided`, `expert panel`) |
-| `extensions` | array | Aggregate metadata — `clinvarReviewStatus` |
+| `extensions` | array of [Extension](#extensions) | ClinVar-specific aggregate metadata (0..*). See [Extensions](#extensions) |
 | `evidenceLines` | array | Contributing and non-contributing evidence. See [Evidence Lines](#evidence-lines) |
 
 </div>
@@ -115,6 +115,36 @@ Each VCV statement contains `evidenceLines` — an array of evidence line object
 | `evidenceItems` | array | `#/scv/` references (at classification layer) or `#/vcv/` references (at priority/aggregate layers) |
 
 Contributing evidence lines use `directionOfEvidenceProvided: "supports"`. Non-contributing evidence lines (lower-ranked submission levels) use `directionOfEvidenceProvided: "neutral"`.
+
+---
+
+## Extensions
+
+Extensions carry aggregate metadata not part of the GA4GH VA-Spec statement model. Each extension follows the GA4GH Extension structure: `{ "name": "<name>", "value": <value> }`. Extensions appear at two structural levels — on the top-level `Statement` and on the `classification` object.
+
+See [VCV Extensions (Pipeline)](../pipeline/vcv-statements/vcv-extensions.md) for details on how these extensions are built during pipeline processing.
+
+### Statement Extensions
+
+<div class="field-table" markdown>
+
+| Extension Name | Value Type | Description |
+|---|---|---|
+| `clinvarReviewStatus` | `string` | The aggregate review status derived from the submission level and aggregation outcome. Always present. Values: `practice guideline`, `reviewed by expert panel`, `criteria provided, single submitter`, `criteria provided, multiple submitters, no conflicts`, `criteria provided, conflicting classifications`, `no assertion criteria provided`, `no classification provided`, `flagged submission`. |
+
+</div>
+
+### Classification Extensions
+
+Extensions on the `classification` MappableConcept within the Statement.
+
+<div class="field-table" markdown>
+
+| Extension Name | Value Type | Description |
+|---|---|---|
+| `conflictingExplanation` | `string` | A formatted breakdown of conflicting classification counts (e.g., `Pathogenic(3); Likely pathogenic(2)`). Present only when the classification is conflicting — multiple distinct significance values exist for a conflict-detectable proposition type. |
+
+</div>
 
 ---
 

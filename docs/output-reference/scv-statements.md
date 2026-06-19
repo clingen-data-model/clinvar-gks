@@ -29,7 +29,7 @@ Each record is a VA-Spec `Statement` with the following top-level fields:
 | `contributions` | array | Submitter and date information with `#/submitter/` references. See [Contributions](#contributions) |
 | `specifiedBy` | object | The classification method/guideline used |
 | `reportedIn` | array | Supporting publications (PubMed, DOI references) |
-| `extensions` | array | ClinVar-specific metadata. See [Extensions](#extensions) |
+| `extensions` | array of [Extension](#extensions) | ClinVar-specific metadata (0..*). See [Extensions](#extensions) |
 | `hasEvidenceLines` | array | Evidence lines for somatic clinical impact assertions. See [Evidence Lines](#evidence-lines) |
 
 </div>
@@ -176,19 +176,93 @@ The `evidenceOutcome` is a MappableConcept with `conceptType: "Outcome"` indicat
 
 ## Extensions
 
-The `extensions` array carries ClinVar-specific metadata:
+Extensions carry ClinVar-specific metadata not part of the GA4GH VA-Spec statement model. Each extension follows the GA4GH Extension structure: `{ "name": "<name>", "value": <value> }`. Extensions appear at three structural levels — on the top-level `Statement`, on the `classification` object, and on proposition qualifier objects.
+
+See [SCV Extensions (Pipeline)](../pipeline/scv-statements/scv-extensions.md) for details on how these extensions are built during pipeline processing.
+
+### Statement Extensions
+
+<div class="field-table" markdown>
 
 | Extension Name | Value Type | Description |
-| --- | --- | --- |
-| `clinvarScvId` | string | SCV accession without version (e.g., `SCV002769510`) |
-| `clinvarScvVersion` | string | SCV version number |
-| `submittedCondition` / `submittedConditionSet` | object | Submitted condition provenance with normalization details, trait mapping, and `#/condition/` references |
-| `clinvarScvReviewStatus` | string | ClinVar review status (e.g., `criteria provided, single submitter`) |
-| `submittedScvClassification` | string | Original submitted classification (when it differs from the normalized label) |
-| `submittedScvLocalKey` | string | Submitter's local key for the record |
-| `submissionLevel` | string | Submission level code (e.g., `CP`, `EP`, `PG`) |
+|---|---|---|
+| `clinvarScvId` | `string` | The ClinVar SCV accession without version (e.g., `SCV001571657`). Always present. |
+| `clinvarScvVersion` | `string` | The version number of the SCV submission (e.g., `2`). Always present. |
+| `submittedCondition` | [SubmittedCondition](#submittedcondition) | Submitted condition provenance with normalization details, trait mapping, and `#/condition/` references. Present when the SCV maps to a single condition. |
+| `submittedConditionSet` | [SubmittedConditionSet](#submittedconditionset) | Submitted condition set provenance with multiple condition concepts. Present when the SCV maps to multiple conditions. |
+| `clinvarScvReviewStatus` | `string` | The ClinVar review status (e.g., `criteria provided, single submitter`). Present when the SCV has a review status. |
+| `submittedScvClassification` | `string` | The original classification text submitted by the submitter, preserved when it differs from the normalized classification name. |
+| `submittedScvLocalKey` | `string` | The unique local key provided by the submitter for this submission. Present only when the submitter provided a local key. |
+| `submissionLevel` | `string` | The submission level code: `PG`, `EP`, `CP`, `NOCP`, `NOCL`, or `FLAG`. Present when the submission level can be determined. |
 
-See [SCV Extensions](../pipeline/scv-statements/scv-extensions.md) for the complete extension reference.
+</div>
+
+!!! note
+    Only one of `submittedCondition` or `submittedConditionSet` is present per SCV — never both. The `submittedScvClassification` extension is omitted when the submitted classification matches the normalized label exactly.
+
+### Classification Extensions
+
+Extensions on the `classification` MappableConcept within the Statement.
+
+<div class="field-table" markdown>
+
+| Extension Name | Value Type | Description |
+|---|---|---|
+| `description` | `string` | A formatted multi-line description summarizing the classification context: condition name, submission level, evaluation date, and submitter name. Always present. |
+
+</div>
+
+The description template is: `for <condition_name>\nClassification is based on the <submission_level_label> submission\n<evaluated_date> by <submitter_name>`.
+
+### Qualifier Extensions
+
+Extensions on proposition qualifier objects (`geneContextQualifier`, `modeOfInheritanceQualifier`, `penetranceQualifier`), preserving the original submitter-provided values.
+
+<div class="field-table" markdown>
+
+| Extension Name | Value Type | Description |
+|---|---|---|
+| `submittedGeneSymbols` | array of `string` | Gene symbols originally submitted by the submitter. Present on `geneContextQualifier` when the submitter provided gene information. May differ from the normalized gene symbol. |
+| `submittedModeOfInheritance` | `string` | Mode of inheritance text as originally submitted. Present on all `modeOfInheritanceQualifier` objects. Preserved alongside the normalized HPO coding. |
+| `submittedClassification` | `string` | Original submitted classification text that triggered the penetrance qualifier derivation. Present on all `penetranceQualifier` objects. |
+
+</div>
+
+### SubmittedCondition
+
+The `submittedCondition` extension captures the provenance of how a single submitted condition was mapped to the normalized ClinVar trait. Present when the SCV maps to exactly one condition.
+
+<div class="field-table" markdown>
+
+| Field | Type | Description |
+|---|---|---|
+| `condition` | `string` | `#/condition/clinvar.trait:{id}` reference to the normalized condition in the bundle. |
+| `conditionSet` | `string` | `#/conditionSet/clinvar.traitset:{id}` reference (present when the RCV trait set has one trait but the reference uses the set). |
+| `id` | `string` | The submitted clinical assertion trait ID (e.g., `SCV002769510.0`). |
+| `name` | `string` | The submitted condition name. |
+| `type` | `string` | The submitted condition type (e.g., `Disease`, `Finding`). |
+| `medgen_id` | `string` | The submitted or resolved MedGen concept ID. |
+| `normalized_match` | `string` | `#/condition/` reference to the matched normalized trait. |
+| `normalized_resolution` | `string` | The resolution method used to match the submitted condition (e.g., `tm reftype xref omim`, `random trait assignment`). |
+| `xrefs` | array | Submitted cross-references with `code` and `system`. |
+| `mapping` | object | The trait mapping entry used for resolution: `type`, `ref`, `value`. |
+
+</div>
+
+### SubmittedConditionSet
+
+The `submittedConditionSet` extension captures provenance for multi-condition submissions. Present when the SCV maps to more than one condition.
+
+<div class="field-table" markdown>
+
+| Field | Type | Description |
+|---|---|---|
+| `conditionSet` | `string` | `#/conditionSet/clinvar.traitset:{id}` reference. |
+| `condition` | `string` | `#/condition/clinvar.trait:{id}` reference (present when the RCV set resolves to a single trait). |
+| `multiple_condition_explanation` | `string` | ClinVar's explanation for the multi-condition grouping. |
+| `concepts` | array | Array of individual condition provenance objects, each with the same fields as [SubmittedCondition](#submittedcondition). |
+
+</div>
 
 ---
 

@@ -2,6 +2,9 @@
 
 ## Overview
 
+!!! tip "Schema Reference"
+    For the canonical extension reference tables (extension names, value types, and descriptions), see [RCV Statements — Extensions](../../output-reference/rcv-statements.md#extensions).
+
 RCV aggregate statement records contain `extensions` arrays at two structural levels — on the top-level `Statement` and on the `classification` object. Extensions carry aggregate review status information and classification context that are not part of the GA4GH VA-Spec statement model but are essential for interpreting the aggregation outcome.
 
 RCV extensions follow the same patterns as [VCV extensions](../vcv-statements/vcv-extensions.md). The key structural difference is that RCV statements are scoped to a specific condition — the condition reference is on the proposition (via `#/condition/` or `#/conditionSet/`), not embedded in the extensions.
