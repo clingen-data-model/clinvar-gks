@@ -64,7 +64,7 @@ R2_PROFILE="r2"
 R2_PUBLIC_URL="https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev"
 
 # --- GCS Source Configuration ---
-GCS_PUBLIC_BUCKET="clingen-public/clinvar-gks"
+GCS_BUCKET="clinvar-gks"
 
 # --- Derived date components ---
 YEAR="${EXPORT_DATE:0:4}"
@@ -234,15 +234,12 @@ fi
 echo ""
 
 # --- Check GCS for the bundle ---
-GCS_URI="gs://${GCS_PUBLIC_BUCKET}/${EXPORT_DATE}/release/clinvar-gks-${EXPORT_DATE}.json.gz"
+GCS_URI="gs://${GCS_BUCKET}/${EXPORT_DATE}/release/clinvar-gks-${EXPORT_DATE}.json.gz"
 echo "Checking GCS: ${GCS_URI}"
 if ! gsutil -q stat "${GCS_URI}" 2>/dev/null; then
-  GCS_URI="gs://${GCS_PUBLIC_BUCKET}/clinvar-gks-${EXPORT_DATE}.json.gz"
-  if ! gsutil -q stat "${GCS_URI}" 2>/dev/null; then
-    echo "ERROR: Bundle file not found in GCS."
-    echo "  Run export-gks-dicts.sh and assemble-gks-dicts.py first."
-    exit 1
-  fi
+  echo "ERROR: Bundle file not found in GCS at ${GCS_URI}"
+  echo "  Run export-gks-dicts.sh and assemble-gks-dicts.py first."
+  exit 1
 fi
 
 # --- Download bundle ---

@@ -1,11 +1,26 @@
 # ClinvarRcvStatement
 
-!!! warning "Draft"
+!!! info "Trial Use"
 
-    This data class is at a **draft** maturity level and may change significantly in future releases.
+    This data class is at a **trial use** maturity level and may change in future releases. Maturity levels are described in the [GKS Maturity Model](https://vrs.ga4gh.org/en/2.0/appendices/maturity_model.html#maturity-model).
 
-A ClinVar RCV (reference clinical variant) statement. Represents an aggregate classification for a specific variant-condition pair across all submissions sharing the same proposition type and condition. RCV statements contain evidence lines that group contributing SCV submissions by review status priority tier, scoped to a single condition or condition set.
-RCV statements use the same 12 proposition types as SCV statements. Unlike VCV statements which aggregate across all conditions for a variant, RCV statements are scoped to a single condition. Evidence lines at the RCV level follow the same priority tier structure as VCV statements.
+A ClinVar RCV (condition-level aggregate) statement. Aggregates all SCV submissions for the same variant, proposition type, and condition into a single classification.
+
+RCV statements differ from VCV statements in one key way: **condition-scoped aggregation** — each RCV is scoped to a specific condition (identified by `trait_set_id`), whereas VCV statements aggregate across all conditions for a variant.
+
+### Aggregation
+
+RCV statements use the same multi-layer hierarchy as VCV, with condition as an additional grouping dimension at every layer:
+
+- **Classification layer** — groups SCVs by classification label within a submission level
+- **Priority layer** — groups by tier within a submission level (somatic only)
+- **Aggregate Contribution layer** — applies winner-takes-all ranking across submission levels (`PG > EP > CP > NOCP > NOCL > FLAG`)
+
+See [RCV Statements](../rcv-statements.md#layer-hierarchy) for details.
+
+### Proposition Types
+
+RCV statements use the same 12 proposition types as SCV statements. See [ClinvarScvStatement — Proposition Types](ClinvarScvStatement.md#proposition-types) for the full list.
 
 **JSON Schema:** [ClinvarRcvStatement](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarRcvStatement){ target=_blank }
 

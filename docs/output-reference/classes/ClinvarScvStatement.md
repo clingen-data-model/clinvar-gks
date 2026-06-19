@@ -1,15 +1,22 @@
 # ClinvarScvStatement
 
-!!! warning "Draft"
+!!! info "Trial Use"
 
-    This data class is at a **draft** maturity level and may change significantly in future releases.
+    This data class is at a **trial use** maturity level and may change in future releases. Maturity levels are described in the [GKS Maturity Model](https://vrs.ga4gh.org/en/2.0/appendices/maturity_model.html#maturity-model).
 
 A ClinVar SCV (submitted clinical variant) statement. Represents a single submitter's assertion about a variant-condition relationship, including their classification, direction, strength, method, and contributions.
-Allowable proposition types at SCV level:
-Germline classification (9 types): VariantPathogenicityProposition, ClinvarRiskFactorProposition, ClinvarProtectiveProposition, ClinvarDrugResponseProposition, ClinvarAffectsProposition, ClinvarAssociationProposition, ClinvarConfersSensitivityProposition, ClinvarOtherProposition, ClinvarNotProvidedProposition.
-Oncogenicity (1 type): VariantOncogenicityProposition.
-Somatic clinical impact (1 type): VariantClinicalSignificanceProposition with evidence lines carrying VariantTherapeuticResponseProposition, VariantDiagnosticProposition, or VariantPrognosticProposition.
-Conflicting data (1 type): ClinvarConflictingDataFromSubmitterProposition.
+
+### Proposition Types
+
+SCV statements support 12 proposition types across four categories:
+
+| Category | Proposition Types |
+| --- | --- |
+| **Germline** (10 types) | `VariantPathogenicityProposition`, `ClinvarRiskFactorProposition`, `ClinvarProtectiveProposition`, `ClinvarDrugResponseProposition`, `ClinvarAffectsProposition`, `ClinvarAssociationProposition`, `ClinvarConfersSensitivityProposition`, `ClinvarOtherProposition`, `ClinvarNotProvidedProposition`, `ClinvarConflictingDataFromSubmitterProposition` |
+| **Oncogenicity** (1 type) | `VariantOncogenicityProposition` |
+| **Somatic Clinical Impact** (1 type) | `VariantClinicalSignificanceProposition` — with evidence lines carrying `VariantTherapeuticResponseProposition`, `VariantDiagnosticProposition`, or `VariantPrognosticProposition` |
+
+See [Propositions](propositions.md) for the full type/code/predicate reference.
 
 **JSON Schema:** [ClinvarScvStatement](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarScvStatement){ target=_blank }
 

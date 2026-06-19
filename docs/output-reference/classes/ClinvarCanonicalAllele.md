@@ -1,8 +1,8 @@
 # ClinvarCanonicalAllele
 
-!!! warning "Draft"
+!!! info "Trial Use"
 
-    This data class is at a **draft** maturity level and may change significantly in future releases.
+    This data class is at a **trial use** maturity level and may change in future releases. Maturity levels are described in the [GKS Maturity Model](https://vrs.ga4gh.org/en/2.0/appendices/maturity_model.html#maturity-model).
 
 A ClinVar canonical allele — the most common variant type. ClinVar identifies each variation by mapping submitted attributes to a GRCh38 genomic allele, which becomes the defining allele constraint. Carries ClinVar-specific extensions (HGVS list, gene list, cytogenetic location, variation type, etc.) alongside the Cat-VRS CanonicalAllele structure.
 

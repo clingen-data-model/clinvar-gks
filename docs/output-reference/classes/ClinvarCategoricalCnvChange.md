@@ -1,8 +1,8 @@
 # ClinvarCategoricalCnvChange
 
-!!! warning "Draft"
+!!! info "Trial Use"
 
-    This data class is at a **draft** maturity level and may change significantly in future releases.
+    This data class is at a **trial use** maturity level and may change in future releases. Maturity levels are described in the [GKS Maturity Model](https://vrs.ga4gh.org/en/2.0/appendices/maturity_model.html#maturity-model).
 
 A ClinVar copy number variant with a qualitative change indication (gain or loss). Uses a DefiningLocationConstraint with a CopyChangeConstraint from Cat-VRS CategoricalCnv.
 

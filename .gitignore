@@ -24,3 +24,4 @@ schema/clinvar-gks/build/
 .claude/Useful background for the documentation.md
 .claude/settings.json
 venv/
+tmp/

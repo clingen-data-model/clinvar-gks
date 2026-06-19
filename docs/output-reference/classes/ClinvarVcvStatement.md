@@ -1,11 +1,24 @@
 # ClinvarVcvStatement
 
-!!! warning "Draft"
+!!! info "Trial Use"
 
-    This data class is at a **draft** maturity level and may change significantly in future releases.
+    This data class is at a **trial use** maturity level and may change in future releases. Maturity levels are described in the [GKS Maturity Model](https://vrs.ga4gh.org/en/2.0/appendices/maturity_model.html#maturity-model).
 
-A ClinVar VCV (variant classification variant) statement. Represents an aggregate classification for a variant across all submissions sharing the same proposition type. VCV statements contain evidence lines that group contributing SCV submissions by review status priority tier (practice guideline, expert panel, criteria provided, no criteria provided).
-VCV statements use the same 12 proposition types as SCV statements. Evidence lines at the VCV level contain nested sub-statements at the classification layer, each carrying the same proposition type as the parent but scoped to a specific priority tier. The innermost layer references individual SCV submissions as evidence items.
+A ClinVar VCV (variant-level aggregate) statement. Aggregates all SCV submissions for the same variant and proposition type into a single classification, regardless of condition.
+
+### Aggregation
+
+VCV statements are built through a multi-layer hierarchy:
+
+- **Classification layer** — groups SCVs by classification label within a submission level
+- **Priority layer** — groups by tier within a submission level (somatic only)
+- **Aggregate Contribution layer** — applies winner-takes-all ranking across submission levels (`PG > EP > CP > NOCP > NOCL > FLAG`)
+
+Evidence lines at each layer reference either SCV submissions or lower-level VCV groupings. See [VCV Statements](../vcv-statements.md#layer-hierarchy) for the full aggregation rules.
+
+### Proposition Types
+
+VCV statements use the same 12 proposition types as SCV statements. See [ClinvarScvStatement — Proposition Types](ClinvarScvStatement.md#proposition-types) for the full list.
 
 **JSON Schema:** [ClinvarVcvStatement](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarVcvStatement){ target=_blank }
 
