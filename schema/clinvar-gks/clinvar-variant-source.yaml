@@ -16,10 +16,9 @@ $defs:
   HgvsListItem:
     description: >-
       A complex structure for sharing individual HGVS entries associated with Clinvar
-      Variations including nucleotide expressions, protein expressions, 
-      molecular consequence and mane select/plus settings for the specific aligned and 
+      Variations including nucleotide expressions, protein expressions,
+      molecular consequence and mane select/plus settings for the specific aligned and
       projected forms of the clinvar variant.
-    protectedClassOf: ClinvarCategoricalVariant
     type: object
     maturity: draft
     properties:
@@ -66,9 +65,8 @@ $defs:
   GeneListItem:
     description: >-
       A complex structure for sharing individual Gene entries associated with Clinvar
-      Variations including `entrez_gene_id`, `hgnc_id`, `symbol`, `relationship_type`, 
+      Variations including `entrez_gene_id`, `hgnc_id`, `symbol`, `relationship_type`,
       `source`, and `iris`.
-    protectedClassOf: ClinvarCategoricalVariant
     type: object
     maturity: draft
     properties:
