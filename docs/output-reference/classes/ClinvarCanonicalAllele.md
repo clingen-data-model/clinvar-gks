@@ -8,7 +8,7 @@ A ClinVar canonical allele — the most common variant type. ClinVar identifies 
 
 **JSON Schema:** [ClinvarCanonicalAllele](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarCanonicalAllele){ target=_blank }
 
-Some ClinvarCanonicalAllele attributes are inherited from [CanonicalAllele](CanonicalAllele.md), [ClinvarCanonicalAlleleProperties](ClinvarCanonicalAlleleProperties.md), [ClinvarCategoricalVariantProperties](ClinvarCategoricalVariantProperties.md).
+Some ClinvarCanonicalAllele attributes are inherited from `CanonicalAllele`, `ClinvarCanonicalAlleleProperties`, `ClinvarCategoricalVariantProperties`.
 
 ## Information Model
 

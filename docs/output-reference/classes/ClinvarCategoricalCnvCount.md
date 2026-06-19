@@ -8,7 +8,7 @@ A ClinVar copy number variant with an absolute copy count. Uses a DefiningLocati
 
 **JSON Schema:** [ClinvarCategoricalCnvCount](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarCategoricalCnvCount){ target=_blank }
 
-Some ClinvarCategoricalCnvCount attributes are inherited from [CategoricalCnv](CategoricalCnv.md), [ClinvarCategoricalVariantProperties](ClinvarCategoricalVariantProperties.md).
+Some ClinvarCategoricalCnvCount attributes are inherited from `CategoricalCnv`, `ClinvarCategoricalVariantProperties`.
 
 ## Information Model
 

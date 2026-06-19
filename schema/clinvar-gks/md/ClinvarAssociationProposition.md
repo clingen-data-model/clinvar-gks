@@ -8,7 +8,7 @@ A proposition describing a statistical or observational association between a va
 
 **JSON Schema:** [ClinvarAssociationProposition](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarAssociationProposition){ target=_blank }
 
-Some ClinvarAssociationProposition attributes are inherited from [ClinicalVariantProposition](ClinicalVariantProposition.md).
+Some ClinvarAssociationProposition attributes are inherited from `ClinicalVariantProposition`.
 
 ## Information Model
 

@@ -8,7 +8,7 @@ A proposition for ClinVar submissions classified as "other" that do not fit any 
 
 **JSON Schema:** [ClinvarOtherProposition](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarOtherProposition){ target=_blank }
 
-Some ClinvarOtherProposition attributes are inherited from [ClinicalVariantProposition](ClinicalVariantProposition.md).
+Some ClinvarOtherProposition attributes are inherited from `ClinicalVariantProposition`.
 
 ## Information Model
 

@@ -214,10 +214,10 @@ def write_class_md(class_name: str, class_def: dict, proc_schema, out_dir: Path,
             ancestor = get_ancestor_with_attributes(ancestor, proc_schema)
             if ancestor:
                 f.write(f"Some {class_name} attributes are inherited from "
-                        f"[{ancestor}]({ancestor}.md).\n\n")
+                        f"{_format_type_ref(ancestor)}.\n\n")
         elif allof_parents:
             parent_links = ", ".join(
-                f"[{p}]({p}.md)" for p in allof_parents
+                _format_type_ref(p) for p in allof_parents
             )
             f.write(f"Some {class_name} attributes are inherited from "
                     f"{parent_links}.\n\n")

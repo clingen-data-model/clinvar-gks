@@ -8,7 +8,7 @@ A proposition for ClinVar submissions where the submitter did not provide a clin
 
 **JSON Schema:** [ClinvarNotProvidedProposition](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarNotProvidedProposition){ target=_blank }
 
-Some ClinvarNotProvidedProposition attributes are inherited from [ClinicalVariantProposition](ClinicalVariantProposition.md).
+Some ClinvarNotProvidedProposition attributes are inherited from `ClinicalVariantProposition`.
 
 ## Information Model
 

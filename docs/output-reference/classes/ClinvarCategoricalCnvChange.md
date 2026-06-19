@@ -8,7 +8,7 @@ A ClinVar copy number variant with a qualitative change indication (gain or loss
 
 **JSON Schema:** [ClinvarCategoricalCnvChange](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarCategoricalCnvChange){ target=_blank }
 
-Some ClinvarCategoricalCnvChange attributes are inherited from [CategoricalCnv](CategoricalCnv.md), [ClinvarCategoricalVariantProperties](ClinvarCategoricalVariantProperties.md).
+Some ClinvarCategoricalCnvChange attributes are inherited from `CategoricalCnv`, `ClinvarCategoricalVariantProperties`.
 
 ## Information Model
 

@@ -8,7 +8,7 @@ A proposition describing the role of a variant in modulating drug response. Used
 
 **JSON Schema:** [ClinvarDrugResponseProposition](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarDrugResponseProposition){ target=_blank }
 
-Some ClinvarDrugResponseProposition attributes are inherited from [ClinicalVariantProposition](ClinicalVariantProposition.md).
+Some ClinvarDrugResponseProposition attributes are inherited from `ClinicalVariantProposition`.
 
 ## Information Model
 

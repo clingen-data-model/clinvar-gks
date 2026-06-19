@@ -9,7 +9,7 @@ VCV statements use the same 12 proposition types as SCV statements. Evidence lin
 
 **JSON Schema:** [ClinvarVcvStatement](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarVcvStatement){ target=_blank }
 
-Some ClinvarVcvStatement attributes are inherited from [Statement](Statement.md), [ClinvarAggregateStatementProperties](ClinvarAggregateStatementProperties.md).
+Some ClinvarVcvStatement attributes are inherited from `Statement`, `ClinvarAggregateStatementProperties`.
 
 ## Information Model
 

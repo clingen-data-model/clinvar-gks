@@ -8,7 +8,7 @@ A proposition describing the protective role of a variant against a condition. U
 
 **JSON Schema:** [ClinvarProtectiveProposition](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarProtectiveProposition){ target=_blank }
 
-Some ClinvarProtectiveProposition attributes are inherited from [ClinicalVariantProposition](ClinicalVariantProposition.md).
+Some ClinvarProtectiveProposition attributes are inherited from `ClinicalVariantProposition`.
 
 ## Information Model
 

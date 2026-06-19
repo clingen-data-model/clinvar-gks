@@ -8,7 +8,7 @@ A proposition describing the role of a variant as a risk factor for a condition.
 
 **JSON Schema:** [ClinvarRiskFactorProposition](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarRiskFactorProposition){ target=_blank }
 
-Some ClinvarRiskFactorProposition attributes are inherited from [ClinicalVariantProposition](ClinicalVariantProposition.md).
+Some ClinvarRiskFactorProposition attributes are inherited from `ClinicalVariantProposition`.
 
 ## Information Model
 

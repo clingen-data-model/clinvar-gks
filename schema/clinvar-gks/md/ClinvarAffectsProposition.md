@@ -8,7 +8,7 @@ A proposition describing a variant that affects a condition without implying cau
 
 **JSON Schema:** [ClinvarAffectsProposition](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarAffectsProposition){ target=_blank }
 
-Some ClinvarAffectsProposition attributes are inherited from [ClinicalVariantProposition](ClinicalVariantProposition.md).
+Some ClinvarAffectsProposition attributes are inherited from `ClinicalVariantProposition`.
 
 ## Information Model
 

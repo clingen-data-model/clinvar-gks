@@ -8,7 +8,7 @@ An evidence line for ClinVar somatic clinical impact (SCI) statements. Carries a
 
 **JSON Schema:** [ClinvarSomaticEvidenceLine](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarSomaticEvidenceLine){ target=_blank }
 
-Some ClinvarSomaticEvidenceLine attributes are inherited from [EvidenceLine](EvidenceLine.md), [ClinvarSomaticEvidenceLineProperties](ClinvarSomaticEvidenceLineProperties.md).
+Some ClinvarSomaticEvidenceLine attributes are inherited from `EvidenceLine`, `ClinvarSomaticEvidenceLineProperties`.
 
 ## Information Model
 
