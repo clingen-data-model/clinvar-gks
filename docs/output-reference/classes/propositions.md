@@ -28,17 +28,17 @@ These types are defined in the [VA-Spec](https://va-spec.ga4gh.org/) and used di
 
 These types handle ClinVar submission categories not covered by the GA4GH specifications. Several are no longer accepted as new submissions by ClinVar, but historical submissions remain in the dataset.
 
-| Code | Type | Predicate | Description | Active? |
-| --- | --- | --- | --- | --- |
-| `RF` | [ClinvarRiskFactorProposition](ClinvarRiskFactorProposition.md) | `isRiskFactorFor` | Risk factor | No |
-| `PROT` | [ClinvarProtectiveProposition](ClinvarProtectiveProposition.md) | `isProtectiveFor` | Protective | No |
-| `DR` | [ClinvarDrugResponseProposition](ClinvarDrugResponseProposition.md) | `hasDrugResponseFor` | Drug response | Yes |
-| `AFF` | [ClinvarAffectsProposition](ClinvarAffectsProposition.md) | `hasAffectFor` | Affects | No |
-| `ASSOC` | [ClinvarAssociationProposition](ClinvarAssociationProposition.md) | `isAssociatedWith` | Association | No |
-| `CS` | [ClinvarConfersSensitivityProposition](ClinvarConfersSensitivityProposition.md) | `confersSensitivityFor` | Confers sensitivity | No |
-| `OTH` | [ClinvarOtherProposition](ClinvarOtherProposition.md) | `isClinvarOtherAssociationFor` | Other | No |
-| `NP` | [ClinvarNotProvidedProposition](ClinvarNotProvidedProposition.md) | `hasNoProvidedClassificationFor` | Not provided | Yes |
-| `CONF` | [ClinvarConflictingDataFromSubmitterProposition](ClinvarConflictingDataFromSubmitterProposition.md) | `isConflictingDataFromSubmittersFor` | Conflicting data | Yes |
+| Code | Type | Predicate | Description |
+| --- | --- | --- | --- |
+| `RF` | [ClinvarRiskFactorProposition](ClinvarRiskFactorProposition.md) | `isRiskFactorFor` | Risk factor |
+| `PROT` | [ClinvarProtectiveProposition](ClinvarProtectiveProposition.md) | `isProtectiveFor` | Protective |
+| `DR` | [ClinvarDrugResponseProposition](ClinvarDrugResponseProposition.md) | `hasDrugResponseFor` | Drug response |
+| `AFF` | [ClinvarAffectsProposition](ClinvarAffectsProposition.md) | `hasAffectFor` | Affects |
+| `ASSOC` | [ClinvarAssociationProposition](ClinvarAssociationProposition.md) | `isAssociatedWith` | Association |
+| `CS` | [ClinvarConfersSensitivityProposition](ClinvarConfersSensitivityProposition.md) | `confersSensitivityFor` | Confers sensitivity |
+| `OTH` | [ClinvarOtherProposition](ClinvarOtherProposition.md) | `isClinvarOtherAssociationFor` | Other |
+| `NP` | [ClinvarNotProvidedProposition](ClinvarNotProvidedProposition.md) | `hasNoProvidedClassificationFor` | Not provided |
+| `CONF` | [ClinvarConflictingDataFromSubmitterProposition](ClinvarConflictingDataFromSubmitterProposition.md) | `isConflictingDataFromSubmittersFor` | Conflicting data (germline only) |
 
 ---
 

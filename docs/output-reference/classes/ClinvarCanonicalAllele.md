@@ -1,8 +1,8 @@
 # ClinvarCanonicalAllele
 
-!!! warning "Draft"
+!!! info "Trial Use"
 
-    This data class is at a **draft** maturity level and may change significantly in future releases.
+    This data class is at a **trial use** maturity level and may change in future releases. Maturity levels are described in the [GKS Maturity Model](https://vrs.ga4gh.org/en/2.0/appendices/maturity_model.html#maturity-model).
 
 A ClinVar canonical allele — the most common variant type. ClinVar identifies each variation by mapping submitted attributes to a GRCh38 genomic allele, which becomes the defining allele constraint. Carries ClinVar-specific extensions (HGVS list, gene list, cytogenetic location, variation type, etc.) alongside the Cat-VRS CanonicalAllele structure.
 
@@ -18,10 +18,9 @@ Some ClinvarCanonicalAllele attributes are inherited from `CanonicalAllele`, `Cl
 | `name` | `string` | 0..1 | A primary name for the entity. |
 | `description` | `string` | 0..1 | A free-text description of the Entity. |
 | `aliases` | `string`[] (unordered) | 0..m | Alternative name(s) for the Entity. |
-| `extensions` | `ExtensionClinvarHgvsList` \| `ExtensionClinvarGeneList` \| `ExtensionCategoricalVariationType` \| `ExtensionDefiningVrsVariationType` \| `ExtensionClinvarVariationType` \| `ExtensionClinvarSubclassType` \| `ExtensionClinvarCytogeneticLocation` \| `ExtensionVrsPreProcessingIssue` \| `ExtensionsVrsProcessingException`[] (unordered) | 0..m | A list of extensions to the entity. Extensions are not expected to be natively understood, but may be used for pre-negotiated exchange of message attributes between systems. |
+| `extensions` | `Extension`[] (unordered) | 0..m | ClinVar-specific metadata. See [Variations — Extensions](../cat-vrs.md#extensions) for the complete list of extension names, value types, and custom type definitions. |
 | `type` | `string` | 0..1 | MUST be "CategoricalVariant" |
 | `members` | `iriReference` \| `ClinvarAllele`[] (unordered) | 0..m | A non-exhaustive list of VRS variation contexts that satisfy the constraints of this categorical variant. |
-| `constraints` | `Constraint`[] (unordered) | 0..m |  |
+| `constraints` | `DefiningAlleleConstraint`[] (unordered) | 0..m | Defining constraints linking this variant to its resolved VRS allele. Contains a `DefiningAlleleConstraint` with an `allele` reference to `#/allele/{id}`. See [Variations — Constraints](../cat-vrs.md#constraints). |
 | `mappings` | `ConceptMapping`[] (unordered) | 0..m | A list of mappings to concepts in terminologies or code systems. Each mapping should include a coding and a relation. |
-| `definingContext` | `iriReference` \| `ClinvarAllele` | 0..1 |  |
 
