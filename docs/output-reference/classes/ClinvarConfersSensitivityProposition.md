@@ -8,7 +8,7 @@ A proposition describing a variant that confers sensitivity to a condition or en
 
 **JSON Schema:** [ClinvarConfersSensitivityProposition](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarConfersSensitivityProposition){ target=_blank }
 
-Some ClinvarConfersSensitivityProposition attributes are inherited from [ClinicalVariantProposition](ClinicalVariantProposition.md).
+Some ClinvarConfersSensitivityProposition attributes are inherited from `ClinicalVariantProposition`.
 
 ## Information Model
 

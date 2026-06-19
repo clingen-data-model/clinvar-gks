@@ -9,7 +9,7 @@ RCV statements use the same 12 proposition types as SCV statements. Unlike VCV s
 
 **JSON Schema:** [ClinvarRcvStatement](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarRcvStatement){ target=_blank }
 
-Some ClinvarRcvStatement attributes are inherited from [Statement](Statement.md), [ClinvarAggregateStatementProperties](ClinvarAggregateStatementProperties.md).
+Some ClinvarRcvStatement attributes are inherited from `Statement`, `ClinvarAggregateStatementProperties`.
 
 ## Information Model
 

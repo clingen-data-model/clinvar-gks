@@ -13,7 +13,7 @@ Conflicting data (1 type): ClinvarConflictingDataFromSubmitterProposition.
 
 **JSON Schema:** [ClinvarScvStatement](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarScvStatement){ target=_blank }
 
-Some ClinvarScvStatement attributes are inherited from [Statement](Statement.md), [ClinvarScvStatementProperties](ClinvarScvStatementProperties.md).
+Some ClinvarScvStatement attributes are inherited from `Statement`, `ClinvarScvStatementProperties`.
 
 ## Information Model
 

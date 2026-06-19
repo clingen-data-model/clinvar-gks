@@ -8,7 +8,7 @@ A ClinVar variant that cannot be mapped to a specific VRS allele or location —
 
 **JSON Schema:** [ClinvarNonConstrainedVariant](https://github.com/clingen-data-model/clinvar-gks/blob/main/schema/clinvar-gks/json/ClinvarNonConstrainedVariant){ target=_blank }
 
-Some ClinvarNonConstrainedVariant attributes are inherited from [CategoricalVariant](CategoricalVariant.md), [ClinvarCategoricalVariantProperties](ClinvarCategoricalVariantProperties.md).
+Some ClinvarNonConstrainedVariant attributes are inherited from `CategoricalVariant`, `ClinvarCategoricalVariantProperties`.
 
 ## Information Model
 
