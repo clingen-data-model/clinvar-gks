@@ -9,6 +9,9 @@ gets a .md file in the md/ output directory with:
   - Computational definition
   - Information model table (Field | Type | Limits | Description)
   - Link to generated JSON schema
+
+For classes composed via allOf, inherited fields from parent classes are
+resolved and included in the information model table.
 """
 
 import os
@@ -17,6 +20,17 @@ import sys
 from pathlib import Path
 
 from ga4gh.gks.metaschema.tools.source_proc import YamlSchemaProcessor
+
+# Cache of loaded processors keyed by resolved source file path
+_processor_cache: dict[str, YamlSchemaProcessor] = {}
+
+
+def _get_processor(source_path: Path) -> YamlSchemaProcessor:
+    """Get or create a cached YamlSchemaProcessor for a source file."""
+    key = str(source_path.resolve())
+    if key not in _processor_cache:
+        _processor_cache[key] = YamlSchemaProcessor(source_path)
+    return _processor_cache[key]
 
 
 def resolve_type(prop_def: dict) -> str:
@@ -30,7 +44,7 @@ def resolve_type(prop_def: dict) -> str:
         identifier = prop_def["$ref"].split("/")[-1]
         return f"[{identifier}]({identifier}.md)"
     elif "$refCurie" in prop_def:
-        identifier = prop_def["$refCurie"].split("/")[-1]
+        identifier = prop_def["$refCurie"].split(":")[-1]
         return f"[{identifier}]({identifier}.md)"
     elif "oneOf" in prop_def or "anyOf" in prop_def:
         kw = "oneOf" if "oneOf" in prop_def else "anyOf"
@@ -77,6 +91,56 @@ def get_ancestor_with_attributes(ancestor, proc_schema):
     return ancestor
 
 
+def _resolve_ref_class_name(ref_item: dict) -> str | None:
+    """Extract class name from a $ref or $refCurie."""
+    if "$ref" in ref_item:
+        return ref_item["$ref"].split("/")[-1]
+    if "$refCurie" in ref_item:
+        # $refCurie uses namespace:ClassName format
+        return ref_item["$refCurie"].split(":")[-1]
+    return None
+
+
+def _find_class_in_processors(class_name: str, proc_schema) -> dict | None:
+    """Find a class definition across the processor and its imports."""
+    # Check the main processor
+    if class_name in proc_schema.defs:
+        return proc_schema.defs[class_name]
+    # Check imported processors
+    for imp_proc in proc_schema.imports.values():
+        result = _find_class_in_processors(class_name, imp_proc)
+        if result is not None:
+            return result
+    return None
+
+
+def _get_class_properties(class_name: str, proc_schema) -> dict:
+    """Get all properties for a class, including inherited ones via allOf."""
+    class_def = _find_class_in_processors(class_name, proc_schema)
+    if class_def is None:
+        return {}
+
+    props = {}
+
+    # First, collect properties from allOf parents (inherited fields first)
+    for ref_item in class_def.get("allOf", []):
+        parent_name = _resolve_ref_class_name(ref_item)
+        if parent_name:
+            parent_props = _get_class_properties(parent_name, proc_schema)
+            props.update(parent_props)
+
+    # Then collect properties inherited via the inherits keyword
+    # (already resolved by YamlSchemaProcessor into heritableProperties)
+
+    # Finally, add local properties (override inherited ones)
+    for key in ("heritableProperties", "properties"):
+        if key in class_def and class_def[key]:
+            props.update(class_def[key])
+            break
+
+    return props
+
+
 def write_class_md(class_name: str, class_def: dict, proc_schema, out_dir: Path,
                    json_schema_base: str):
     """Write a single class Markdown file."""
@@ -117,26 +181,20 @@ def write_class_md(class_name: str, class_def: dict, proc_schema, out_dir: Path,
                     f.write(f"- {item_type}\n")
                 f.write("\n")
 
-        # Show allOf composition if present
-        if "allOf" in class_def:
-            f.write("**Composed of:**\n\n")
-            for item in class_def["allOf"]:
-                item_type = resolve_type(item)
-                f.write(f"- {item_type}\n")
-            f.write("\n")
+        # Collect all properties including inherited via allOf
+        all_props = _get_class_properties(class_name, proc_schema)
 
-        # Determine properties key and check if there are any fields
-        props = {}
-        if "heritableProperties" in class_def:
-            props = class_def["heritableProperties"]
-        elif "properties" in class_def:
-            props = class_def["properties"]
+        # Identify allOf parents for the inheritance note
+        allof_parents = []
+        for ref_item in class_def.get("allOf", []):
+            parent_name = _resolve_ref_class_name(ref_item)
+            if parent_name:
+                allof_parents.append(parent_name)
 
-        if not props:
-            # No local fields — passthrough, union, or allOf-only type
-            if proc_schema.class_is_primitive(class_name):
+        if not all_props:
+            if has_union or allof_parents:
                 return
-            if has_union or "allOf" in class_def:
+            if proc_schema.class_is_primitive(class_name):
                 return
             return
 
@@ -147,13 +205,19 @@ def write_class_md(class_name: str, class_def: dict, proc_schema, out_dir: Path,
             if ancestor:
                 f.write(f"Some {class_name} attributes are inherited from "
                         f"[{ancestor}]({ancestor}.md).\n\n")
+        elif allof_parents:
+            parent_links = ", ".join(
+                f"[{p}]({p}.md)" for p in allof_parents
+            )
+            f.write(f"Some {class_name} attributes are inherited from "
+                    f"{parent_links}.\n\n")
 
         # Information model table
         f.write("## Information Model\n\n")
         f.write("| Field | Type | Limits | Description |\n")
         f.write("| --- | --- | --- | --- |\n")
 
-        for prop_name, prop_attrs in props.items():
+        for prop_name, prop_attrs in all_props.items():
             prop_type = resolve_type(prop_attrs)
             cardinality = resolve_cardinality(prop_name, prop_attrs, class_def)
             desc = prop_attrs.get("description", "").replace("\n", " ").replace("|", "\\|")
@@ -170,6 +234,9 @@ def main(proc_schema):
     md_dir = proc_schema.def_fp.parent / "md"
     os.makedirs(md_dir, exist_ok=True)
 
+    # Cache the main processor
+    _processor_cache[str(proc_schema.schema_fp.resolve())] = proc_schema
+
     # Base URL for JSON schema links (relative from docs site)
     json_schema_base = (
         "https://github.com/clingen-data-model/clinvar-gks/blob/main"
@@ -177,8 +244,8 @@ def main(proc_schema):
     )
 
     for class_name, class_def in proc_schema.defs.items():
-        write_class_md(class_name, class_def, proc_schema, md_dir,
-                       json_schema_base)
+        write_class_md(class_name, class_def, proc_schema, out_dir=md_dir,
+                       json_schema_base=json_schema_base)
 
 
 def cli():
