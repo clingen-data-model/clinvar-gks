@@ -1,0 +1,15 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarVcvStatement",
+   "title": "ClinvarVcvStatement",
+   "description": "A ClinVar VCV (variant classification variant) statement. Represents an aggregate classification for a variant across all submissions sharing the same proposition type. VCV statements contain evidence lines that group contributing SCV submissions by review status priority tier (practice guideline, expert panel, criteria provided, no criteria provided). VCV statements use the same 12 proposition types as SCV statements. Evidence lines at the VCV level contain nested sub-statements at the classification layer, each carrying the same proposition type as the parent but scoped to a specific priority tier. The innermost layer references individual SCV submissions as evidence items.",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/Statement"
+      },
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarAggregateStatement#/$defs/ClinvarAggregateStatementProperties"
+      }
+   ]
+}

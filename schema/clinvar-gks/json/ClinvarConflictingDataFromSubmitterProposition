@@ -1,0 +1,43 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarConflictingDataFromSubmitterProposition",
+   "title": "ClinvarConflictingDataFromSubmitterProposition",
+   "description": "A proposition for ClinVar submissions where the submitter's data conflicts with other submitters' data for the same variant-condition pair. Used for submissions classified as \"conflicting data from submitters\".",
+   "type": "object",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$refCurie": "va-spec:ClinicalVariantProposition"
+      }
+   ],
+   "properties": {
+      "type": {
+         "type": "string",
+         "const": "ClinvarConflictingDataFromSubmitterProposition",
+         "default": "ClinvarConflictingDataFromSubmitterProposition",
+         "description": "MUST be \"ClinvarConflictingDataFromSubmitterProposition\"."
+      },
+      "predicate": {
+         "type": "string",
+         "const": "isConflictingDataFromSubmittersFor",
+         "default": "isConflictingDataFromSubmittersFor",
+         "description": "The relationship the Proposition describes between the subject variant and object condition. MUST be \"isConflictingDataFromSubmittersFor\"."
+      },
+      "objectCondition": {
+         "oneOf": [
+            {
+               "$ref": "/ga4gh/schema/gks-core/1.1.0/json/iriReference"
+            },
+            {
+               "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/Condition"
+            }
+         ],
+         "description": "The condition for which conflicting data exists."
+      }
+   },
+   "required": [
+      "objectCondition",
+      "predicate"
+   ],
+   "additionalProperties": false
+}
