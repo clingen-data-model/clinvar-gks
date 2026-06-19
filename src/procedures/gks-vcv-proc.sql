@@ -109,9 +109,15 @@ BEGIN
       ),
       somatic_conditions AS (
           SELECT b.variation_id, b.statement_group, b.prop_type, b.submission_level, b.classif_type as tier_grouping,
-                 ARRAY_AGG(DISTINCT cm.trait_name IGNORE NULLS) as unique_traits
+                 ARRAY_AGG(DISTINCT trait_name IGNORE NULLS) as unique_traits
           FROM `{P}.temp_vcv_base_data` b
-          JOIN `{S}.gks_scv_condition_mapping` cm ON b.scv_id = cm.scv_id
+          JOIN `{S}.gks_scv_condition_sets` scs_sc ON b.scv_id = scs_sc.scv_id
+          CROSS JOIN UNNEST(
+            IF(scs_sc.extensions.value_submitted_condition IS NOT NULL,
+              [scs_sc.extensions.value_submitted_condition.name],
+              ARRAY(SELECT c.name FROM UNNEST(scs_sc.extensions.value_submitted_condition_set.concepts) c)
+            )
+          ) as trait_name
           WHERE b.prop_type = 'sci'
           GROUP BY 1, 2, 3, 4, 5
       ),
