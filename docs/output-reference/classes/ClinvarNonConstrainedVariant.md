@@ -18,9 +18,9 @@ Some ClinvarNonConstrainedVariant attributes are inherited from `CategoricalVari
 | `name` | `string` | 0..1 | A primary name for the entity. |
 | `description` | `string` | 0..1 | A free-text description of the Entity. |
 | `aliases` | `string`[] (unordered) | 0..m | Alternative name(s) for the Entity. |
-| `extensions` | `ExtensionClinvarHgvsList` \| `ExtensionClinvarGeneList` \| `ExtensionCategoricalVariationType` \| `ExtensionDefiningVrsVariationType` \| `ExtensionClinvarVariationType` \| `ExtensionClinvarSubclassType` \| `ExtensionClinvarCytogeneticLocation` \| `ExtensionVrsPreProcessingIssue` \| `ExtensionsVrsProcessingException`[] (unordered) | 0..m | A list of extensions to the entity. Extensions are not expected to be natively understood, but may be used for pre-negotiated exchange of message attributes between systems. |
+| `extensions` | `Extension`[] (unordered) | 0..m | ClinVar-specific metadata. See [Variations — Extensions](../cat-vrs.md#extensions) for the complete list of extension names, value types, and custom type definitions. |
 | `type` | `string` | 0..1 | MUST be "CategoricalVariant" |
 | `members` | `Variation` \| `iriReference`[] (unordered) | 0..m | A non-exhaustive list of VRS Variations that satisfy the constraints of this categorical variant. |
-| `constraints` | `Constraint`[] (unordered) | 0..m |  |
+| `constraints` | `Constraint`[] (unordered) | 0..m | No VRS constraints — this variant type cannot be mapped to a specific VRS allele or location. The constraints array is empty. |
 | `mappings` | `ConceptMapping`[] (unordered) | 0..m | A list of mappings to concepts in terminologies or code systems. Each mapping should include a coding and a relation. |
 

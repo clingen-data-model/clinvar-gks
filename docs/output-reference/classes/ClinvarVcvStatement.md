@@ -19,7 +19,7 @@ Some ClinvarVcvStatement attributes are inherited from `Statement`, `ClinvarAggr
 | `name` | `string` | 0..1 | A primary name for the entity. |
 | `description` | `string` | 0..1 | A free-text description of the Entity. |
 | `aliases` | `string`[] (unordered) | 0..m | Alternative name(s) for the Entity. |
-| `extensions` | `ExtensionClinvarReviewStatus`[] (unordered) | 0..m | Aggregate-level extensions including the overall review status. |
+| `extensions` | `Extension`[] (unordered) | 0..m | Aggregate-level extensions. See [VCV Statements — Extensions](../vcv-statements.md#extensions) for the complete list of extension names, value types, and descriptions. |
 | `specifiedBy` | `Method` \| `iriReference` | 0..1 | A specification that describes all or part of the process that led to creation of the Information Entity |
 | `contributions` | `Contribution`[] (ordered) | 0..m | Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity. |
 | `reportedIn` | `Document` \| `iriReference`[] (unordered) | 0..m | A document in which the the Information Entity is reported. |
