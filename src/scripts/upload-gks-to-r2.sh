@@ -225,7 +225,7 @@ promote_monthly() {
   fi
 
   local last="${EXISTING_WEEKLY_FILES[-1]}"
-  PREV_MONTHLY_FILE="clinvar-gks_${PREV_YEAR}-${PREV_MONTH}.json.gz"
+  PREV_MONTHLY_FILE="clinvar-gks_${YEAR}-${MM}.json.gz"
 
   echo "--- Month rollover: promoting last prior weekly to monthly ---"
   echo "  Source:   datasets/weekly/${last}"
