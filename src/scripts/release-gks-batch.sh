@@ -28,7 +28,6 @@ DATES=(
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TOTAL=${#DATES[@]}
-FAILED=()
 
 for i in "${!DATES[@]}"; do
   date="${DATES[$i]}"
@@ -44,17 +43,11 @@ for i in "${!DATES[@]}"; do
     echo ">>> ${date} completed successfully."
   else
     echo ""
-    echo ">>> ${date} FAILED."
-    FAILED+=("${date}")
+    echo ">>> ${date} FAILED. Aborting batch."
+    exit 1
   fi
 done
 
 echo ""
 echo "======================================================"
-echo "Batch complete: ${TOTAL} releases processed."
-if [[ ${#FAILED[@]} -gt 0 ]]; then
-  echo "FAILED (${#FAILED[@]}): ${FAILED[*]}"
-  exit 1
-else
-  echo "All releases succeeded."
-fi
+echo "Batch complete: ${TOTAL} releases processed successfully."
