@@ -94,8 +94,11 @@ echo ""
 if [[ "$START_STEP" -le 1 ]]; then
   echo "=== Step 1/3: Exporting dictionary tables ==="
   if $DRY_RUN; then
-    echo "  [dry-run] Would run: export-gks-dicts.sh ${BQ_DATASET} ${GCS_BUCKET} ${GCS_DICTS_PREFIX}"
+    echo "  [dry-run] Would clear ${GCS_DICTS_PATH}/ and run: export-gks-dicts.sh ${BQ_DATASET} ${GCS_BUCKET} ${GCS_DICTS_PREFIX}"
   else
+    # Clear gks-dicts before export to ensure no stale shards from a prior run
+    echo "  Clearing ${GCS_DICTS_PATH}/ ..."
+    gsutil -m -q rm -r "${GCS_DICTS_PATH}/" 2>/dev/null || true
     "${SCRIPT_DIR}/export-gks-dicts.sh" "${BQ_DATASET}" "${GCS_BUCKET}" "${GCS_DICTS_PREFIX}"
   fi
   echo ""
