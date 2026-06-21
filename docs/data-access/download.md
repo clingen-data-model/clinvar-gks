@@ -260,7 +260,7 @@ archives/{YYYY}/weekly/
 
 New releases are published weekly, typically within 1-2 days of each ClinVar XML release.
 
-**Monthly releases** represent the last weekly release of each calendar month. When the first release of a new month is uploaded, the previous month's final weekly release is promoted to that month's official monthly release and the `00-latest` pointer is updated. Weekly releases do not affect the monthly release or latest pointer within the same month.
+**Monthly releases** represent the most current data available at the start of each month. When the first release of a new month is uploaded, the previous month's final weekly release is promoted as that new month's official monthly release and the `00-latest` pointer is updated. Weekly releases within a month do not affect the monthly release or latest pointer.
 
 At month boundaries, prior weekly files are archived. At year boundaries, prior monthly files are archived. All archived releases are retained indefinitely.
 
