@@ -13,8 +13,9 @@
 #
 # On each upload the script auto-detects month and year boundaries:
 #   - Always: uploads weekly file + updates latest weekly
-#   - New month: archives previous weekly files, creates monthly file + updates latest
-#   - New year: archives previous monthly files, then performs new-month steps
+#   - New month: promotes last weekly from prior month as that month's monthly
+#               release + updates latest, then archives prior month's weeklies
+#   - New year: archives prior year's monthly files (after promoting)
 #
 # Usage:
 #   ./upload-gks-to-r2.sh <export_date> <dataset_version> <bundle_file> [--dry-run]
@@ -70,13 +71,11 @@ R2_PUBLIC_URL="https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev"
 YEAR="${EXPORT_DATE:0:4}"
 MM="${EXPORT_DATE:5:2}"
 DD="${EXPORT_DATE:8:2}"
-YEAR_MONTH="${YEAR}-${MM}"       # 2026-06
 MMDD="${MM}${DD}"                # 0614
 
 # --- Filenames ---
 WEEKLY_FILE="clinvar-gks_${YEAR}-${MMDD}.json.gz"
 LATEST_WEEKLY="clinvar-gks_00-latest_weekly.json.gz"
-MONTHLY_FILE="clinvar-gks_${YEAR_MONTH}.json.gz"
 LATEST_MONTHLY="clinvar-gks_00-latest.json.gz"
 
 # --- Locate script directory for r2-readme.txt ---
@@ -160,8 +159,10 @@ detect_boundaries() {
     # Extract year-month from first existing weekly file
     # Filename: clinvar-gks_2026-0607.json.gz -> year=2026, month=06
     local first="${EXISTING_WEEKLY_FILES[0]}"
-    PREV_YEAR=$(echo "$first" | sed 's/clinvar-gks_\([0-9]\{4\}\)-.*/\1/')
-    PREV_MONTH=$(echo "$first" | sed 's/clinvar-gks_[0-9]\{4\}-\([0-9]\{2\}\).*/\1/')
+    # Filename: clinvar-gks_2026-0607.json.gz
+    local date_part="${first#clinvar-gks_}"   # 2026-0607.json.gz
+    PREV_YEAR="${date_part:0:4}"              # 2026
+    PREV_MONTH="${date_part:5:2}"             # 06
 
     if [[ "$YEAR" != "$PREV_YEAR" ]]; then
       IS_NEW_YEAR=true
@@ -181,6 +182,7 @@ detect_boundaries() {
 
 archive_yearly() {
   # Move dated monthly files from datasets/ to archives/{prev_year}/
+  # Note: LATEST_MONTHLY is retained — it holds the prior year's last monthly.
   echo "--- Year rollover: archiving ${PREV_YEAR} monthly files ---"
 
   local monthly_files=()
@@ -193,12 +195,6 @@ archive_yearly() {
     r2_copy "datasets/${f}" "archives/${PREV_YEAR}/${f}"
     r2_rm "datasets/${f}"
   done
-
-  # Clean up the old latest monthly (it will be recreated)
-  if r2_ls "datasets/${LATEST_MONTHLY}" | grep -q "${LATEST_MONTHLY}"; then
-    echo "  Removing old datasets/${LATEST_MONTHLY}"
-    r2_rm "datasets/${LATEST_MONTHLY}"
-  fi
 }
 
 archive_monthly() {
@@ -219,6 +215,28 @@ archive_monthly() {
   fi
 }
 
+promote_monthly() {
+  # Promote the last weekly from the prior month as that month's monthly release.
+  # Must run before archive_monthly (files still in datasets/weekly/).
+  # Must run before archive_yearly (so promoted monthly gets swept to archives on year rollover).
+  if [[ ${#EXISTING_WEEKLY_FILES[@]} -eq 0 ]]; then
+    echo "--- No prior weekly files to promote (first-ever upload) ---"
+    return
+  fi
+
+  local last="${EXISTING_WEEKLY_FILES[-1]}"
+  PREV_MONTHLY_FILE="clinvar-gks_${PREV_YEAR}-${PREV_MONTH}.json.gz"
+
+  echo "--- Month rollover: promoting last prior weekly to monthly ---"
+  echo "  Source:   datasets/weekly/${last}"
+  echo "  Monthly:  datasets/${PREV_MONTHLY_FILE}"
+
+  r2_copy "datasets/weekly/${last}" "datasets/${PREV_MONTHLY_FILE}"
+
+  echo "  Updating datasets/${LATEST_MONTHLY}"
+  r2_copy "datasets/weekly/${last}" "datasets/${LATEST_MONTHLY}"
+}
+
 # =====================================================================
 # Main
 # =====================================================================
@@ -227,7 +245,6 @@ echo "=== ClinVar-GKS Release Upload ==="
 echo "  Release date:  ${EXPORT_DATE}"
 echo "  Version:       ${DATASET_VERSION}"
 echo "  Weekly file:   ${WEEKLY_FILE}"
-echo "  Monthly file:  ${MONTHLY_FILE}"
 if $DRY_RUN; then
   echo "  Mode:          DRY RUN"
 fi
@@ -250,24 +267,17 @@ echo "  New month: ${IS_NEW_MONTH}"
 echo "  New year:  ${IS_NEW_YEAR}"
 echo ""
 
-# --- Year rollover ---
-if $IS_NEW_YEAR; then
-  archive_yearly
-  echo ""
-fi
-
-# --- Month rollover ---
+# --- Month rollover: promote, archive yearly, archive weeklies ---
 if $IS_NEW_MONTH; then
-  archive_monthly
+  promote_monthly
   echo ""
 
-  # Create monthly file
-  echo "--- Creating monthly release ---"
-  echo "  Uploading datasets/${MONTHLY_FILE}"
-  r2_upload "${LOCAL_TMP}" "datasets/${MONTHLY_FILE}"
+  if $IS_NEW_YEAR; then
+    archive_yearly
+    echo ""
+  fi
 
-  echo "  Updating datasets/${LATEST_MONTHLY}"
-  r2_upload "${LOCAL_TMP}" "datasets/${LATEST_MONTHLY}"
+  archive_monthly
   echo ""
 fi
 
@@ -372,8 +382,8 @@ echo ""
 echo "=== Upload Complete ==="
 echo "  Weekly:  ${R2_PUBLIC_URL}/datasets/weekly/${WEEKLY_FILE}"
 echo "  Latest:  ${R2_PUBLIC_URL}/datasets/weekly/${LATEST_WEEKLY}"
-if $IS_NEW_MONTH; then
-  echo "  Monthly: ${R2_PUBLIC_URL}/datasets/${MONTHLY_FILE}"
+if $IS_NEW_MONTH && [[ -n "${PREV_MONTHLY_FILE:-}" ]]; then
+  echo "  Monthly: ${R2_PUBLIC_URL}/datasets/${PREV_MONTHLY_FILE}"
   echo "  Latest:  ${R2_PUBLIC_URL}/datasets/${LATEST_MONTHLY}"
 fi
 echo "  Index:   ${R2_PUBLIC_URL}/index.json"
