@@ -258,7 +258,11 @@ archives/{YYYY}/weekly/
 
 ## Release Cadence
 
-New releases are published weekly, typically within 1-2 days of each ClinVar XML release. The `00-latest` files are overwritten with each new release. At month boundaries, weekly files are archived. At year boundaries, monthly files are archived. All archived releases are retained indefinitely.
+New releases are published weekly, typically within 1-2 days of each ClinVar XML release.
+
+**Monthly releases** represent the last weekly release of each calendar month. When the first release of a new month is uploaded, the previous month's final weekly release is promoted to that month's official monthly release and the `00-latest` pointer is updated. Weekly releases do not affect the monthly release or latest pointer within the same month.
+
+At month boundaries, prior weekly files are archived. At year boundaries, prior monthly files are archived. All archived releases are retained indefinitely.
 
 ---
 
