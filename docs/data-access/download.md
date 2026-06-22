@@ -245,13 +245,10 @@ datasets/
 
 datasets/weekly/
   clinvar-gks_00-latest_weekly.json.gz  latest weekly release (stable URL)
-  clinvar-gks_YYYY-MMDD.json.gz         weekly releases (current year)
+  clinvar-gks_YYYY-MMDD.json.gz         all weekly releases (never archived)
 
 archives/{YYYY}/
   clinvar-gks_YYYY-MM.json.gz           monthly releases from prior years
-
-archives/{YYYY}/weekly/
-  clinvar-gks_YYYY-MMDD.json.gz         weekly releases from prior years
 ```
 
 ---
