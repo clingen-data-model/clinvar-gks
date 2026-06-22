@@ -5,9 +5,8 @@
 #
 # Manages the R2 directory structure:
 #   datasets/                  — monthly files for the current year + 00-latest
-#   datasets/weekly/           — weekly files for the current year + 00-latest_weekly
+#   datasets/weekly/           — all weekly files (never archived) + 00-latest_weekly
 #   archives/{yyyy}/           — monthly files from prior years
-#   archives/{yyyy}/weekly/    — weekly files from prior years
 #   release_notes/             — pipeline change notes
 #   README.txt                 — bucket overview
 #
@@ -15,7 +14,7 @@
 #   - Always: uploads weekly file + updates latest weekly
 #   - New month: promotes last weekly from prior month as that month's monthly
 #               release + updates latest
-#   - New year: archives prior year's monthly + weekly files (after promoting)
+#   - New year: archives prior year's monthly files to archives/{yyyy}/ (after promoting)
 #
 # Usage:
 #   ./upload-gks-to-r2.sh <export_date> <dataset_version> <bundle_file> [--dry-run]
@@ -182,9 +181,9 @@ detect_boundaries() {
 
 archive_yearly() {
   # Move dated monthly files from datasets/ to archives/{prev_year}/
-  # Move dated weekly files from datasets/weekly/ to archives/{prev_year}/weekly/
-  # Note: LATEST_MONTHLY and LATEST_WEEKLY are retained; they get overwritten by the new upload.
-  echo "--- Year rollover: archiving ${PREV_YEAR} monthly and weekly files ---"
+  # Weekly files are never archived — they stay in datasets/weekly/ indefinitely.
+  # Note: LATEST_MONTHLY is retained; it gets overwritten by the new upload.
+  echo "--- Year rollover: archiving ${PREV_YEAR} monthly files to archives/${PREV_YEAR}/ ---"
 
   local monthly_files=()
   while IFS= read -r f; do
@@ -195,12 +194,6 @@ archive_yearly() {
     echo "  Moving datasets/${f} -> archives/${PREV_YEAR}/${f}"
     r2_copy "datasets/${f}" "archives/${PREV_YEAR}/${f}"
     r2_rm "datasets/${f}"
-  done
-
-  for f in "${EXISTING_WEEKLY_FILES[@]}"; do
-    echo "  Moving datasets/weekly/${f} -> archives/${PREV_YEAR}/weekly/${f}"
-    r2_copy "datasets/weekly/${f}" "archives/${PREV_YEAR}/weekly/${f}"
-    r2_rm "datasets/weekly/${f}"
   done
 }
 
