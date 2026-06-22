@@ -5,17 +5,17 @@
 #
 # Manages the R2 directory structure:
 #   datasets/                  — monthly files for the current year + 00-latest
-#   datasets/weekly/           — weekly files for the current month + 00-latest_weekly
+#   datasets/weekly/           — weekly files for the current year + 00-latest_weekly
 #   archives/{yyyy}/           — monthly files from prior years
-#   archives/{yyyy}/weekly/    — weekly files from prior months
+#   archives/{yyyy}/weekly/    — weekly files from prior years
 #   release_notes/             — pipeline change notes
 #   README.txt                 — bucket overview
 #
 # On each upload the script auto-detects month and year boundaries:
 #   - Always: uploads weekly file + updates latest weekly
 #   - New month: promotes last weekly from prior month as that month's monthly
-#               release + updates latest, then archives prior month's weeklies
-#   - New year: archives prior year's monthly files (after promoting)
+#               release + updates latest
+#   - New year: archives prior year's monthly + weekly files (after promoting)
 #
 # Usage:
 #   ./upload-gks-to-r2.sh <export_date> <dataset_version> <bundle_file> [--dry-run]
@@ -182,8 +182,9 @@ detect_boundaries() {
 
 archive_yearly() {
   # Move dated monthly files from datasets/ to archives/{prev_year}/
-  # Note: LATEST_MONTHLY is retained — it holds the prior year's last monthly.
-  echo "--- Year rollover: archiving ${PREV_YEAR} monthly files ---"
+  # Move dated weekly files from datasets/weekly/ to archives/{prev_year}/weekly/
+  # Note: LATEST_MONTHLY and LATEST_WEEKLY are retained; they get overwritten by the new upload.
+  echo "--- Year rollover: archiving ${PREV_YEAR} monthly and weekly files ---"
 
   local monthly_files=()
   while IFS= read -r f; do
@@ -195,29 +196,16 @@ archive_yearly() {
     r2_copy "datasets/${f}" "archives/${PREV_YEAR}/${f}"
     r2_rm "datasets/${f}"
   done
-}
-
-archive_monthly() {
-  # Move dated weekly files from datasets/weekly/ to archives/{archive_year}/weekly/
-  local archive_year="${PREV_YEAR:-$YEAR}"
-  echo "--- Month rollover: archiving weekly files to archives/${archive_year}/weekly/ ---"
 
   for f in "${EXISTING_WEEKLY_FILES[@]}"; do
-    echo "  Moving datasets/weekly/${f} -> archives/${archive_year}/weekly/${f}"
-    r2_copy "datasets/weekly/${f}" "archives/${archive_year}/weekly/${f}"
+    echo "  Moving datasets/weekly/${f} -> archives/${PREV_YEAR}/weekly/${f}"
+    r2_copy "datasets/weekly/${f}" "archives/${PREV_YEAR}/weekly/${f}"
     r2_rm "datasets/weekly/${f}"
   done
-
-  # Clean up old latest weekly
-  if r2_ls "datasets/weekly/${LATEST_WEEKLY}" | grep -q "${LATEST_WEEKLY}"; then
-    echo "  Removing old datasets/weekly/${LATEST_WEEKLY}"
-    r2_rm "datasets/weekly/${LATEST_WEEKLY}"
-  fi
 }
 
 promote_monthly() {
   # Promote the last weekly from the prior month as that month's monthly release.
-  # Must run before archive_monthly (files still in datasets/weekly/).
   # Must run before archive_yearly (so promoted monthly gets swept to archives on year rollover).
   if [[ ${#EXISTING_WEEKLY_FILES[@]} -eq 0 ]]; then
     echo "--- No prior weekly files to promote (first-ever upload) ---"
@@ -267,7 +255,7 @@ echo "  New month: ${IS_NEW_MONTH}"
 echo "  New year:  ${IS_NEW_YEAR}"
 echo ""
 
-# --- Month rollover: promote, archive yearly, archive weeklies ---
+# --- Month rollover: promote + (year rollover: archive monthly + weekly files) ---
 if $IS_NEW_MONTH; then
   promote_monthly
   echo ""
@@ -276,9 +264,6 @@ if $IS_NEW_MONTH; then
     archive_yearly
     echo ""
   fi
-
-  archive_monthly
-  echo ""
 fi
 
 # --- Always: upload weekly file ---
