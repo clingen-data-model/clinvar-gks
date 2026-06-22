@@ -245,13 +245,13 @@ datasets/
 
 datasets/weekly/
   clinvar-gks_00-latest_weekly.json.gz  latest weekly release (stable URL)
-  clinvar-gks_YYYY-MMDD.json.gz         weekly releases (current month)
+  clinvar-gks_YYYY-MMDD.json.gz         weekly releases (current year)
 
 archives/{YYYY}/
   clinvar-gks_YYYY-MM.json.gz           monthly releases from prior years
 
 archives/{YYYY}/weekly/
-  clinvar-gks_YYYY-MMDD.json.gz         weekly releases from prior months
+  clinvar-gks_YYYY-MMDD.json.gz         weekly releases from prior years
 ```
 
 ---
@@ -262,7 +262,7 @@ New releases are published weekly, typically within 1-2 days of each ClinVar XML
 
 **Monthly releases** represent the most current data available at the start of each month. When the first release of a new month is uploaded, the previous month's final weekly release is promoted as that new month's official monthly release and the `00-latest` pointer is updated. Weekly releases within a month do not affect the monthly release or latest pointer.
 
-At month boundaries, prior weekly files are archived. At year boundaries, prior monthly files are archived. All archived releases are retained indefinitely.
+Weekly files accumulate in `datasets/weekly/` throughout the year. At year boundaries, the prior year's monthly and weekly files are moved to the `archives/{YYYY}/` and `archives/{YYYY}/weekly/` directories respectively. All archived releases are retained indefinitely.
 
 ---
 
