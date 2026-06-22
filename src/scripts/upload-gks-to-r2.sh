@@ -5,7 +5,7 @@
 #
 # Manages the R2 directory structure:
 #   datasets/                  — monthly files for the current year + 00-latest
-#   datasets/weekly/           — all weekly files (never archived) + 00-latest_weekly
+#   datasets/weekly/           — weekly files for the current month + 00-latest_weekly
 #   archives/{yyyy}/           — monthly files from prior years
 #   release_notes/             — pipeline change notes
 #   README.txt                 — bucket overview
@@ -13,7 +13,7 @@
 # On each upload the script auto-detects month and year boundaries:
 #   - Always: uploads weekly file + updates latest weekly
 #   - New month: promotes last weekly from prior month as that month's monthly
-#               release + updates latest
+#               release + updates latest, then deletes prior month's weekly files
 #   - New year: archives prior year's monthly files to archives/{yyyy}/ (after promoting)
 #
 # Usage:
@@ -197,6 +197,19 @@ archive_yearly() {
   done
 }
 
+cleanup_prior_weeklies() {
+  # Delete the prior month's weekly files from datasets/weekly/.
+  # They are not archived — only monthly files are retained long-term.
+  if [[ ${#EXISTING_WEEKLY_FILES[@]} -eq 0 ]]; then
+    return
+  fi
+  echo "--- Month rollover: deleting prior month's weekly files ---"
+  for f in "${EXISTING_WEEKLY_FILES[@]}"; do
+    echo "  Deleting datasets/weekly/${f}"
+    r2_rm "datasets/weekly/${f}"
+  done
+}
+
 promote_monthly() {
   # Promote the last weekly from the prior month as that month's monthly release.
   # Must run before archive_yearly (so promoted monthly gets swept to archives on year rollover).
@@ -248,7 +261,7 @@ echo "  New month: ${IS_NEW_MONTH}"
 echo "  New year:  ${IS_NEW_YEAR}"
 echo ""
 
-# --- Month rollover: promote + (year rollover: archive monthly + weekly files) ---
+# --- Month rollover: promote, archive (year only), delete prior weeklies ---
 if $IS_NEW_MONTH; then
   promote_monthly
   echo ""
@@ -257,6 +270,9 @@ if $IS_NEW_MONTH; then
     archive_yearly
     echo ""
   fi
+
+  cleanup_prior_weeklies
+  echo ""
 fi
 
 # --- Always: upload weekly file ---
