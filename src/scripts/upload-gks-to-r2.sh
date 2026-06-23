@@ -341,11 +341,8 @@ generate_index() {
 
     local arch_monthly
     arch_monthly=$(build_file_array "archives/${year_dir}/")
-    local arch_weekly
-    arch_weekly=$(build_file_array "archives/${year_dir}/weekly/")
 
-    archives_json+=$(printf '"%s":{"monthly":%s,"weekly":%s}' \
-      "$year_dir" "$arch_monthly" "$arch_weekly")
+    archives_json+=$(printf '"%s":{"monthly":%s}' "$year_dir" "$arch_monthly")
   done < <(r2_ls "archives/" 2>/dev/null)
   archives_json+="}"
 
