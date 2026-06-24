@@ -199,8 +199,6 @@ curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3
         var yGroup = el("div", {className: "r2-group"});
         var mGroup = renderFileGroup("Monthly", yearData.monthly, i === 0);
         if (mGroup) yGroup.appendChild(mGroup);
-        var wGroup = renderFileGroup("Weekly", yearData.weekly, false);
-        if (wGroup) yGroup.appendChild(wGroup);
         yearFolder.appendChild(yGroup);
 
         aSection.appendChild(yearFolder);
