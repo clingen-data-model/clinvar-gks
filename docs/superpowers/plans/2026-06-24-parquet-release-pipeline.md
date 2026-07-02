@@ -478,7 +478,6 @@ _COLUMN_TYPES = {
     "contributions":                _CONTRIBUTION_TYPE,
     "reported_in":                  _REPORTED_IN_TYPE,
     "specified_by":                 _SPECIFIED_BY_TYPE,
-    "evidence_lines":              pa.list_(pa.string()),
     "evidence_outcome":            _CONCEPT_LABEL_TYPE,
     "strength_of_evidence_provided": _CONCEPT_LABEL_TYPE,
     "has_evidence_lines":          pa.list_(pa.string()),
@@ -692,7 +691,7 @@ PARQUET_SECTION_CONFIGS = {
         ["id", "type", "proposition_id",
          "classification", "strength",
          "direction", "confidence", "description",
-         "contributions", "reported_in", "specified_by", "evidence_lines",
+         "contributions", "reported_in", "specified_by", "has_evidence_lines",
          "extensions", "data"],
         lambda k, v: (
             k,
