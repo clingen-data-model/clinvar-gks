@@ -661,19 +661,7 @@ BEGIN
                 'exactMatch' as relation
               )
             ]
-          ) as mappings,
-          IF(
-            g.hgnc_id is null,
-            [
-              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
-              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
-            ],
-            [
-              FORMAT('https://identifiers.org/%s', LOWER(g.hgnc_id)),
-              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
-              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
-            ]
-          ) as iris
+          ) as mappings
         )), remove_empty => TRUE) as value
       FROM `{S}.gene` g
       WHERE g.id IN (SELECT DISTINCT gene_id FROM `{S}.gene_association`)
