@@ -296,7 +296,7 @@ BEGIN
         ARRAY_AGG(
           FORMAT('#/condition/clinvar.trait:%s', tst.rcv_trait_id)
           ORDER BY tst.rcv_trait_id
-        ) AS condition_refs,
+        ) AS concepts,
         IF(
           ANY_VALUE(art.rcv_trait_relationship_type) IN ('Finding member','co-occurring condition'),
           'AND',
@@ -890,7 +890,7 @@ BEGIN
           SELECT 
             scm.scv_id,
             IF(scm.rcv_trait_count > 1, FORMAT('#/conditionSet/%s', ts.id), NULL) AS conditionSet,
-            IF(scm.rcv_trait_count = 1, ts.condition_refs[SAFE_OFFSET(0)], NULL) AS condition,
+            IF(scm.rcv_trait_count = 1, ts.concepts[SAFE_OFFSET(0)], NULL) AS condition,
             scm.multiple_condition_explanation,
             scm.cats_trait_count as scv_trait_count,
             STRUCT(
