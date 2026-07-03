@@ -4,9 +4,7 @@ BEGIN
   DECLARE query_classification STRING;
   DECLARE query_priority STRING;
   DECLARE query_agg_contribution STRING;
-  DECLARE query_classification_pre STRING;
-  DECLARE query_priority_pre STRING;
-  DECLARE query_agg_contribution_pre STRING;
+  DECLARE dict_rcv_evidence_line_query STRING;
   DECLARE dict_rcv_proposition_query STRING;
   DECLARE query_rcv_pre STRING;
   DECLARE temp_create STRING;
@@ -25,9 +23,7 @@ BEGIN
       CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
         'temp_rcv_condition_data',
         'temp_rcv_classification_statements', 'temp_rcv_priority_statements',
-        'temp_rcv_agg_contribution_statements',
-        'temp_rcv_classification_pre', 'temp_rcv_priority_pre',
-        'temp_rcv_agg_contribution_pre'
+        'temp_rcv_agg_contribution_statements'
       ]);
     END IF;
 
@@ -121,17 +117,7 @@ BEGIN
           CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
         ) AS extensions,
 
-        [
-          STRUCT(
-            'EvidenceLine' AS type,
-            'supports' AS directionOfEvidenceProvided,
-            STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
-            ARRAY(
-              SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
-              FROM UNNEST(agg.full_scv_ids) AS scv_id
-            ) AS evidenceItems
-          )
-        ] AS evidenceLines
+        [FORMAT('#/evidenceLine/%s.contributing', agg.id)] AS hasEvidenceLines
 
       FROM `{S}.gks_rcv_classification_agg` agg
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
@@ -191,30 +177,13 @@ BEGIN
           CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
         ) AS extensions,
 
-        ARRAY(
-          SELECT AS STRUCT val.* FROM UNNEST([
-            STRUCT(
-              'EvidenceLine' AS type,
-              'supports' AS directionOfEvidenceProvided,
-              STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
-              ARRAY(
-                SELECT FORMAT('#/rcv/%s', stmt_id)
-                FROM UNNEST(agg.contributing_statement_ids) AS stmt_id
-              ) AS evidenceItems
-            ),
-            STRUCT(
-              'EvidenceLine' AS type,
-              'neutral' AS directionOfEvidenceProvided,
-              STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
-              ARRAY(
-                SELECT FORMAT('#/rcv/%s', stmt_id)
-                FROM UNNEST(agg.non_contributing_statement_ids) AS stmt_id
-              ) AS evidenceItems
-            )
-          ]) AS val
-          WHERE val.strengthOfEvidenceProvided.name = 'Contributing'
-             OR ARRAY_LENGTH(val.evidenceItems) > 0
-        ) AS evidenceLines
+        ARRAY_CONCAT(
+          [FORMAT('#/evidenceLine/%s.contributing', agg.id)],
+          IF(ARRAY_LENGTH(agg.non_contributing_statement_ids) > 0,
+            [FORMAT('#/evidenceLine/%s.non-contributing', agg.id)],
+            []
+          )
+        ) AS hasEvidenceLines
 
       FROM `{S}.gks_rcv_priority_agg` agg
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
@@ -273,27 +242,13 @@ BEGIN
           CAST(NULL AS ARRAY<STRUCT<name STRING, value STRING>>)
         ) AS extensions,
 
-        ARRAY(
-          SELECT AS STRUCT val.* FROM UNNEST([
-            STRUCT(
-              'EvidenceLine' AS type,
-              'supports' AS directionOfEvidenceProvided,
-              STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
-              [FORMAT('#/rcv/%s', agg.contributing_layer_id)] AS evidenceItems
-            ),
-            STRUCT(
-              'EvidenceLine' AS type,
-              'neutral' AS directionOfEvidenceProvided,
-              STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
-              ARRAY(
-                SELECT FORMAT('#/rcv/%s', nc.layer_id)
-                FROM UNNEST(agg.non_contributing_details) AS nc
-              ) AS evidenceItems
-            )
-          ]) AS val
-          WHERE val.strengthOfEvidenceProvided.name = 'Contributing'
-             OR ARRAY_LENGTH(val.evidenceItems) > 0
-        ) AS evidenceLines
+        ARRAY_CONCAT(
+          [FORMAT('#/evidenceLine/%s.contributing', agg.id)],
+          IF(agg.non_contributing_details IS NOT NULL AND ARRAY_LENGTH(agg.non_contributing_details) > 0,
+            [FORMAT('#/evidenceLine/%s.non-contributing', agg.id)],
+            []
+          )
+        ) AS hasEvidenceLines
 
       FROM `{S}.gks_rcv_aggregate_contribution` agg
     """, '{S}', rec.schema_name);
@@ -302,152 +257,82 @@ BEGIN
     EXECUTE IMMEDIATE query_agg_contribution;
 
     -------------------------------------------------------------------------
-    -- GROUPING BASE PRE: Base Grouping statements with inlined SCV evidence items
-    -- All submission levels (PG, EP, CP, NOCP, NOCL, FLAG) use the same flow.
+    -- Dictionary table - RCV evidence lines
+    -- Extracts evidence lines from all 3 statement layers into flat rows.
+    -- Classification: 1 Contributing evidence line per statement (SCV items)
+    -- Priority/Aggregate: Contributing + optional Non-contributing (RCV items)
     -------------------------------------------------------------------------
-    SET query_classification_pre = REPLACE("""
-      {CT} `{P}.temp_rcv_classification_pre` AS
+    SET dict_rcv_evidence_line_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_rcv_evidence_line`
+      AS
+      -- Classification layer: always 1 Contributing evidence line
       SELECT
-        l1.id, l1.type, l1.direction, l1.strength, l1.confidence,
-        l1.classification,
-        l1.proposition,
-        l1.extensions,
-        [
-          STRUCT(
-            'EvidenceLine' AS type,
-            'supports' AS directionOfEvidenceProvided,
-            STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
-            ARRAY(
-              SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
-              FROM UNNEST(agg.full_scv_ids) AS scv_id
-            ) AS evidenceItems
-          )
-        ] AS evidenceLines
-      FROM `{P}.temp_rcv_classification_statements` l1
-      JOIN `{S}.gks_rcv_classification_agg` agg ON l1.id = agg.id
-    """, '{S}', rec.schema_name);
-    SET query_classification_pre = REPLACE(query_classification_pre, '{CT}', temp_create);
-    SET query_classification_pre = REPLACE(query_classification_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_classification_pre;
+        FORMAT('%s.contributing', agg.id) AS id,
+        'EvidenceLine' AS type,
+        'supports' AS directionOfEvidenceProvided,
+        STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
+        ARRAY(
+          SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
+          FROM UNNEST(agg.full_scv_ids) AS scv_id
+        ) AS evidenceItems
+      FROM `{S}.gks_rcv_classification_agg` agg
 
-    -------------------------------------------------------------------------
-    -- GROUPING TIER PRE: Tier Grouping statements with inlined Base Grouping evidence items
-    -------------------------------------------------------------------------
-    SET query_priority_pre = REPLACE("""
-      {CT} `{P}.temp_rcv_priority_pre` AS
-      WITH
-      l2_contributing AS (
-        SELECT l2.id, ARRAY_AGG(TO_JSON(
-          STRUCT(l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
-            l1.classification,
-            l1.proposition, l1.extensions, l1.evidenceLines)
-        )) AS evidenceItems
-        FROM `{P}.temp_rcv_priority_statements` l2
-        CROSS JOIN UNNEST(l2.evidenceLines) AS el
-        CROSS JOIN UNNEST(el.evidenceItems) AS item
-        JOIN `{P}.temp_rcv_classification_pre` l1 ON l1.id = REGEXP_EXTRACT(item, r'#/rcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided.name = 'Contributing'
-        GROUP BY l2.id
-      ),
-      l2_non_contributing AS (
-        SELECT l2.id, ARRAY_AGG(TO_JSON(
-          STRUCT(l1.type, l1.id, l1.direction, l1.strength, l1.confidence,
-            l1.classification,
-            l1.proposition, l1.extensions, l1.evidenceLines)
-        )) AS evidenceItems
-        FROM `{P}.temp_rcv_priority_statements` l2
-        CROSS JOIN UNNEST(l2.evidenceLines) AS el
-        CROSS JOIN UNNEST(el.evidenceItems) AS item
-        JOIN `{P}.temp_rcv_classification_pre` l1 ON l1.id = REGEXP_EXTRACT(item, r'#/rcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided.name = 'Non-contributing'
-        GROUP BY l2.id
-      )
-      SELECT
-        l2.id, l2.type, l2.direction, l2.strength, l2.confidence,
-        l2.classification,
-        l2.proposition,
-        l2.extensions,
-        ARRAY_CONCAT(
-          IF(c.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
-          ),
-          IF(nc.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
-          )
-        ) AS evidenceLines
-      FROM `{P}.temp_rcv_priority_statements` l2
-      LEFT JOIN l2_contributing c ON l2.id = c.id
-      LEFT JOIN l2_non_contributing nc ON l2.id = nc.id
-    """, '{S}', rec.schema_name);
-    SET query_priority_pre = REPLACE(query_priority_pre, '{CT}', temp_create);
-    SET query_priority_pre = REPLACE(query_priority_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_priority_pre;
+      UNION ALL
 
-    -------------------------------------------------------------------------
-    -- AGGREGATE CONTRIBUTION PRE: Aggregate Contribution statements with inlined Tier Grouping/Base Grouping evidence items
-    -------------------------------------------------------------------------
-    SET query_agg_contribution_pre = REPLACE("""
-      {CT} `{P}.temp_rcv_agg_contribution_pre` AS
-      WITH
-      all_layer_statements AS (
-        SELECT id, type, direction, strength, confidence,
-          classification, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
-        FROM `{P}.temp_rcv_priority_pre`
-        UNION ALL
-        SELECT id, type, direction, strength, confidence,
-          classification, proposition, extensions, TO_JSON(evidenceLines) as evidenceLines
-        FROM `{P}.temp_rcv_classification_pre`
-      ),
-      l3_contributing AS (
-        SELECT l3.id, ARRAY_AGG(TO_JSON(
-          STRUCT(als.type, als.id, als.direction, als.strength, als.confidence,
-            als.classification,
-            als.proposition, als.extensions, als.evidenceLines)
-        )) AS evidenceItems
-        FROM `{P}.temp_rcv_agg_contribution_statements` l3
-        CROSS JOIN UNNEST(l3.evidenceLines) AS el
-        CROSS JOIN UNNEST(el.evidenceItems) AS item
-        JOIN all_layer_statements als ON als.id = REGEXP_EXTRACT(item, r'#/rcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided.name = 'Contributing'
-        GROUP BY l3.id
-      ),
-      l3_non_contributing AS (
-        SELECT l3.id, ARRAY_AGG(TO_JSON(
-          STRUCT(als.type, als.id, als.direction, als.strength, als.confidence,
-            als.classification,
-            als.proposition, als.extensions, als.evidenceLines)
-        )) AS evidenceItems
-        FROM `{P}.temp_rcv_agg_contribution_statements` l3
-        CROSS JOIN UNNEST(l3.evidenceLines) AS el
-        CROSS JOIN UNNEST(el.evidenceItems) AS item
-        JOIN all_layer_statements als ON als.id = REGEXP_EXTRACT(item, r'#/rcv/(.+)')
-        WHERE el.strengthOfEvidenceProvided.name = 'Non-contributing'
-        GROUP BY l3.id
-      )
+      -- Priority layer: Contributing evidence line
       SELECT
-        l3.id, l3.type, l3.direction, l3.strength, l3.confidence,
-        l3.classification,
-        l3.proposition,
-        l3.extensions,
-        ARRAY_CONCAT(
-          IF(c.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'supports' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided, c.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
-          ),
-          IF(nc.evidenceItems IS NOT NULL,
-            [STRUCT('EvidenceLine' AS type, 'neutral' AS directionOfEvidenceProvided, STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided, nc.evidenceItems AS evidenceItems)],
-            CAST([] AS ARRAY<STRUCT<type STRING, directionOfEvidenceProvided STRING, strengthOfEvidenceProvided STRUCT<conceptType STRING, name STRING>, evidenceItems ARRAY<JSON>>>)
-          )
-        ) AS evidenceLines
-      FROM `{P}.temp_rcv_agg_contribution_statements` l3
-      LEFT JOIN l3_contributing c ON l3.id = c.id
-      LEFT JOIN l3_non_contributing nc ON l3.id = nc.id
+        FORMAT('%s.contributing', agg.id) AS id,
+        'EvidenceLine' AS type,
+        'supports' AS directionOfEvidenceProvided,
+        STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
+        ARRAY(
+          SELECT FORMAT('#/rcv/%s', stmt_id)
+          FROM UNNEST(agg.contributing_statement_ids) AS stmt_id
+        ) AS evidenceItems
+      FROM `{S}.gks_rcv_priority_agg` agg
+
+      UNION ALL
+
+      -- Priority layer: Non-contributing evidence line (only when items exist)
+      SELECT
+        FORMAT('%s.non-contributing', agg.id) AS id,
+        'EvidenceLine' AS type,
+        'neutral' AS directionOfEvidenceProvided,
+        STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
+        ARRAY(
+          SELECT FORMAT('#/rcv/%s', stmt_id)
+          FROM UNNEST(agg.non_contributing_statement_ids) AS stmt_id
+        ) AS evidenceItems
+      FROM `{S}.gks_rcv_priority_agg` agg
+      WHERE ARRAY_LENGTH(agg.non_contributing_statement_ids) > 0
+
+      UNION ALL
+
+      -- Aggregate layer: Contributing evidence line
+      SELECT
+        FORMAT('%s.contributing', agg.id) AS id,
+        'EvidenceLine' AS type,
+        'supports' AS directionOfEvidenceProvided,
+        STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
+        [FORMAT('#/rcv/%s', agg.contributing_layer_id)] AS evidenceItems
+      FROM `{S}.gks_rcv_aggregate_contribution` agg
+
+      UNION ALL
+
+      -- Aggregate layer: Non-contributing evidence line (only when items exist)
+      SELECT
+        FORMAT('%s.non-contributing', agg.id) AS id,
+        'EvidenceLine' AS type,
+        'neutral' AS directionOfEvidenceProvided,
+        STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
+        ARRAY(
+          SELECT FORMAT('#/rcv/%s', nc.layer_id)
+          FROM UNNEST(agg.non_contributing_details) AS nc
+        ) AS evidenceItems
+      FROM `{S}.gks_rcv_aggregate_contribution` agg
+      WHERE agg.non_contributing_details IS NOT NULL AND ARRAY_LENGTH(agg.non_contributing_details) > 0
     """, '{S}', rec.schema_name);
-    SET query_agg_contribution_pre = REPLACE(query_agg_contribution_pre, '{CT}', temp_create);
-    SET query_agg_contribution_pre = REPLACE(query_agg_contribution_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_agg_contribution_pre;
+    EXECUTE IMMEDIATE dict_rcv_evidence_line_query;
 
     -------------------------------------------------------------------------
     -- Dictionary table - RCV propositions (global, keyed by proposition id)
@@ -541,11 +426,15 @@ BEGIN
     EXECUTE IMMEDIATE dict_rcv_proposition_query;
 
     -------------------------------------------------------------------------
-    -- FINAL: RCV statement pre (all Aggregate Contribution statements)
+    -- FINAL: RCV statement pre (all statement layers)
     -------------------------------------------------------------------------
     SET query_rcv_pre = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_rcv_statement_pre` AS
-      SELECT * FROM `{P}.temp_rcv_agg_contribution_pre`
+      SELECT * FROM `{P}.temp_rcv_agg_contribution_statements`
+      UNION ALL
+      SELECT * FROM `{P}.temp_rcv_classification_statements`
+      UNION ALL
+      SELECT * FROM `{P}.temp_rcv_priority_statements`
     """, '{S}', rec.schema_name);
     SET query_rcv_pre = REPLACE(query_rcv_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE query_rcv_pre;
@@ -556,9 +445,6 @@ BEGIN
       DROP TABLE _SESSION.temp_rcv_classification_statements;
       DROP TABLE _SESSION.temp_rcv_priority_statements;
       DROP TABLE _SESSION.temp_rcv_agg_contribution_statements;
-      DROP TABLE _SESSION.temp_rcv_classification_pre;
-      DROP TABLE _SESSION.temp_rcv_priority_pre;
-      DROP TABLE _SESSION.temp_rcv_agg_contribution_pre;
     END IF;
 
   END FOR;
