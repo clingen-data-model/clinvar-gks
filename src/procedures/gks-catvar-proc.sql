@@ -5,6 +5,8 @@ BEGIN
   DECLARE dict_seqref_query STRING;
   DECLARE dict_location_query STRING;
   DECLARE dict_allele_query STRING;
+  DECLARE dict_copy_number_count_query STRING;
+  DECLARE dict_copy_number_change_query STRING;
   DECLARE temp_ctxvar_expr_query STRING;
   DECLARE temp_ctxvar_query STRING;
   DECLARE temp_catvar_ext_query STRING;
@@ -279,7 +281,7 @@ BEGIN
     EXECUTE IMMEDIATE temp_ctxvar_expr_query;
 
     -------------------------------------------------------------------------
-    -- Step 2b: Dictionary table - alleles (global, keyed by VRS allele id)
+    -- Step 2b: Dictionary table - alleles (Allele type only)
     -- Uses temp_ctxvar_expression for full expression set (spdi + hgvs + gnomad)
     -------------------------------------------------------------------------
     SET dict_allele_query = REPLACE("""
@@ -291,6 +293,7 @@ BEGIN
           vrs.in.variation_id
         FROM `{S}.gks_vrs` vrs
         WHERE vrs.out.id IS NOT NULL
+          AND vrs.out.type = 'Allele'
       )
       SELECT
         vrs.id as key,
@@ -300,8 +303,6 @@ BEGIN
           vrs.digest,
           exp.name,
           vrs.state,
-          vrs.copies,
-          vrs.copyChange,
           exp.expressions,
           FORMAT('#/location/%s', vrs.location.id) as location
         )), remove_empty => TRUE) as value
@@ -309,12 +310,61 @@ BEGIN
         SELECT DISTINCT out.*
         FROM `{S}.gks_vrs`
         WHERE out.id IS NOT NULL
+          AND out.type = 'Allele'
       ) vrs
       LEFT JOIN allele_to_variation atv ON atv.allele_id = vrs.id
       LEFT JOIN {P}.temp_ctxvar_expression exp ON exp.variation_id = atv.variation_id
     """, '{S}', rec.schema_name);
     SET dict_allele_query = REPLACE(dict_allele_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE dict_allele_query;
+
+    -------------------------------------------------------------------------
+    -- Step 2c: Dictionary table - copy number counts (CopyNumberCount type only)
+    -------------------------------------------------------------------------
+    SET dict_copy_number_count_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_copy_number_count`
+      AS
+      SELECT
+        vrs.id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          vrs.id,
+          vrs.type,
+          vrs.digest,
+          vrs.copies,
+          FORMAT('#/location/%s', vrs.location.id) as location
+        )), remove_empty => TRUE) as value
+      FROM (
+        SELECT DISTINCT out.*
+        FROM `{S}.gks_vrs`
+        WHERE out.id IS NOT NULL
+          AND out.type = 'CopyNumberCount'
+      ) vrs
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE dict_copy_number_count_query;
+
+    -------------------------------------------------------------------------
+    -- Step 2d: Dictionary table - copy number changes (CopyNumberChange type only)
+    -------------------------------------------------------------------------
+    SET dict_copy_number_change_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_copy_number_change`
+      AS
+      SELECT
+        vrs.id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          vrs.id,
+          vrs.type,
+          vrs.digest,
+          vrs.copyChange,
+          FORMAT('#/location/%s', vrs.location.id) as location
+        )), remove_empty => TRUE) as value
+      FROM (
+        SELECT DISTINCT out.*
+        FROM `{S}.gks_vrs`
+        WHERE out.id IS NOT NULL
+          AND out.type = 'CopyNumberChange'
+      ) vrs
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE dict_copy_number_change_query;
 
     -------------------------------------------------------------------------
     -- Step 3: Contextual variants with VRS type mapping
@@ -331,7 +381,7 @@ BEGIN
           WHEN 'Allele' THEN 'CanonicalAllele'
           WHEN 'CopyNumberChange' THEN 'CategoricalCnvChange'
           WHEN 'CopyNumberCount' THEN 'CategoricalCnvCount'
-          ELSE 'Non-Constrained'
+          ELSE 'Undefined'
           END as catvar_type,
           vrs.in.name,
           vrs.out.*
