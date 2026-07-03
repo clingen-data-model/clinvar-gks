@@ -700,7 +700,7 @@ BEGIN
           ) as primaryCoding
         ) as strength,
         scv.direction,
-        scv.submission_level_label as confidence,
+        STRUCT('Confidence' AS conceptType, scv.submission_level_label AS name) as confidence,
         scv.classification_comment as description,
         [
           STRUCT(
