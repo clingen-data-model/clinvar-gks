@@ -117,7 +117,7 @@
          "additionalProperties": false
       },
       "ExtensionCategoricalVariationType": {
-         "description": "The Cat-VRS category assigned to this variation: `CanonicalAllele`, `CategoricalCnvChange`,  `CategoricalCnvCount`, or `Non-Constrained`. Determines which constraint types are generated.",
+         "description": "The Cat-VRS category assigned to this variation: `CanonicalAllele`, `CategoricalCnvChange`,  `CategoricalCnvCount`, or `Undefined`. Determines which constraint types are generated.",
          "protectedClassOf": "ClinvarCategoricalVariant",
          "type": "object",
          "maturity": "draft",
@@ -133,9 +133,9 @@
                   "CanonicalAllele",
                   "CategoricalCnvChange",
                   "CategoricalCnvCount",
-                  "Non-Constrained"
+                  "Undefined"
                ],
-               "description": "The type of categorical variant. It must be one of the following: `CanonicalAllele`, `CategoricalCnvChange`, `CategoricalCnvCount`, or `Non-Constrained`."
+               "description": "The type of categorical variant. It must be one of the following: `CanonicalAllele`, `CategoricalCnvChange`, `CategoricalCnvCount`, or `Undefined`."
             }
          },
          "required": [],
