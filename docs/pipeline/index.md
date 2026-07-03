@@ -34,20 +34,20 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
                │
 ┌──────────────▼───────────────┐
 │ 5. SCV Statements            │  gks_scv_statement_proc
-│    Build SCV records,        │  → gks_scv_statement_pre table
+│    Build SCV records,        │  → gks_dict_scv table
 │    propositions & statements │
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
 │ 6. VCV Statements            │  gks_vcv_proc +
 │    Aggregate SCVs into       │  gks_vcv_statement_proc
-│    variant-level statements  │  → gks_vcv_statement_pre table
+│    variant-level statements  │  → gks_dict_vcv table
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
 │ 7. RCV Statements            │  gks_rcv_proc +
 │    Aggregate SCVs into       │  gks_rcv_statement_proc
-│    condition-level statements│  → gks_rcv_statement_pre table
+│    condition-level statements│  → gks_dict_rcv table
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐

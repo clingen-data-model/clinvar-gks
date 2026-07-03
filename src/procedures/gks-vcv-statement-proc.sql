@@ -63,7 +63,7 @@ BEGIN
           ) AS name
         ) AS strength,
 
-        sl.label AS confidence,
+        STRUCT('Confidence' AS conceptType, sl.label AS name) AS confidence,
 
         STRUCT(
           'Classification' AS conceptType,
@@ -123,7 +123,7 @@ BEGIN
           END AS name
         ) AS strength,
 
-        sl.label AS confidence,
+        STRUCT('Confidence' AS conceptType, sl.label AS name) AS confidence,
 
         STRUCT(
           'Classification' AS conceptType,
@@ -188,7 +188,7 @@ BEGIN
           END AS name
         ) AS strength,
 
-        agg.contributing_submission_level_label AS confidence,
+        STRUCT('Confidence' AS conceptType, agg.contributing_submission_level_label AS name) AS confidence,
 
         STRUCT(
           'Classification' AS conceptType,
@@ -392,7 +392,7 @@ BEGIN
     -- FINAL: VCV statement pre (all statement layers)
     -------------------------------------------------------------------------
     SET query_vcv_pre = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_vcv_statement_pre` AS
+      CREATE OR REPLACE TABLE `{S}.gks_dict_vcv` AS
       SELECT * FROM `{P}.temp_vcv_agg_contribution_statements`
       UNION ALL
       SELECT * FROM `{P}.temp_vcv_classification_statements`

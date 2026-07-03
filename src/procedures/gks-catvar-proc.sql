@@ -5,6 +5,8 @@ BEGIN
   DECLARE dict_seqref_query STRING;
   DECLARE dict_location_query STRING;
   DECLARE dict_allele_query STRING;
+  DECLARE dict_copy_number_count_query STRING;
+  DECLARE dict_copy_number_change_query STRING;
   DECLARE temp_ctxvar_expr_query STRING;
   DECLARE temp_ctxvar_query STRING;
   DECLARE temp_catvar_ext_query STRING;
@@ -279,7 +281,7 @@ BEGIN
     EXECUTE IMMEDIATE temp_ctxvar_expr_query;
 
     -------------------------------------------------------------------------
-    -- Step 2b: Dictionary table - alleles (global, keyed by VRS allele id)
+    -- Step 2b: Dictionary table - alleles (Allele type only)
     -- Uses temp_ctxvar_expression for full expression set (spdi + hgvs + gnomad)
     -------------------------------------------------------------------------
     SET dict_allele_query = REPLACE("""
@@ -291,6 +293,7 @@ BEGIN
           vrs.in.variation_id
         FROM `{S}.gks_vrs` vrs
         WHERE vrs.out.id IS NOT NULL
+          AND vrs.out.type = 'Allele'
       )
       SELECT
         vrs.id as key,
@@ -300,8 +303,6 @@ BEGIN
           vrs.digest,
           exp.name,
           vrs.state,
-          vrs.copies,
-          vrs.copyChange,
           exp.expressions,
           FORMAT('#/location/%s', vrs.location.id) as location
         )), remove_empty => TRUE) as value
@@ -309,12 +310,61 @@ BEGIN
         SELECT DISTINCT out.*
         FROM `{S}.gks_vrs`
         WHERE out.id IS NOT NULL
+          AND out.type = 'Allele'
       ) vrs
       LEFT JOIN allele_to_variation atv ON atv.allele_id = vrs.id
       LEFT JOIN {P}.temp_ctxvar_expression exp ON exp.variation_id = atv.variation_id
     """, '{S}', rec.schema_name);
     SET dict_allele_query = REPLACE(dict_allele_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE dict_allele_query;
+
+    -------------------------------------------------------------------------
+    -- Step 2c: Dictionary table - copy number counts (CopyNumberCount type only)
+    -------------------------------------------------------------------------
+    SET dict_copy_number_count_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_copy_number_count`
+      AS
+      SELECT
+        vrs.id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          vrs.id,
+          vrs.type,
+          vrs.digest,
+          vrs.copies,
+          FORMAT('#/location/%s', vrs.location.id) as location
+        )), remove_empty => TRUE) as value
+      FROM (
+        SELECT DISTINCT out.*
+        FROM `{S}.gks_vrs`
+        WHERE out.id IS NOT NULL
+          AND out.type = 'CopyNumberCount'
+      ) vrs
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE dict_copy_number_count_query;
+
+    -------------------------------------------------------------------------
+    -- Step 2d: Dictionary table - copy number changes (CopyNumberChange type only)
+    -------------------------------------------------------------------------
+    SET dict_copy_number_change_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_copy_number_change`
+      AS
+      SELECT
+        vrs.id as key,
+        JSON_STRIP_NULLS(TO_JSON(STRUCT(
+          vrs.id,
+          vrs.type,
+          vrs.digest,
+          vrs.copyChange,
+          FORMAT('#/location/%s', vrs.location.id) as location
+        )), remove_empty => TRUE) as value
+      FROM (
+        SELECT DISTINCT out.*
+        FROM `{S}.gks_vrs`
+        WHERE out.id IS NOT NULL
+          AND out.type = 'CopyNumberChange'
+      ) vrs
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE dict_copy_number_change_query;
 
     -------------------------------------------------------------------------
     -- Step 3: Contextual variants with VRS type mapping
@@ -331,7 +381,7 @@ BEGIN
           WHEN 'Allele' THEN 'CanonicalAllele'
           WHEN 'CopyNumberChange' THEN 'CategoricalCnvChange'
           WHEN 'CopyNumberCount' THEN 'CategoricalCnvCount'
-          ELSE 'Non-Constrained'
+          ELSE 'Undefined'
           END as catvar_type,
           vrs.in.name,
           vrs.out.*
@@ -622,7 +672,7 @@ BEGIN
     EXECUTE IMMEDIATE temp_catvar_ext_query;
 
     -------------------------------------------------------------------------
-    -- Step 4b: Dictionary table - genes (global, keyed by ncbigene:{id})
+    -- Step 4b: Dictionary table - genes (MappableConcept, keyed by ncbigene:{id})
     -------------------------------------------------------------------------
     SET dict_gene_query = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_dict_gene`
@@ -630,21 +680,38 @@ BEGIN
       SELECT
         FORMAT('ncbigene:%s', g.id) as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          g.id as entrez_gene_id,
-          g.hgnc_id,
-          g.symbol,
+          FORMAT('ncbigene:%s', g.id) as id,
+          'gene' as conceptType,
+          g.symbol as name,
+          STRUCT(
+            g.id as code,
+            g.symbol as name,
+            'https://www.ncbi.nlm.nih.gov/gene/' as system,
+            [
+              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
+              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
+            ] as iris
+          ) as primaryCoding,
           IF(
             g.hgnc_id is null,
+            null,
             [
-              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
-              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
-            ],
-            [
-              FORMAT('https://identifiers.org/%s', LOWER(g.hgnc_id)),
-              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
-              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
+              STRUCT(
+                STRUCT(
+                  REGEXP_EXTRACT(g.hgnc_id, r'\\d+') as code,
+                  'https://www.genenames.org' as system,
+                  [
+                    FORMAT('https://identifiers.org/hgnc:%s', REGEXP_EXTRACT(g.hgnc_id, r'\\d+')),
+                    FORMAT(
+                      'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/%s',
+                      REGEXP_EXTRACT(g.hgnc_id, r'\\d+')
+                    )
+                  ] as iris
+                ) as coding,
+                'exactMatch' as relation
+              )
             ]
-          ) as iris
+          ) as mappings
         )), remove_empty => TRUE) as value
       FROM `{S}.gene` g
       WHERE g.id IN (SELECT DISTINCT gene_id FROM `{S}.gene_association`)
@@ -662,7 +729,7 @@ BEGIN
         SELECT
           vrs.in.variation_id,
           STRUCT(
-            'ClinVar' as system,
+            'https://www.ncbi.nlm.nih.gov/clinvar/' as system,
             vrs.in.variation_id as code,
             [FORMAT('https://identifiers.org/clinvar:%s',vrs.in.variation_id)] as iris
           ) as coding,
@@ -675,7 +742,7 @@ BEGIN
         SELECT
           x.variation_id,
           STRUCT(
-            x.db as system,
+            COALESCE(iri.system, x.db) as system,
             x.id as code,
             CASE LOWER(x.db)
             WHEN 'clinvar' THEN [FORMAT('https://identifiers.org/clinvar:%s',x.id)]
@@ -695,6 +762,12 @@ BEGIN
           ELSE 'relatedMatch'
           END as relation
         FROM `{S}.variation_xref` x
+        LEFT JOIN (
+          SELECT LOWER(db) as db_lower, ANY_VALUE(system) as system
+          FROM `clinvar_ingest.gks_xref_iri_templates`
+          WHERE category IN ('Variation', 'Tests')
+          GROUP BY LOWER(db)
+        ) iri ON iri.db_lower = LOWER(x.db)
       )
       SELECT
         m.variation_id,
@@ -747,7 +820,7 @@ BEGIN
             STRUCT(
               STRUCT(
                 'transcribed_to' as code,
-                'http://www.sequenceontology.org' as system,
+                'http://www.sequenceontology.org/' as system,
                 ['http://www.sequenceontology.org/browser/current_release/term/transcribed_to'] as iris
               ) as primaryCoding
             )
@@ -840,7 +913,12 @@ BEGIN
         cv.type,
         cv.name,
         cvc.constraints,
-        IF(cv.vrs_allele_id IS NOT NULL, [FORMAT('#/allele/%s', cv.vrs_allele_id)], []) as members,
+        CASE cv.catvar_type
+          WHEN 'CanonicalAllele' THEN [FORMAT('#/allele/%s', cv.vrs_allele_id)]
+          WHEN 'CategoricalCnvCount' THEN [FORMAT('#/copyNumberCount/%s', cv.vrs_allele_id)]
+          WHEN 'CategoricalCnvChange' THEN [FORMAT('#/copyNumberChange/%s', cv.vrs_allele_id)]
+          ELSE []
+        END as members,
         cvext.extensions,
         vm.mappings
       FROM catvar cv
