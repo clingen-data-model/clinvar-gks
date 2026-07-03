@@ -729,7 +729,7 @@ BEGIN
         SELECT
           vrs.in.variation_id,
           STRUCT(
-            'ClinVar' as system,
+            'https://www.ncbi.nlm.nih.gov/clinvar/' as system,
             vrs.in.variation_id as code,
             [FORMAT('https://identifiers.org/clinvar:%s',vrs.in.variation_id)] as iris
           ) as coding,
@@ -742,7 +742,7 @@ BEGIN
         SELECT
           x.variation_id,
           STRUCT(
-            x.db as system,
+            COALESCE(iri.system, x.db) as system,
             x.id as code,
             CASE LOWER(x.db)
             WHEN 'clinvar' THEN [FORMAT('https://identifiers.org/clinvar:%s',x.id)]
@@ -762,6 +762,12 @@ BEGIN
           ELSE 'relatedMatch'
           END as relation
         FROM `{S}.variation_xref` x
+        LEFT JOIN (
+          SELECT LOWER(db) as db_lower, ANY_VALUE(system) as system
+          FROM `clinvar_ingest.gks_xref_iri_templates`
+          WHERE category IN ('Variation', 'Tests')
+          GROUP BY LOWER(db)
+        ) iri ON iri.db_lower = LOWER(x.db)
       )
       SELECT
         m.variation_id,
@@ -814,7 +820,7 @@ BEGIN
             STRUCT(
               STRUCT(
                 'transcribed_to' as code,
-                'http://www.sequenceontology.org' as system,
+                'http://www.sequenceontology.org/' as system,
                 ['http://www.sequenceontology.org/browser/current_release/term/transcribed_to'] as iris
               ) as primaryCoding
             )
