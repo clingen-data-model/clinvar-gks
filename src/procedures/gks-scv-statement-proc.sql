@@ -12,6 +12,7 @@ BEGIN
   DECLARE query_scv_method STRING;
   DECLARE dict_submitter_query STRING;
   DECLARE dict_proposition_query STRING;
+  DECLARE dict_evidence_line_query STRING;
   DECLARE query_statement_scv_pre STRING;
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
@@ -630,6 +631,79 @@ BEGIN
     EXECUTE IMMEDIATE dict_proposition_query;
 
     ---------------------------------------------------------------------------
+    -- Step 7f: Dictionary table - evidence lines
+    -- Extracts the hasEvidenceLines data (previously inlined in Step 8)
+    -- into a standalone dict table keyed by evidence line id.
+    ---------------------------------------------------------------------------
+    SET dict_evidence_line_query = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_evidence_line`
+      AS
+      WITH null_templates AS (
+        SELECT
+          STRUCT(
+            CAST(null as STRING) as conditionSet,
+            CAST(null as STRING) as condition,
+            CAST(null as STRING) as multiple_condition_explanation,
+            [STRUCT(
+              CAST(null as STRING) AS id,
+              CAST(null as STRING) AS name,
+              CAST(null as STRING) AS type,
+              CAST(null as STRING) AS medgen_id,
+              [STRUCT(CAST(null as STRING) AS code, CAST(null as STRING) AS system)] AS xrefs,
+              STRUCT(CAST(null as STRING) AS id, CAST(null as STRING) AS name) AS original_medgen_match,
+              CAST(null as STRING) AS direct_match,
+              CAST(null as STRING) AS normalized_match,
+              CAST(null as STRING) AS normalized_resolution,
+              STRUCT(CAST(null as STRING) AS type, CAST(null as STRING) AS ref, CAST(null as STRING) AS value) AS mapping
+            )] as concepts
+          ) AS null_cs,
+          STRUCT(
+            CAST(null as STRING) AS conditionSet,
+            CAST(null as STRING) AS condition,
+            CAST(null as STRING) AS id,
+            CAST(null as STRING) AS name,
+            CAST(null as STRING) AS type,
+            CAST(null as STRING) AS medgen_id,
+            [STRUCT(CAST(null as STRING) AS code, CAST(null as STRING) AS system)] AS xrefs,
+            STRUCT(CAST(null as STRING) AS id, CAST(null as STRING) AS name) AS original_medgen_match,
+            CAST(null as STRING) AS direct_match,
+            CAST(null as STRING) AS normalized_match,
+            CAST(null as STRING) AS normalized_resolution,
+            STRUCT(CAST(null as STRING) AS type, CAST(null as STRING) AS ref, CAST(null as STRING) AS value) AS mapping
+          ) AS null_c
+      )
+      SELECT
+        FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
+        'EvidenceLine' as type,
+        FORMAT('#/proposition/%s', stp.id) as proposition,
+        'supports' as directionOfEvidenceProvided,
+        CASE scv.classification_code
+          WHEN 'tier 1' THEN
+            STRUCT('Outcome' as conceptType, 'Level A/B' as name)
+          WHEN 'tier 2' THEN
+            STRUCT('Outcome' as conceptType, 'Level C/D' as name)
+          ELSE
+            STRUCT('Outcome' as conceptType, scv.classification_code as name)
+        END as evidenceOutcome,
+        IF(
+          spc.extensions.value_submitted_condition_set IS NOT NULL,
+          [STRUCT('submittedConditionSet' as name, spc.extensions.value_submitted_condition_set, nt.null_c as value_submitted_condition)],
+          IF(spc.extensions.value_submitted_condition IS NOT NULL,
+            [STRUCT('submittedCondition' as name, nt.null_cs as value_submitted_condition_set, spc.extensions.value_submitted_condition as value_submitted_condition)],
+            []
+          )
+        ) as extensions
+      FROM {P}.temp_gks_scv scv
+      CROSS JOIN null_templates nt
+      JOIN `{S}.gks_scv_condition_sets` spc
+      ON spc.scv_id = scv.id
+      JOIN {P}.temp_gks_scv_target_proposition stp
+      ON stp.scv_id = scv.id
+    """, '{S}', rec.schema_name);
+    SET dict_evidence_line_query = REPLACE(dict_evidence_line_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE dict_evidence_line_query;
+
+    ---------------------------------------------------------------------------
     -- Step 8: Create statement SCV pre table (simple join, no UNNEST)
     ---------------------------------------------------------------------------
     SET query_statement_scv_pre = REPLACE("""
@@ -723,6 +797,8 @@ BEGIN
           )
         ] as contributions,
         sm.specifiedBy,
+        sm.specifiedBy.methodType as methodType,
+        sm.specifiedBy.name as methodName,
         scit.reportedIn,
         ARRAY_CONCAT(
           [
@@ -756,30 +832,7 @@ BEGIN
         ) as extensions,
         IF (
           stp.id is not null,
-          [
-            STRUCT(
-              FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
-              'EvidenceLine' as type,
-              FORMAT('#/proposition/%s', stp.id) as proposition,
-              'supports' as directionOfEvidenceProvided,
-              CASE scv.classification_code
-                WHEN 'tier 1' THEN
-                  STRUCT('Outcome' as conceptType, 'Level A/B' as name)
-                WHEN 'tier 2' THEN
-                  STRUCT('Outcome' as conceptType, 'Level C/D' as name)
-                ELSE
-                  STRUCT('Outcome' as conceptType, scv.classification_code as name)
-              END as evidenceOutcome,
-              IF(
-                spc.extensions.value_submitted_condition_set IS NOT NULL,
-                [STRUCT('submittedConditionSet' as name, spc.extensions.value_submitted_condition_set, nt.null_c as value_submitted_condition)],
-                IF(spc.extensions.value_submitted_condition IS NOT NULL,
-                  [STRUCT('submittedCondition' as name, nt.null_cs as value_submitted_condition_set, spc.extensions.value_submitted_condition as value_submitted_condition)],
-                  []
-                )
-              ) as extensions
-            )
-          ],
+          [FORMAT('#/evidenceLine/clinvar.submission:%s.%i', scv.id, scv.version)],
           []
         ) as hasEvidenceLines
       FROM {P}.temp_gks_scv scv
