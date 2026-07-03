@@ -633,7 +633,7 @@ BEGIN
     -- Step 8: Create statement SCV pre table (simple join, no UNNEST)
     ---------------------------------------------------------------------------
     SET query_statement_scv_pre = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_scv_statement_pre`
+      CREATE OR REPLACE TABLE `{S}.gks_dict_scv`
       as
       WITH null_templates AS (
         SELECT

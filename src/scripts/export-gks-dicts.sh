@@ -33,8 +33,8 @@ extract gks_dict_gene gene.ndjson.gz
 extract gks_dict_variation variation.ndjson.gz
 
 # Condition dictionaries (from gks_scv_condition_proc)
-extract gks_traits condition.ndjson.gz
-extract gks_trait_sets conditionSet.ndjson.gz
+extract gks_dict_condition condition.ndjson.gz
+extract gks_dict_condition_set conditionSet.ndjson.gz
 
 # SCV dictionaries (from gks_scv_statement_proc)
 extract gks_dict_submitter submitter.ndjson.gz
@@ -45,8 +45,8 @@ extract gks_dict_vcv_proposition vcv_proposition.ndjson.gz
 extract gks_dict_rcv_proposition rcv_proposition.ndjson.gz
 
 # Statement outputs
-extract gks_scv_statement_pre scv.ndjson.gz
-extract gks_vcv_statement_pre vcv.ndjson.gz
-extract gks_rcv_statement_pre rcv.ndjson.gz
+extract gks_dict_scv scv.ndjson.gz
+extract gks_dict_vcv vcv.ndjson.gz
+extract gks_dict_rcv rcv.ndjson.gz
 
 echo "Done. Files exported to ${GCS_PATH}/"

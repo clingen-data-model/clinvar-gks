@@ -146,7 +146,7 @@ Step-specific differences:
 
 ### Base Grouping PRE
 
-Inlines SCV evidence items from `gks_scv_statement_pre`. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification`, `confidence`, `direction`, `strength`, and `proposition` fields are carried forward unchanged from the BASE.
+Inlines SCV evidence items from `gks_dict_scv`. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification`, `confidence`, `direction`, `strength`, and `proposition` fields are carried forward unchanged from the BASE.
 
 **Output:** `temp_rcv_grouping_base_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -172,7 +172,7 @@ Inlines evidence items from either Tier Grouping PRE or Base Grouping PRE (using
 
 Selects all Aggregate Contribution PRE statements into the final output table.
 
-**Output:** `gks_rcv_statement_pre` -- the complete set of RCV statements ready for JSON serialization by `gks_json_proc`. <span class="role-badge badge-pipeline">Pipeline table</span>
+**Output:** `gks_dict_rcv` -- the complete set of RCV statements ready for JSON serialization by `gks_json_proc`. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ---
 
@@ -191,7 +191,7 @@ Selects all Aggregate Contribution PRE statements into the final output table.
 | `temp_rcv_grouping_base_pre` | `gks_rcv_statement_proc` | PRE statement structures with inlined SCV evidence | <span class="role-badge badge-internal">Internal</span> |
 | `temp_rcv_grouping_tier_pre` | `gks_rcv_statement_proc` | PRE statement structures with inlined Base Grouping evidence (somatic only) | <span class="role-badge badge-internal">Internal</span> |
 | `temp_rcv_agg_contribution_pre` | `gks_rcv_statement_proc` | PRE statement structures with inlined evidence for Aggregate Contribution | <span class="role-badge badge-internal">Internal</span> |
-| `gks_rcv_statement_pre` | `gks_rcv_statement_proc` | Final RCV statements from Aggregate Contribution PRE | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `gks_dict_rcv` | `gks_rcv_statement_proc` | Final RCV statements from Aggregate Contribution PRE | <span class="role-badge badge-pipeline">Pipeline table</span> |
 
 ---
 
@@ -208,7 +208,7 @@ Selects all Aggregate Contribution PRE statements into the final output table.
 
 - **Aggregation Tables**: `gks_rcv_grouping_base_agg`, `gks_rcv_grouping_tier_agg`, `gks_rcv_aggregate_contribution`
 - **Condition Tables**: `rcv_mapping`, `gks_scv_condition_sets`
-- **Statement Tables**: `gks_scv_statement_pre`
+- **Statement Tables**: `gks_dict_scv`
 - **Source Tables**: `scv_summary`
 - **Lookup Tables**: `clinvar_statement_categories`, `clinvar_proposition_types`, `submission_level`, `clinvar_clinsig_types`
 - **UDFs**: `clinvar_ingest.schema_on`, `clinvar_ingest.cleanup_temp_tables`
