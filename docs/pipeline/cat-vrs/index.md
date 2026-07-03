@@ -56,7 +56,7 @@ Joins VRS output with expressions and sequence locations to build contextual var
 | `Allele` | `CanonicalAllele` |
 | `CopyNumberChange` | `CategoricalCnvChange` |
 | `CopyNumberCount` | `CategoricalCnvCount` |
-| Other | `Non-Constrained` |
+| Other | `Undefined` |
 
 **Output:** `temp_ctxvar` — one row per distinct contextual variant. <span class="role-badge badge-internal">Internal</span>
 
