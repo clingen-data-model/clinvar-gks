@@ -672,7 +672,7 @@ BEGIN
     EXECUTE IMMEDIATE temp_catvar_ext_query;
 
     -------------------------------------------------------------------------
-    -- Step 4b: Dictionary table - genes (global, keyed by ncbigene:{id})
+    -- Step 4b: Dictionary table - genes (MappableConcept, keyed by ncbigene:{id})
     -------------------------------------------------------------------------
     SET dict_gene_query = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_dict_gene`
@@ -680,21 +680,38 @@ BEGIN
       SELECT
         FORMAT('ncbigene:%s', g.id) as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          g.id as entrez_gene_id,
-          g.hgnc_id,
-          g.symbol,
+          FORMAT('ncbigene:%s', g.id) as id,
+          'gene' as conceptType,
+          g.symbol as name,
+          STRUCT(
+            g.id as code,
+            g.symbol as name,
+            'https://www.ncbi.nlm.nih.gov/gene/' as system,
+            [
+              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
+              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
+            ] as iris
+          ) as primaryCoding,
           IF(
             g.hgnc_id is null,
+            null,
             [
-              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
-              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
-            ],
-            [
-              FORMAT('https://identifiers.org/%s', LOWER(g.hgnc_id)),
-              FORMAT('https://identifiers.org/ncbigene:%s', g.id),
-              FORMAT('https://www.ncbi.nlm.nih.gov/gene/%s', g.id)
+              STRUCT(
+                STRUCT(
+                  REGEXP_EXTRACT(g.hgnc_id, r'\\d+') as code,
+                  'https://www.genenames.org' as system,
+                  [
+                    FORMAT('https://identifiers.org/hgnc:%s', REGEXP_EXTRACT(g.hgnc_id, r'\\d+')),
+                    FORMAT(
+                      'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/%s',
+                      REGEXP_EXTRACT(g.hgnc_id, r'\\d+')
+                    )
+                  ] as iris
+                ) as coding,
+                'exactMatch' as relation
+              )
             ]
-          ) as iris
+          ) as mappings
         )), remove_empty => TRUE) as value
       FROM `{S}.gene` g
       WHERE g.id IN (SELECT DISTINCT gene_id FROM `{S}.gene_association`)
