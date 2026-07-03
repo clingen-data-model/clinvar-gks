@@ -96,7 +96,7 @@ BEGIN
           ) AS name
         ) AS strength,
 
-        sl.label AS confidence,
+        STRUCT('Confidence' AS conceptType, sl.label AS name) AS confidence,
 
         -- classification: single MappableConcept for all submission levels
         STRUCT(
@@ -157,7 +157,7 @@ BEGIN
           END AS name
         ) AS strength,
 
-        sl.label AS confidence,
+        STRUCT('Confidence' AS conceptType, sl.label AS name) AS confidence,
 
         STRUCT(
           'Classification' AS conceptType,
@@ -222,7 +222,7 @@ BEGIN
           END AS name
         ) AS strength,
 
-        agg.contributing_submission_level_label AS confidence,
+        STRUCT('Confidence' AS conceptType, agg.contributing_submission_level_label AS name) AS confidence,
 
         STRUCT(
           'Classification' AS conceptType,
@@ -429,7 +429,7 @@ BEGIN
     -- FINAL: RCV statement pre (all statement layers)
     -------------------------------------------------------------------------
     SET query_rcv_pre = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_rcv_statement_pre` AS
+      CREATE OR REPLACE TABLE `{S}.gks_dict_rcv` AS
       SELECT * FROM `{P}.temp_rcv_agg_contribution_statements`
       UNION ALL
       SELECT * FROM `{P}.temp_rcv_classification_statements`

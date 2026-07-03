@@ -26,7 +26,7 @@ The pipeline is implemented across two stored procedures plus a JSON serializati
 ## Pipeline Flow
 
 ```text
-SCV Statements (gks_scv_statement_pre)
+SCV Statements (gks_dict_scv)
          |
          v
 +---------------------------------+
@@ -50,7 +50,7 @@ SCV Statements (gks_scv_statement_pre)
 +--------------+------------------+
                |
                v
-        gks_rcv_statement_pre
+        gks_dict_rcv
 ```
 
 ---
