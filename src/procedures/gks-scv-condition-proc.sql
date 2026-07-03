@@ -91,6 +91,9 @@ BEGIN
         t.id as trait_id,
         t.type as conceptType,
         t.name,
+        ANY_VALUE(
+          IF(ARRAY_LENGTH(t.synonyms) > 0, t.synonyms, null)
+        ) as aliases,
         ARRAY_AGG(
           IF(
             tx.mapping.system = 'medgen',
@@ -106,18 +109,7 @@ BEGIN
             null
           )
           IGNORE NULLS
-        ) as mappings,
-        -- Use ANY_VALUE because we cannot GROUP BY the synonyms array
-        ANY_VALUE(
-          IF(
-            ARRAY_LENGTH(t.synonyms) > 0, 
-            [STRUCT(
-              'aliases' AS name,
-              t.synonyms AS value_array_string
-            )],
-            NULL 
-          )
-        ) AS extensions
+        ) as mappings
       FROM traits t
       LEFT JOIN trait_xrefs tx
       ON
