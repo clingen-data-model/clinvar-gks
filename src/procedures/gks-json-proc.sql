@@ -54,7 +54,7 @@ BEGIN
               TO_JSON(tv),
             remove_empty => TRUE
             ) AS rec
-          FROM `{S}.gks_scv_statement_pre` AS tv
+          FROM `{S}.gks_dict_scv` AS tv
         )
         SELECT
           json_draft.id,
@@ -80,7 +80,7 @@ BEGIN
               TO_JSON(tv),
             remove_empty => TRUE
             ) AS rec
-          FROM `{S}.gks_vcv_statement_pre` AS tv
+          FROM `{S}.gks_dict_vcv` AS tv
         )
         SELECT
           json_draft.id,
@@ -106,7 +106,7 @@ BEGIN
               TO_JSON(tv),
             remove_empty => TRUE
             ) AS rec
-          FROM `{S}.gks_rcv_statement_pre` AS tv
+          FROM `{S}.gks_dict_rcv` AS tv
         )
         SELECT
           json_draft.id,

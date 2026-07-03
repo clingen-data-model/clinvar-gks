@@ -156,7 +156,7 @@ Inlines evidence items from either Grouping Tier PRE or Grouping Base PRE (using
 
 Selects all Aggregate Contribution PRE statements into the final output table.
 
-**Output:** `gks_vcv_statement_pre` -- the complete set of VCV statements ready for JSON serialization by `gks_json_proc`. <span class="role-badge badge-pipeline">Pipeline table</span>
+**Output:** `gks_dict_vcv` -- the complete set of VCV statements ready for JSON serialization by `gks_json_proc`. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ---
 
@@ -174,7 +174,7 @@ Selects all Aggregate Contribution PRE statements into the final output table.
 | `temp_vcv_grouping_base_pre` | `gks_vcv_statement_proc` | PRE statement structures with inlined SCV evidence | <span class="role-badge badge-internal">Internal</span> |
 | `temp_vcv_grouping_tier_pre` | `gks_vcv_statement_proc` | PRE statement structures with inlined Base Grouping evidence | <span class="role-badge badge-internal">Internal</span> |
 | `temp_vcv_agg_contribution_pre` | `gks_vcv_statement_proc` | PRE statement structures with inlined Tier/Base Grouping evidence | <span class="role-badge badge-internal">Internal</span> |
-| `gks_vcv_statement_pre` | `gks_vcv_statement_proc` | Final VCV statements from Aggregate Contribution PRE | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `gks_dict_vcv` | `gks_vcv_statement_proc` | Final VCV statements from Aggregate Contribution PRE | <span class="role-badge badge-pipeline">Pipeline table</span> |
 
 ---
 
@@ -190,7 +190,7 @@ Selects all Aggregate Contribution PRE statements into the final output table.
 ### gks_vcv_statement_proc
 
 - **Aggregation Tables**: `gks_vcv_grouping_base_agg`, `gks_vcv_grouping_tier_agg`, `gks_vcv_aggregate_contribution`
-- **Statement Tables**: `gks_scv_statement_pre`, `gks_scv_condition_sets`
+- **Statement Tables**: `gks_dict_scv`, `gks_scv_condition_sets`
 - **Source Tables**: `scv_summary`
 - **Lookup Tables**: `clinvar_statement_categories`, `clinvar_proposition_types`, `submission_level`, `clinvar_clinsig_types`
 - **UDFs**: `clinvar_ingest.schema_on`, `clinvar_ingest.cleanup_temp_tables`
