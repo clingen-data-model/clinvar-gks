@@ -19,7 +19,7 @@ Extensions on the top-level `CategoricalVariant` record.
 
 | Extension | Type | Description |
 |---|---|---|
-| `categoricalVariationType` | string | The Cat-VRS category assigned to this variation: `CanonicalAllele`, `CategoricalCnvChange`, `CategoricalCnvCount`, or `Non-Constrained`. Determines which constraint types are generated. |
+| `categoricalVariationType` | string | The Cat-VRS category assigned to this variation: `CanonicalAllele`, `CategoricalCnvChange`, `CategoricalCnvCount`, or `Undefined`. Determines which constraint types are generated. |
 | `definingVrsVariationType` | string | The VRS class assigned during variation identity processing (e.g., `Allele`, `CopyNumberChange`, `CopyNumberCount`, `Not Available`). Reflects the upstream classification used to route the variant through VRS processing. |
 | `clinvarVariationType` | string | The variation type as reported by ClinVar (e.g., `Deletion`, `single nucleotide variant`, `Duplication`, `Indel`). Present when ClinVar provides a variation type. |
 | `clinvarSubclassType` | string | The variation subclass as reported by ClinVar (e.g., `SimpleAllele`, `Haplotype`, `CompoundHeterozygote`). Present when ClinVar provides a subclass type. |
@@ -92,7 +92,7 @@ When VRS processing issues are present, the error extensions appear alongside th
 
 ```json
 [
-  { "name": "categoricalVariationType", "value": "Non-Constrained" },
+  { "name": "categoricalVariationType", "value": "Undefined" },
   { "name": "definingVrsVariationType", "value": "Not Available" },
   { "name": "clinvarVariationType", "value": "Microsatellite" },
   { "name": "clinvarSubclassType", "value": "SimpleAllele" },
