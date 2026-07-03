@@ -907,7 +907,12 @@ BEGIN
         cv.type,
         cv.name,
         cvc.constraints,
-        IF(cv.vrs_allele_id IS NOT NULL, [FORMAT('#/allele/%s', cv.vrs_allele_id)], []) as members,
+        CASE cv.catvar_type
+          WHEN 'CanonicalAllele' THEN [FORMAT('#/allele/%s', cv.vrs_allele_id)]
+          WHEN 'CategoricalCnvCount' THEN [FORMAT('#/copyNumberCount/%s', cv.vrs_allele_id)]
+          WHEN 'CategoricalCnvChange' THEN [FORMAT('#/copyNumberChange/%s', cv.vrs_allele_id)]
+          ELSE []
+        END as members,
         cvext.extensions,
         vm.mappings
       FROM catvar cv
