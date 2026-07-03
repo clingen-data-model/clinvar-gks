@@ -32,15 +32,15 @@ The script exports the following tables:
 | `gks_dict_allele` | `allele-*.ndjson.gz` |
 | `gks_dict_gene` | `gene-*.ndjson.gz` |
 | `gks_dict_variation` | `variation-*.ndjson.gz` |
-| `gks_traits` | `condition-*.ndjson.gz` |
-| `gks_trait_sets` | `conditionSet-*.ndjson.gz` |
+| `gks_dict_condition` | `condition-*.ndjson.gz` |
+| `gks_dict_condition_set` | `conditionSet-*.ndjson.gz` |
 | `gks_dict_submitter` | `submitter-*.ndjson.gz` |
 | `gks_dict_proposition` | `proposition-*.ndjson.gz` |
 | `gks_dict_vcv_proposition` | `vcv_proposition-*.ndjson.gz` |
 | `gks_dict_rcv_proposition` | `rcv_proposition-*.ndjson.gz` |
-| `gks_scv_statement_pre` | `scv-*.ndjson.gz` |
-| `gks_vcv_statement_pre` | `vcv-*.ndjson.gz` |
-| `gks_rcv_statement_pre` | `rcv-*.ndjson.gz` |
+| `gks_dict_scv` | `scv-*.ndjson.gz` |
+| `gks_dict_vcv` | `vcv-*.ndjson.gz` |
+| `gks_dict_rcv` | `rcv-*.ndjson.gz` |
 
 BigQuery `EXTRACT` shards large tables across multiple files automatically. The assembly step recombines them.
 

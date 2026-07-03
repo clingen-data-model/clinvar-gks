@@ -1,11 +1,11 @@
 
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_scv_condition_proc`(on_date DATE, debug BOOL)
 BEGIN
-  DECLARE query_gks_traits STRING;
+  DECLARE query_gks_dict_condition STRING;
   DECLARE temp_rcv_mapping_traits_query STRING;
   DECLARE temp_gks_scv_trait_sets_query STRING;
   DECLARE temp_all_rcv_traits_query STRING;
-  DECLARE query_gks_trait_sets STRING;
+  DECLARE query_gks_dict_condition_set STRING;
   DECLARE temp_scv_trait_name_xrefs_query STRING;
   DECLARE temp_scv_trait_mappings_query STRING;  
   DECLARE temp_scv_trait_assignment_stage1_query STRING;
@@ -34,12 +34,12 @@ BEGIN
     END IF;
 
     -- -----------------------------------------------------------------------
-    -- STEP 1: Create gks_traits (canonical trait representations)
+    -- STEP 1: Create gks_dict_condition (canonical trait representations)
     -- All traits with clinvar.trait:{id} identifiers, with primaryCoding,
     -- mappings (deduplicated by code+system), and aliases extension.
     -- -----------------------------------------------------------------------
-    SET query_gks_traits = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_traits` AS
+    SET query_gks_dict_condition = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_condition` AS
       WITH traits AS (
         select distinct
           t.id,
@@ -127,7 +127,7 @@ BEGIN
         t.type,
         t.name
     """, '{S}', rec.schema_name);
-    EXECUTE IMMEDIATE query_gks_traits;
+    EXECUTE IMMEDIATE query_gks_dict_condition;
 
     -- -----------------------------------------------------------------------
     -- STEP 2: Create temp_rcv_mapping_traits
@@ -280,12 +280,12 @@ BEGIN
     EXECUTE IMMEDIATE temp_all_rcv_traits_query;
 
     -- -----------------------------------------------------------------------
-    -- STEP 5: Create gks_trait_sets (persistent baseline traitset representations)
+    -- STEP 5: Create gks_dict_condition_set (persistent baseline traitset representations)
     -- Unique trait sets with clinvar.traitset:{id} identifiers, referencing
     -- member traits via #/traits/clinvar.trait:{trait_id}.
     -- -----------------------------------------------------------------------
-    SET query_gks_trait_sets = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_trait_sets` AS
+    SET query_gks_dict_condition_set = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_condition_set` AS
       WITH trait_set_traits AS (
         SELECT DISTINCT
           art.rcv_trait_set_id,
@@ -317,8 +317,8 @@ BEGIN
         ON art.rcv_trait_set_id = tsi.rcv_trait_set_id AND art.rcv_trait_id = tst.rcv_trait_id
       GROUP BY tsi.rcv_trait_set_id, tsi.rcv_trait_set_type
     """, '{S}', rec.schema_name);
-    SET query_gks_trait_sets = REPLACE(query_gks_trait_sets, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-    EXECUTE IMMEDIATE query_gks_trait_sets;
+    SET query_gks_dict_condition_set = REPLACE(query_gks_dict_condition_set, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    EXECUTE IMMEDIATE query_gks_dict_condition_set;
   
     -- -----------------------------------------------------------------------
     -- STEP 6: Create temp_scv_trait_name_xrefs
@@ -390,7 +390,7 @@ BEGIN
             stx.id
         )
         -- this statement is responsible for preserving the submitted xref id and db values as well as normalizing
-        --  them so they best match the intended values and subsequently give the best opportunity to match with the gks_traits.xrefs.
+        --  them so they best match the intended values and subsequently give the best opportunity to match with the gks_dict_condition.xrefs.
         SELECT
           stx.id as cat_id,
           stx.type as cat_type,
@@ -639,7 +639,7 @@ BEGIN
             gt.primaryCoding.code AS mapped_medgen_id,
             IF(gt.trait_id IS NOT NULL, 'trait-mapping-then-submitted-medgen-id', NULL) AS mapped_resolution_type
           FROM medgen_scv_traits mst
-          LEFT JOIN `{S}.gks_traits` gt
+          LEFT JOIN `{S}.gks_dict_condition` gt
             ON gt.primaryCoding.code = mst.lookup_medgen_id
         ),
         -- Pivot each SCV trait's match key into a row with priority
@@ -924,7 +924,7 @@ BEGIN
             ) AS condition_struct
           FROM 
             {P}.temp_scv_trait_assignment_stage2 scm
-          LEFT JOIN `{S}.gks_trait_sets` 
+          LEFT JOIN `{S}.gks_dict_condition_set` 
             ts ON FORMAT('clinvar.traitset:%s', scm.rcv_trait_set_id) = ts.id
         ),
         multi_sets AS (

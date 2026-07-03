@@ -507,7 +507,7 @@ BEGIN
     -- FINAL: VCV statement pre (all Aggregate Contribution statements)
     -------------------------------------------------------------------------
     SET query_vcv_pre = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_vcv_statement_pre` AS
+      CREATE OR REPLACE TABLE `{S}.gks_dict_vcv` AS
       SELECT * FROM `{P}.temp_vcv_agg_contribution_pre`
     """, '{S}', rec.schema_name);
     SET query_vcv_pre = REPLACE(query_vcv_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));

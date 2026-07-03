@@ -544,7 +544,7 @@ BEGIN
     -- FINAL: RCV statement pre (all Aggregate Contribution statements)
     -------------------------------------------------------------------------
     SET query_rcv_pre = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_rcv_statement_pre` AS
+      CREATE OR REPLACE TABLE `{S}.gks_dict_rcv` AS
       SELECT * FROM `{P}.temp_rcv_agg_contribution_pre`
     """, '{S}', rec.schema_name);
     SET query_rcv_pre = REPLACE(query_rcv_pre, '{P}', IF(debug, rec.schema_name, '_SESSION'));
