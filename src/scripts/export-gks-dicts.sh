@@ -29,6 +29,8 @@ extract() {
 extract gks_dict_sequence_reference sequenceReference.ndjson.gz
 extract gks_dict_location location.ndjson.gz
 extract gks_dict_allele allele.ndjson.gz
+extract gks_dict_copy_number_count copyNumberCount.ndjson.gz
+extract gks_dict_copy_number_change copyNumberChange.ndjson.gz
 extract gks_dict_gene gene.ndjson.gz
 extract gks_dict_variation variation.ndjson.gz
 
@@ -39,10 +41,13 @@ extract gks_dict_condition_set conditionSet.ndjson.gz
 # SCV dictionaries (from gks_scv_statement_proc)
 extract gks_dict_submitter submitter.ndjson.gz
 extract gks_dict_proposition proposition.ndjson.gz
+extract gks_dict_evidence_line evidenceLine.ndjson.gz
 
-# VCV/RCV proposition dictionaries
+# VCV/RCV proposition and evidence line dictionaries
 extract gks_dict_vcv_proposition vcv_proposition.ndjson.gz
+extract gks_dict_vcv_evidence_line vcv_evidenceLine.ndjson.gz
 extract gks_dict_rcv_proposition rcv_proposition.ndjson.gz
+extract gks_dict_rcv_evidence_line rcv_evidenceLine.ndjson.gz
 
 # Statement outputs
 extract gks_dict_scv scv.ndjson.gz
