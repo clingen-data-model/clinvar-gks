@@ -93,7 +93,7 @@ BEGIN
         t.name,
         ARRAY_AGG(
           IF(
-            tx.mapping.system = 'medgen',
+            tx.mapping.system = 'https://www.ncbi.nlm.nih.gov/medgen/',
             tx.mapping,
             null
           )
@@ -101,7 +101,7 @@ BEGIN
         )[SAFE_OFFSET(0)] as primaryCoding,
         ARRAY_AGG(
           IF(
-            tx.mapping.system <> 'medgen',
+            tx.mapping.system <> 'https://www.ncbi.nlm.nih.gov/medgen/',
             STRUCT(tx.mapping as coding, 'relatedMatch' as relation),
             null
           )
