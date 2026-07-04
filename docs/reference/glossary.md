@@ -233,7 +233,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 ## Output Format
 
 **Bundle**
-:   A single JSON file containing all data for a ClinVar release, organized as named sections at the root level. Each section is a keyed collection of objects of the same class, where the key is the object's unique identifier. Objects reference each other using `#/` JSON pointer strings.
+:   A JSON file containing all data for a ClinVar release, organized as named sections at the root level. Each section is a keyed collection of objects of the same class, where the key is the object's unique identifier. Objects reference each other using `#/` JSON pointer strings. Typed Parquet files (one per bundle section) are also produced during assembly for analytical workloads.
 
 **Bundle Section**
 :   A named top-level key in the bundle file (e.g., `variation`, `scv`, `proposition`) containing a keyed collection of objects.

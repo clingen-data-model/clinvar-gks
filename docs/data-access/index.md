@@ -1,6 +1,6 @@
 # Data Access
 
-ClinVar-GKS releases are published weekly as a single gzip-compressed JSON file, synchronized with each ClinVar XML release. The files are freely available for download from Cloudflare R2 object storage with no authentication required and no egress fees.
+ClinVar-GKS releases are published weekly, synchronized with each ClinVar XML release. Each release includes a gzip-compressed JSON bundle and optionally typed Parquet files (one per bundle section). The files are freely available for download from Cloudflare R2 object storage with no authentication required and no egress fees.
 
 ---
 
@@ -18,7 +18,7 @@ Download the most recent weekly release:
 curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz
 ```
 
-Each release file is a single JSON object containing all bundle sections — variations, statements, propositions, conditions, and supporting reference data. See [Output Format](../output-reference/overview.md) for the complete structure.
+Each JSON release file is a single JSON object containing all bundle sections — variations, statements, propositions, conditions, and supporting reference data. Typed Parquet files are also available for analytical workloads. See [Output Format](../output-reference/overview.md) for the complete structure.
 
 ---
 
@@ -61,7 +61,7 @@ Pipeline changes that affect the structure or content of the output are document
 
 ## File Format
 
-Each release is a **gzip-compressed JSON file** (`.json.gz`). The decompressed content is a single JSON object with bundle sections at the root level:
+The primary release format is a **gzip-compressed JSON file** (`.json.gz`). Typed Parquet files (one per bundle section) are also produced during assembly for analytical use. The decompressed JSON content is a single JSON object with bundle sections at the root level:
 
 ```json
 {

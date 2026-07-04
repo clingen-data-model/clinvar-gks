@@ -123,7 +123,7 @@ The SCV statements for this variant reference it via `#/variation/clinvar:10` in
 
 ## Data Access
 
-ClinVar-GKS releases are published weekly as a single gzip-compressed JSON file, synchronized with each ClinVar XML release. The files are freely available for download from Cloudflare R2 object storage with no authentication required and no egress fees.
+ClinVar-GKS releases are published weekly, synchronized with each ClinVar XML release. Each release includes a gzip-compressed JSON bundle and typed Parquet files (one per bundle section). The files are freely available for download from Cloudflare R2 object storage with no authentication required and no egress fees.
 
 ### Release Schedule
 

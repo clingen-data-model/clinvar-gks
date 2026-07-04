@@ -2,7 +2,7 @@
 
 ## Download the Latest Release
 
-The latest ClinVar-GKS release is available as a single compressed JSON file:
+The latest ClinVar-GKS release is available as a compressed JSON file (with Parquet files also available for analytical use):
 
 ```text
 https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/

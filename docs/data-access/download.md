@@ -2,7 +2,7 @@
 
 ClinVar-GKS releases are hosted on Cloudflare R2 object storage. All downloads are free with no authentication required and no egress fees.
 
-Each release is a single gzip-compressed JSON bundle file containing all variations, statements, propositions, conditions, and supporting reference data for a ClinVar release.
+Each release includes a gzip-compressed JSON bundle file containing all variations, statements, propositions, conditions, and supporting reference data for a ClinVar release. Typed Parquet files (one per bundle section) are also available for analytical workloads.
 
 ---
 
