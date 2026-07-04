@@ -78,7 +78,7 @@ classDiagram
             classification : MappableConcept
             strength : MappableConcept
             direction : string
-            confidence : string
+            confidence : Concept
             contributions : Contribution[1..*]
             specifiedBy : Method[0..1]
             reportedIn : Publication[0..*]
@@ -90,7 +90,7 @@ classDiagram
             classification : MappableConcept
             strength : MappableConcept
             direction : string
-            confidence : string
+            confidence : Concept
             extensions : Extension[0..*]
         }
         class RcvStatement {
@@ -99,7 +99,7 @@ classDiagram
             classification : MappableConcept
             strength : MappableConcept
             direction : string
-            confidence : string
+            confidence : Concept
             extensions : Extension[0..*]
         }
         class EvidenceLine {

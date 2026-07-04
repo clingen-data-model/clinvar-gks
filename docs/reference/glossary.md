@@ -135,7 +135,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 ## Classification Terms
 
 **Confidence**
-:   Statement-level attribute indicating the submission level label for the contributing submission (e.g., `"expert panel"`, `"assertion criteria provided"`). Present on both SCV and aggregate (VCV/RCV) statements.
+:   Statement-level attribute indicating the submission level. A Concept struct with `conceptType: "Confidence"` and `name` set to the submission level label (e.g., `"criteria provided"`, `"expert panel"`). Present on both SCV and aggregate (VCV/RCV) statements.
 
 **Direction**
 :   Whether evidence supports or disputes a proposition. Values: `supports`, `disputes`, `neutral`. On aggregate statements, derived from the classification label (multi-SCV) or passed through from the contributing SCV (single-SCV).
