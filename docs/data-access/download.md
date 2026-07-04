@@ -10,22 +10,33 @@ Each release includes a gzip-compressed JSON bundle file containing all variatio
 
 Download the most recent releases using the stable URLs below:
 
-| Release | Download | Description |
+| Format | Download | Description |
 | --- | --- | --- |
-| Monthly | [clinvar-gks_00-latest.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz) | Latest monthly release (first weekly of each month) |
-| Weekly | [clinvar-gks_00-latest_weekly.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz) | Latest weekly release |
+| Monthly (JSON) | [clinvar-gks_00-latest.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz) | Latest monthly release (first weekly of each month) |
+| Weekly (JSON) | [clinvar-gks_00-latest_weekly.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz) | Latest weekly release |
+| Parquet | [datasets/parquet/](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/) | Typed Parquet files (one per bundle section), always latest release |
 
 ### Download with curl
 
 ```bash
-# Latest monthly release
+# Latest monthly release (JSON bundle)
 curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz
 
-# Latest weekly release
+# Latest weekly release (JSON bundle)
 curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz
 
 # Decompress
 gunzip clinvar-gks_00-latest.json.gz
+
+# Download a single Parquet section (e.g., SCV statements)
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet
+
+# Download all Parquet files
+for section in sequenceReference location allele copyNumberCount copyNumberChange \
+               gene variation condition conditionSet submitter proposition \
+               evidenceLine scv vcv rcv; do
+  curl -O "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/${section}.parquet"
+done
 ```
 
 ### Download with Python
@@ -57,6 +68,12 @@ urllib.request.urlretrieve(
 urllib.request.urlretrieve(
     f"{BASE}/archives/2025/clinvar-gks_2025-03.json.gz",
     "clinvar-gks_2025-03.json.gz"
+)
+
+# Download a Parquet section
+urllib.request.urlretrieve(
+    f"{BASE}/datasets/parquet/scv.parquet",
+    "scv.parquet"
 )
 ```
 
@@ -245,9 +262,38 @@ datasets/weekly/
   clinvar-gks_00-latest_weekly.json.gz  latest weekly release (stable URL)
   clinvar-gks_YYYY-MMDD.json.gz         weekly releases (current month only)
 
+datasets/parquet/
+  {section}.parquet                     typed Parquet files (always latest release)
+
 archives/{YYYY}/
   clinvar-gks_YYYY-MM.json.gz           monthly releases from prior years
 ```
+
+---
+
+## Parquet Files
+
+Typed Parquet files are produced alongside each release and uploaded to `datasets/parquet/`. Unlike JSON bundles, Parquet files are not versioned — they are overwritten on each release and always represent the latest data. Each file contains one bundle section with two columns: `key` (the object identifier) and `value` (the full JSON object as a string).
+
+Available Parquet files (15 sections):
+
+| File | Description |
+| --- | --- |
+| `sequenceReference.parquet` | NCBI RefSeq sequence references |
+| `location.parquet` | VRS SequenceLocation records |
+| `allele.parquet` | VRS Allele records |
+| `copyNumberCount.parquet` | VRS CopyNumberCount records |
+| `copyNumberChange.parquet` | VRS CopyNumberChange records |
+| `gene.parquet` | Gene records (MappableConcept with NCBI Gene / HGNC codings) |
+| `variation.parquet` | CategoricalVariant records (Cat-VRS) |
+| `condition.parquet` | Condition records (traits) |
+| `conditionSet.parquet` | ConditionSet records (trait sets) |
+| `submitter.parquet` | Submitter organization records |
+| `proposition.parquet` | Proposition records (SCV, VCV, and RCV) |
+| `evidenceLine.parquet` | Evidence line records (SCV, VCV, and RCV) |
+| `scv.parquet` | SCV statement records |
+| `vcv.parquet` | VCV aggregate statement records |
+| `rcv.parquet` | RCV aggregate statement records |
 
 ---
 
