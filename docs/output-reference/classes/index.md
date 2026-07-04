@@ -131,8 +131,8 @@ classDiagram
 
     %% Evidence lines
     ScvStatement "1" --> "0..*" EvidenceLine : hasEvidenceLines
-    VcvStatement "1" --> "1..*" EvidenceLine : evidenceLines
-    RcvStatement "1" --> "1..*" EvidenceLine : evidenceLines
+    VcvStatement "1" --> "1..*" EvidenceLine : hasEvidenceLines
+    RcvStatement "1" --> "1..*" EvidenceLine : hasEvidenceLines
 
     %% Evidence items (what evidence lines reference)
     EvidenceLine "*" --> "1..*" ScvStatement : evidenceItems

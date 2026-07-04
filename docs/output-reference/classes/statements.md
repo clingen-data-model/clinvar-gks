@@ -29,7 +29,7 @@ Each SCV represents one submitter's assertion about a variant-condition relation
 | `clinvarScvId` | SCV accession without version (e.g., `SCV001571657`) |
 | `clinvarScvVersion` | Version number |
 | `clinvarScvReviewStatus` | Review status (e.g., `criteria provided, single submitter`) |
-| `submissionLevel` | Aggregation tier: `PG`, `EP`, `CP`, or `NOCP` |
+| `submissionLevel` | Aggregation tier: `PG`, `EP`, `CP`, `NOCP`, `NOCL`, or `FLAG` |
 | `submittedScvLocalKey` | Submitter's internal identifier |
 | `submittedScvClassification` | Original classification before normalization (when different) |
 | `submittedCondition` | Submitter's original condition for single-condition submissions |
@@ -47,7 +47,7 @@ Aggregate statements group SCV submissions into a hierarchical evidence structur
 2. **Priority layer** — groups by review status tier (practice guideline > expert panel > criteria provided > no criteria provided)
 3. **Aggregate contribution layer** — references individual SCV submissions as evidence items
 
-Each layer is connected via `hasEvidenceLines`, with nested sub-statements carrying the same proposition type as the parent but scoped to a specific tier or classification group.
+Each layer is connected via `hasEvidenceLines` — an array of `#/evidenceLine/` JSON pointer references to evidence line records stored in the `evidenceLine` bundle section. Sub-statements carry the same proposition type as the parent but are scoped to a specific tier or classification group.
 
 ### Aggregate Extensions
 

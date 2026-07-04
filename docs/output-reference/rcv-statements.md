@@ -26,7 +26,7 @@ Each record is a `Statement` with the following top-level fields:
 | `direction` | string | `supports`, `disputes`, or `neutral` — derived from the aggregate classification |
 | `confidence` | object | Concept struct with `conceptType: "Confidence"` and `name` (the submission level label, e.g., `criteria provided`, `expert panel`) |
 | `extensions` | array of [Extension](#extensions) | ClinVar-specific aggregate metadata (0..*). See [Extensions](#extensions) |
-| `evidenceLines` | array | Contributing and non-contributing evidence. See [Evidence Lines](#evidence-lines) |
+| `hasEvidenceLines` | array | `#/evidenceLine/` references to contributing and non-contributing evidence. See [Evidence Lines](#evidence-lines) |
 
 </div>
 
@@ -72,24 +72,18 @@ The key difference from VCV propositions: the `objectCondition` references the s
 
 ## Evidence Lines
 
-Evidence lines work identically to VCV. Each evidence line references contributing or non-contributing submissions:
+Evidence lines work identically to VCV. The `hasEvidenceLines` field contains `#/evidenceLine/` JSON pointer references to evidence line records in the `evidenceLine` bundle section:
 
 ```json
 {
-  "type": "EvidenceLine",
-  "directionOfEvidenceProvided": "supports",
-  "strengthOfEvidenceProvided": {
-    "conceptType": "Strength",
-    "name": "Contributing"
-  },
-  "evidenceItems": [
-    "#/scv/clinvar.submission:SCV001571657.2",
-    "#/scv/clinvar.submission:SCV000329383.7"
+  "hasEvidenceLines": [
+    "#/evidenceLine/RCV001781420.1-G-PATH-CP.contributing",
+    "#/evidenceLine/RCV001781420.1-G-PATH-CP.non-contributing"
   ]
 }
 ```
 
-At the Classification layer, evidence items reference SCVs via `#/scv/`. At the Priority and Aggregate Contribution layers, evidence items reference lower-level RCV groupings via `#/rcv/`.
+At the Classification layer, evidence items within the referenced records point to SCVs via `#/scv/`. At the Priority and Aggregate Contribution layers, evidence items reference lower-level RCV groupings via `#/rcv/`.
 
 See [VCV Evidence Lines](vcv-statements.md#evidence-lines) for the full field reference.
 
