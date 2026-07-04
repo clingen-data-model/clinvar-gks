@@ -47,12 +47,14 @@ fi
 
 # --- Parse flags ---
 DRY_RUN=false
+PARQUET_DIR=""
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=true ;;
+    --parquet-dir=*) PARQUET_DIR="${arg#--parquet-dir=}" ;;
     *)
       echo "ERROR: Unknown argument '${arg}'"
-      echo "Usage: $0 <export_date> <dataset_version> [--dry-run]"
+      echo "Usage: $0 <export_date> <dataset_version> <bundle_file> [--dry-run] [--parquet-dir=DIR]"
       exit 1
       ;;
   esac
@@ -210,6 +212,29 @@ cleanup_prior_weeklies() {
   done
 }
 
+upload_parquet() {
+  local parquet_dir="$1"
+  if [[ -z "$parquet_dir" || ! -d "$parquet_dir" ]]; then
+    echo "  (no Parquet dir found, skipping)"
+    return
+  fi
+
+  echo "--- Uploading Parquet section files ---"
+  local uploaded=0
+  for parquet_file in "${parquet_dir}"/*.parquet; do
+    [[ -f "$parquet_file" ]] || continue
+    local section
+    section="$(basename "${parquet_file}" .parquet)"
+    echo "  datasets/parquet/${section}.parquet"
+    r2_upload \
+      "${parquet_file}" \
+      "datasets/parquet/${section}.parquet" \
+      "application/vnd.apache.parquet"
+    (( uploaded++ )) || true
+  done
+  echo "  ${uploaded} Parquet files uploaded."
+}
+
 promote_monthly() {
   # Promote the last weekly from the prior month as that month's monthly release.
   # Must run before archive_yearly (so promoted monthly gets swept to archives on year rollover).
@@ -218,7 +243,7 @@ promote_monthly() {
     return
   fi
 
-  local last="${EXISTING_WEEKLY_FILES[-1]}"
+  local last="${EXISTING_WEEKLY_FILES[${#EXISTING_WEEKLY_FILES[@]}-1]}"
   PREV_MONTHLY_FILE="clinvar-gks_${YEAR}-${MM}.json.gz"
 
   echo "--- Month rollover: promoting last prior weekly to monthly ---"
@@ -282,6 +307,12 @@ r2_upload "${LOCAL_TMP}" "datasets/weekly/${WEEKLY_FILE}"
 
 echo "  Updating datasets/weekly/${LATEST_WEEKLY}"
 r2_upload "${LOCAL_TMP}" "datasets/weekly/${LATEST_WEEKLY}"
+
+# --- Upload Parquet files (if generated) ---
+if [[ -n "${PARQUET_DIR}" ]]; then
+  echo ""
+  upload_parquet "${PARQUET_DIR}"
+fi
 
 # --- Upload README.txt ---
 README_SRC="${SCRIPT_DIR}/r2-readme.txt"
@@ -376,5 +407,8 @@ echo "  Latest:  ${R2_PUBLIC_URL}/datasets/weekly/${LATEST_WEEKLY}"
 if $IS_NEW_MONTH && [[ -n "${PREV_MONTHLY_FILE:-}" ]]; then
   echo "  Monthly: ${R2_PUBLIC_URL}/datasets/${PREV_MONTHLY_FILE}"
   echo "  Latest:  ${R2_PUBLIC_URL}/datasets/${LATEST_MONTHLY}"
+fi
+if [[ -n "${PARQUET_DIR}" && -d "${PARQUET_DIR}" ]]; then
+  echo "  Parquet: ${R2_PUBLIC_URL}/datasets/parquet/"
 fi
 echo "  Index:   ${R2_PUBLIC_URL}/index.json"
