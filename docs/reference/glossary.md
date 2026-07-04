@@ -97,7 +97,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   A single concept with `conceptType`, `name`, and optional `extension` array. Used for single-label classifications and single-condition `objectCondition` values.
 
 **ConceptSet**
-:   A structured group of concepts with `membershipOperator`. Used for multi-condition `objectCondition` values (OR operator for VCV with multiple distinct conditions; AND operator for RCV conditionSets).
+:   A structured group of concepts with `concepts` array, `conceptSetType`, and `membershipOperator`. Used for multi-condition `objectCondition` values (OR operator for VCV with multiple distinct conditions; AND operator for RCV conditionSets).
 
 **Constraint** (Cat-VRS)
 :   Defining relationship between a categorical variant and its VRS representation. Types: DefiningAlleleConstraint, DefiningLocationConstraint, CopyChangeConstraint, CopyCountConstraint.
