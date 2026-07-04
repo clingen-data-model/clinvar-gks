@@ -121,7 +121,7 @@ The `extension` array is only present when the classification is conflicting.
 
 These statement-level fields are derived from the aggregate classification label:
 
-- **`confidence`** — the submission level label (e.g., `"expert panel"`, `"assertion criteria provided"`). Set on every VCV statement.
+- **`confidence`** — a Concept struct with `conceptType: "Confidence"` and `name` set to the submission level label (e.g., `"criteria provided"`, `"expert panel"`). Set on every VCV statement.
 - **`direction`** — derived from the classification label. For single-SCV aggregations, passed through directly from the contributing SCV. For multi-SCV aggregations, derived from the winning label.
 - **`strength`** — derived from the classification label. For single-SCV aggregations, passed through directly from the contributing SCV. For multi-SCV aggregations, derived from the winning label. No hardcoded `"definitive"` value.
 

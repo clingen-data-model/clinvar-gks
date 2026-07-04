@@ -24,7 +24,7 @@ Each record is a `Statement` with the following top-level fields:
 | `classification` | object | MappableConcept — the aggregate classification label. See [Classification](#classification) |
 | `strength` | object | MappableConcept — the aggregate evidence strength |
 | `direction` | string | `supports`, `disputes`, or `neutral` — derived from the aggregate classification |
-| `confidence` | string | Submission level label (e.g., `criteria provided`, `expert panel`) |
+| `confidence` | object | Concept struct with `conceptType: "Confidence"` and `name` (the submission level label, e.g., `criteria provided`, `expert panel`) |
 | `extensions` | array of [Extension](#extensions) | ClinVar-specific aggregate metadata (0..*). See [Extensions](#extensions) |
 | `evidenceLines` | array | Contributing and non-contributing evidence. See [Evidence Lines](#evidence-lines) |
 
