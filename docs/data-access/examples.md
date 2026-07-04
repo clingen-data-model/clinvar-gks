@@ -67,8 +67,8 @@ Examples of aggregate classification `Statement` records produced by rolling up 
 
 | File | VCV | Prop Types | Tiers | Description |
 | --- | --- | --- | --- | --- |
-| [VCV000012582.63-S-sci.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-sci.jsonc) | VCV000012582 | Somatic Clinical Impact | Tier I, Tier II | Aggregate Contribution → Tier Grouping → Base Grouping hierarchy. Tier Grouping combining Tier I and Tier II. CP contributing, NOCP non-contributing |
-| [VCV000012582.63-S-onco.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-onco.jsonc) | VCV000012582 | Oncogenicity | N/A | Somatic oncogenicity aggregate (Aggregate Contribution → Base Grouping). Single CP submission, no tier grouping |
+| [VCV000012582.63-S-sci.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-sci.jsonc) | VCV000012582 | Somatic Clinical Impact | Tier I, Tier II | Aggregate Contribution → Priority Grouping → Classification Grouping hierarchy. Priority Grouping combining Tier I and Tier II. CP contributing, NOCP non-contributing |
+| [VCV000012582.63-S-onco.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV000012582.63-S-onco.jsonc) | VCV000012582 | Oncogenicity | N/A | Somatic oncogenicity aggregate (Aggregate Contribution → Classification Grouping). Single CP submission, no priority grouping |
 
 ### PG and EP (single-submission levels)
 
@@ -76,7 +76,7 @@ PG (practice guideline) and EP (reviewed by expert panel) submissions are aggreg
 
 | File | VCV | Submission Level | Description |
 | --- | --- | --- | --- |
-| [VCV-PG-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-PG-example.jsonc) | VCV999999999 (hypothetical) | PG | Base Grouping statement for a practice guideline submission. Uses standard `classification` and `objectClassification` |
-| [VCV-EP-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-EP-example.jsonc) | VCV999999999 (hypothetical) | EP | Base Grouping statement for an expert panel submission. Same form as PG; only the submission level qualifier and review status differ |
+| [VCV-PG-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-PG-example.jsonc) | VCV999999999 (hypothetical) | PG | Classification Grouping statement for a practice guideline submission. Uses standard `classification` and `objectClassification` |
+| [VCV-EP-example.jsonc](https://github.com/clingen-data-model/clinvar-gks/blob/main/examples/vcv/VCV-EP-example.jsonc) | VCV999999999 (hypothetical) | EP | Classification Grouping statement for an expert panel submission. Same form as PG; only the submission level qualifier and review status differ |
 
 See [VCV Statements output reference](../output-reference/vcv-statements.md) for field documentation.

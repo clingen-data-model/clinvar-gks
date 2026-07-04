@@ -64,7 +64,7 @@ ID format: `{VCV}.{ver}-{GROUP}-{PROP}-{LEVEL}[-{TIER}]` (all tier components ar
 
 ### Step 3: Build gks_vcv_grouping_tier_agg
 
-Aggregates Base Grouping records by tier within each submission level. This layer applies only to somatic clinical impact (sci) propositions where `tier_grouping IS NOT NULL`.
+Aggregates Classification Grouping records by tier within each submission level. This layer applies only to somatic clinical impact (sci) propositions where `tier_grouping IS NOT NULL`.
 
 The step ranks tiers by `tier_priority` (ascending) and SCV count (descending), then designates:
 
@@ -82,7 +82,7 @@ ID format: `{VCV}.{ver}-{GROUP}-{PROP}-{LEVEL}` (uppercase components)
 
 ### Step 4: Build gks_vcv_aggregate_contribution
 
-Submission-level aggregator using winner-takes-all ranking. Takes a unified input of Tier Grouping output (tiered records) combined with non-tiered Base Grouping records (`tier_grouping IS NULL`).
+Submission-level aggregator using winner-takes-all ranking. Takes a unified input of Priority Grouping output (tiered records) combined with non-tiered Classification Grouping records (`tier_grouping IS NULL`).
 
 Records are ranked by submission level within each `(variation_id, statement_group, prop_type)` group using the explicit ordering `PG=6, EP=5, CP=4, NOCP=3, NOCL=2, FLAG=1`. The highest-ranked submission level becomes the contributing result; all others become non-contributing.
 
@@ -114,31 +114,31 @@ Each BASE section reads from the corresponding aggregation table and produces a 
 | `strength` | Derived from the classification label; passed through from the contributing SCV for single-SCV aggregations |
 | `proposition` | Contains `objectCondition` (the unique conditions from contributing SCVs — a single MappableConcept or an OR ConceptSet), the SCV-matching proposition type from `clinvar_proposition_types.gks_type`, the SCV-matching predicate from `clinvar_proposition_types.gks_predicate`, and `subjectVariant` reference |
 | `extensions` | Array with `clinvarReviewStatus` value |
-| `evidenceLines` | References to child layer IDs (SCV IDs for Base Grouping, contributing/non-contributing statement IDs for Tier Grouping and Aggregate Contribution) |
+| `hasEvidenceLines` | References to child layer IDs (SCV IDs for Classification Grouping, contributing/non-contributing statement IDs for Priority Grouping and Aggregate Contribution) |
 
 Step-specific differences:
 
-- **Base Grouping BASE** -- references SCV IDs directly in evidence lines; includes tier info in the proposition for tiered records
-- **Tier Grouping BASE** -- references Base Grouping IDs; somatic only; includes contributing and non-contributing evidence lines
-- **Aggregate Contribution BASE** -- references a single contributing child (from Tier Grouping or Base Grouping) plus non-contributing details
+- **Classification Grouping BASE** -- references SCV IDs directly in evidence lines; includes tier info in the proposition for tiered records
+- **Priority Grouping BASE** -- references Classification Grouping IDs; somatic only; includes contributing and non-contributing evidence lines
+- **Aggregate Contribution BASE** -- references a single contributing child (from Priority Grouping or Classification Grouping) plus non-contributing details
 
 **Output:** `temp_vcv_grouping_base_statements`, `temp_vcv_grouping_tier_statements`, `temp_vcv_agg_contribution_statements` -- one per step. <span class="role-badge badge-internal">Internal</span>
 
 ---
 
-### Grouping Base PRE
+### Classification Grouping PRE
 
-Inlines SCV evidence items into each Base Grouping BASE statement. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification`, `confidence`, `direction`, `strength`, and `proposition` fields are carried forward from the BASE statement unchanged.
+Inlines SCV evidence items into each Classification Grouping BASE statement. Evidence lines are rewritten to reference SCV IDs in `clinvar.submission:{scv_id}` format. The `classification`, `confidence`, `direction`, `strength`, and `proposition` fields are carried forward from the BASE statement unchanged.
 
 **Output:** `temp_vcv_grouping_base_pre` <span class="role-badge badge-internal">Internal</span>
 
 ---
 
-### Grouping Tier PRE
+### Priority Grouping PRE
 
-Inlines Grouping Base PRE evidence items into Tier Grouping statements. This step is somatic only. Classification, confidence, direction, strength, and proposition are passed through without modification.
+Inlines Classification Grouping PRE evidence items into Priority Grouping statements. This step is somatic only. Classification, confidence, direction, strength, and proposition are passed through without modification.
 
-Contributing and non-contributing evidence lines are rebuilt with the full inlined Grouping Base PRE statement structures.
+Contributing and non-contributing evidence lines are rebuilt with the full inlined Classification Grouping PRE statement structures.
 
 **Output:** `temp_vcv_grouping_tier_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -146,7 +146,7 @@ Contributing and non-contributing evidence lines are rebuilt with the full inlin
 
 ### Aggregate Contribution PRE
 
-Inlines evidence items from either Grouping Tier PRE or Grouping Base PRE (using COALESCE to check Tier Grouping first, then Base Grouping). Classification, confidence, direction, strength, and proposition on the Aggregate Contribution statement are taken directly from the Aggregate Contribution BASE row and are not modified at the PRE step.
+Inlines evidence items from either Priority Grouping PRE or Classification Grouping PRE (using COALESCE to check Priority Grouping first, then Classification Grouping). Classification, confidence, direction, strength, and proposition on the Aggregate Contribution statement are taken directly from the Aggregate Contribution BASE row and are not modified at the PRE step.
 
 **Output:** `temp_vcv_agg_contribution_pre` <span class="role-badge badge-internal">Internal</span>
 
@@ -165,15 +165,15 @@ Selects all Aggregate Contribution PRE statements into the final output table.
 | Table | Procedure | Description | Role |
 |---|---|---|---|
 | `temp_vcv_base_data` | `gks_vcv_proc` | Materialized SCV base data with submission level mappings | <span class="role-badge badge-internal">Internal</span> |
-| `gks_vcv_grouping_base_agg` | `gks_vcv_proc` | Base aggregation by variation + group + prop + level (+ tier) | <span class="role-badge badge-pipeline">Pipeline table</span> |
-| `gks_vcv_grouping_tier_agg` | `gks_vcv_proc` | Tier aggregation within submission level (somatic only) | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `gks_vcv_grouping_base_agg` | `gks_vcv_proc` | Classification grouping by variation + group + prop + level (+ tier) | <span class="role-badge badge-pipeline">Pipeline table</span> |
+| `gks_vcv_grouping_tier_agg` | `gks_vcv_proc` | Priority grouping within submission level (somatic only) | <span class="role-badge badge-pipeline">Pipeline table</span> |
 | `gks_vcv_aggregate_contribution` | `gks_vcv_proc` | Submission level aggregation with winner-takes-all | <span class="role-badge badge-pipeline">Pipeline table</span> |
-| `temp_vcv_grouping_base_statements` | `gks_vcv_statement_proc` | BASE statement structures for Base Grouping | <span class="role-badge badge-internal">Internal</span> |
-| `temp_vcv_grouping_tier_statements` | `gks_vcv_statement_proc` | BASE statement structures for Tier Grouping | <span class="role-badge badge-internal">Internal</span> |
+| `temp_vcv_grouping_base_statements` | `gks_vcv_statement_proc` | BASE statement structures for Classification Grouping | <span class="role-badge badge-internal">Internal</span> |
+| `temp_vcv_grouping_tier_statements` | `gks_vcv_statement_proc` | BASE statement structures for Priority Grouping | <span class="role-badge badge-internal">Internal</span> |
 | `temp_vcv_agg_contribution_statements` | `gks_vcv_statement_proc` | BASE statement structures for Aggregate Contribution | <span class="role-badge badge-internal">Internal</span> |
 | `temp_vcv_grouping_base_pre` | `gks_vcv_statement_proc` | PRE statement structures with inlined SCV evidence | <span class="role-badge badge-internal">Internal</span> |
-| `temp_vcv_grouping_tier_pre` | `gks_vcv_statement_proc` | PRE statement structures with inlined Base Grouping evidence | <span class="role-badge badge-internal">Internal</span> |
-| `temp_vcv_agg_contribution_pre` | `gks_vcv_statement_proc` | PRE statement structures with inlined Tier/Base Grouping evidence | <span class="role-badge badge-internal">Internal</span> |
+| `temp_vcv_grouping_tier_pre` | `gks_vcv_statement_proc` | PRE statement structures with inlined Classification Grouping evidence | <span class="role-badge badge-internal">Internal</span> |
+| `temp_vcv_agg_contribution_pre` | `gks_vcv_statement_proc` | PRE statement structures with inlined Priority/Classification Grouping evidence | <span class="role-badge badge-internal">Internal</span> |
 | `gks_dict_vcv` | `gks_vcv_statement_proc` | Final VCV statements from Aggregate Contribution PRE | <span class="role-badge badge-pipeline">Pipeline table</span> |
 
 ---
