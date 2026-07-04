@@ -37,10 +37,10 @@ The final query joins traits with their cross-references and aggregates into one
 
 - **`primaryCoding`** — the MedGen coding, selected as the first non-null MedGen xref. The MedGen coding includes the trait name in its `name` field
 - **`mappings`** — all non-MedGen codings wrapped with a `relatedMatch` relation
+- **`aliases`** — an array of alternate names/synonyms (present only when synonyms exist)
 - **`extensions`** — an array containing:
   - `clinvarTraitId` — the ClinVar trait ID
   - `clinvarTraitType` — the trait type (e.g., Disease, Finding, PhenotypeInstruction)
-  - `aliases` — comma-separated alternate names (included only when synonyms exist)
 
 **Output:** `temp_gks_trait` — one row per trait with structured codings, mappings, and extensions. <span class="role-badge badge-internal">Internal</span>
 
