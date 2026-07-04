@@ -75,6 +75,7 @@ else
 fi
 
 BUNDLE_FILE="/tmp/clinvar-gks-${EXPORT_DATE}.json.gz"
+PARQUET_DIR="/tmp/clinvar-gks-${EXPORT_DATE}-parquet"
 
 echo "=== ClinVar-GKS Release Pipeline ==="
 echo "  Release date:  ${EXPORT_DATE}"
@@ -82,6 +83,7 @@ echo "  Version:       ${DATASET_VERSION}"
 echo "  BQ dataset:    ${BQ_DATASET}"
 echo "  GCS dicts:     ${GCS_DICTS_PATH}/"
 echo "  Bundle:        ${BUNDLE_FILE}"
+echo "  Parquet dir:   ${PARQUET_DIR}"
 $DRY_RUN && echo "  Mode:          DRY RUN"
 $KEEP_SOURCE && echo "  Keep source:   YES"
 [[ "$START_STEP" -gt 1 ]] && echo "  Start step:    ${START_STEP}"
@@ -113,7 +115,7 @@ fi
 
 if [[ "$START_STEP" -le 2 ]]; then
   echo "=== Step 2/3: Assembling bundle ==="
-  ASSEMBLE_ARGS=("${GCS_DICTS_PATH}/" "${EXPORT_DATE}")
+  ASSEMBLE_ARGS=("${GCS_DICTS_PATH}/" "${EXPORT_DATE}" "--parquet-dir=${PARQUET_DIR}")
   if $KEEP_SOURCE; then
     ASSEMBLE_ARGS+=("--keep-source")
   fi
@@ -134,7 +136,7 @@ fi
 # =====================================================================
 
 echo "=== Step 3/3: Uploading to R2 ==="
-UPLOAD_ARGS=("${EXPORT_DATE}" "${DATASET_VERSION}" "${BUNDLE_FILE}")
+UPLOAD_ARGS=("${EXPORT_DATE}" "${DATASET_VERSION}" "${BUNDLE_FILE}" "--parquet-dir=${PARQUET_DIR}")
 if $DRY_RUN; then
   UPLOAD_ARGS+=("--dry-run")
 fi
@@ -144,4 +146,5 @@ fi
 # --- Cleanup local bundle ---
 if ! $DRY_RUN; then
   rm -f "${BUNDLE_FILE}"
+  rm -rf "${PARQUET_DIR}"
 fi
