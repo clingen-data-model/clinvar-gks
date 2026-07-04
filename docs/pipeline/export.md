@@ -30,14 +30,19 @@ The script exports the following tables:
 | `gks_dict_sequence_reference` | `sequenceReference-*.ndjson.gz` |
 | `gks_dict_location` | `location-*.ndjson.gz` |
 | `gks_dict_allele` | `allele-*.ndjson.gz` |
+| `gks_dict_copy_number_count` | `copyNumberCount-*.ndjson.gz` |
+| `gks_dict_copy_number_change` | `copyNumberChange-*.ndjson.gz` |
 | `gks_dict_gene` | `gene-*.ndjson.gz` |
 | `gks_dict_variation` | `variation-*.ndjson.gz` |
 | `gks_dict_condition` | `condition-*.ndjson.gz` |
 | `gks_dict_condition_set` | `conditionSet-*.ndjson.gz` |
 | `gks_dict_submitter` | `submitter-*.ndjson.gz` |
 | `gks_dict_proposition` | `proposition-*.ndjson.gz` |
+| `gks_dict_evidence_line` | `evidenceLine-*.ndjson.gz` |
 | `gks_dict_vcv_proposition` | `vcv_proposition-*.ndjson.gz` |
+| `gks_dict_vcv_evidence_line` | `vcv_evidenceLine-*.ndjson.gz` |
 | `gks_dict_rcv_proposition` | `rcv_proposition-*.ndjson.gz` |
+| `gks_dict_rcv_evidence_line` | `rcv_evidenceLine-*.ndjson.gz` |
 | `gks_dict_scv` | `scv-*.ndjson.gz` |
 | `gks_dict_vcv` | `vcv-*.ndjson.gz` |
 | `gks_dict_rcv` | `rcv-*.ndjson.gz` |
@@ -46,22 +51,52 @@ BigQuery `EXTRACT` shards large tables across multiple files automatically. The 
 
 ### Step 2: Assemble Bundle
 
-`assemble-gks-dicts.py` reads all NDJSON shard files and assembles them into a single keyed JSON file — the release bundle.
+`assemble-gks-dicts.py` reads all NDJSON shard files and assembles them into a single keyed JSON file — the release bundle. Optionally, it also produces typed Parquet files for each bundle section.
 
 ```bash
-python3 ./src/scripts/assemble-gks-dicts.py <source> <output>
+python3 ./src/scripts/assemble-gks-dicts.py <source> <output> [--parquet-dir DIR]
 ```
 
 Both `<source>` and `<output>` accept local paths or `gs://` URIs. For best performance, run in Google Cloud Shell to avoid downloading shards locally.
 
 ```bash
-# Stream from GCS, write result to GCS
+# JSON bundle only
 python3 ./src/scripts/assemble-gks-dicts.py \
   gs://clingen-dev-clinvar-gks/gks-dicts/ \
   gs://clingen-public/clinvar-gks/2026-06-14/release/clinvar-gks-2026-06-14.json.gz
+
+# JSON bundle + Parquet files
+python3 ./src/scripts/assemble-gks-dicts.py \
+  gs://clingen-dev-clinvar-gks/gks-dicts/ \
+  gs://clingen-public/clinvar-gks/2026-06-14/release/clinvar-gks-2026-06-14.json.gz \
+  --parquet-dir /tmp/parquet-output
 ```
 
-The script assembles 12 bundle sections in a fixed order: `sequenceReference`, `location`, `allele`, `gene`, `variation`, `condition`, `conditionSet`, `submitter`, `proposition`, `scv`, `vcv`, `rcv`. Each section is a keyed object where the key is the record's unique identifier.
+The script assembles 15 bundle sections in a fixed order: `sequenceReference`, `location`, `allele`, `copyNumberCount`, `copyNumberChange`, `gene`, `variation`, `condition`, `conditionSet`, `submitter`, `proposition`, `evidenceLine`, `scv`, `vcv`, `rcv`. Each section is a keyed object where the key is the record's unique identifier. Proposition and evidence line shards from SCV, VCV, and RCV are merged into single `proposition` and `evidenceLine` sections.
+
+#### Parquet Output
+
+When `--parquet-dir` is specified, the assembler emits one typed Parquet file per bundle section during assembly:
+
+| Parquet File | Content |
+| --- | --- |
+| `sequenceReference.parquet` | VRS sequence references |
+| `location.parquet` | Genomic locations |
+| `allele.parquet` | VRS alleles |
+| `copyNumberCount.parquet` | Copy number count variants |
+| `copyNumberChange.parquet` | Copy number change variants |
+| `gene.parquet` | Gene MappableConcepts |
+| `variation.parquet` | Categorical variants |
+| `condition.parquet` | Conditions/traits |
+| `conditionSet.parquet` | Condition sets |
+| `submitter.parquet` | Submitters |
+| `proposition.parquet` | All propositions (SCV+VCV+RCV merged) |
+| `evidenceLine.parquet` | All evidence lines (SCV+VCV+RCV merged) |
+| `scv.parquet` | SCV statements |
+| `vcv.parquet` | VCV statements |
+| `rcv.parquet` | RCV statements |
+
+Each Parquet file has a typed schema with named columns for the section's fields, rather than the simple `id`/`data` fallback.
 
 Install `orjson` for significantly faster JSON processing:
 
@@ -112,10 +147,11 @@ A complete export for the June 14, 2026 release:
 # 1. Export dictionary tables to GCS
 ./src/scripts/export-gks-dicts.sh clinvar_2026_06_14_v2_5_0 clingen-dev-clinvar-gks gks-dicts
 
-# 2. Assemble into a single bundle (run from Cloud Shell for best performance)
+# 2. Assemble into a single bundle + Parquet files
 python3 ./src/scripts/assemble-gks-dicts.py \
   gs://clingen-dev-clinvar-gks/gks-dicts/ \
-  gs://clingen-public/clinvar-gks/2026-06-14/release/clinvar-gks-2026-06-14.json.gz
+  gs://clingen-public/clinvar-gks/2026-06-14/release/clinvar-gks-2026-06-14.json.gz \
+  --parquet-dir /tmp/parquet-output
 
 # 3. Upload to Cloudflare R2 (auto-detects month/year boundaries)
 ./src/scripts/upload-gks-to-r2.sh 2026-06-14 v2_5_0

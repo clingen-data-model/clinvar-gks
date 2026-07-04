@@ -1,6 +1,6 @@
 # Output File
 
-Each ClinVar-GKS release is published as a **single gzip-compressed JSON file** containing all data for the corresponding ClinVar XML release in the bundle format.
+Each ClinVar-GKS release is published as a **gzip-compressed JSON file** containing all data for the corresponding ClinVar XML release in the bundle format. Typed **Parquet files** (one per bundle section) are also produced during assembly for analytical workloads.
 
 ---
 
@@ -108,12 +108,15 @@ Each release file contains the following bundle sections:
 | `sequenceReference` | VRS reference sequences with refget accessions |
 | `location` | VRS sequence locations with coordinates |
 | `allele` | VRS alleles with state and expressions |
-| `gene` | Gene records with identifiers and symbols |
+| `copyNumberCount` | Copy number count variants |
+| `copyNumberChange` | Copy number change variants |
+| `gene` | Gene MappableConcepts |
 | `variation` | Cat-VRS categorical variants |
 | `condition` | Trait and disease concepts |
 | `conditionSet` | Multi-condition groupings |
 | `submitter` | Submitting organizations |
 | `proposition` | Classification propositions (SCV, VCV, and RCV) |
+| `evidenceLine` | Evidence lines (SCV, VCV, and RCV) |
 | `scv` | Submitted classification statements |
 | `vcv` | Variation-level aggregate statements |
 | `rcv` | Condition-level aggregate statements |
