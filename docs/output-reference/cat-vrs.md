@@ -100,7 +100,7 @@ The `mappings` array contains cross-references to external databases. Each mappi
 ```json
 {
   "coding": {
-    "system": "dbSNP",
+    "system": "https://www.ncbi.nlm.nih.gov/snp/",
     "code": "1799945",
     "iris": ["https://identifiers.org/dbsnp:rs1799945"]
   },
