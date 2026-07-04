@@ -8,7 +8,7 @@ For details on how the output is built, see the [Pipeline](../pipeline/index.md)
 
 ## Release Format
 
-Each release is a single gzip-compressed JSON file (`.json.gz`) containing a root-level object with **bundle sections**. Each section is a keyed collection — the key is the object's unique identifier, and the value is the complete object.
+Each release is available as a gzip-compressed JSON file (`.json.gz`) containing a root-level object with **bundle sections**, and optionally as a set of typed Parquet files (one per section). Each bundle section is a keyed collection — the key is the object's unique identifier, and the value is the complete object.
 
 See [Output Format Overview](overview.md) for a detailed guide to the bundle structure, reference patterns, and how to navigate between sections.
 
@@ -21,12 +21,15 @@ See [Output Format Overview](overview.md) for a detailed guide to the bundle str
 | [`sequenceReference`](cat-vrs.md) | VRS sequence references | `SQ.{digest}` |
 | [`location`](cat-vrs.md) | VRS sequence locations | `ga4gh:SL.{digest}` |
 | [`allele`](cat-vrs.md) | VRS alleles with expressions | `ga4gh:VA.{digest}` |
-| [`gene`](cat-vrs.md) | Gene records | `ncbigene:{id}` |
+| `copyNumberCount` | Copy number count variants | `clinvar:{id}` |
+| `copyNumberChange` | Copy number change variants | `clinvar:{id}` |
+| [`gene`](cat-vrs.md) | Gene MappableConcepts | `ncbigene:{id}` |
 | [`variation`](cat-vrs.md) | Cat-VRS categorical variants | `clinvar:{variation_id}` |
 | `condition` | Trait/disease concepts | `clinvar.trait:{id}` |
 | `conditionSet` | Multi-condition groupings | `clinvar.traitset:{id}` |
 | `submitter` | Submitting organizations | `clinvar.submitter:{id}` |
 | [`proposition`](scv-statements.md) | Classification propositions | `{scv_id}-{CODE}` / `{vcv_id}-{group}-{prop}-{level}` |
+| `evidenceLine` | Evidence lines (SCV, VCV, RCV) | `{id}.contributing` / `{scv_id}.{ver}` |
 | [`scv`](scv-statements.md) | Submitted classifications | `clinvar.submission:{scv_id}.{version}` |
 | [`vcv`](vcv-statements.md) | Variation-level aggregates | `{vcv_id}-{group}-{prop}-{level}` |
 | [`rcv`](rcv-statements.md) | Condition-level aggregates | `{rcv_id}-{group}-{prop}-{level}` |

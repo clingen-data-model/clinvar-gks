@@ -10,7 +10,7 @@ The procedure executes three logical phases in sequence:
 2. **Condition Mapping** (Steps 2–14) — resolves each SCV's submitted traits to ClinVar's normalized RCV traits through a multi-stage matching strategy
 3. **Condition Sets** (Step 15) — assembles individual conditions into `Condition` or `ConditionSet` domain entities for each SCV
 
-These steps do not produce a standalone output file. Instead, the resulting `gks_scv_condition_sets` table feeds directly into the SCV record assembly, where conditions become part of the full SCV statement output. The same condition structures will also be critical for RCV accession output when that is added to the pipeline.
+These steps do not produce a standalone output file. Instead, the resulting `gks_scv_condition_sets` table feeds directly into the SCV and RCV record assembly, where conditions become part of the full statement output.
 
 ---
 

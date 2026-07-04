@@ -108,7 +108,7 @@ Used by all submission levels (PG, EP, CP, NOCP, NOCL, and FLAG). Contains a sin
   "classification": {
     "conceptType": "Classification",
     "name": "Pathogenic/Likely pathogenic",
-    "extension": [
+    "extensions": [
       {"name": "conflictingExplanation", "value": "Pathogenic(3); Likely pathogenic(2)"}
     ]
   }
@@ -121,7 +121,7 @@ The `extension` array is only present when the classification is conflicting.
 
 These statement-level fields are derived from the aggregate classification label:
 
-- **`confidence`** — the submission level label (e.g., `"expert panel"`, `"assertion criteria provided"`). Set on every VCV statement.
+- **`confidence`** — a Concept struct with `conceptType: "Confidence"` and `name` set to the submission level label (e.g., `"criteria provided"`, `"expert panel"`). Set on every VCV statement.
 - **`direction`** — derived from the classification label. For single-SCV aggregations, passed through directly from the contributing SCV. For multi-SCV aggregations, derived from the winning label.
 - **`strength`** — derived from the classification label. For single-SCV aggregations, passed through directly from the contributing SCV. For multi-SCV aggregations, derived from the winning label. No hardcoded `"definitive"` value.
 
@@ -164,10 +164,10 @@ The Grouping Layer produces the initial aggregation of individual SCVs into grou
 
 | Step | Name | Aggregates By | Description |
 | --- | --- | --- | --- |
-| Base Grouping | `gks_vcv_grouping_base_agg` | Variation + Statement Group + Proposition Type + Submission Level (+ Tier) | Lowest-level aggregation of individual SCVs. Applies submission-level-specific classification and conflict detection logic |
-| Tier Grouping | `gks_vcv_grouping_tier_agg` | Variation + Statement Group + Proposition Type + Submission Level | Combines tier-level groups (somatic sci only). Ranks tiers by priority, designates top tier as contributing |
+| Classification Grouping | `gks_vcv_grouping_base_agg` | Variation + Statement Group + Proposition Type + Submission Level (+ Tier) | Lowest-level aggregation of individual SCVs. Applies submission-level-specific classification and conflict detection logic |
+| Priority Grouping | `gks_vcv_grouping_tier_agg` | Variation + Statement Group + Proposition Type + Submission Level | Combines tier-level groups (somatic sci only). Ranks tiers by priority, designates top tier as contributing |
 
-Tier Grouping applies only to somatic tiered records (`tier_grouping IS NOT NULL`). Non-tiered records (all germline and non-sci somatic) flow directly from Base Grouping to the Aggregate Contribution Layer.
+Priority Grouping applies only to somatic tiered records (`tier_grouping IS NOT NULL`). Non-tiered records (all germline and non-sci somatic) flow directly from Classification Grouping to the Aggregate Contribution Layer.
 
 ### Aggregate Contribution Layer
 

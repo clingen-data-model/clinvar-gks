@@ -13,12 +13,15 @@ This design eliminates duplication (a sequence reference shared by thousands of 
   "sequenceReference": { "<key>": { ... }, ... },
   "location":          { "<key>": { ... }, ... },
   "allele":            { "<key>": { ... }, ... },
+  "copyNumberCount":   { "<key>": { ... }, ... },
+  "copyNumberChange":  { "<key>": { ... }, ... },
   "gene":              { "<key>": { ... }, ... },
   "variation":         { "<key>": { ... }, ... },
   "condition":         { "<key>": { ... }, ... },
   "conditionSet":      { "<key>": { ... }, ... },
   "submitter":         { "<key>": { ... }, ... },
   "proposition":       { "<key>": { ... }, ... },
+  "evidenceLine":      { "<key>": { ... }, ... },
   "scv":               { "<key>": { ... }, ... },
   "vcv":               { "<key>": { ... }, ... },
   "rcv":               { "<key>": { ... }, ... }
@@ -39,7 +42,11 @@ These sections contain the VRS and Cat-VRS variant data:
 
 **`allele`** — VRS alleles with state, expressions (SPDI, HGVS, gnomAD), and copy number data. Each allele references its location via `#/location/{key}`. Keyed by VRS allele ID (e.g., `ga4gh:VA.ELQCnIBGqaTl0AEE0Az18XZ2cgIHAQIY`).
 
-**`gene`** — Gene records with NCBI gene ID, HGNC ID, symbol, and identifier IRIs. Keyed by `ncbigene:{gene_id}` (e.g., `ncbigene:3077`).
+**`copyNumberCount`** — VRS CopyNumberCount records for copy number variants with absolute copy counts. Each references its location via `#/location/{key}`. Keyed by VRS ID.
+
+**`copyNumberChange`** — VRS CopyNumberChange records for copy number variants with relative change types (gain, loss). Each references its location via `#/location/{key}`. Keyed by VRS ID.
+
+**`gene`** — Gene MappableConcepts with NCBI Gene primaryCoding and HGNC mapping. Keyed by `ncbigene:{gene_id}` (e.g., `ncbigene:3077`).
 
 **`variation`** — ClinVar variations with their defining constraints, cross-references, HGVS expressions, and gene associations. Most variations are represented as CanonicalAlleles with a defining VRS allele (via `#/allele/`); copy number variants use a defining location (via `#/location/`); complex variants use a generalized representation. Keyed by `clinvar:{variation_id}` (e.g., `clinvar:10`).
 
@@ -59,11 +66,13 @@ These sections contain the condition, submitter, and proposition reference data:
 
 These sections contain the classification statements:
 
-**`scv`** — Submitted classification statements. Each SCV carries a classification, strength, direction, proposition reference, contributions (with submitter references), evidence lines, citations, assertion method, and extensions with submitted condition provenance. Keyed by `clinvar.submission:{scv_id}.{version}`.
+**`evidenceLine`** — Evidence line records referenced by statements via `hasEvidenceLines` arrays of `#/evidenceLine/` pointers. Merges SCV, VCV, and RCV evidence lines into a single section.
 
-**`vcv`** — Variation-level aggregate classification statements. VCVs aggregate SCVs across a variation by classification, priority (somatic tiers), and submission level contribution. Evidence lines reference contributing SCVs via `#/scv/` or lower-level VCV groupings via `#/vcv/`. Keyed by the VCV layer ID.
+**`scv`** — Submitted classification statements. Each SCV carries a classification, strength, direction, proposition reference, contributions (with submitter references), evidence line references, citations, assertion method, and extensions with submitted condition provenance. Keyed by `clinvar.submission:{scv_id}.{version}`.
 
-**`rcv`** — Condition-level aggregate classification statements. RCVs follow the same aggregation structure as VCVs but are scoped to a specific RCV accession (variation + condition). Evidence lines reference SCVs and lower-level RCV groupings.
+**`vcv`** — Variation-level aggregate classification statements. VCVs aggregate SCVs across a variation by classification, priority (somatic tiers), and submission level contribution. Evidence line references point to records in `#/evidenceLine/`. Keyed by the VCV layer ID.
+
+**`rcv`** — Condition-level aggregate classification statements. RCVs follow the same aggregation structure as VCVs but are scoped to a specific RCV accession (variation + condition). Evidence line references point to records in `#/evidenceLine/`.
 
 ---
 
@@ -126,6 +135,14 @@ Fields that use this pattern:
 - **`strengthOfEvidenceProvided`** — the evidence line strength (`conceptType: "Strength"`)
 
 The `conceptType` identifies the kind of concept. The `name` is the human-readable display value. The `primaryCoding` provides a machine-readable code and system when available. Not all instances carry `primaryCoding` — aggregate VCV/RCV classifications, for example, may only have `conceptType` and `name`.
+
+---
+
+## Parquet Output
+
+In addition to the JSON bundle, the assembler can produce **typed Parquet files** — one per bundle section — using the `--parquet-dir` flag. Parquet files use columnar storage with named, typed columns for each section's fields, making them suitable for analytical workloads, DuckDB, pandas, or Apache Spark.
+
+See [Export & Distribute](../pipeline/export.md#parquet-output) for the full list of Parquet files and their schemas.
 
 ---
 

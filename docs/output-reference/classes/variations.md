@@ -20,7 +20,7 @@ All ClinVar variant types carry a shared set of extensions that provide ClinVar 
 | Extension | Description |
 | --- | --- |
 | `clinvarHgvsList` | Complete list of HGVS expressions — nucleotide and protein forms, MANE select/plus designations, and molecular consequences (SO terms). Each entry is an [HgvsListItem](HgvsListItem.md). |
-| `clinvarGeneList` | Gene associations including Entrez gene ID, HGNC ID, symbol, and relationship type. Each entry is a [GeneListItem](GeneListItem.md). |
+| `clinvarGeneList` | Gene associations with `#/gene/` references to gene MappableConcepts, relationship types, and sources. Each entry is a [GeneListItem](GeneListItem.md). |
 | `categoricalVariationType` | The Cat-VRS category assigned: `CanonicalAllele`, `CategoricalCnvChange`, `CategoricalCnvCount`, or `Undefined`. |
 | `definingVrsVariationType` | The VRS class from upstream processing: `Allele`, `CopyNumberChange`, `CopyNumberCount`, `Haplotype`, `Unknown`, or `Not Available`. |
 | `clinvarVariationType` | The variation type as reported by ClinVar (e.g., `Deletion`, `single nucleotide variant`, `Duplication`). |

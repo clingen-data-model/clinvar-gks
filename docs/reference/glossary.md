@@ -88,7 +88,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   The core claim being asserted. Contains a subject (variant), predicate (relationship), object (condition/therapy), and optional qualifiers.
 
 **EvidenceLine** (VA-Spec)
-:   Links a proposition to evidence items with direction and strength assessments. SCV statements use `hasEvidenceLines`; VCV statements use nested `evidenceLines`.
+:   Links a proposition to evidence items with direction and strength assessments. Evidence lines are stored in the `evidenceLine` bundle section and referenced from all statement levels via `hasEvidenceLines` arrays of `#/evidenceLine/` JSON pointer strings.
 
 **CategoricalVariant** (Cat-VRS)
 :   Higher-level grouping that associates a ClinVar variation with its resolved VRS representation. Types: CanonicalAllele, CategoricalCnvChange, CategoricalCnvCount.
@@ -97,7 +97,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   A single concept with `conceptType`, `name`, and optional `extension` array. Used for single-label classifications and single-condition `objectCondition` values.
 
 **ConceptSet**
-:   A structured group of concepts with `membershipOperator`. Used for multi-condition `objectCondition` values (OR operator for VCV with multiple distinct conditions; AND operator for RCV conditionSets).
+:   A structured group of concepts with `concepts` array, `conceptSetType`, and `membershipOperator`. Used for multi-condition `objectCondition` values (OR operator for VCV with multiple distinct conditions; AND operator for RCV conditionSets).
 
 **Constraint** (Cat-VRS)
 :   Defining relationship between a categorical variant and its VRS representation. Types: DefiningAlleleConstraint, DefiningLocationConstraint, CopyChangeConstraint, CopyCountConstraint.
@@ -135,7 +135,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 ## Classification Terms
 
 **Confidence**
-:   Statement-level attribute indicating the submission level label for the contributing submission (e.g., `"expert panel"`, `"assertion criteria provided"`). Present on both SCV and aggregate (VCV/RCV) statements.
+:   Statement-level attribute indicating the submission level. A Concept struct with `conceptType: "Confidence"` and `name` set to the submission level label (e.g., `"criteria provided"`, `"expert panel"`). Present on both SCV and aggregate (VCV/RCV) statements.
 
 **Direction**
 :   Whether evidence supports or disputes a proposition. Values: `supports`, `disputes`, `neutral`. On aggregate statements, derived from the classification label (multi-SCV) or passed through from the contributing SCV (single-SCV).
@@ -182,12 +182,12 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   Submission ranked lower than the contributing submission. Preserved in the evidence structure but not reflected in the aggregate label.
 
 **Grouping Layer**
-:   First conceptual aggregation layer. Consists of Base Grouping and Tier Grouping steps. Produces initial aggregation of SCVs into groups by submission level.
+:   First conceptual aggregation layer. Consists of Classification Grouping and Priority Grouping steps. Produces initial aggregation of SCVs into groups by submission level.
 
-**Base Grouping** (Grouping Layer)
+**Classification Grouping** (Grouping Layer)
 :   First step of the Grouping Layer. Groups SCVs by variation + statement group + proposition type + submission level [+ tier]. Applies submission-level-specific classification and conflict detection logic.
 
-**Tier Grouping** (Grouping Layer)
+**Priority Grouping** (Grouping Layer)
 :   Second step of the Grouping Layer (somatic sci only). Aggregates tier-level groups within each submission level.
 
 **Aggregate Contribution Layer**
@@ -233,7 +233,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 ## Output Format
 
 **Bundle**
-:   A single JSON file containing all data for a ClinVar release, organized as named sections at the root level. Each section is a keyed collection of objects of the same class, where the key is the object's unique identifier. Objects reference each other using `#/` JSON pointer strings.
+:   A JSON file containing all data for a ClinVar release, organized as named sections at the root level. Each section is a keyed collection of objects of the same class, where the key is the object's unique identifier. Objects reference each other using `#/` JSON pointer strings. Typed Parquet files (one per bundle section) are also produced during assembly for analytical workloads.
 
 **Bundle Section**
 :   A named top-level key in the bundle file (e.g., `variation`, `scv`, `proposition`) containing a keyed collection of objects.

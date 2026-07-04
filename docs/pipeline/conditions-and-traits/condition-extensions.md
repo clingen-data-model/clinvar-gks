@@ -6,6 +6,9 @@ Condition and condition set records contain `extensions` arrays at two structura
 
 All extensions follow the structure `{ "name": "<extension_name>", "value": <value> }`, where the value type varies by extension. Most extensions carry simple scalar values (string). Extensions with complex value types — arrays of structured objects — are documented as custom extension structures in a dedicated section below.
 
+!!! note
+    The `aliases` field (alternate names/synonyms for a condition) is a **top-level field** on the condition record, not an extension. It is an array of strings, present only when the trait has synonyms.
+
 ---
 
 ## Extension Reference
@@ -31,13 +34,6 @@ All extensions follow the structure `{ "name": "<extension_name>", "value": <val
     </tr>
     <tr>
       <td colspan="2"><pre><code>{ "name": "clinvarTraitType", "value": "Disease" }</code></pre></td>
-    </tr>
-    <tr>
-      <td><code>aliases</code><br><em>Condition</em><br>string</td>
-      <td>Comma-separated alternate names for the condition from ClinVar's trait record. Present only when alternate names exist.</td>
-    </tr>
-    <tr>
-      <td colspan="2"><pre><code>{ "name": "aliases", "value": "HBOC, Hereditary breast and ovarian cancer syndrome" }</code></pre></td>
     </tr>
     <tr>
       <td><code>submittedScvXrefs</code><br><em>Condition</em><br>array&lt;<a href="#submitted-scv-xrefs">SubmittedXref</a>&gt;</td>
