@@ -13,12 +13,15 @@ This design eliminates duplication (a sequence reference shared by thousands of 
   "sequenceReference": { "<key>": { ... }, ... },
   "location":          { "<key>": { ... }, ... },
   "allele":            { "<key>": { ... }, ... },
+  "copyNumberCount":   { "<key>": { ... }, ... },
+  "copyNumberChange":  { "<key>": { ... }, ... },
   "gene":              { "<key>": { ... }, ... },
   "variation":         { "<key>": { ... }, ... },
   "condition":         { "<key>": { ... }, ... },
   "conditionSet":      { "<key>": { ... }, ... },
   "submitter":         { "<key>": { ... }, ... },
   "proposition":       { "<key>": { ... }, ... },
+  "evidenceLine":      { "<key>": { ... }, ... },
   "scv":               { "<key>": { ... }, ... },
   "vcv":               { "<key>": { ... }, ... },
   "rcv":               { "<key>": { ... }, ... }
@@ -38,6 +41,10 @@ These sections contain the VRS and Cat-VRS variant data:
 **`location`** — Sequence locations with start/end coordinates. Each location references its sequence via `#/sequenceReference/{key}`. Keyed by VRS location ID (e.g., `ga4gh:SL.Eg_6kV6Bb4FMjm9kEolHZ_4NhU8lBEsZ`).
 
 **`allele`** — VRS alleles with state, expressions (SPDI, HGVS, gnomAD), and copy number data. Each allele references its location via `#/location/{key}`. Keyed by VRS allele ID (e.g., `ga4gh:VA.ELQCnIBGqaTl0AEE0Az18XZ2cgIHAQIY`).
+
+**`copyNumberCount`** — VRS CopyNumberCount records for copy number variants with absolute copy counts. Each references its location via `#/location/{key}`. Keyed by VRS ID.
+
+**`copyNumberChange`** — VRS CopyNumberChange records for copy number variants with relative change types (gain, loss). Each references its location via `#/location/{key}`. Keyed by VRS ID.
 
 **`gene`** — Gene MappableConcepts with NCBI Gene primaryCoding and HGNC mapping. Keyed by `ncbigene:{gene_id}` (e.g., `ncbigene:3077`).
 
