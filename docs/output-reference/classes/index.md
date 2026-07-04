@@ -33,8 +33,10 @@ classDiagram
         }
         class Gene {
             id : ncbigene:id
-            symbol : string
-            hgnc_id : string
+            conceptType : gene
+            name : string
+            primaryCoding : Coding
+            mappings : Mapping[0..*]
         }
         class CategoricalVariant {
             id : clinvar:id
@@ -158,7 +160,7 @@ These classes represent the variant and its genomic context. VRS types (Sequence
 | SequenceReference | `sequenceReference` | `SQ.{digest}` | Reference sequence with refget accession, molecule type, and assembly |
 | Location | `location` | `ga4gh:SL.{digest}` | Position or range on a sequence reference |
 | Allele | `allele` | `ga4gh:VA.{digest}` | Specific sequence change at a location |
-| Gene | `gene` | `ncbigene:{id}` | Gene record with Entrez ID, HGNC ID, and symbol |
+| Gene | `gene` | `ncbigene:{id}` | Gene MappableConcept with NCBI Gene primaryCoding and HGNC mapping |
 | [ClinvarCategoricalVariant](ClinvarCategoricalVariant.md) | `variation` | `clinvar:{id}` | ClinVar variation with Cat-VRS representation and extensions |
 
 See [Variations](variations.md) for the full variant type hierarchy and extension documentation.
@@ -189,6 +191,6 @@ These classes represent classification statements at different levels of aggrega
 | [ClinvarScvStatement](ClinvarScvStatement.md) | `scv` | `clinvar.submission:{id}.{ver}` | Submitted classification |
 | [ClinvarVcvStatement](ClinvarVcvStatement.md) | `vcv` | `{vcv}-{group}-{prop}-{level}` | Variant-level aggregate |
 | [ClinvarRcvStatement](ClinvarRcvStatement.md) | `rcv` | `{rcv}-{group}-{prop}-{level}` | Condition-level aggregate |
-| [ClinvarSomaticEvidenceLine](ClinvarSomaticEvidenceLine.md) | (nested) | — | Somatic clinical impact evidence line |
+| [ClinvarSomaticEvidenceLine](ClinvarSomaticEvidenceLine.md) | `evidenceLine` | `{scv_id}.{ver}` / `{agg_id}.contributing` | Evidence line referenced via `hasEvidenceLines` |
 
 See [Statements](statements.md) for the aggregation structure and [Evidence Lines](evidence.md) for the somatic tier mapping.
