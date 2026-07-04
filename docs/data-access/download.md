@@ -2,7 +2,7 @@
 
 ClinVar-GKS releases are hosted on Cloudflare R2 object storage. All downloads are free with no authentication required and no egress fees.
 
-Each release is a single gzip-compressed JSON bundle file containing all variations, statements, propositions, conditions, and supporting reference data for a ClinVar release.
+Each release includes a gzip-compressed JSON bundle file containing all variations, statements, propositions, conditions, and supporting reference data for a ClinVar release. Typed Parquet files (one per bundle section) are also available for analytical workloads.
 
 ---
 
@@ -10,22 +10,33 @@ Each release is a single gzip-compressed JSON bundle file containing all variati
 
 Download the most recent releases using the stable URLs below:
 
-| Release | Download | Description |
+| Format | Download | Description |
 | --- | --- | --- |
-| Monthly | [clinvar-gks_00-latest.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz) | Latest monthly release (first weekly of each month) |
-| Weekly | [clinvar-gks_00-latest_weekly.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz) | Latest weekly release |
+| Monthly (JSON) | [clinvar-gks_00-latest.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz) | Latest monthly release (first weekly of each month) |
+| Weekly (JSON) | [clinvar-gks_00-latest_weekly.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz) | Latest weekly release |
+| Parquet | [datasets/parquet/](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/) | Typed Parquet files (one per bundle section), always latest release |
 
 ### Download with curl
 
 ```bash
-# Latest monthly release
+# Latest monthly release (JSON bundle)
 curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz
 
-# Latest weekly release
+# Latest weekly release (JSON bundle)
 curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz
 
 # Decompress
 gunzip clinvar-gks_00-latest.json.gz
+
+# Download a single Parquet section (e.g., SCV statements)
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet
+
+# Download all Parquet files
+for section in sequenceReference location allele copyNumberCount copyNumberChange \
+               gene variation condition conditionSet submitter proposition \
+               evidenceLine scv vcv rcv; do
+  curl -O "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/${section}.parquet"
+done
 ```
 
 ### Download with Python
@@ -57,6 +68,12 @@ urllib.request.urlretrieve(
 urllib.request.urlretrieve(
     f"{BASE}/archives/2025/clinvar-gks_2025-03.json.gz",
     "clinvar-gks_2025-03.json.gz"
+)
+
+# Download a Parquet section
+urllib.request.urlretrieve(
+    f"{BASE}/datasets/parquet/scv.parquet",
+    "scv.parquet"
 )
 ```
 
@@ -245,8 +262,151 @@ datasets/weekly/
   clinvar-gks_00-latest_weekly.json.gz  latest weekly release (stable URL)
   clinvar-gks_YYYY-MMDD.json.gz         weekly releases (current month only)
 
+datasets/parquet/
+  {section}.parquet                     typed Parquet files (always latest release)
+
 archives/{YYYY}/
   clinvar-gks_YYYY-MM.json.gz           monthly releases from prior years
+```
+
+---
+
+## Parquet Files
+
+Typed Parquet files are produced alongside each release and uploaded to `datasets/parquet/`. Unlike JSON bundles, Parquet files are not versioned — they are overwritten on each release and always represent the latest data.
+
+Each Parquet file contains one bundle section with typed, query-friendly columns extracted from the JSON objects. Every section includes an `id` column (the object identifier) and a `data` column (the full JSON object as a string), plus additional typed columns for key fields — enabling efficient filtering and aggregation without parsing JSON.
+
+Available Parquet files (15 sections):
+
+| File | Description |
+| --- | --- |
+| `sequenceReference.parquet` | NCBI RefSeq sequence references |
+| `location.parquet` | VRS SequenceLocation records |
+| `allele.parquet` | VRS Allele records |
+| `copyNumberCount.parquet` | VRS CopyNumberCount records |
+| `copyNumberChange.parquet` | VRS CopyNumberChange records |
+| `gene.parquet` | Gene records (MappableConcept with NCBI Gene / HGNC codings) |
+| `variation.parquet` | CategoricalVariant records (Cat-VRS) |
+| `condition.parquet` | Condition records (traits) |
+| `conditionSet.parquet` | ConditionSet records (trait sets) |
+| `submitter.parquet` | Submitter organization records |
+| `proposition.parquet` | Proposition records (SCV, VCV, and RCV) |
+| `evidenceLine.parquet` | Evidence line records (SCV, VCV, and RCV) |
+| `scv.parquet` | SCV statement records |
+| `vcv.parquet` | VCV aggregate statement records |
+| `rcv.parquet` | RCV aggregate statement records |
+
+### Working with Parquet Files
+
+Parquet files can be queried directly from the R2 URL — no download step required — using tools like DuckDB. They can also be downloaded and loaded into pandas, polars, or any Parquet-compatible tool.
+
+#### DuckDB (CLI or Python)
+
+[DuckDB](https://duckdb.org/) can query Parquet files directly over HTTPS with zero setup:
+
+```bash
+# Install DuckDB (macOS)
+brew install duckdb
+
+# Query SCV statements directly from the URL
+duckdb -c "
+  SELECT id, classification, direction, strength, confidence
+  FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet'
+  WHERE classification = 'Pathogenic'
+  LIMIT 10;
+"
+```
+
+```bash
+# Count classifications across all SCVs
+duckdb -c "
+  SELECT classification, direction, COUNT(*) as n
+  FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet'
+  GROUP BY classification, direction
+  ORDER BY n DESC;
+"
+```
+
+```bash
+# Join SCVs with their propositions to find pathogenic variants for a specific condition
+duckdb -c "
+  SET s3_url_style = 'path';
+  CREATE VIEW scv AS SELECT * FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet';
+  CREATE VIEW prop AS SELECT * FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/proposition.parquet';
+
+  SELECT s.id, s.classification, p.predicate, p.object_condition
+  FROM scv s
+  JOIN prop p ON s.proposition_id = p.id
+  WHERE s.classification = 'Pathogenic'
+    AND p.object_condition LIKE '%clinvar.trait:9580%'
+  LIMIT 10;
+"
+```
+
+DuckDB also works from Python:
+
+```python
+import duckdb
+
+BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet"
+
+# Query directly — no download needed
+df = duckdb.sql(f"""
+    SELECT id, classification, direction, strength, confidence
+    FROM '{BASE}/scv.parquet'
+    WHERE classification = 'Pathogenic'
+    LIMIT 100
+""").df()
+
+print(df)
+```
+
+#### pandas / pyarrow
+
+```python
+import pandas as pd
+
+BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet"
+
+# Read a full section into a DataFrame
+scv = pd.read_parquet(f"{BASE}/scv.parquet")
+
+# Filter pathogenic SCVs
+pathogenic = scv[scv["classification"] == "Pathogenic"]
+print(f"{len(pathogenic)} pathogenic SCVs")
+
+# Access the full JSON when you need nested fields
+import json
+record = json.loads(pathogenic.iloc[0]["data"])
+print(record["proposition"])
+```
+
+#### Column Reference
+
+Statement sections (`scv`, `vcv`, `rcv`) share a common set of typed columns:
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `id` | string | Statement identifier |
+| `type` | string | Statement type |
+| `proposition_id` | string | FK to `proposition.parquet` |
+| `classification` | string | Classification label (e.g., "Pathogenic") |
+| `strength` | string | Evidence strength (e.g., "definitive", "likely") |
+| `direction` | string | Evidence direction ("supports", "disputes", "neutral") |
+| `confidence` | string | Submission level label (e.g., "criteria provided") |
+| `has_evidence_lines` | list\<string\> | FK references to `evidenceLine.parquet` |
+| `extensions` | string | JSON array of extensions |
+| `data` | string | Full JSON object |
+
+SCV statements include additional columns: `description`, `contributions`, `reported_in`, `specified_by`.
+
+The `proposition` section includes `subject_variant`, `predicate`, `object_condition`, `object_condition_set`, `type`, and qualifier columns — enabling JOINs across statements, variants, and conditions without parsing JSON.
+
+Every section includes `id` and `data` at minimum. Run `DESCRIBE` in DuckDB to see the full schema for any section:
+
+```bash
+duckdb -c "DESCRIBE SELECT * FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet';"
 ```
 
 ---

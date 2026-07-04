@@ -47,6 +47,7 @@ Objects reference each other using `#/{section}/{key}` strings. To resolve a ref
 | `#/proposition/{key}` | `#/proposition/SCV001234567-PATH` | `proposition` |
 | `#/scv/{key}` | `#/scv/clinvar.submission:SCV001234567.1` | `scv` |
 | `#/vcv/{key}` | `#/vcv/VCV000012582.63-G-PATH-CP` | `vcv` |
+| `#/evidenceLine/{key}` | `#/evidenceLine/VCV000012582.63-G-PATH-CP.contributing` | `evidenceLine` |
 | `#/rcv/{key}` | `#/rcv/RCV000012345.8-G-PATH-CP` | `rcv` |
 
 ### Where References Appear
@@ -64,9 +65,11 @@ Objects reference each other using `#/{section}/{key}` strings. To resolve a ref
 | SCV Statement | `proposition` | `#/proposition/` |
 | SCV Statement | `contributions[].contributor` | `#/submitter/` |
 | VCV Statement | `proposition` | `#/proposition/` |
-| VCV Statement | `evidenceLines[].evidenceItems[]` | `#/scv/` or `#/vcv/` |
+| SCV Statement | `hasEvidenceLines[]` | `#/evidenceLine/` |
+| VCV Statement | `hasEvidenceLines[]` | `#/evidenceLine/` |
 | RCV Statement | `proposition` | `#/proposition/` |
-| RCV Statement | `evidenceLines[].evidenceItems[]` | `#/scv/` or `#/rcv/` |
+| RCV Statement | `hasEvidenceLines[]` | `#/evidenceLine/` |
+| EvidenceLine | `evidenceItems[]` | `#/scv/`, `#/vcv/`, or `#/rcv/` |
 
 ### Resolution Example
 

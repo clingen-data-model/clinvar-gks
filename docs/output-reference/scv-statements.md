@@ -24,7 +24,7 @@ Each record is a VA-Spec `Statement` with the following top-level fields:
 | `classification` | object | MappableConcept — the submitter's classification. See [Classification](#classification) |
 | `strength` | object | MappableConcept — the evidence strength. See [Strength](#strength) |
 | `direction` | string | Whether the evidence `supports`, `disputes`, or is `neutral` toward the proposition |
-| `confidence` | string | Submission level label (e.g., `criteria provided`, `practice guideline`) |
+| `confidence` | object | Concept struct with `conceptType: "Confidence"` and `name` (the submission level label). See [Confidence](#confidence) |
 | `description` | string | Free-text interpretation summary (when provided by the submitter) |
 | `contributions` | array | Submitter and date information with `#/submitter/` references. See [Contributions](#contributions) |
 | `specifiedBy` | object | The classification method/guideline used |
@@ -77,6 +77,24 @@ The `strength` field is a MappableConcept indicating the evidence strength:
 ```
 
 The `primaryCoding` is present when the strength can be mapped to a specific code in the classification system.
+
+---
+
+## Confidence
+
+The `confidence` field is a Concept struct indicating the submission level:
+
+```json
+{
+  "conceptType": "Confidence",
+  "name": "criteria provided"
+}
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `conceptType` | string | Always `"Confidence"` |
+| `name` | string | The submission level label (e.g., `criteria provided`, `practice guideline`, `expert panel`) |
 
 ---
 

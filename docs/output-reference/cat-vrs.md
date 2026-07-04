@@ -100,7 +100,7 @@ The `mappings` array contains cross-references to external databases. Each mappi
 ```json
 {
   "coding": {
-    "system": "dbSNP",
+    "system": "https://www.ncbi.nlm.nih.gov/snp/",
     "code": "1799945",
     "iris": ["https://identifiers.org/dbsnp:rs1799945"]
   },
@@ -130,7 +130,7 @@ See [Categorical Variant Extensions (Pipeline)](../pipeline/cat-vrs/catvar-exten
 | `vrsPreProcessingIssue` | `string` | Issues detected during VRS pre-processing of the variation's input expressions. Present only when issues exist. May contain multiple issues separated by newlines. |
 | `vrsProcessingException` | `string` | Errors returned by the external VRS Python processing service. Present only when errors occurred during VRS resolution. |
 | `clinvarHgvsList` | array of [HgvsListItem](#hgvslistitem) | Complete list of HGVS expressions from ClinVar for this variation, including nucleotide and protein expressions, molecular consequences (SO terms), and MANE transcript designations. |
-| `clinvarGeneList` | array of [GeneListItem](#genelistitem) | Gene associations for this variation from ClinVar, including Entrez gene IDs, HGNC IDs, gene symbols, relationship types, and identifier IRIs. |
+| `clinvarGeneList` | array of [GeneListItem](#genelistitem) | Gene associations for this variation from ClinVar, with `#/gene/` references to gene MappableConcepts, relationship types, and sources. |
 
 </div>
 
@@ -165,18 +165,15 @@ Each item in the `clinvarHgvsList` extension array represents one HGVS expressio
 
 ### GeneListItem
 
-Each item in the `clinvarGeneList` extension array represents one gene association for the variation.
+Each item in the `clinvarGeneList` extension array represents one gene association for the variation. Gene details (symbol, NCBI Gene ID, HGNC mapping) are on the referenced gene MappableConcept in the `gene` bundle section.
 
 <div class="field-table" markdown>
 
 | Field | Type | Description |
 |---|---|---|
-| `entrez_gene_id` | `string` | NCBI Entrez Gene identifier. |
-| `hgnc_id` | `string` | HGNC gene identifier (e.g., `HGNC:1234`). May be null for genes without an HGNC assignment. |
-| `symbol` | `string` | The gene symbol (e.g., `BRCA1`, `MTOR`). |
+| `gene` | `string` | `#/gene/ncbigene:{id}` reference to the gene MappableConcept in the `gene` bundle section. |
 | `relationship_type` | `string` | The relationship between the variation and the gene as reported by ClinVar (e.g., `within single gene`, `genes overlapped by variant`). |
 | `source` | `string` | The source of the gene association (e.g., `submitted`, `calculated`). |
-| `iris` | array | Identifier IRIs for the gene, including links to identifiers.org (HGNC and/or NCBI Gene) and NCBI Gene pages. |
 
 </div>
 

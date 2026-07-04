@@ -2,7 +2,7 @@
 
 ## Overview
 
-Step 15 of the `clinvar_ingest.gks_scv_condition_proc` procedure assembles individual conditions into structured domain entities for each SCV. SCVs with a single condition produce a `Condition` record; SCVs with multiple conditions produce a `ConditionSet` containing a `conditions` array and a `membershipOperator`. The resulting `gks_scv_condition_sets` table feeds directly into the SCV statement assembly procedure (`gks_scv_statement_proc`), where it becomes the condition component of the full SCV statement.
+Step 15 of the `clinvar_ingest.gks_scv_condition_proc` procedure assembles individual conditions into structured domain entities for each SCV. SCVs with a single condition produce a `Condition` record; SCVs with multiple conditions produce a `ConditionSet` containing a `concepts` array, `conceptSetType`, and `membershipOperator`. The resulting `gks_scv_condition_sets` table feeds directly into the SCV statement assembly procedure (`gks_scv_statement_proc`), where it becomes the condition component of the full SCV statement.
 
 ---
 
@@ -25,7 +25,8 @@ The `enriched_conditions` CTE joins each SCV trait from `gks_scv_condition_mappi
 
 The `multi_sets` CTE filters to only multi-condition SCVs (where `trait_count > 1`) and aggregates. The grouping produces:
 
-- **`conditions`** — an array of condition structs (id, name, conceptType, primaryCoding, mappings, extensions)
+- **`concepts`** — an array of `#/condition/` JSON pointer references to condition records in the `condition` bundle section
+- **`conceptSetType`** — the RCV trait set type (e.g., `Disease`, `Finding`)
 - **`membershipOperator`** — determines how multiple conditions relate to each other:
   - `AND` — when the trait relationship type is `Finding member` or `co-occurring condition`
   - `OR` — for all other relationship types
@@ -42,7 +43,7 @@ The final query joins `temp_gks_scv_trait_sets` with the condition and condition
 
 **Multi-condition SCVs** populate the `conditionSet` field:
 
-- A `ConditionSet` struct with the conditions array, membershipOperator, and extensions
+- A `ConditionSet` struct with the concepts array, conceptSetType, membershipOperator, and extensions
 - Extensions include the trait set extensions and the optional `submittedScvTraitSetType`
 
 **Output:** `gks_scv_condition_sets` — one row per SCV with either a `condition` or `conditionSet` field populated. <span class="role-badge badge-pipeline">Pipeline table</span>
