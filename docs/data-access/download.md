@@ -273,7 +273,9 @@ archives/{YYYY}/
 
 ## Parquet Files
 
-Typed Parquet files are produced alongside each release and uploaded to `datasets/parquet/`. Unlike JSON bundles, Parquet files are not versioned — they are overwritten on each release and always represent the latest data. Each file contains one bundle section with two columns: `key` (the object identifier) and `value` (the full JSON object as a string).
+Typed Parquet files are produced alongside each release and uploaded to `datasets/parquet/`. Unlike JSON bundles, Parquet files are not versioned — they are overwritten on each release and always represent the latest data.
+
+Each Parquet file contains one bundle section with typed, query-friendly columns extracted from the JSON objects. Every section includes an `id` column (the object identifier) and a `data` column (the full JSON object as a string), plus additional typed columns for key fields — enabling efficient filtering and aggregation without parsing JSON.
 
 Available Parquet files (15 sections):
 
@@ -294,6 +296,118 @@ Available Parquet files (15 sections):
 | `scv.parquet` | SCV statement records |
 | `vcv.parquet` | VCV aggregate statement records |
 | `rcv.parquet` | RCV aggregate statement records |
+
+### Working with Parquet Files
+
+Parquet files can be queried directly from the R2 URL — no download step required — using tools like DuckDB. They can also be downloaded and loaded into pandas, polars, or any Parquet-compatible tool.
+
+#### DuckDB (CLI or Python)
+
+[DuckDB](https://duckdb.org/) can query Parquet files directly over HTTPS with zero setup:
+
+```bash
+# Install DuckDB (macOS)
+brew install duckdb
+
+# Query SCV statements directly from the URL
+duckdb -c "
+  SELECT id, classification, direction, strength, confidence
+  FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet'
+  WHERE classification = 'Pathogenic'
+  LIMIT 10;
+"
+```
+
+```bash
+# Count classifications across all SCVs
+duckdb -c "
+  SELECT classification, direction, COUNT(*) as n
+  FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet'
+  GROUP BY classification, direction
+  ORDER BY n DESC;
+"
+```
+
+```bash
+# Join SCVs with their propositions to find pathogenic variants for a specific condition
+duckdb -c "
+  SET s3_url_style = 'path';
+  CREATE VIEW scv AS SELECT * FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet';
+  CREATE VIEW prop AS SELECT * FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/proposition.parquet';
+
+  SELECT s.id, s.classification, p.predicate, p.object_condition
+  FROM scv s
+  JOIN prop p ON s.proposition_id = p.id
+  WHERE s.classification = 'Pathogenic'
+    AND p.object_condition LIKE '%clinvar.trait:9580%'
+  LIMIT 10;
+"
+```
+
+DuckDB also works from Python:
+
+```python
+import duckdb
+
+BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet"
+
+# Query directly — no download needed
+df = duckdb.sql(f"""
+    SELECT id, classification, direction, strength, confidence
+    FROM '{BASE}/scv.parquet'
+    WHERE classification = 'Pathogenic'
+    LIMIT 100
+""").df()
+
+print(df)
+```
+
+#### pandas / pyarrow
+
+```python
+import pandas as pd
+
+BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet"
+
+# Read a full section into a DataFrame
+scv = pd.read_parquet(f"{BASE}/scv.parquet")
+
+# Filter pathogenic SCVs
+pathogenic = scv[scv["classification"] == "Pathogenic"]
+print(f"{len(pathogenic)} pathogenic SCVs")
+
+# Access the full JSON when you need nested fields
+import json
+record = json.loads(pathogenic.iloc[0]["data"])
+print(record["proposition"])
+```
+
+#### Column Reference
+
+Statement sections (`scv`, `vcv`, `rcv`) share a common set of typed columns:
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `id` | string | Statement identifier |
+| `type` | string | Statement type |
+| `proposition_id` | string | FK to `proposition.parquet` |
+| `classification` | string | Classification label (e.g., "Pathogenic") |
+| `strength` | string | Evidence strength (e.g., "definitive", "likely") |
+| `direction` | string | Evidence direction ("supports", "disputes", "neutral") |
+| `confidence` | string | Submission level label (e.g., "criteria provided") |
+| `has_evidence_lines` | list\<string\> | FK references to `evidenceLine.parquet` |
+| `extensions` | string | JSON array of extensions |
+| `data` | string | Full JSON object |
+
+SCV statements include additional columns: `description`, `contributions`, `reported_in`, `specified_by`.
+
+The `proposition` section includes `subject_variant`, `predicate`, `object_condition`, `object_condition_set`, `type`, and qualifier columns — enabling JOINs across statements, variants, and conditions without parsing JSON.
+
+Every section includes `id` and `data` at minimum. Run `DESCRIBE` in DuckDB to see the full schema for any section:
+
+```bash
+duckdb -c "DESCRIBE SELECT * FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet';"
+```
 
 ---
 
