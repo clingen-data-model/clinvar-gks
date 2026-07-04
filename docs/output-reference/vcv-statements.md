@@ -24,7 +24,7 @@ Each record is a `Statement` with the following top-level fields:
 | `direction` | string | `supports`, `disputes`, or `neutral` — derived from the aggregate classification |
 | `confidence` | object | Concept struct with `conceptType: "Confidence"` and `name` (the submission level label, e.g., `criteria provided`, `expert panel`) |
 | `extensions` | array of [Extension](#extensions) | ClinVar-specific aggregate metadata (0..*). See [Extensions](#extensions) |
-| `evidenceLines` | array | Contributing and non-contributing evidence. See [Evidence Lines](#evidence-lines) |
+| `hasEvidenceLines` | array | `#/evidenceLine/` references to contributing and non-contributing evidence. See [Evidence Lines](#evidence-lines) |
 
 </div>
 
@@ -90,22 +90,18 @@ A resolved VCV proposition contains:
 
 ## Evidence Lines
 
-Each VCV statement contains `evidenceLines` — an array of evidence line objects that reference contributing and non-contributing submissions:
+Each VCV statement contains `hasEvidenceLines` — an array of `#/evidenceLine/` JSON pointer references to evidence line records in the `evidenceLine` bundle section:
 
 ```json
 {
-  "type": "EvidenceLine",
-  "directionOfEvidenceProvided": "supports",
-  "strengthOfEvidenceProvided": {
-    "conceptType": "Strength",
-    "name": "Contributing"
-  },
-  "evidenceItems": [
-    "#/scv/clinvar.submission:SCV001571657.2",
-    "#/scv/clinvar.submission:SCV000329383.7"
+  "hasEvidenceLines": [
+    "#/evidenceLine/VCV000012582.63-G-PATH-CP.contributing",
+    "#/evidenceLine/VCV000012582.63-G-PATH-CP.non-contributing"
   ]
 }
 ```
+
+Each referenced evidence line record contains:
 
 | Field | Type | Description |
 | --- | --- | --- |

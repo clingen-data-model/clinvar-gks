@@ -88,7 +88,7 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   The core claim being asserted. Contains a subject (variant), predicate (relationship), object (condition/therapy), and optional qualifiers.
 
 **EvidenceLine** (VA-Spec)
-:   Links a proposition to evidence items with direction and strength assessments. SCV statements use `hasEvidenceLines`; VCV statements use nested `evidenceLines`.
+:   Links a proposition to evidence items with direction and strength assessments. Evidence lines are stored in the `evidenceLine` bundle section and referenced from all statement levels via `hasEvidenceLines` arrays of `#/evidenceLine/` JSON pointer strings.
 
 **CategoricalVariant** (Cat-VRS)
 :   Higher-level grouping that associates a ClinVar variation with its resolved VRS representation. Types: CanonicalAllele, CategoricalCnvChange, CategoricalCnvCount.
