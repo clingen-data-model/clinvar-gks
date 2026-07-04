@@ -164,10 +164,10 @@ The Grouping Layer produces the initial aggregation of individual SCVs into grou
 
 | Step | Name | Aggregates By | Description |
 | --- | --- | --- | --- |
-| Base Grouping | `gks_vcv_grouping_base_agg` | Variation + Statement Group + Proposition Type + Submission Level (+ Tier) | Lowest-level aggregation of individual SCVs. Applies submission-level-specific classification and conflict detection logic |
-| Tier Grouping | `gks_vcv_grouping_tier_agg` | Variation + Statement Group + Proposition Type + Submission Level | Combines tier-level groups (somatic sci only). Ranks tiers by priority, designates top tier as contributing |
+| Classification Grouping | `gks_vcv_grouping_base_agg` | Variation + Statement Group + Proposition Type + Submission Level (+ Tier) | Lowest-level aggregation of individual SCVs. Applies submission-level-specific classification and conflict detection logic |
+| Priority Grouping | `gks_vcv_grouping_tier_agg` | Variation + Statement Group + Proposition Type + Submission Level | Combines tier-level groups (somatic sci only). Ranks tiers by priority, designates top tier as contributing |
 
-Tier Grouping applies only to somatic tiered records (`tier_grouping IS NOT NULL`). Non-tiered records (all germline and non-sci somatic) flow directly from Base Grouping to the Aggregate Contribution Layer.
+Priority Grouping applies only to somatic tiered records (`tier_grouping IS NOT NULL`). Non-tiered records (all germline and non-sci somatic) flow directly from Classification Grouping to the Aggregate Contribution Layer.
 
 ### Aggregate Contribution Layer
 

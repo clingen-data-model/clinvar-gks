@@ -182,12 +182,12 @@ Key terms, acronyms, and concepts used throughout the ClinVar-GKS documentation.
 :   Submission ranked lower than the contributing submission. Preserved in the evidence structure but not reflected in the aggregate label.
 
 **Grouping Layer**
-:   First conceptual aggregation layer. Consists of Base Grouping and Tier Grouping steps. Produces initial aggregation of SCVs into groups by submission level.
+:   First conceptual aggregation layer. Consists of Classification Grouping and Priority Grouping steps. Produces initial aggregation of SCVs into groups by submission level.
 
-**Base Grouping** (Grouping Layer)
+**Classification Grouping** (Grouping Layer)
 :   First step of the Grouping Layer. Groups SCVs by variation + statement group + proposition type + submission level [+ tier]. Applies submission-level-specific classification and conflict detection logic.
 
-**Tier Grouping** (Grouping Layer)
+**Priority Grouping** (Grouping Layer)
 :   Second step of the Grouping Layer (somatic sci only). Aggregates tier-level groups within each submission level.
 
 **Aggregate Contribution Layer**
