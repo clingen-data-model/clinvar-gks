@@ -8,7 +8,7 @@ The Germline Classification category groups 9 statement types.
 
 | # | Statement Type | Classification | Direction | Strength |
 | --- | --- | --- | --- | --- |
-| G.1 | Pathogenicity | Pathogenic | supports | definitive |
+| G.01 | Pathogenicity | Pathogenic | supports | definitive |
 |  |  | Pathogenic, low penetrance | supports | definitive |
 |  |  | Risk allele | supports | definitive |
 |  |  | Likely pathogenic | supports | likely |
@@ -21,15 +21,15 @@ The Germline Classification category groups 9 statement types.
 |  |  | Benign | disputes | definitive |
 |  |  | Likely benign | disputes | likely |
 |  |  | Benign/Likely benign | disputes | \<null\> |
-| G.2 | Risk Factor | risk factor | supports | \<null\> |
-| G.3 | Protective | protective | supports | \<null\> |
-| G.4 | Drug Response | drug response | supports | \<null\> |
-| G.5 | Other | other | supports | \<null\> |
-| G.6 | Not Provided | not provided | supports | \<null\> |
-| G.7 | Affects | Affects | supports | \<null\> |
-| G.8 | Association | association | supports | \<null\> |
+| G.02 | Drug Response | drug response | supports | \<null\> |
+| G.03 | Risk Factor | risk factor | supports | \<null\> |
+| G.04 | Protective | protective | supports | \<null\> |
+| G.05 | Affects | Affects | supports | \<null\> |
+| G.06 | Association | association | supports | \<null\> |
 |  |  | association not found | disputes | \<null\> |
-| G.9 | Confers Sensitivity | confers sensitivity | supports | \<null\> |
+| G.07 | Confers Sensitivity | confers sensitivity | supports | \<null\> |
+| G.08 | Other | other | supports | \<null\> |
+| G.09 | Not Provided | not provided | supports | \<null\> |
 
 ## Oncogenicity Classification
 
@@ -37,7 +37,7 @@ The Oncogenicity Classification category groups only 1 statement type.
 
 | # | Statement Type | Classification | Direction | Strength |
 | --- | --- | --- | --- | --- |
-| O.1 | Oncogenicity | Oncogenic | supports | definitive |
+| O.10 | Oncogenicity | Oncogenic | supports | definitive |
 |  |  | Likely oncogenic | supports | likely |
 |  |  | Uncertain significance | neutral | \<null\> |
 |  |  | Benign | disputes | definitive |
@@ -51,7 +51,7 @@ The Somatic Clinical Impact category groups 1 primary statement type with up to 
 
 | # | Statement Type | Classification | Direction | Strength |
 | --- | --- | --- | --- | --- |
-| S.1 | Clinical Significance | Tier I - Strong | supports | strong |
+| S.11 | Clinical Significance | Tier I - Strong | supports | strong |
 |  |  | Tier II - Potential | supports | potential |
 |  |  | Tier III - Unknown | neutral | \<null\> |
 |  |  | Tier IV - Benign/Likely benign | disputes | \<null\> |
@@ -62,6 +62,6 @@ All Tier I and II Clinical Significance statements MUST have at least one of the
 
 | # | Statement Type | Direction | Strength |
 | --- | --- | --- | --- |
-| S.2 | Therapeutic Response | supports | strong or potential |
-| S.3 | Diagnostic | supports | strong or potential |
-| S.4 | Prognostic | supports | strong or potential |
+| S.12 | Therapeutic Response | supports | strong or potential |
+| S.13 | Diagnostic | supports | strong or potential |
+| S.14 | Prognostic | supports | strong or potential |

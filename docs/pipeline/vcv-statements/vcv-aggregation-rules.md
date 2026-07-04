@@ -108,7 +108,7 @@ Used by all submission levels (PG, EP, CP, NOCP, NOCL, and FLAG). Contains a sin
   "classification": {
     "conceptType": "Classification",
     "name": "Pathogenic/Likely pathogenic",
-    "extension": [
+    "extensions": [
       {"name": "conflictingExplanation", "value": "Pathogenic(3); Likely pathogenic(2)"}
     ]
   }
