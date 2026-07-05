@@ -97,16 +97,17 @@ CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all');
 
 ```bash
 # Export dictionary tables from BigQuery to GCS as NDJSON
-./src/scripts/export-gks-dicts.sh clinvar_2026_06_14_v2_5_0 clingen-dev-clinvar-gks gks-dicts
+./src/scripts/export-gks-dicts.sh clinvar_2026_06_14_v2_5_0 clinvar-gks gks-dicts
 
 # Assemble NDJSON files into JSON bundle + Parquet
 python3 ./src/scripts/assemble-gks-dicts.py \
-  gs://clingen-dev-clinvar-gks/gks-dicts/ \
-  gs://clingen-public/clinvar-gks/2026-06-14/release/clinvar-gks-2026-06-14.json.gz \
+  gs://clinvar-gks/gks-dicts/ \
+  2026-06-14 \
   --parquet-dir /tmp/parquet-output
 
 # Upload bundle to Cloudflare R2
-./src/scripts/upload-gks-to-r2.sh 2026-06-14 v2_5_0
+./src/scripts/upload-gks-to-r2.sh 2026-06-14 v2_5_0 /tmp/clinvar-gks-2026-06-14.json.gz \
+  --parquet-dir=/tmp/parquet-output
 ```
 
 See [Export](export.md) for details on each step.
