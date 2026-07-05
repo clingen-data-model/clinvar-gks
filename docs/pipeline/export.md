@@ -20,7 +20,7 @@ The export and distribution process uses three scripts, executed in sequence:
 
 ```bash
 # Example
-./src/scripts/export-gks-dicts.sh clinvar_2026_06_14_v2_5_0 clingen-dev-clinvar-gks gks-dicts
+./src/scripts/export-gks-dicts.sh clinvar_2026_06_14_v2_5_0 clinvar-gks gks-dicts
 ```
 
 The script exports the following tables:
@@ -62,12 +62,12 @@ python3 ./src/scripts/assemble-gks-dicts.py <source> <date> [--parquet-dir DIR] 
 ```bash
 # JSON bundle only
 python3 ./src/scripts/assemble-gks-dicts.py \
-  gs://clingen-dev-clinvar-gks/gks-dicts/ \
+  gs://clinvar-gks/gks-dicts/ \
   2026-06-14
 
 # JSON bundle + Parquet files
 python3 ./src/scripts/assemble-gks-dicts.py \
-  gs://clingen-dev-clinvar-gks/gks-dicts/ \
+  gs://clinvar-gks/gks-dicts/ \
   2026-06-14 \
   --parquet-dir /tmp/parquet-output
 ```
@@ -147,11 +147,11 @@ A complete export for the June 14, 2026 release using the individual scripts:
 
 ```bash
 # 1. Export dictionary tables to GCS
-./src/scripts/export-gks-dicts.sh clinvar_2026_06_14_v2_5_0 clingen-dev-clinvar-gks gks-dicts
+./src/scripts/export-gks-dicts.sh clinvar_2026_06_14_v2_5_0 clinvar-gks gks-dicts
 
 # 2. Assemble into a single bundle + Parquet files
 python3 ./src/scripts/assemble-gks-dicts.py \
-  gs://clingen-dev-clinvar-gks/gks-dicts/ \
+  gs://clinvar-gks/gks-dicts/ \
   2026-06-14 \
   --parquet-dir /tmp/clinvar-gks-2026-06-14-parquet
 

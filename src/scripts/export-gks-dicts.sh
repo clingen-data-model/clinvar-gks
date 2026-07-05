@@ -3,7 +3,7 @@
 # Export all GKS dictionary tables to GCS as NDJSON
 #
 # Usage: ./export-gks-dicts.sh <dataset> <gcs_bucket> [prefix]
-# Example: ./export-gks-dicts.sh clinvar_2025_06_08 clingen-dev-clinvar-gks gks-dicts
+# Example: ./export-gks-dicts.sh clinvar_2025_06_08 clinvar-gks gks-dicts
 
 set -euo pipefail
 
