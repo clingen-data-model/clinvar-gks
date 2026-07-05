@@ -14,7 +14,7 @@ Download the most recent releases using the stable URLs below:
 | --- | --- | --- |
 | Monthly (JSON) | [clinvar-gks_00-latest.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz) | Latest monthly release (first weekly of each month) |
 | Weekly (JSON) | [clinvar-gks_00-latest_weekly.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz) | Latest weekly release |
-| Parquet | [datasets/parquet/](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/) | Typed Parquet files (one per bundle section), always latest release |
+| Parquet | See [download instructions](#download) | Typed Parquet files (one per bundle section), always latest release |
 
 ### Download with curl
 
@@ -200,6 +200,22 @@ curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3
       container.appendChild(section);
     }
 
+    // Parquet files (static list — always the same 15 sections at fixed paths)
+    var parquetSections = [
+      "sequenceReference", "location", "allele", "copyNumberCount", "copyNumberChange",
+      "gene", "variation", "condition", "conditionSet", "submitter",
+      "proposition", "evidenceLine", "scv", "vcv", "rcv"
+    ];
+    var parquetFiles = parquetSections.map(function(s) {
+      return {name: s + ".parquet", path: "datasets/parquet/" + s + ".parquet"};
+    });
+    hasContent = true;
+    var pSection = el("div", {className: "r2-section"});
+    pSection.appendChild(el("div", {className: "r2-section-title", text: "Parquet Files"}));
+    var pGroup = renderFileGroup("datasets/parquet/", parquetFiles, false);
+    if (pGroup) pSection.appendChild(pGroup);
+    container.appendChild(pSection);
+
     // Archives by year
     var years = Object.keys(archives).sort().reverse();
     if (years.length > 0) {
@@ -299,20 +315,44 @@ Available Parquet files (15 sections):
 
 ### Working with Parquet Files
 
-Parquet files can be queried directly from the R2 URL — no download step required — using tools like DuckDB. They can also be downloaded and loaded into pandas, polars, or any Parquet-compatible tool.
+Download the Parquet files you need, then query them locally. The R2 hosting has rate limits and is designed for file downloads, not as a remote query endpoint for tools like DuckDB.
 
-#### DuckDB (CLI or Python)
+#### Download
 
-[DuckDB](https://duckdb.org/) can query Parquet files directly over HTTPS with zero setup:
+Download individual sections or all files at once:
 
 ```bash
-# Install DuckDB (macOS)
-brew install duckdb
+BASE="https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet"
+mkdir -p clinvar-gks-parquet && cd clinvar-gks-parquet
 
-# Query SCV statements directly from the URL
+# Download specific sections
+curl -O "${BASE}/scv.parquet"
+curl -O "${BASE}/proposition.parquet"
+curl -O "${BASE}/condition.parquet"
+
+# Or download all 15 sections
+for section in sequenceReference location allele copyNumberCount copyNumberChange \
+               gene variation condition conditionSet submitter proposition \
+               evidenceLine scv vcv rcv; do
+  curl -O "${BASE}/${section}.parquet"
+done
+```
+
+#### DuckDB
+
+[DuckDB](https://duckdb.org/) is the fastest way to explore Parquet files — it queries them directly with no data loading step.
+
+```bash
+# Install DuckDB
+brew install duckdb   # macOS
+# or: pip install duckdb
+```
+
+```bash
+# Query SCV statements
 duckdb -c "
   SELECT id, classification, direction, strength, confidence
-  FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet'
+  FROM 'scv.parquet'
   WHERE classification = 'Pathogenic'
   LIMIT 10;
 "
@@ -322,26 +362,27 @@ duckdb -c "
 # Count classifications across all SCVs
 duckdb -c "
   SELECT classification, direction, COUNT(*) as n
-  FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet'
+  FROM 'scv.parquet'
   GROUP BY classification, direction
   ORDER BY n DESC;
 "
 ```
 
 ```bash
-# Join SCVs with their propositions to find pathogenic variants for a specific condition
+# Join SCVs with propositions to find pathogenic variants for a specific condition
 duckdb -c "
-  SET s3_url_style = 'path';
-  CREATE VIEW scv AS SELECT * FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet';
-  CREATE VIEW prop AS SELECT * FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/proposition.parquet';
-
   SELECT s.id, s.classification, p.predicate, p.object_condition
-  FROM scv s
-  JOIN prop p ON s.proposition_id = p.id
+  FROM 'scv.parquet' s
+  JOIN 'proposition.parquet' p ON s.proposition_id = p.id
   WHERE s.classification = 'Pathogenic'
     AND p.object_condition LIKE '%clinvar.trait:9580%'
   LIMIT 10;
 "
+```
+
+```bash
+# Inspect the schema of any section
+duckdb -c "DESCRIBE SELECT * FROM 'scv.parquet';"
 ```
 
 DuckDB also works from Python:
@@ -349,12 +390,9 @@ DuckDB also works from Python:
 ```python
 import duckdb
 
-BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet"
-
-# Query directly — no download needed
-df = duckdb.sql(f"""
+df = duckdb.sql("""
     SELECT id, classification, direction, strength, confidence
-    FROM '{BASE}/scv.parquet'
+    FROM 'scv.parquet'
     WHERE classification = 'Pathogenic'
     LIMIT 100
 """).df()
@@ -367,10 +405,8 @@ print(df)
 ```python
 import pandas as pd
 
-BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet"
-
-# Read a full section into a DataFrame
-scv = pd.read_parquet(f"{BASE}/scv.parquet")
+# Load a section into a DataFrame
+scv = pd.read_parquet("scv.parquet")
 
 # Filter pathogenic SCVs
 pathogenic = scv[scv["classification"] == "Pathogenic"]
@@ -403,11 +439,54 @@ SCV statements include additional columns: `description`, `contributions`, `repo
 
 The `proposition` section includes `subject_variant`, `predicate`, `object_condition`, `object_condition_set`, `type`, and qualifier columns — enabling JOINs across statements, variants, and conditions without parsing JSON.
 
-Every section includes `id` and `data` at minimum. Run `DESCRIBE` in DuckDB to see the full schema for any section:
+Every section includes `id` and `data` at minimum. Run `DESCRIBE` in DuckDB to see the full schema for any section.
 
-```bash
-duckdb -c "DESCRIBE SELECT * FROM 'https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv.parquet';"
+#### Joining Parquet Sections
+
+The typed columns make cross-section JOINs fast and readable — most analytical queries can be answered without parsing JSON. However, some data is only available in the `data` column (the full JSON string), which requires JSON extraction functions.
+
+**What typed columns give you:** Efficient filtering, grouping, and JOINs on the most commonly queried fields. The query below finds all pathogenic SCVs for a specific gene, joining three sections purely on typed columns:
+
+```sql
+-- All pathogenic SCVs for BRCA1, with submitter and condition
+SELECT
+    s.id AS scv_id,
+    s.classification,
+    s.direction,
+    s.confidence,
+    p.predicate,
+    p.object_condition AS condition_id
+FROM 'scv.parquet' s
+JOIN 'proposition.parquet' p ON s.proposition_id = p.id
+WHERE s.classification = 'Pathogenic'
+  AND p.subject_variant = 'clinvar:17661';
 ```
+
+**Where you hit limits:** Fields like condition names, submitter names, gene symbols, HGVS expressions, and extension values are not extracted into typed columns — they live inside the `data` JSON string. To access them, use DuckDB's `json_extract_string`:
+
+```sql
+-- Same query but with condition name and submitter name resolved
+SELECT
+    s.id AS scv_id,
+    s.classification,
+    json_extract_string(c.data, '$.name') AS condition_name,
+    json_extract_string(s.data, '$.contributions[0].agent.name') AS submitter
+FROM 'scv.parquet' s
+JOIN 'proposition.parquet' p ON s.proposition_id = p.id
+JOIN 'condition.parquet' c ON p.object_condition = c.id
+WHERE s.classification = 'Pathogenic'
+  AND p.subject_variant = 'clinvar:17661';
+```
+
+JSON extraction is slower than typed column access, but DuckDB handles it efficiently for analytical queries. For bulk processing where you need many nested fields, load the `data` column into your application and parse the full JSON objects there.
+
+**Summary:**
+
+| Approach | Best for | Tradeoff |
+| --- | --- | --- |
+| Typed columns only | Filtering, counting, grouping, JOINs | Fast, but limited to extracted fields |
+| Typed columns + `json_extract_string` | Ad-hoc exploration needing a few nested fields | Slightly slower; syntax is verbose |
+| Parse `data` column in application code | Bulk processing needing many nested fields | Full flexibility; requires application-side JSON parsing |
 
 ---
 
