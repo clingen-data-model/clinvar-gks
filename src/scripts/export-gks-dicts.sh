@@ -39,9 +39,10 @@ extract() {
 extract_parquet() {
   local table="$1"
   local basename="$2"
-  echo "  Exporting ${table} -> ${basename} (Parquet)"
+  local sharded="${basename%.parquet}-*.parquet"
+  echo "  Exporting ${table} -> ${sharded} (Parquet)"
   bq extract --destination_format PARQUET --compression SNAPPY \
-    "${DATASET}.${table}" "${GCS_PARQUET_PATH}/${basename}"
+    "${DATASET}.${table}" "${GCS_PARQUET_PATH}/${sharded}"
 }
 
 extract_parquet_kv() {
