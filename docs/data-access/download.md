@@ -441,51 +441,106 @@ The `proposition` section includes `subject_variant`, `predicate`, `object_condi
 
 Every section includes `id` and `data` at minimum. Run `DESCRIBE` in DuckDB to see the full schema for any section.
 
-#### Joining Parquet Sections
+#### Example Queries
 
-The typed columns make cross-section JOINs fast and readable — most analytical queries can be answered without parsing JSON. However, some data is only available in the `data` column (the full JSON string), which requires JSON extraction functions.
+These examples demonstrate cross-section JOINs using typed columns. Most analytical queries can be answered without parsing JSON — the proposition's `gene_context_qualifier` struct carries the gene symbol and NCBI Gene ID directly, and the condition's `primary_coding` struct carries the MedGen code.
 
-**What typed columns give you:** Efficient filtering, grouping, and JOINs on the most commonly queried fields. The query below finds all pathogenic SCVs for a specific gene, joining three sections purely on typed columns:
+**All SCVs for a gene — detailed view:**
 
 ```sql
--- All pathogenic SCVs for BRCA1, with submitter and condition
+-- SCVs for BRCA1: classification, review status, condition
 SELECT
     s.id AS scv_id,
     s.classification,
     s.direction,
-    s.confidence,
-    p.predicate,
-    p.object_condition AS condition_id
+    s.strength,
+    s.confidence AS review_status,
+    p.gene_context_qualifier.name AS gene,
+    c.name AS condition_name,
+    c.primary_coding.code AS condition_code
 FROM 'scv.parquet' s
 JOIN 'proposition.parquet' p ON s.proposition_id = p.id
-WHERE s.classification = 'Pathogenic'
-  AND p.subject_variant = 'clinvar:17661';
+LEFT JOIN 'condition.parquet' c ON p.object_condition = c.id
+WHERE p.gene_context_qualifier.name = 'BRCA1'
+ORDER BY s.classification;
 ```
 
-**Where you hit limits:** Fields like condition names, submitter names, gene symbols, HGVS expressions, and extension values are not extracted into typed columns — they live inside the `data` JSON string. To access them, use DuckDB's `json_extract_string`:
+**Classification summary for a gene:**
 
 ```sql
--- Same query but with condition name and submitter name resolved
+-- Count SCVs by classification and review status for BRCA2
+SELECT
+    p.gene_context_qualifier.name AS gene,
+    s.classification,
+    s.confidence AS review_status,
+    s.direction,
+    COUNT(*) AS scv_count
+FROM 'scv.parquet' s
+JOIN 'proposition.parquet' p ON s.proposition_id = p.id
+WHERE p.gene_context_qualifier.name = 'BRCA2'
+GROUP BY ALL
+ORDER BY scv_count DESC;
+```
+
+**Restrict to submissions with criteria provided:**
+
+```sql
+-- Only expert panel and criteria-provided SCVs for a gene
 SELECT
     s.id AS scv_id,
     s.classification,
-    json_extract_string(c.data, '$.name') AS condition_name,
-    json_extract_string(s.data, '$.contributions[0].agent.name') AS submitter
+    s.confidence AS review_status,
+    c.name AS condition_name
 FROM 'scv.parquet' s
 JOIN 'proposition.parquet' p ON s.proposition_id = p.id
-JOIN 'condition.parquet' c ON p.object_condition = c.id
-WHERE s.classification = 'Pathogenic'
-  AND p.subject_variant = 'clinvar:17661';
+LEFT JOIN 'condition.parquet' c ON p.object_condition = c.id
+WHERE p.gene_context_qualifier.name = 'TP53'
+  AND s.confidence IN ('criteria provided', 'reviewed by expert panel')
+ORDER BY s.classification;
 ```
 
-JSON extraction is slower than typed column access, but DuckDB handles it efficiently for analytical queries. For bulk processing where you need many nested fields, load the `data` column into your application and parse the full JSON objects there.
+**Cross-gene comparison — classification breakdown for multiple genes:**
+
+```sql
+-- Compare pathogenicity classification distributions across genes
+SELECT
+    p.gene_context_qualifier.name AS gene,
+    s.classification,
+    COUNT(*) AS n
+FROM 'scv.parquet' s
+JOIN 'proposition.parquet' p ON s.proposition_id = p.id
+WHERE p.gene_context_qualifier.name IN ('BRCA1', 'BRCA2', 'TP53', 'MLH1')
+  AND s.confidence = 'criteria provided'
+GROUP BY gene, s.classification
+ORDER BY gene, n DESC;
+```
+
+**Accessing fields not in typed columns:**
+
+Some fields — like submitter names, HGVS expressions, and assertion methods — are only available in the `data` column (full JSON string). Use DuckDB's `json_extract_string` to access them:
+
+```sql
+-- SCVs with submitter name and assertion method (from JSON)
+SELECT
+    s.id AS scv_id,
+    s.classification,
+    p.gene_context_qualifier.name AS gene,
+    json_extract_string(s.data, '$.contributions[0].agent.name') AS submitter,
+    json_extract_string(s.data, '$.specifiedBy.name') AS method
+FROM 'scv.parquet' s
+JOIN 'proposition.parquet' p ON s.proposition_id = p.id
+WHERE p.gene_context_qualifier.name = 'BRCA1'
+  AND s.classification = 'Pathogenic'
+  AND s.confidence = 'reviewed by expert panel'
+LIMIT 20;
+```
 
 **Summary:**
 
 | Approach | Best for | Tradeoff |
 | --- | --- | --- |
-| Typed columns only | Filtering, counting, grouping, JOINs | Fast, but limited to extracted fields |
-| Typed columns + `json_extract_string` | Ad-hoc exploration needing a few nested fields | Slightly slower; syntax is verbose |
+| Typed columns only | Filtering, counting, grouping, JOINs on classification, gene, condition, review status | Fast; covers most analytical questions |
+| Typed columns + `json_extract_string` | Ad-hoc queries needing submitter names, HGVS, methods | Slightly slower; syntax is verbose |
 | Parse `data` column in application code | Bulk processing needing many nested fields | Full flexibility; requires application-side JSON parsing |
 
 ---
