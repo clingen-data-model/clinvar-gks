@@ -58,9 +58,9 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
                │
 ┌──────────────▼───────────────┐
 │ 9. Export & Distribute       │  export-gks-dicts.sh
-│    Export dicts to GCS,      │  assemble-gks-dicts.py
-│    assemble JSON bundle +    │  upload-gks-to-r2.sh
-│    Parquet, upload to R2     │  → R2 public bucket
+│    Export NDJSON + Parquet    │  assemble-gks-dicts.py
+│    to GCS, assemble JSON     │  release-gks.sh
+│    bundle, upload to R2      │  → R2 public bucket
 └──────────────────────────────┘
 ```
 
@@ -96,18 +96,25 @@ CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all');
 ### Step 4: Export & Distribute
 
 ```bash
-# Export dictionary tables from BigQuery to GCS as NDJSON
+# Run the full release pipeline (export, assemble, download Parquet, upload to R2)
+./src/scripts/release-gks.sh 2026-06-14 v2_5_0
+```
+
+Or run each step individually:
+
+```bash
+# 1. Export dictionary tables to GCS (NDJSON + Parquet)
 ./src/scripts/export-gks-dicts.sh clinvar_2026_06_14_v2_5_0 clinvar-gks gks-dicts
 
-# Assemble NDJSON files into JSON bundle + Parquet
-python3 ./src/scripts/assemble-gks-dicts.py \
-  gs://clinvar-gks/gks-dicts/ \
-  2026-06-14 \
-  --parquet-dir /tmp/parquet-output
+# 2. Assemble NDJSON into JSON bundle
+python3 ./src/scripts/assemble-gks-dicts.py gs://clinvar-gks/gks-dicts/ 2026-06-14
 
-# Upload bundle to Cloudflare R2
+# 3. Download Parquet from GCS
+gsutil -m cp gs://clinvar-gks/gks-dicts-parquet/*.parquet /tmp/clinvar-gks-2026-06-14-parquet/
+
+# 4. Upload bundle + Parquet to Cloudflare R2
 ./src/scripts/upload-gks-to-r2.sh 2026-06-14 v2_5_0 /tmp/clinvar-gks-2026-06-14.json.gz \
-  --parquet-dir=/tmp/parquet-output
+  --parquet-dir=/tmp/clinvar-gks-2026-06-14-parquet
 ```
 
 See [Export](export.md) for details on each step.
