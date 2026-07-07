@@ -144,11 +144,27 @@ fi
 if [[ "$START_STEP" -le 3 ]]; then
   echo "=== Step 3/4: Downloading Parquet files from GCS ==="
   if $DRY_RUN; then
-    echo "  [dry-run] Would download ${GCS_PARQUET_PATH}/*.parquet to ${PARQUET_DIR}/"
+    echo "  [dry-run] Would download ${GCS_PARQUET_PATH}/ to ${PARQUET_DIR}/"
   else
     mkdir -p "${PARQUET_DIR}"
-    gsutil -m cp "${GCS_PARQUET_PATH}/*.parquet" "${PARQUET_DIR}/"
-    echo "  Downloaded $(ls -1 "${PARQUET_DIR}"/*.parquet 2>/dev/null | wc -l) Parquet files"
+    GCS_DOWNLOAD_DIR="${PARQUET_DIR}/_gcs_shards"
+    mkdir -p "${GCS_DOWNLOAD_DIR}"
+    gsutil -m cp "${GCS_PARQUET_PATH}/*.parquet" "${GCS_DOWNLOAD_DIR}/"
+
+    # Merge sharded Parquet files into one file per section.
+    # BQ export produces shards like allele-000000000000.parquet, allele-000000000001.parquet.
+    # Consumers expect a single allele.parquet per section.
+    echo "  Merging shards into single files per section..."
+    for first_shard in "${GCS_DOWNLOAD_DIR}"/*-000000000000.parquet; do
+      [ -f "$first_shard" ] || continue
+      section_base="$(basename "$first_shard" | sed 's/-000000000000\.parquet//')"
+      merged="${PARQUET_DIR}/${section_base}.parquet"
+      echo "    ${section_base} ($(ls -1 "${GCS_DOWNLOAD_DIR}/${section_base}"-*.parquet | wc -l) shards)"
+      duckdb -c "COPY (SELECT * FROM read_parquet('${GCS_DOWNLOAD_DIR}/${section_base}-*.parquet')) TO '${merged}' (FORMAT PARQUET, COMPRESSION SNAPPY);"
+    done
+    rm -rf "${GCS_DOWNLOAD_DIR}"
+
+    echo "  ${PARQUET_DIR}/ contains $(ls -1 "${PARQUET_DIR}"/*.parquet 2>/dev/null | wc -l) Parquet files"
   fi
   echo ""
 else
