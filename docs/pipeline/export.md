@@ -79,13 +79,11 @@ Install `orjson` for best performance:
 pip install orjson
 ```
 
-### Step 3: Download Parquet from GCS
+### Step 3: Download and Merge Parquet from GCS
 
-The release script downloads Parquet files from GCS to a local directory for upload to R2. This step is handled automatically by `release-gks.sh`.
+`release-gks.sh` downloads Parquet shards from GCS, merges them into one file per section using DuckDB, and stages the merged files for upload. BigQuery exports may produce multiple shards per table (e.g., `allele-000000000000.parquet`, `allele-000000000001.parquet`); this step consolidates them into a single `allele.parquet`.
 
-```bash
-gsutil -m cp gs://clinvar-gks/gks-dicts-parquet/*.parquet /tmp/clinvar-gks-2026-06-14-parquet/
-```
+This step is handled automatically by `release-gks.sh` and cannot be run as a standalone script.
 
 #### Parquet Output
 
@@ -148,13 +146,22 @@ The script auto-detects month and year boundaries. When a new month begins, the 
 - **Google Cloud SDK** — `bq` and `gsutil` commands for BigQuery export and GCS operations
 - **AWS CLI** — configured with an `r2` profile for Cloudflare R2 access
 - **Python 3** — for the assembly script; `orjson` (faster JSON) recommended
+- **DuckDB CLI** — for merging Parquet shards into single files per section
 - **BigQuery access** — read access to the target dataset in `clingen-dev`
 
 ---
 
 ## Full Example
 
-A complete export for the June 14, 2026 release using the individual scripts:
+A complete release for June 14, 2026:
+
+```bash
+./src/scripts/release-gks.sh 2026-06-14 v2_5_0
+```
+
+This runs all four steps: export to GCS, assemble JSON bundle, download and merge Parquet, upload to R2.
+
+Steps 1 and 2 can also be run individually. Steps 3–4 (Parquet download, shard merging, and upload) are handled internally by `release-gks.sh` — use `--start-step` to resume from a specific step.
 
 ```bash
 # 1. Export dictionary tables to GCS (NDJSON + Parquet)
@@ -165,19 +172,6 @@ python3 ./src/scripts/assemble-gks-dicts.py \
   gs://clinvar-gks/gks-dicts/ \
   2026-06-14
 
-# 3. Download Parquet files from GCS
-mkdir -p /tmp/clinvar-gks-2026-06-14-parquet
-gsutil -m cp gs://clinvar-gks/gks-dicts-parquet/*.parquet \
-  /tmp/clinvar-gks-2026-06-14-parquet/
-
-# 4. Upload bundle + Parquet to Cloudflare R2
-./src/scripts/upload-gks-to-r2.sh 2026-06-14 v2_5_0 \
-  /tmp/clinvar-gks-2026-06-14.json.gz \
-  --parquet-dir=/tmp/clinvar-gks-2026-06-14-parquet
-```
-
-Or use `release-gks.sh` to run all four steps in sequence:
-
-```bash
-./src/scripts/release-gks.sh 2026-06-14 v2_5_0
+# 3-4. Download Parquet, merge shards, upload to R2
+./src/scripts/release-gks.sh 2026-06-14 v2_5_0 --start-step=3
 ```

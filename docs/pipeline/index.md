@@ -83,7 +83,6 @@ Export, process externally with vrs-python, and load back. See [VRS Processing](
 From the BigQuery console:
 
 ```sql
-CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_scv_condition_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_scv_statement_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_vcv_proc`(CURRENT_DATE(), FALSE);
@@ -100,7 +99,7 @@ CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all');
 ./src/scripts/release-gks.sh 2026-06-14 v2_5_0
 ```
 
-Or run each step individually:
+Steps 1 and 2 can also be run individually. Steps 3–4 (Parquet download, shard merging, and upload) are handled internally by `release-gks.sh` — use `--start-step` to resume from a specific step.
 
 ```bash
 # 1. Export dictionary tables to GCS (NDJSON + Parquet)
@@ -109,12 +108,8 @@ Or run each step individually:
 # 2. Assemble NDJSON into JSON bundle
 python3 ./src/scripts/assemble-gks-dicts.py gs://clinvar-gks/gks-dicts/ 2026-06-14
 
-# 3. Download Parquet from GCS
-gsutil -m cp gs://clinvar-gks/gks-dicts-parquet/*.parquet /tmp/clinvar-gks-2026-06-14-parquet/
-
-# 4. Upload bundle + Parquet to Cloudflare R2
-./src/scripts/upload-gks-to-r2.sh 2026-06-14 v2_5_0 /tmp/clinvar-gks-2026-06-14.json.gz \
-  --parquet-dir=/tmp/clinvar-gks-2026-06-14-parquet
+# 3-4. Download Parquet, merge shards, upload to R2
+./src/scripts/release-gks.sh 2026-06-14 v2_5_0 --start-step=3
 ```
 
 See [Export](export.md) for details on each step.
