@@ -63,6 +63,113 @@ extract_parquet_kv() {
     FROM \`${DATASET}.${table}\`"
 }
 
+extract_parquet_stmt() {
+  # VCV/RCV statement tables: strip JSON pointer prefixes from FK columns.
+  #   proposition -> proposition_id, hasEvidenceLines -> has_evidence_lines
+  local table="$1"
+  local basename="$2"
+  local sharded="${basename%.parquet}-*.parquet"
+  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
+  bq query --use_legacy_sql=false --nouse_cache \
+    "EXPORT DATA OPTIONS(
+      uri='${GCS_PARQUET_PATH}/${sharded}',
+      format='PARQUET',
+      compression='SNAPPY',
+      overwrite=true
+    ) AS
+    SELECT * EXCEPT(proposition, hasEvidenceLines),
+      REGEXP_REPLACE(proposition, r'^#/[^/]+/', '') AS proposition_id,
+      ARRAY(SELECT REGEXP_REPLACE(el, r'^#/[^/]+/', '') FROM UNNEST(hasEvidenceLines) AS el) AS has_evidence_lines
+    FROM \`${DATASET}.${table}\`"
+}
+
+extract_parquet_scv() {
+  # SCV statement: same as stmt plus contributions[].contributor FK cleanup.
+  local table="$1"
+  local basename="$2"
+  local sharded="${basename%.parquet}-*.parquet"
+  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
+  bq query --use_legacy_sql=false --nouse_cache \
+    "EXPORT DATA OPTIONS(
+      uri='${GCS_PARQUET_PATH}/${sharded}',
+      format='PARQUET',
+      compression='SNAPPY',
+      overwrite=true
+    ) AS
+    SELECT * EXCEPT(proposition, hasEvidenceLines, contributions),
+      REGEXP_REPLACE(proposition, r'^#/[^/]+/', '') AS proposition_id,
+      ARRAY(
+        SELECT AS STRUCT c.type, REGEXP_REPLACE(c.contributor, r'^#/[^/]+/', '') AS contributor, c.date, c.activityType
+        FROM UNNEST(contributions) AS c
+      ) AS contributions,
+      ARRAY(SELECT REGEXP_REPLACE(el, r'^#/[^/]+/', '') FROM UNNEST(hasEvidenceLines) AS el) AS has_evidence_lines
+    FROM \`${DATASET}.${table}\`"
+}
+
+extract_parquet_el() {
+  # SCV evidence line: proposition -> proposition_id FK.
+  local table="$1"
+  local basename="$2"
+  local sharded="${basename%.parquet}-*.parquet"
+  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
+  bq query --use_legacy_sql=false --nouse_cache \
+    "EXPORT DATA OPTIONS(
+      uri='${GCS_PARQUET_PATH}/${sharded}',
+      format='PARQUET',
+      compression='SNAPPY',
+      overwrite=true
+    ) AS
+    SELECT * EXCEPT(proposition),
+      REGEXP_REPLACE(proposition, r'^#/[^/]+/', '') AS proposition_id
+    FROM \`${DATASET}.${table}\`"
+}
+
+extract_parquet_fk_array() {
+  # Strip #/section/ prefix from each element of a single array column.
+  local table="$1"
+  local basename="$2"
+  local old_col="$3"
+  local new_col="$4"
+  local sharded="${basename%.parquet}-*.parquet"
+  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
+  bq query --use_legacy_sql=false --nouse_cache \
+    "EXPORT DATA OPTIONS(
+      uri='${GCS_PARQUET_PATH}/${sharded}',
+      format='PARQUET',
+      compression='SNAPPY',
+      overwrite=true
+    ) AS
+    SELECT * EXCEPT(${old_col}),
+      ARRAY(SELECT REGEXP_REPLACE(el, r'^#/[^/]+/', '') FROM UNNEST(${old_col}) AS el) AS ${new_col}
+    FROM \`${DATASET}.${table}\`"
+}
+
+extract_parquet_variation() {
+  # Variation table: members array + nested constraints struct FK cleanup.
+  local table="$1"
+  local basename="$2"
+  local sharded="${basename%.parquet}-*.parquet"
+  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
+  bq query --use_legacy_sql=false --nouse_cache \
+    "EXPORT DATA OPTIONS(
+      uri='${GCS_PARQUET_PATH}/${sharded}',
+      format='PARQUET',
+      compression='SNAPPY',
+      overwrite=true
+    ) AS
+    SELECT * EXCEPT(constraints, members),
+      ARRAY(SELECT REGEXP_REPLACE(m, r'^#/[^/]+/', '') FROM UNNEST(members) AS m) AS members,
+      ARRAY(
+        SELECT AS STRUCT
+          c.type,
+          REGEXP_REPLACE(c.allele, r'^#/[^/]+/', '') AS allele,
+          REGEXP_REPLACE(c.location, r'^#/[^/]+/', '') AS location,
+          c.copies, c.copyChange, c.matchCharacteristic, c.relations
+        FROM UNNEST(constraints) AS c
+      ) AS constraints
+    FROM \`${DATASET}.${table}\`"
+}
+
 if ! $PARQUET_ONLY; then
   echo "Exporting NDJSON files to ${GCS_PATH}"
 
@@ -106,27 +213,27 @@ extract_parquet_kv gks_dict_allele allele.parquet
 extract_parquet_kv gks_dict_copy_number_count copyNumberCount.parquet
 extract_parquet_kv gks_dict_copy_number_change copyNumberChange.parquet
 extract_parquet_kv gks_dict_gene gene.parquet
-extract_parquet gks_dict_variation variation.parquet
+extract_parquet_variation gks_dict_variation variation.parquet
 
 # Conditions
 extract_parquet gks_dict_condition condition.parquet
-extract_parquet gks_dict_condition_set conditionSet.parquet
+extract_parquet_fk_array gks_dict_condition_set conditionSet.parquet concepts concepts
 
 # SCV (KV tables use EXPORT DATA)
 extract_parquet_kv gks_dict_submitter submitter.parquet
 extract_parquet_kv gks_dict_proposition proposition.parquet
-extract_parquet gks_dict_evidence_line evidenceLine.parquet
+extract_parquet_el gks_dict_evidence_line evidenceLine.parquet
 
 # VCV/RCV (KV tables use EXPORT DATA)
 extract_parquet_kv gks_dict_vcv_proposition vcv_proposition.parquet
-extract_parquet gks_dict_vcv_evidence_line vcv_evidenceLine.parquet
+extract_parquet_fk_array gks_dict_vcv_evidence_line vcv_evidenceLine.parquet evidenceItems evidence_items
 extract_parquet_kv gks_dict_rcv_proposition rcv_proposition.parquet
-extract_parquet gks_dict_rcv_evidence_line rcv_evidenceLine.parquet
+extract_parquet_fk_array gks_dict_rcv_evidence_line rcv_evidenceLine.parquet evidenceItems evidence_items
 
-# Statements
-extract_parquet gks_dict_scv scv.parquet
-extract_parquet gks_dict_vcv vcv.parquet
-extract_parquet gks_dict_rcv rcv.parquet
+# Statements (FK column transformations via EXPORT DATA)
+extract_parquet_scv gks_dict_scv scv.parquet
+extract_parquet_stmt gks_dict_vcv vcv.parquet
+extract_parquet_stmt gks_dict_rcv rcv.parquet
 
 echo "Done."
 if ! $PARQUET_ONLY; then
