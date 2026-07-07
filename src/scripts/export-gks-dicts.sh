@@ -44,6 +44,24 @@ extract_parquet() {
     "${DATASET}.${table}" "${GCS_PARQUET_PATH}/${basename}"
 }
 
+extract_parquet_kv() {
+  # KV tables have a JSON-typed `value` column that bq extract cannot handle.
+  # Use EXPORT DATA with TO_JSON_STRING to cast it to STRING.
+  local table="$1"
+  local basename="$2"
+  local sharded="${basename%.parquet}-*.parquet"
+  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
+  bq query --use_legacy_sql=false --nouse_cache \
+    "EXPORT DATA OPTIONS(
+      uri='${GCS_PARQUET_PATH}/${sharded}',
+      format='PARQUET',
+      compression='SNAPPY',
+      overwrite=true
+    ) AS
+    SELECT key, TO_JSON_STRING(value) AS value
+    FROM \`${DATASET}.${table}\`"
+}
+
 if ! $PARQUET_ONLY; then
   echo "Exporting NDJSON files to ${GCS_PATH}"
 
@@ -80,28 +98,28 @@ fi
 echo ""
 echo "Exporting Parquet files to ${GCS_PARQUET_PATH}"
 
-# Cat-VRS
-extract_parquet gks_dict_sequence_reference sequenceReference.parquet
-extract_parquet gks_dict_location location.parquet
-extract_parquet gks_dict_allele allele.parquet
-extract_parquet gks_dict_copy_number_count copyNumberCount.parquet
-extract_parquet gks_dict_copy_number_change copyNumberChange.parquet
-extract_parquet gks_dict_gene gene.parquet
+# Cat-VRS (KV tables — JSON value column requires EXPORT DATA)
+extract_parquet_kv gks_dict_sequence_reference sequenceReference.parquet
+extract_parquet_kv gks_dict_location location.parquet
+extract_parquet_kv gks_dict_allele allele.parquet
+extract_parquet_kv gks_dict_copy_number_count copyNumberCount.parquet
+extract_parquet_kv gks_dict_copy_number_change copyNumberChange.parquet
+extract_parquet_kv gks_dict_gene gene.parquet
 extract_parquet gks_dict_variation variation.parquet
 
 # Conditions
 extract_parquet gks_dict_condition condition.parquet
 extract_parquet gks_dict_condition_set conditionSet.parquet
 
-# SCV
-extract_parquet gks_dict_submitter submitter.parquet
-extract_parquet gks_dict_proposition proposition.parquet
+# SCV (KV tables use EXPORT DATA)
+extract_parquet_kv gks_dict_submitter submitter.parquet
+extract_parquet_kv gks_dict_proposition proposition.parquet
 extract_parquet gks_dict_evidence_line evidenceLine.parquet
 
-# VCV/RCV
-extract_parquet gks_dict_vcv_proposition vcv_proposition.parquet
+# VCV/RCV (KV tables use EXPORT DATA)
+extract_parquet_kv gks_dict_vcv_proposition vcv_proposition.parquet
 extract_parquet gks_dict_vcv_evidence_line vcv_evidenceLine.parquet
-extract_parquet gks_dict_rcv_proposition rcv_proposition.parquet
+extract_parquet_kv gks_dict_rcv_proposition rcv_proposition.parquet
 extract_parquet gks_dict_rcv_evidence_line rcv_evidenceLine.parquet
 
 # Statements
