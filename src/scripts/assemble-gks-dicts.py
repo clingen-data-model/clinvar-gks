@@ -585,10 +585,10 @@ PARQUET_SECTION_CONFIGS = {
         lambda k, v: (
             k,
             v.get("name"),
-            _ref(v.get("subject"), "#/variation/"),
+            _ref(v.get("subjectVariant"), "#/variation/"),
             v.get("predicate"),
-            _ref_if(v.get("object"), "#/condition/"),
-            _ref_if(v.get("object"), "#/conditionSet/"),
+            _ref_if(v.get("objectCondition"), "#/condition/"),
+            _ref_if(v.get("objectCondition"), "#/conditionSet/"),
             v.get("type"),
             _mappable_concept(v.get("geneContextQualifier")),
             _mappable_concept(v.get("modeOfInheritanceQualifier")),
