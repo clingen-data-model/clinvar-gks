@@ -436,12 +436,12 @@ Statement sections (`scv`, `vcv`, `rcv`) share a common set of typed columns:
 | --- | --- | --- |
 | `id` | string | Statement identifier |
 | `type` | string | Statement type |
-| `proposition_id` | string | FK to `proposition.parquet` |
+| `proposition_id` | string | FK to proposition Parquet (`proposition` for SCV, `vcv_proposition` for VCV, `rcv_proposition` for RCV) |
 | `classification` | string | Classification label (e.g., "Pathogenic") |
 | `strength` | string | Evidence strength (e.g., "definitive", "likely") |
 | `direction` | string | Evidence direction ("supports", "disputes", "neutral") |
 | `confidence` | string | Submission level label (e.g., "criteria provided") |
-| `has_evidence_lines` | list\<string\> | FK references to `evidenceLine.parquet` |
+| `has_evidence_lines` | list\<string\> | FK references to evidence line Parquet (`evidenceLine` for SCV, `vcv_evidenceLine` for VCV, `rcv_evidenceLine` for RCV) |
 | `extensions` | string | JSON array of extensions |
 | `data` | string | Full JSON object |
 
