@@ -1,20 +1,29 @@
 #!/bin/bash
 # export-gks-dicts.sh
-# Export all GKS dictionary tables to GCS as NDJSON
+# Export all GKS dictionary tables to GCS as NDJSON and/or Parquet
 #
-# Usage: ./export-gks-dicts.sh <dataset> <gcs_bucket> [prefix]
+# Usage: ./export-gks-dicts.sh <dataset> <gcs_bucket> [prefix] [--parquet-only]
 # Example: ./export-gks-dicts.sh clinvar_2025_06_08 clinvar-gks gks-dicts
+# Example: ./export-gks-dicts.sh clinvar_2025_06_08 clinvar-gks gks-dicts --parquet-only
 
 set -euo pipefail
 
-DATASET="${1:?Usage: $0 <dataset> <gcs_bucket> [prefix]}"
-BUCKET="${2:?Usage: $0 <dataset> <gcs_bucket> [prefix]}"
+# Parse positional args and flags
+DATASET="${1:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only]}"
+BUCKET="${2:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only]}"
 PREFIX="${3:-gks-dicts}"
+PARQUET_ONLY=false
+for arg in "$@"; do
+  case "$arg" in
+    --parquet-only) PARQUET_ONLY=true ;;
+  esac
+done
+
 GCS_PATH="gs://${BUCKET}/${PREFIX}"
 PARQUET_PREFIX="${PREFIX}-parquet"
 GCS_PARQUET_PATH="gs://${BUCKET}/${PARQUET_PREFIX}"
 
-echo "Exporting GKS dictionaries from ${DATASET} to ${GCS_PATH}"
+echo "Exporting GKS dictionaries from ${DATASET}"
 
 extract() {
   local table="$1"
@@ -35,34 +44,38 @@ extract_parquet() {
     "${DATASET}.${table}" "${GCS_PARQUET_PATH}/${basename}"
 }
 
-# Cat-VRS dictionaries (from gks_catvar_proc)
-extract gks_dict_sequence_reference sequenceReference.ndjson.gz
-extract gks_dict_location location.ndjson.gz
-extract gks_dict_allele allele.ndjson.gz
-extract gks_dict_copy_number_count copyNumberCount.ndjson.gz
-extract gks_dict_copy_number_change copyNumberChange.ndjson.gz
-extract gks_dict_gene gene.ndjson.gz
-extract gks_dict_variation variation.ndjson.gz
+if ! $PARQUET_ONLY; then
+  echo "Exporting NDJSON files to ${GCS_PATH}"
 
-# Condition dictionaries (from gks_scv_condition_proc)
-extract gks_dict_condition condition.ndjson.gz
-extract gks_dict_condition_set conditionSet.ndjson.gz
+  # Cat-VRS dictionaries (from gks_catvar_proc)
+  extract gks_dict_sequence_reference sequenceReference.ndjson.gz
+  extract gks_dict_location location.ndjson.gz
+  extract gks_dict_allele allele.ndjson.gz
+  extract gks_dict_copy_number_count copyNumberCount.ndjson.gz
+  extract gks_dict_copy_number_change copyNumberChange.ndjson.gz
+  extract gks_dict_gene gene.ndjson.gz
+  extract gks_dict_variation variation.ndjson.gz
 
-# SCV dictionaries (from gks_scv_statement_proc)
-extract gks_dict_submitter submitter.ndjson.gz
-extract gks_dict_proposition proposition.ndjson.gz
-extract gks_dict_evidence_line evidenceLine.ndjson.gz
+  # Condition dictionaries (from gks_scv_condition_proc)
+  extract gks_dict_condition condition.ndjson.gz
+  extract gks_dict_condition_set conditionSet.ndjson.gz
 
-# VCV/RCV proposition and evidence line dictionaries
-extract gks_dict_vcv_proposition vcv_proposition.ndjson.gz
-extract gks_dict_vcv_evidence_line vcv_evidenceLine.ndjson.gz
-extract gks_dict_rcv_proposition rcv_proposition.ndjson.gz
-extract gks_dict_rcv_evidence_line rcv_evidenceLine.ndjson.gz
+  # SCV dictionaries (from gks_scv_statement_proc)
+  extract gks_dict_submitter submitter.ndjson.gz
+  extract gks_dict_proposition proposition.ndjson.gz
+  extract gks_dict_evidence_line evidenceLine.ndjson.gz
 
-# Statement outputs
-extract gks_dict_scv scv.ndjson.gz
-extract gks_dict_vcv vcv.ndjson.gz
-extract gks_dict_rcv rcv.ndjson.gz
+  # VCV/RCV proposition and evidence line dictionaries
+  extract gks_dict_vcv_proposition vcv_proposition.ndjson.gz
+  extract gks_dict_vcv_evidence_line vcv_evidenceLine.ndjson.gz
+  extract gks_dict_rcv_proposition rcv_proposition.ndjson.gz
+  extract gks_dict_rcv_evidence_line rcv_evidenceLine.ndjson.gz
+
+  # Statement outputs
+  extract gks_dict_scv scv.ndjson.gz
+  extract gks_dict_vcv vcv.ndjson.gz
+  extract gks_dict_rcv rcv.ndjson.gz
+fi
 
 echo ""
 echo "Exporting Parquet files to ${GCS_PARQUET_PATH}"
@@ -96,5 +109,8 @@ extract_parquet gks_dict_scv scv.parquet
 extract_parquet gks_dict_vcv vcv.parquet
 extract_parquet gks_dict_rcv rcv.parquet
 
-echo "Done. NDJSON exported to ${GCS_PATH}/"
-echo "      Parquet exported to ${GCS_PARQUET_PATH}/"
+echo "Done."
+if ! $PARQUET_ONLY; then
+  echo "  NDJSON:  ${GCS_PATH}/"
+fi
+echo "  Parquet: ${GCS_PARQUET_PATH}/"
