@@ -7,6 +7,6 @@ SELECT
   ARRAY(
     SELECT REGEXP_REPLACE(el, r'^#/[^/]+/', '')
     FROM UNNEST(JSON_VALUE_ARRAY(value, '$.objectCondition')) AS el
-  ) AS object_conditions,
+  ) AS object_condition_ids,
   TO_JSON_STRING(value) AS data
 FROM {DATASET}.gks_dict_rcv_proposition
