@@ -7,5 +7,6 @@ SELECT * EXCEPT(constraints, members),
       REGEXP_REPLACE(c.location, r'^#/[^/]+/', '') AS location,
       c.copies, c.copyChange, c.matchCharacteristic, c.relations
     FROM UNNEST(constraints) AS c
-  ) AS constraints
-FROM {DATASET}.gks_dict_variation
+  ) AS constraints,
+  TO_JSON_STRING((SELECT AS STRUCT t.*)) AS data
+FROM {DATASET}.gks_dict_variation t
