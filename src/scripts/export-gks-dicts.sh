@@ -23,6 +23,9 @@ GCS_PATH="gs://${BUCKET}/${PREFIX}"
 PARQUET_PREFIX="${PREFIX}-parquet"
 GCS_PARQUET_PATH="gs://${BUCKET}/${PARQUET_PREFIX}"
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCHEMA_DIR="${SCRIPT_DIR}/parquet-schemas"
+
 echo "Exporting GKS dictionaries from ${DATASET}"
 
 extract() {
@@ -37,6 +40,7 @@ extract() {
 }
 
 extract_parquet() {
+  # Raw Parquet export via bq extract — for tables with no FK columns to clean.
   local table="$1"
   local basename="$2"
   local sharded="${basename%.parquet}-*.parquet"
@@ -45,13 +49,22 @@ extract_parquet() {
     "${DATASET}.${table}" "${GCS_PARQUET_PATH}/${sharded}"
 }
 
-extract_parquet_kv() {
-  # KV tables have a JSON-typed `value` column that bq extract cannot handle.
-  # Use EXPORT DATA with TO_JSON_STRING to cast it to STRING.
-  local table="$1"
-  local basename="$2"
+extract_parquet_typed() {
+  # Export via EXPORT DATA using a SQL schema file from parquet-schemas/.
+  # Schema files define typed columns, FK cleanup, and data column.
+  # The {DATASET} placeholder is substituted with the target dataset.
+  local basename="$1"
+  local sql_file="$2"
   local sharded="${basename%.parquet}-*.parquet"
-  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
+  local schema_path="${SCHEMA_DIR}/${sql_file}"
+  if [[ ! -f "${schema_path}" ]]; then
+    echo "  ERROR: Schema file not found: ${schema_path}" >&2
+    return 1
+  fi
+  local sql
+  sql=$(<"${schema_path}")
+  sql="${sql//\{DATASET\}/${DATASET}}"
+  echo "  Exporting ${sql_file%.sql} -> ${sharded} (Parquet via EXPORT DATA)"
   bq query --use_legacy_sql=false --nouse_cache \
     "EXPORT DATA OPTIONS(
       uri='${GCS_PARQUET_PATH}/${sharded}',
@@ -59,115 +72,7 @@ extract_parquet_kv() {
       compression='SNAPPY',
       overwrite=true
     ) AS
-    SELECT key, TO_JSON_STRING(value) AS value
-    FROM \`${DATASET}.${table}\`"
-}
-
-extract_parquet_stmt() {
-  # VCV/RCV statement tables: strip JSON pointer prefixes from FK columns.
-  #   proposition -> proposition_id, hasEvidenceLines -> has_evidence_lines
-  local table="$1"
-  local basename="$2"
-  local sharded="${basename%.parquet}-*.parquet"
-  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
-  bq query --use_legacy_sql=false --nouse_cache \
-    "EXPORT DATA OPTIONS(
-      uri='${GCS_PARQUET_PATH}/${sharded}',
-      format='PARQUET',
-      compression='SNAPPY',
-      overwrite=true
-    ) AS
-    SELECT * EXCEPT(proposition, hasEvidenceLines),
-      REGEXP_REPLACE(proposition, r'^#/[^/]+/', '') AS proposition_id,
-      ARRAY(SELECT REGEXP_REPLACE(el, r'^#/[^/]+/', '') FROM UNNEST(hasEvidenceLines) AS el) AS has_evidence_lines
-    FROM \`${DATASET}.${table}\`"
-}
-
-extract_parquet_scv() {
-  # SCV statement: same as stmt plus contributions[].contributor FK cleanup.
-  local table="$1"
-  local basename="$2"
-  local sharded="${basename%.parquet}-*.parquet"
-  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
-  bq query --use_legacy_sql=false --nouse_cache \
-    "EXPORT DATA OPTIONS(
-      uri='${GCS_PARQUET_PATH}/${sharded}',
-      format='PARQUET',
-      compression='SNAPPY',
-      overwrite=true
-    ) AS
-    SELECT * EXCEPT(proposition, hasEvidenceLines, contributions),
-      REGEXP_REPLACE(proposition, r'^#/[^/]+/', '') AS proposition_id,
-      ARRAY(
-        SELECT AS STRUCT c.type, REGEXP_REPLACE(c.contributor, r'^#/[^/]+/', '') AS contributor, c.date, c.activityType
-        FROM UNNEST(contributions) AS c
-      ) AS contributions,
-      ARRAY(SELECT REGEXP_REPLACE(el, r'^#/[^/]+/', '') FROM UNNEST(hasEvidenceLines) AS el) AS has_evidence_lines
-    FROM \`${DATASET}.${table}\`"
-}
-
-extract_parquet_el() {
-  # SCV evidence line: proposition -> proposition_id FK.
-  local table="$1"
-  local basename="$2"
-  local sharded="${basename%.parquet}-*.parquet"
-  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
-  bq query --use_legacy_sql=false --nouse_cache \
-    "EXPORT DATA OPTIONS(
-      uri='${GCS_PARQUET_PATH}/${sharded}',
-      format='PARQUET',
-      compression='SNAPPY',
-      overwrite=true
-    ) AS
-    SELECT * EXCEPT(proposition),
-      REGEXP_REPLACE(proposition, r'^#/[^/]+/', '') AS proposition_id
-    FROM \`${DATASET}.${table}\`"
-}
-
-extract_parquet_fk_array() {
-  # Strip #/section/ prefix from each element of a single array column.
-  local table="$1"
-  local basename="$2"
-  local old_col="$3"
-  local new_col="$4"
-  local sharded="${basename%.parquet}-*.parquet"
-  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
-  bq query --use_legacy_sql=false --nouse_cache \
-    "EXPORT DATA OPTIONS(
-      uri='${GCS_PARQUET_PATH}/${sharded}',
-      format='PARQUET',
-      compression='SNAPPY',
-      overwrite=true
-    ) AS
-    SELECT * EXCEPT(${old_col}),
-      ARRAY(SELECT REGEXP_REPLACE(el, r'^#/[^/]+/', '') FROM UNNEST(${old_col}) AS el) AS ${new_col}
-    FROM \`${DATASET}.${table}\`"
-}
-
-extract_parquet_variation() {
-  # Variation table: members array + nested constraints struct FK cleanup.
-  local table="$1"
-  local basename="$2"
-  local sharded="${basename%.parquet}-*.parquet"
-  echo "  Exporting ${table} -> ${sharded} (Parquet via EXPORT DATA)"
-  bq query --use_legacy_sql=false --nouse_cache \
-    "EXPORT DATA OPTIONS(
-      uri='${GCS_PARQUET_PATH}/${sharded}',
-      format='PARQUET',
-      compression='SNAPPY',
-      overwrite=true
-    ) AS
-    SELECT * EXCEPT(constraints, members),
-      ARRAY(SELECT REGEXP_REPLACE(m, r'^#/[^/]+/', '') FROM UNNEST(members) AS m) AS members,
-      ARRAY(
-        SELECT AS STRUCT
-          c.type,
-          REGEXP_REPLACE(c.allele, r'^#/[^/]+/', '') AS allele,
-          REGEXP_REPLACE(c.location, r'^#/[^/]+/', '') AS location,
-          c.copies, c.copyChange, c.matchCharacteristic, c.relations
-        FROM UNNEST(constraints) AS c
-      ) AS constraints
-    FROM \`${DATASET}.${table}\`"
+    ${sql}"
 }
 
 if ! $PARQUET_ONLY; then
@@ -206,34 +111,34 @@ fi
 echo ""
 echo "Exporting Parquet files to ${GCS_PARQUET_PATH}"
 
-# Cat-VRS (KV tables — JSON value column requires EXPORT DATA)
-extract_parquet_kv gks_dict_sequence_reference sequenceReference.parquet
-extract_parquet_kv gks_dict_location location.parquet
-extract_parquet_kv gks_dict_allele allele.parquet
-extract_parquet_kv gks_dict_copy_number_count copyNumberCount.parquet
-extract_parquet_kv gks_dict_copy_number_change copyNumberChange.parquet
-extract_parquet_kv gks_dict_gene gene.parquet
-extract_parquet_variation gks_dict_variation variation.parquet
+# Cat-VRS (typed columns extracted from KV JSON values)
+extract_parquet_typed sequenceReference.parquet sequenceReference.sql
+extract_parquet_typed location.parquet location.sql
+extract_parquet_typed allele.parquet allele.sql
+extract_parquet_typed copyNumberCount.parquet copyNumberCount.sql
+extract_parquet_typed copyNumberChange.parquet copyNumberChange.sql
+extract_parquet_typed gene.parquet gene.sql
+extract_parquet_typed variation.parquet variation.sql
 
 # Conditions
 extract_parquet gks_dict_condition condition.parquet
-extract_parquet_fk_array gks_dict_condition_set conditionSet.parquet concepts concepts
+extract_parquet_typed conditionSet.parquet conditionSet.sql
 
-# SCV (KV tables use EXPORT DATA)
-extract_parquet_kv gks_dict_submitter submitter.parquet
-extract_parquet_kv gks_dict_proposition proposition.parquet
-extract_parquet_el gks_dict_evidence_line evidenceLine.parquet
+# SCV
+extract_parquet_typed submitter.parquet submitter.sql
+extract_parquet_typed proposition.parquet proposition.sql
+extract_parquet_typed evidenceLine.parquet evidenceLine.sql
 
-# VCV/RCV (KV tables use EXPORT DATA)
-extract_parquet_kv gks_dict_vcv_proposition vcv_proposition.parquet
-extract_parquet_fk_array gks_dict_vcv_evidence_line vcv_evidenceLine.parquet evidenceItems evidence_items
-extract_parquet_kv gks_dict_rcv_proposition rcv_proposition.parquet
-extract_parquet_fk_array gks_dict_rcv_evidence_line rcv_evidenceLine.parquet evidenceItems evidence_items
+# VCV/RCV
+extract_parquet_typed vcv_proposition.parquet vcv_proposition.sql
+extract_parquet_typed vcv_evidenceLine.parquet vcv_evidenceLine.sql
+extract_parquet_typed rcv_proposition.parquet rcv_proposition.sql
+extract_parquet_typed rcv_evidenceLine.parquet rcv_evidenceLine.sql
 
-# Statements (FK column transformations via EXPORT DATA)
-extract_parquet_scv gks_dict_scv scv.parquet
-extract_parquet_stmt gks_dict_vcv vcv.parquet
-extract_parquet_stmt gks_dict_rcv rcv.parquet
+# Statements
+extract_parquet_typed scv.parquet scv.sql
+extract_parquet_typed vcv.parquet vcv.sql
+extract_parquet_typed rcv.parquet rcv.sql
 
 echo "Done."
 if ! $PARQUET_ONLY; then
