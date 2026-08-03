@@ -33,8 +33,10 @@ curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/scv
 
 # Download all Parquet files
 for section in sequenceReference location allele copyNumberCount copyNumberChange \
-               gene variation condition conditionSet submitter proposition \
-               evidenceLine scv vcv rcv; do
+               gene variation condition conditionSet submitter \
+               proposition vcv_proposition rcv_proposition \
+               evidenceLine vcv_evidenceLine rcv_evidenceLine \
+               scv vcv rcv; do
   curl -O "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/parquet/${section}.parquet"
 done
 ```
@@ -204,7 +206,9 @@ curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3
     var parquetSections = [
       "sequenceReference", "location", "allele", "copyNumberCount", "copyNumberChange",
       "gene", "variation", "condition", "conditionSet", "submitter",
-      "proposition", "evidenceLine", "scv", "vcv", "rcv"
+      "proposition", "vcv_proposition", "rcv_proposition",
+      "evidenceLine", "vcv_evidenceLine", "rcv_evidenceLine",
+      "scv", "vcv", "rcv"
     ];
     var parquetFiles = parquetSections.map(function(s) {
       return {name: s + ".parquet", path: "datasets/parquet/" + s + ".parquet"};
@@ -293,7 +297,7 @@ Typed Parquet files are produced alongside each release and uploaded to `dataset
 
 Each Parquet file contains one bundle section with typed, query-friendly columns extracted from the JSON objects. Every section includes an `id` column (the object identifier) and a `data` column (the full JSON object as a string), plus additional typed columns for key fields — enabling efficient filtering and aggregation without parsing JSON.
 
-Available Parquet files (15 sections):
+Available Parquet files (19 sections):
 
 | File | Description |
 | --- | --- |
@@ -307,8 +311,12 @@ Available Parquet files (15 sections):
 | `condition.parquet` | Condition records (traits) |
 | `conditionSet.parquet` | ConditionSet records (trait sets) |
 | `submitter.parquet` | Submitter organization records |
-| `proposition.parquet` | Proposition records (SCV, VCV, and RCV) |
-| `evidenceLine.parquet` | Evidence line records (SCV, VCV, and RCV) |
+| `proposition.parquet` | SCV proposition records |
+| `vcv_proposition.parquet` | VCV proposition records |
+| `rcv_proposition.parquet` | RCV proposition records |
+| `evidenceLine.parquet` | SCV evidence line records |
+| `vcv_evidenceLine.parquet` | VCV evidence line records |
+| `rcv_evidenceLine.parquet` | RCV evidence line records |
 | `scv.parquet` | SCV statement records |
 | `vcv.parquet` | VCV aggregate statement records |
 | `rcv.parquet` | RCV aggregate statement records |
@@ -330,10 +338,12 @@ curl -O "${BASE}/scv.parquet"
 curl -O "${BASE}/proposition.parquet"
 curl -O "${BASE}/condition.parquet"
 
-# Or download all 15 sections
+# Or download all 19 sections
 for section in sequenceReference location allele copyNumberCount copyNumberChange \
-               gene variation condition conditionSet submitter proposition \
-               evidenceLine scv vcv rcv; do
+               gene variation condition conditionSet submitter \
+               proposition vcv_proposition rcv_proposition \
+               evidenceLine vcv_evidenceLine rcv_evidenceLine \
+               scv vcv rcv; do
   curl -O "${BASE}/${section}.parquet"
 done
 ```
@@ -426,12 +436,12 @@ Statement sections (`scv`, `vcv`, `rcv`) share a common set of typed columns:
 | --- | --- | --- |
 | `id` | string | Statement identifier |
 | `type` | string | Statement type |
-| `proposition_id` | string | FK to `proposition.parquet` |
+| `proposition_id` | string | FK to proposition Parquet (`proposition` for SCV, `vcv_proposition` for VCV, `rcv_proposition` for RCV) |
 | `classification` | string | Classification label (e.g., "Pathogenic") |
 | `strength` | string | Evidence strength (e.g., "definitive", "likely") |
 | `direction` | string | Evidence direction ("supports", "disputes", "neutral") |
 | `confidence` | string | Submission level label (e.g., "criteria provided") |
-| `has_evidence_lines` | list\<string\> | FK references to `evidenceLine.parquet` |
+| `has_evidence_lines` | list\<string\> | FK references to evidence line Parquet (`evidenceLine` for SCV, `vcv_evidenceLine` for VCV, `rcv_evidenceLine` for RCV) |
 | `extensions` | string | JSON array of extensions |
 | `data` | string | Full JSON object |
 
