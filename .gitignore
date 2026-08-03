@@ -25,3 +25,5 @@ schema/clinvar-gks/build/
 .claude/settings.json
 venv/
 tmp/
+parquet/
+
