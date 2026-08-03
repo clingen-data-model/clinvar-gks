@@ -29,6 +29,29 @@
 
 
 
+# Dataset Diff (snapshot-to-snapshot delta tool)
+
+Order-independent delta between two ClinVar release snapshots, used to identify
+`new` / `removed` / `exact_match` / `modified` records per table. See
+[`dataset-diff.md`](./dataset-diff.md) for design and usage details.
+
+These are deployed manually into the `clinvar_ingest` dataset (like the other
+procs here). Deploy the UDFs first, then the procedures:
+
+```bash
+bq query --use_legacy_sql=false < src/procedures/dataset-diff-func.sql       # UDFs: canonicalize_json, json_changed_keys
+bq query --use_legacy_sql=false < src/procedures/dataset-diff-proc.sql       # clinvar_ingest.dataset_diff (one table)
+bq query --use_legacy_sql=false < src/procedures/dataset-diff-all-proc.sql   # clinvar_ingest.dataset_diff_all (all tables)
+```
+
+Diff one table, or all tables between a baseline (older) and compare (newer) snapshot:
+
+```sql
+CALL `clinvar_ingest.dataset_diff_all`('clinvar_2026_07_15_v2_5_0', 'clinvar_2026_07_20_v2_5_0');
+```
+
+Each call writes `<compare_schema>.diff_<table>` into the compare snapshot's own dataset.
+
 # How to build the GKS SCV Statements from a ClinVar Dataset
 The example steps below show how to build the GKS SCV Statements
 for the `clinvar_2025_03_23_v2_3_1` dataset in the `ClinGen Dev` GCP project
