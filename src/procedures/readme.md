@@ -42,12 +42,20 @@ procs here). Deploy the UDFs first, then the procedures:
 bq query --use_legacy_sql=false < src/procedures/dataset-diff-func.sql       # UDFs: canonicalize_json, json_changed_keys
 bq query --use_legacy_sql=false < src/procedures/dataset-diff-proc.sql       # clinvar_ingest.dataset_diff (one table)
 bq query --use_legacy_sql=false < src/procedures/dataset-diff-all-proc.sql   # clinvar_ingest.dataset_diff_all (all tables)
+bq query --use_legacy_sql=false < src/procedures/dataset-diff-on-proc.sql    # clinvar_ingest.dataset_diff_on (by on_date)
 ```
 
 Diff one table, or all tables between a baseline (older) and compare (newer) snapshot:
 
 ```sql
 CALL `clinvar_ingest.dataset_diff_all`('clinvar_2026_07_15_v2_5_0', 'clinvar_2026_07_20_v2_5_0');
+```
+
+Or by release date — `dataset_diff_on` resolves the compare snapshot and the nearest
+existing prior snapshot automatically (falls back to a warning on the first release):
+
+```sql
+CALL `clinvar_ingest.dataset_diff_on`(CURRENT_DATE());
 ```
 
 Each call writes `<compare_schema>.diff_<table>` into the compare snapshot's own dataset.
@@ -60,19 +68,40 @@ for the `clinvar_2025_03_23_v2_3_1` dataset in the `ClinGen Dev` GCP project
 From BQ Console (NOTE: this example assumes CURRENT_DATE() will resolve to the 2025-03-23 clinvar release)
 
 ```
-CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.variation_identity`(CURRENT_DATE(), FALSE);
 ```
+
+> **Incremental strategy (see [dataset-diff.md](./dataset-diff.md)):** `variation_identity`
+> itself is always a full rebuild — it is cheap (~2 min) and the BigQuery transform is
+> not the bottleneck. The expensive step is vrs-python (STEP 3). The incremental win is
+> realized in STEP 2/3/4 by sending **only the variations whose VRS-relevant fields
+> changed** to vrs-python and carrying forward `gks_vrs` for the rest. See the
+> "Incremental vrsify" note under STEP 3.
 
 ## STEP 2
-From a terminal
+From a terminal, extract `variation_identity` to `gs://clinvar-gks/<date>/dev/vi.jsonl.gz`.
+Default is **incremental** — only the variations whose `variation_identity` changed since
+the prior release are exported (the rest are carried forward in STEP 4):
 
 ```
-bq extract \
-  --destination_format NEWLINE_DELIMITED_JSON \
-  --compression GZIP \
-  'clinvar_2025_03_23_v2_3_1.variation_identity' \
-  gs://clinvar-gks/2025-03-23/dev/vi.json.gz
+./src/scripts/export-vi-table-to-gcs.sh 2025-03-23          # incremental (default)
+./src/scripts/export-vi-table-to-gcs.sh 2025-03-23 --full   # whole table (first release / version bump)
 ```
+
+> **Incremental vrsify (the real win — Tasks 1–3 implemented + verified in clingen-dev):**
+> - **STEP 2** (`export-vi-table-to-gcs.sh`) computes `variation_vrs_changed` (diff of
+>   `variation_identity` vs the prior release) and extracts only that set to `vi.jsonl.gz`.
+> - **STEP 3** runs vrs-python on only those (~14K vs 4.5M for a typical weekly release).
+> - **gks_vrs load** (`vrs-to-bq-table.sh`, `INCREMENTAL=true` default) carries the prior
+>   release's `gks_vrs` forward (CLONE) for unchanged variations and merges in the new
+>   vrs-python output for changed ones (keyed on `in.variation_id`), instead of `--replace`.
+>   It self-corrects to a full replace when the staged rows are not the changed subset.
+>
+> Because VRS normalization is per-variation (no cross-variation dependency), diffing
+> `variation_identity` between releases is a clean, correct driver for this. This is
+> where the ~100x payload reduction lands. **Version-invalidation:** run the extract with
+> `--full` and the load with `INCREMENTAL=false` after any vrs-python or `variation_identity`
+> transform change (carried-forward results assume the same normalizer + input).
 
 ## STEP 3
 
