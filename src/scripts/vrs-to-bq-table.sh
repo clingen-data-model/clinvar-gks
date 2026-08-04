@@ -8,9 +8,10 @@
 #    strategy, and copies them to a public bucket.
 #
 # USAGE:
-#   ./run_pipeline.sh [start_step]
+#   ./vrs-to-bq-table.sh <YYYY-MM-DD> [start_step]
 #
 # ARGUMENTS:
+#   release_date  (Required) The ClinVar release date to process (YYYY-MM-DD).
 #   start_step    (Optional) The step number (1-4) to start execution from.
 #                 Defaults to 1 if not provided.
 #                 - 1: Cloud Run Job
@@ -18,8 +19,7 @@
 #                 - 3: BigQuery Procedures
 #                 - 4: Export & Publish
 #
-# The script iterates over a list of release dates, performing all designated
-# steps for each date sequentially.
+# The script performs all designated steps for the single given release date.
 
 # --- SCRIPT SETUP ---
 # Exit immediately if a command exits with a non-zero status.
@@ -38,6 +38,14 @@ PROJECT_ID='clingen-dev'
 BUCKET_NAME='clinvar-gks'
 # Public GCS Bucket for final distribution. Leave empty to skip public copy.
 PUBLIC_BUCKET_NAME='clingen-public/clinvar-gks'
+
+# Incremental gks_vrs load: carry the prior release's gks_vrs forward and merge in
+# only the changed variations (produced when export-vi-table-to-gcs.sh runs in its
+# default incremental mode, so vi-final.jsonl.gz holds only the changed set). Falls
+# back to a full --replace load automatically when no baseline gks_vrs exists.
+# Set INCREMENTAL=false for a full --replace load (e.g. after a vrs-python or
+# variation_identity transform version change, which invalidates carry-forward).
+INCREMENTAL="${INCREMENTAL:-true}"
 
 # Cloud Run Job Configuration
 GCLOUD_JOB_NAME='vrs-to-vi-location-transformer'
@@ -75,46 +83,6 @@ EXPORT_OUTPUT_NAMES=(
   "vcv"
 )
 
-# Array of release dates to process (format: YYYY-MM-DD)
-RELEASE_DATES=(
-  # '2025-09-15'
-  # '2025-09-23'
-  # '2025-09-28'
-  # '2025-10-06'
-  # '2025-10-13'
-  # '2025-10-19'
-  # '2025-10-27'
-  # '2025-11-03'
-  # '2025-11-09'
-  # '2025-11-16'
-  # '2025-11-23'
-  # '2025-12-01'
-  # '2025-12-08'
-  # '2025-12-15'
-  # '2025-12-20'
-  # '2025-12-27'
-  # '2026-01-04'
-  # '2026-01-13'
-  # '2026-01-20'
-  # '2026-01-25'
-  # '2026-02-01'
-  # '2026-02-08'
-  # '2026-02-18'
-  # '2026-02-26'
-  # '2026-03-02'
-  # '2026-03-08'
-  # '2026-03-15'
-  # '2026-03-21'
-  # '2026-03-28'
-  # '2026-04-04'
-  # '2026-04-14'
-  # '2026-04-18'
-  # '2026-04-26'
-  # '2026-05-03'
-  # '2026-05-10'
-  '2026-05-16'
-  # Add more dates as needed
-)
 # --- END OF CONFIGURATION ---
 
 
@@ -160,12 +128,64 @@ load_vrs_data() {
     echo "❌ ERROR: GCS file not found. Ensure Step 1 completed successfully: $gcs_json_path"; return 1;
   fi
 
+  local staging="${dataset_id}.${TABLE_ID}_changed"
 
+  # Always stage the loaded file first (it may be the changed subset or the whole
+  # table, depending on how the extract ran). The mode is then DECIDED from the
+  # data, not from a flag, so a full extract + incremental flag (or vice-versa)
+  # cannot corrupt gks_vrs.
+  echo "  - Loading vi-final into staging ${staging}..."
+  if ! bq --project_id="$PROJECT_ID" load --source_format=NEWLINE_DELIMITED_JSON --schema="$SCHEMA_FILE_PATH" --max_bad_records=2 --ignore_unknown_values --replace "$staging" "$gcs_json_path"; then
+    echo "❌ staging load failed."; return 1;
+  fi
 
-  if bq --project_id="$PROJECT_ID" load --source_format=NEWLINE_DELIMITED_JSON --schema="$SCHEMA_FILE_PATH" --max_bad_records=2 --ignore_unknown_values --replace "$dataset_id.$TABLE_ID" "$gcs_json_path"; then
-    echo "✅ BigQuery load succeeded."; return 0;
+  # Resolve baseline + decide incremental vs full.
+  local base_dataset base_has_vrs="false" staging_n changed_n="-1"
+  base_dataset=$(bq --project_id="$PROJECT_ID" query --use_legacy_sql=false --format=csv --quiet \
+    "SELECT schema_name FROM \`clinvar_ingest.schema_on\`((SELECT prev_release_date FROM \`clinvar_ingest.schema_on\`(DATE '${release_date}')))" \
+    | tail -n 1 | tr -d '[:space:]')
+  if [[ -n "$base_dataset" ]]; then
+    base_has_vrs=$(bq --project_id="$PROJECT_ID" query --use_legacy_sql=false --format=csv --quiet \
+      "SELECT COUNT(*)=1 FROM \`${base_dataset}.INFORMATION_SCHEMA.TABLES\` WHERE table_name='${TABLE_ID}'" \
+      | tail -n 1 | tr -d '[:space:]')
+  fi
+  staging_n=$(bq --project_id="$PROJECT_ID" query --use_legacy_sql=false --format=csv --quiet \
+    "SELECT COUNT(*) FROM \`${staging}\`" | tail -n 1 | tr -d '[:space:]')
+  # changed-set count (only if the incremental extract produced the table)
+  if [[ "$(bq --project_id="$PROJECT_ID" query --use_legacy_sql=false --format=csv --quiet \
+      "SELECT COUNT(*)=1 FROM \`${dataset_id}.INFORMATION_SCHEMA.TABLES\` WHERE table_name='variation_vrs_changed'" | tail -n 1 | tr -d '[:space:]')" == "true" ]]; then
+    changed_n=$(bq --project_id="$PROJECT_ID" query --use_legacy_sql=false --format=csv --quiet \
+      "SELECT COUNT(*) FROM \`${dataset_id}.variation_vrs_changed\`" | tail -n 1 | tr -d '[:space:]')
+  fi
+
+  # Incremental only when: enabled, a baseline gks_vrs exists, the changed-set
+  # table exists, AND staging == changed-set count (i.e. vi-final really is the
+  # changed subset). Otherwise a full replace from staging.
+  if [[ "$INCREMENTAL" == "true" && -n "$base_dataset" && "$base_has_vrs" == "true" && "$changed_n" != "-1" && "$staging_n" == "$changed_n" ]]; then
+    echo "  - Incremental: carry forward ${base_dataset}.${TABLE_ID} + merge ${staging_n} changed rows"
+    bq --project_id="$PROJECT_ID" query --use_legacy_sql=false --quiet \
+      "CREATE OR REPLACE TABLE \`${dataset_id}.${TABLE_ID}\` CLONE \`${base_dataset}.${TABLE_ID}\`" || { echo "❌ seed CLONE failed."; return 1; }
+    if bq --project_id="$PROJECT_ID" query --use_legacy_sql=false --quiet \
+      "DELETE FROM \`${dataset_id}.${TABLE_ID}\`
+         WHERE \`in\`.variation_id IN (
+           SELECT variation_id FROM \`${dataset_id}.variation_vrs_changed\`
+           UNION DISTINCT SELECT variation_id FROM \`${dataset_id}.variation_vrs_removed\`);
+       INSERT INTO \`${dataset_id}.${TABLE_ID}\` SELECT * FROM \`${staging}\`;
+       DROP TABLE \`${staging}\`;"; then
+      echo "✅ BigQuery incremental gks_vrs merge succeeded."; return 0;
+    else
+      echo "❌ BigQuery incremental merge failed."; return 1;
+    fi
+  fi
+
+  # Full replace: gks_vrs = staging (staging is the whole table, or no usable
+  # baseline / mismatch was detected).
+  echo "  - Full replace (INCREMENTAL=${INCREMENTAL}, baseline gks_vrs=${base_has_vrs}, staging=${staging_n}, changed=${changed_n})"
+  if bq --project_id="$PROJECT_ID" query --use_legacy_sql=false --quiet \
+    "CREATE OR REPLACE TABLE \`${dataset_id}.${TABLE_ID}\` CLONE \`${staging}\`; DROP TABLE \`${staging}\`;"; then
+    echo "✅ BigQuery full gks_vrs load succeeded."; return 0;
   else
-    echo "❌ BigQuery load failed."; return 1;
+    echo "❌ BigQuery full load failed."; return 1;
   fi
 }
 
@@ -292,77 +312,63 @@ export_and_publish_tables() {
 
 # --- MAIN EXECUTION ---
 
-# Set start step from command-line argument, default to 1
-START_STEP=${1:-1}
+# Arguments: <release_date> [start_step]
+date="${1:-}"
+START_STEP="${2:-1}"
 
-# Validate the start step input
+if [[ -z "$date" ]]; then
+  echo "❌ Usage: $0 <YYYY-MM-DD> [start_step]"; exit 1
+fi
+if ! [[ "$date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+  echo "❌ Error: Invalid release date '$date'. Expected format YYYY-MM-DD."; exit 1
+fi
 if ! [[ "$START_STEP" =~ ^[1-4]$ ]]; then
-    echo "❌ Error: Invalid start step '$START_STEP'. Please provide a number between 1 and 4."
-    exit 1
+  echo "❌ Error: Invalid start step '$START_STEP'. Please provide a number between 1 and 4."; exit 1
 fi
 
-echo "Starting ClinVar 4-Step Pipeline..."
-echo "Project: $PROJECT_ID / Dates to process: ${#RELEASE_DATES[@]}"
+echo "Starting ClinVar 4-Step Pipeline for ${date}..."
+echo "Project: $PROJECT_ID"
 echo ">>> Starting from Step ${START_STEP} <<<"
 echo "=================================================="
 
-success_count=0; failure_count=0; failed_dates_details=()
-
-for date in "${RELEASE_DATES[@]}"; do
-  echo; echo "--- Processing release date: $date ---"
-
-  # --- STEP 1: Execute Cloud Run Job ---
-  if (( START_STEP <= 1 )); then
-    echo "[1/4] Executing Cloud Run job..."
-    INPUT_FILE="gs://${BUCKET_NAME}/${date}/dev/vi-normalized-no-liftover.jsonl.gz"
-    OUTPUT_FILE="gs://${BUCKET_NAME}/${date}/dev/vi-final.jsonl.gz"
-    if ! gcloud run jobs execute "$GCLOUD_JOB_NAME" --args "$INPUT_FILE" --args "$OUTPUT_FILE" --wait --region "$GCLOUD_JOB_REGION"; then
-      echo "❌ [FAIL] Cloud Run job failed."; ((failure_count++)); failed_dates_details+=("$date (Cloud Run Job)"); continue;
-    fi
-    echo "✅ Cloud Run job completed."
+# --- STEP 1: Execute Cloud Run Job ---
+if (( START_STEP <= 1 )); then
+  echo "[1/4] Executing Cloud Run job..."
+  INPUT_FILE="gs://${BUCKET_NAME}/${date}/dev/vi-normalized-no-liftover.jsonl.gz"
+  OUTPUT_FILE="gs://${BUCKET_NAME}/${date}/dev/vi-final.jsonl.gz"
+  if ! gcloud run jobs execute "$GCLOUD_JOB_NAME" --project "$PROJECT_ID" --args "$INPUT_FILE" --args "$OUTPUT_FILE" --wait --region "$GCLOUD_JOB_REGION"; then
+    echo "❌ [FAIL] Cloud Run job failed for ${date}."; exit 1
   fi
-
-  # --- STEP 2: Load Data into BigQuery ---
-  if (( START_STEP <= 2 )); then
-    echo "[2/4] Loading data into BigQuery..."
-    if ! load_vrs_data "$date"; then
-      echo "❌ [FAIL] BigQuery data load failed."; ((failure_count++)); failed_dates_details+=("$date (BigQuery Load)"); continue;
-    fi
-    echo "✅ BigQuery data load completed."
-  fi
-
-  # --- STEP 3: Execute BigQuery Stored Procedures ---
-  if (( START_STEP <= 3 )); then
-    echo "[3/4] Executing downstream BigQuery procedures..."
-    if ! execute_bq_procedures "$date"; then
-      echo "❌ [FAIL] BigQuery procedure execution failed."; ((failure_count++)); failed_dates_details+=("$date (BigQuery Procedures)"); continue;
-    fi
-    echo "✅ BigQuery procedures completed."
-  fi
-
-  # --- STEP 4: Export and Publish Tables ---
-  if (( START_STEP <= 4 )); then
-    echo "[4/4] Exporting and publishing result tables..."
-    if ! export_and_publish_tables "$date"; then
-      echo "❌ [FAIL] Export and publish step failed."; ((failure_count++)); failed_dates_details+=("$date (Export/Publish)"); continue;
-    fi
-    echo "✅ Export and publish step completed."
-  fi
-
-  echo "--- ✅ All steps completed successfully for date: $date ---"
-  ((success_count++))
-done
-
-
-# --- SUMMARY ---
-echo; echo "=================================================="
-echo "Pipeline processing complete!"
-echo "✅ Successful dates: $success_count"
-echo "❌ Failed dates:     $failure_count"
-
-if [ ${#failed_dates_details[@]} -gt 0 ]; then
-  echo "--------------------------------------------------"; echo "Details of failures:"
-  printf " - %s\n" "${failed_dates_details[@]}"; exit 1;
-else
-  echo "All dates processed successfully!"; exit 0;
+  echo "✅ Cloud Run job completed."
 fi
+
+# --- STEP 2: Load Data into BigQuery ---
+if (( START_STEP <= 2 )); then
+  echo "[2/4] Loading data into BigQuery..."
+  if ! load_vrs_data "$date"; then
+    echo "❌ [FAIL] BigQuery data load failed for ${date}."; exit 1
+  fi
+  echo "✅ BigQuery data load completed."
+fi
+
+# --- STEP 3: Execute BigQuery Stored Procedures ---
+if (( START_STEP <= 3 )); then
+  echo "[3/4] Executing downstream BigQuery procedures..."
+  if ! execute_bq_procedures "$date"; then
+    echo "❌ [FAIL] BigQuery procedure execution failed for ${date}."; exit 1
+  fi
+  echo "✅ BigQuery procedures completed."
+fi
+
+# --- STEP 4: Export and Publish Tables ---
+if (( START_STEP <= 4 )); then
+  echo "[4/4] Exporting and publishing result tables..."
+  if ! export_and_publish_tables "$date"; then
+    echo "❌ [FAIL] Export and publish step failed for ${date}."; exit 1
+  fi
+  echo "✅ Export and publish step completed."
+fi
+
+echo; echo "=================================================="
+echo "✅ All steps completed successfully for ${date}."
+exit 0
