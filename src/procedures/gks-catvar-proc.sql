@@ -60,6 +60,16 @@ BEGIN
       FROM `{S}.gks_vrs` vrs
       WHERE
         vrs.out.location.sequenceReference.refgetAccession is not null
+      -- One sequence-reference row per refgetAccession — a refget IS one physical
+      -- sequence. Some sequences legitimately carry more than one assembly label across
+      -- variants (the mitochondrion NC_012920.1 is shared by GRCh37 and GRCh38), which
+      -- would otherwise duplicate the sequenceReference and fan out the catvar location
+      -- join into duplicate variation rows. Keep the highest assembly (GRCh38 for shared
+      -- sequences); NULLS LAST so an unresolved-assembly variant never wins over a real one.
+      QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY vrs.out.location.sequenceReference.refgetAccession
+        ORDER BY vrs.in.assembly_version DESC NULLS LAST
+      ) = 1
     """, '{S}', rec.schema_name);
     SET temp_seqref_query = REPLACE(temp_seqref_query, '{CT}', temp_create);
     SET temp_seqref_query = REPLACE(temp_seqref_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
