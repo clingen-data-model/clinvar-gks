@@ -453,19 +453,38 @@ BEGIN
     -------------------------------------------------------------------------
     -- Step 6: Extract canonical SPDI expressions (internal temp table)
     -------------------------------------------------------------------------
+    -- Derive the assembly from the CanonicalSPDI accession's OWN parsed location
+    -- assembly (variation_loc, built in Step 2). ClinVar's CanonicalSPDI is usually
+    -- on a GRCh38 accession but NOT always — a handful sit on GRCh37 accessions
+    -- (e.g. NC_000011.9), so hardcoding GRCh38/38 mislabels them. When the SPDI
+    -- accession's assembly can't be resolved from variation_loc, emit NULL rather
+    -- than guessing, so downstream flags it as an exception.
     SET temp_variation_spdi_query = """
       {CT} {P}.temp_variation_spdi AS
       SELECT
         v.variation_id,
-        'GRCh38' as assembly,
-        38 as assembly_version,
+        a.assembly,
+        a.assembly_version,
         SPLIT(v.canonical_spdi, ':')[OFFSET(0)] as accession,
         v.canonical_spdi as spdi_source
       FROM {P}.temp_variation v
+      LEFT JOIN (
+        SELECT
+          variation_id,
+          accession,
+          ANY_VALUE(assembly) as assembly,
+          ANY_VALUE(assembly_version) as assembly_version
+        FROM `{S}.variation_loc`
+        GROUP BY variation_id, accession
+      ) a
+      ON
+        a.variation_id = v.variation_id
+        AND a.accession = SPLIT(v.canonical_spdi, ':')[OFFSET(0)]
       WHERE v.canonical_spdi is not null
     """;
     SET temp_variation_spdi_query = REPLACE(temp_variation_spdi_query, '{CT}', temp_create);
     SET temp_variation_spdi_query = REPLACE(temp_variation_spdi_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET temp_variation_spdi_query = REPLACE(temp_variation_spdi_query, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE temp_variation_spdi_query;
 
