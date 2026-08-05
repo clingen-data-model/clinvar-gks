@@ -469,13 +469,17 @@ BEGIN
         v.canonical_spdi as spdi_source
       FROM {P}.temp_variation v
       LEFT JOIN (
-        SELECT
-          variation_id,
-          accession,
-          ANY_VALUE(assembly) as assembly,
-          ANY_VALUE(assembly_version) as assembly_version
+        -- One assembly per (variation_id, accession). When an accession legitimately
+        -- appears at multiple assemblies — the mitochondrion NC_012920.1 is shared by
+        -- GRCh37/38, as are some alt scaffolds — prefer the highest (GRCh38), so it stays
+        -- consistent with the catvar temp_seqref dedup (which also prefers GRCh38) instead
+        -- of picking arbitrarily.
+        SELECT variation_id, accession, assembly, assembly_version
         FROM `{S}.variation_loc`
-        GROUP BY variation_id, accession
+        QUALIFY ROW_NUMBER() OVER (
+          PARTITION BY variation_id, accession
+          ORDER BY assembly_version DESC NULLS LAST
+        ) = 1
       ) a
       ON
         a.variation_id = v.variation_id
