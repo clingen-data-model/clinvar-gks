@@ -13,6 +13,7 @@ BEGIN
   DECLARE dict_gene_query STRING;
   DECLARE temp_catvar_map_query STRING;
   DECLARE dict_variation_query STRING;
+  DECLARE catvar_id_mismatch INT64;
 
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
@@ -945,6 +946,30 @@ BEGIN
     SET dict_variation_query = REPLACE(dict_variation_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE dict_variation_query;
+
+    -------------------------------------------------------------------------
+    -- Validation: gks_dict_variation must carry EXACTLY the variation-table id
+    -- set (its id is 'clinvar:<variation_id>' — strip the namespace prefix to
+    -- compare) with exactly one row per variation. A nonzero delta means a
+    -- missing, extra, or duplicate categorical-variant record — fail loudly.
+    -------------------------------------------------------------------------
+    EXECUTE IMMEDIATE FORMAT("""
+      SELECT
+        ABS((SELECT COUNT(*) FROM `%s.variation`) - (SELECT COUNT(*) FROM `%s.gks_dict_variation`))
+        + (SELECT COUNT(*) FROM (
+             SELECT id FROM `%s.variation`
+             EXCEPT DISTINCT SELECT SPLIT(id, ':')[OFFSET(1)] FROM `%s.gks_dict_variation`))
+        + (SELECT COUNT(*) FROM (
+             SELECT SPLIT(id, ':')[OFFSET(1)] FROM `%s.gks_dict_variation`
+             EXCEPT DISTINCT SELECT id FROM `%s.variation`))
+    """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name)
+    INTO catvar_id_mismatch;
+
+    IF catvar_id_mismatch != 0 THEN
+      RAISE USING MESSAGE = FORMAT(
+        'gks_catvar validation FAILED for %s: gks_dict_variation id set does not exactly match variation.id (count/set delta = %t)',
+        rec.schema_name, catvar_id_mismatch);
+    END IF;
 
     IF NOT debug THEN
       DROP TABLE _SESSION.temp_seqref;
