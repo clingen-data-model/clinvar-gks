@@ -55,4 +55,7 @@ Per table, a **full-rebuild == incremental oracle** before trusting it — the `
 ## Open questions
 - Where to stamp `pipeline_version` (per-table label vs a metadata table) so the same-version gate is automatic rather than operator-asserted.
 - Whether the aggregate procs can be cleanly restricted to an impact set of parent keys, or need refactoring to accept a key filter (mirrors the `{VFILTER}` approach used in the variation_identity experiment).
-- Cost/benefit per table: like `variation_identity`, if a proc is cheap enough that the merge overhead ≈ a full rebuild, keep it full and only incrementalize the expensive ones. Measure each proc's full-run time first.
+- Cost/benefit per table — **measured (2026-08-05), and it reshaped the priority.** The metric is **execution cost (bytes/slot-time)**, not wall-clock. Incremental wins ⟺ **full-compute > ~2 × output-table size** (the carry-forward floor = read+write the unchanged output once, best done via **UNION-CTAS**, not the scattered-row DELETE+INSERT). Measured per run:
+  - **`variation_identity`: 124 GB compute → 0.83 GB output → ~70× win.** The standout — parses content blobs into a tiny output. See `2026-08-05-incremental-variation-identity-v2.md`.
+  - `gks_catvar_proc` 25 GB / 9.5 GB → ~1.3× (marginal); `gks_scv_statement` 27 / 13.8 → ~break-even; `gks_rcv/vcv_statement` 12.8/4.4, 10.1/3.6 → ~1.4–1.5× (modest).
+  - **Conclusion:** the output-heavy downstream procs are marginal (carrying their large JSON forward ≈ recomputing it), so they stay full rebuilds. **`variation_identity` is where incremental pays off**, and it's pursued in the v2 plan; this downstream plan is deprioritized accordingly.
