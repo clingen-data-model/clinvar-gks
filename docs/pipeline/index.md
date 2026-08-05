@@ -2,13 +2,15 @@
 
 The ClinVar-GKS pipeline transforms ClinVar XML release data into GA4GH GKS format through a series of BigQuery stored procedures with an external VRS Python processing step.
 
+The two most expensive stages — [Variation Identity](variation-identity/index.md) and [VRS Processing](vrs-processing.md) — support **incremental** processing: they recompute only the variations that changed since the prior release and carry the rest forward, driven by the release-to-release diff (`dataset_diff_on`). The remaining stored procedures currently run as full rebuilds each release.
+
 ## Pipeline Steps
 
 The pipeline executes in the following order. Each step is a BigQuery stored procedure unless otherwise noted.
 
 ```
 ┌──────────────────────────────┐
-│ 1. Variation Identity        │  variation_identity_proc
+│ 1. Variation Identity        │  variation_identity[_incremental]
 │    Extract & normalize       │  → variation_identity table
 │    variant data              │
 └──────────────┬───────────────┘
@@ -68,15 +70,19 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
 
 ### Step 1: Variation Identity
 
-From the BigQuery console:
+From the BigQuery console — incremental by default, full rebuild when reseeding (see [Incremental Rebuild](variation-identity/index.md#incremental-rebuild)):
 
 ```sql
-CALL `clinvar_ingest.variation_identity_proc`(CURRENT_DATE(), FALSE);
+-- default: recompute only changed variations, carry the rest forward
+CALL `clinvar_ingest.variation_identity_incremental`(CURRENT_DATE(), FALSE);
+
+-- full rebuild: first release, or after a variation_identity transform change
+CALL `clinvar_ingest.variation_identity`(CURRENT_DATE(), FALSE);
 ```
 
 ### Step 2: VRS Processing
 
-Export, process externally with vrs-python, and load back. See [VRS Processing](vrs-processing.md).
+Export, process externally with vrs-python, and load back — incremental by default (only changed variations are vrsified; unchanged `gks_vrs` results carry forward). See [VRS Processing](vrs-processing.md).
 
 ### Step 3: Cat-VRS through JSON Output
 
