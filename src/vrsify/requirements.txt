@@ -1,0 +1,14 @@
+# Pinned VRS-ification engine for the ClinVar-GKS pipeline.
+#
+# The resolver is the clinvar_gk_pilot package (wraps ga4gh.vrs + variation-normalizer);
+# it is pinned to an exact commit so the VRS output is reproducible and version changes
+# are deliberate and reviewable. Its own pyproject pins the resolver stack transitively
+# (ga4gh.vrs[extras]~=2.3.1, variation-normalizer@0.15.0, gene-normalizer[pg], cool-seq-tool).
+#
+# VERSION-INVALIDATION: bumping this pin changes VRS output for every variation. After a
+# bump, run the pipeline with --full on the next release so gks_vrs is fully reseeded
+# (see README.md and docs/pipeline/vrs-processing.md).
+#
+# Install:  pip install -r src/vrsify/requirements.txt      (Python >= 3.11)
+
+clinvar_gk_pilot @ git+https://github.com/clingen-data-model/clinvar-gk-python@224f87d13cb77aaa05fd671e1c3b486821df6f2f
