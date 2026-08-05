@@ -122,7 +122,7 @@ Converts the structured records from `gks_catvar_pre` into JSON format using `TO
 
 - **UDFs**: `clinvar_ingest.normalizeAndKeyById`, `clinvar_ingest.schema_on`
 - **Source Tables**: `gks_vrs`, `variation_loc`, `variation_hgvs`, `variation_identity`, `variation_xref`, `gene_association`, `gene`
-- **Upstream Procedures**: `variation_identity_proc`, VRS Python processing
+- **Upstream Procedures**: `variation_identity` (or `variation_identity_incremental`), VRS Python processing
 - **Downstream Consumers**: `gks_scv_statement_proc`, export pipeline
 
 ---
