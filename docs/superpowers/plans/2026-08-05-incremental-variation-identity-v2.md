@@ -57,3 +57,17 @@ Concretely: Step 8 builds the per-variation `variation_identity` core (everythin
 
 ## Out of scope
 The downstream output-heavy procs (`gks_catvar`, SCV/RCV/VCV statements) — the cost analysis shows they're break-even-to-modest, so they stay full rebuilds unless a future need (or a cheaper carry-forward) changes the math.
+
+## Future enhancement considerations
+
+**Realized result (2026-08-05):** the incremental measured **~9× slot-time** (23,005 → 2,533 slot-sec) and **~2.1× bytes** (115.5 → 54.5 GB), with a modest **~17% wall-clock** improvement (2m49s → 2m20s) — a strong cost win and a small speed win, but **not the ~70×** the estimate projected. The 70× counted only `variation_identity`'s 0.83 GB output; the incremental must also carry forward `variation_loc` (9M rows) and especially **`variation_hgvs` (41.8M rows)**, so the UNION-CTAS floor is 2× the sum of all four outputs, dominated by hgvs. The combined benefit metric should weight slot-cost highest but keep wall-clock (faster is better) in the qualified conclusion.
+
+### 1. Cluster the output tables by `variation_id` (the real lever past ~9×)
+
+UNION-CTAS is the optimal *merge primitive* for the current storage layout — it reads+writes each table exactly once, which beats DELETE+INSERT (scattered-row rewrite of ~every block for a 0.38% random change set, the penalty that made v1 slower). But its floor is a **full read+write of every carried-forward table**, and `variation_hgvs` (41.8M rows) is the dominant residual cost.
+
+The lever to go below that floor: **cluster the four output tables by `variation_id`**. With changed rows co-located in a few blocks, a zero-copy `CLONE` of the baseline + a *targeted* merge (delete/insert only the changed keys) could rewrite only the blocks that actually contain changed rows instead of the whole table — potentially turning the hgvs floor from "full rewrite" into "touch a handful of blocks." This is a schema/storage change (and shifts the merge primitive from UNION-CTAS to CLONE-then-targeted-DML, which only pays off *because* of the clustering), so it was out of scope for the initial build. It is the main path to a materially bigger multiple.
+
+### 2. Filter Step 1's copy-number `cn` scan to the changed set
+
+Step 1 still scans `clinical_assertion_variation` (6.9M rows) with `content LIKE '%CopyNumber%'` unfiltered, even though only the changed variations survive downstream. Restricting the `cn` join to the changed set would trim part of the 54.5 GB residual. Smaller lever than clustering, but cheap and correctness-neutral.
