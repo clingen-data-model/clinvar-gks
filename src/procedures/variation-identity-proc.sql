@@ -422,8 +422,8 @@ BEGIN
           hgvs.assembly,
           hgvs.nucleotide_expression.expression as nucleotide,
           hgvs.protein_expression.expression as protein,
-          STRING_AGG(DISTINCT IF(STARTS_WITH(mc.id, mc.db), mc.id, FORMAT('%s:%s', mc.db, mc.id)) ) as consq_id,
-          STRING_AGG(DISTINCT mc.type) as consq_label,
+          STRING_AGG(DISTINCT IF(STARTS_WITH(mc.id, mc.db), mc.id, FORMAT('%s:%s', mc.db, mc.id)) ORDER BY IF(STARTS_WITH(mc.id, mc.db), mc.id, FORMAT('%s:%s', mc.db, mc.id)) ) as consq_id,
+          STRING_AGG(DISTINCT mc.type ORDER BY mc.type) as consq_label,
           hgvs.nucleotide_expression.mane_select,
           hgvs.nucleotide_expression.mane_plus_clinical as mane_plus,
           -- calculate whether there is a balanced # of parens in the hgvs expression
@@ -508,7 +508,14 @@ BEGIN
                 h_issues.consq_label DESC,
                 h_issues.has_balanced_parens DESC,
                 h_issues.protein DESC,
-                LENGTH(h_issues.nucleotide)
+                LENGTH(h_issues.nucleotide),
+                -- total order tie-break so the representative pick is deterministic
+                -- across runs (equivalent alternate HGVS on the same accession)
+                h_issues.nucleotide,
+                h_issues.type,
+                h_issues.assembly,
+                h_issues.mane_select,
+                h_issues.mane_plus
             ) AS rn
           FROM h_issues
         )
@@ -588,7 +595,7 @@ BEGIN
             vl.variation_id,
             vl.has_range_endpoints,
             vl.derived_variant_length,
-            row_number() over (partition by vl.variation_id order by vl.varlen_precedence, vl.derived_variant_length DESC NULLS LAST) as rn
+            row_number() over (partition by vl.variation_id order by vl.varlen_precedence, vl.derived_variant_length DESC NULLS LAST, vl.has_range_endpoints DESC, vl.accession) as rn
           FROM {VL} vl
         )
         WHERE rn = 1
@@ -600,7 +607,7 @@ BEGIN
             vh.variation_id,
             vh.has_range_endpoints,
             vh.derived_variant_length,
-            row_number() over (partition by vh.variation_id order by vh.varlen_precedence, vh.derived_variant_length DESC NULLS LAST) as rn
+            row_number() over (partition by vh.variation_id order by vh.varlen_precedence, vh.derived_variant_length DESC NULLS LAST, vh.has_range_endpoints DESC, vh.accession) as rn
           FROM {VH} vh
           LEFT JOIN {VL} vl
           on
@@ -666,7 +673,7 @@ BEGIN
         FROM {VL}
         QUALIFY ROW_NUMBER() OVER (
           PARTITION BY variation_id, accession
-          ORDER BY assembly_version DESC NULLS LAST
+          ORDER BY assembly_version DESC NULLS LAST, assembly
         ) = 1
       ) a
       ON
@@ -856,7 +863,7 @@ BEGIN
           source,
           issue,
           precedence,
-          row_number() over (partition by variation_id, accession order by precedence) as rn
+          row_number() over (partition by variation_id, accession order by precedence, assembly_version DESC, fmt, source, issue) as rn
         from var_source
       ) vs
       join {P}.temp_variation tv
