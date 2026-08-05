@@ -1,5 +1,22 @@
 
-CREATE OR REPLACE PROCEDURE `clinvar_ingest.variation_identity`(on_date DATE, debug BOOL)
+-------------------------------------------------------------------------------
+-- variation_identity — build the variation identity tables from a ClinVar release
+--
+-- Three entry points:
+--   variation_identity(on_date, debug)              -> full rebuild (unchanged behavior)
+--   variation_identity_incremental(on_date, debug)  -> incremental (carry-forward + merge)
+--   variation_identity_build(on_date, debug, incr)  -> internal implementation
+--
+-- Incremental strategy (see docs/superpowers/plans/2026-08-05-incremental-variation-identity-v2.md):
+--   The heavy per-variation content parsing (parseSequenceLocations / parseHGVS /
+--   parseXRefs / SPDI) runs ONLY for the variations that changed since the prior
+--   release; the rest are carried forward from the baseline release and merged via
+--   UNION-CTAS. `mappings` is recomputed GLOBALLY from the merged variation_xref so
+--   its cross-variation dependency (xref rows keyed on the external id) stays correct.
+--   Version-invalidation: call the *_incremental wrapper only when this proc is
+--   unchanged since the baseline release; otherwise use the full rebuild.
+-------------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.variation_identity_build`(on_date DATE, debug BOOL, incremental BOOL)
 BEGIN
   DECLARE temp_variation_query STRING;
   DECLARE query_variation_loc STRING;
@@ -9,8 +26,21 @@ BEGIN
   DECLARE temp_variation_spdi_query STRING;
   DECLARE temp_variation_members_query STRING;
   DECLARE query_variation_identity STRING;
+  DECLARE query_changed_set STRING;
+  DECLARE query_merge STRING;
   DECLARE temp_create STRING;
-  DECLARE temp_prefix STRING;
+
+  -- incremental control / fallback guard
+  DECLARE eff_incremental BOOL DEFAULT FALSE;
+  DECLARE baseline_schema STRING DEFAULT NULL;
+  DECLARE base_ok BOOL DEFAULT FALSE;
+  DECLARE diff_ok BOOL DEFAULT FALSE;
+
+  -- mode-dependent SQL fragments (contain {S}/{P}/{CT} placeholders, resolved per query)
+  DECLARE vl_head STRING; DECLARE vh_head STRING; DECLARE vx_head STRING; DECLARE vi_head STRING;
+  DECLARE vl_ref STRING;  DECLARE vh_ref STRING;  DECLARE vx_ref STRING;
+  DECLARE vfilter STRING;
+  DECLARE xm_ctes STRING; DECLARE mappings_col STRING; DECLARE mappings_join STRING;
 
   IF debug THEN
     SET temp_create = 'CREATE OR REPLACE TABLE';
@@ -18,14 +48,165 @@ BEGIN
     SET temp_create = 'CREATE TEMP TABLE';
   END IF;
 
-  FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
+  FOR rec IN (select s.schema_name, s.prev_release_date FROM clinvar_ingest.schema_on(on_date) as s)
   DO
+
+    -----------------------------------------------------------------------
+    -- Resolve baseline + fallback guard: incremental is only safe when the
+    -- prior release exists, has all four output tables, and the current
+    -- release has the diff driver tables. Otherwise fall back to a full
+    -- rebuild (always correct).
+    -----------------------------------------------------------------------
+    SET eff_incremental = FALSE;
+    SET baseline_schema = NULL;
+    SET base_ok = FALSE;
+    SET diff_ok = FALSE;
+
+    IF incremental AND rec.prev_release_date IS NOT NULL THEN
+      SET baseline_schema = (
+        SELECT s2.schema_name FROM clinvar_ingest.schema_on(rec.prev_release_date) AS s2 LIMIT 1
+      );
+    END IF;
+
+    IF baseline_schema IS NOT NULL THEN
+      EXECUTE IMMEDIATE FORMAT("""
+        SELECT (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES`
+                WHERE table_name IN ('variation_identity','variation_loc','variation_hgvs','variation_xref')) = 4
+      """, baseline_schema) INTO base_ok;
+
+      EXECUTE IMMEDIATE FORMAT("""
+        SELECT (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES`
+                WHERE table_name IN ('diff_variation','diff_clinical_assertion','diff_clinical_assertion_variation')) = 3
+      """, rec.schema_name) INTO diff_ok;
+
+      SET eff_incremental = base_ok AND diff_ok;
+    END IF;
+
+    -----------------------------------------------------------------------
+    -- Mode-dependent fragments. In full mode the derived tables are the real
+    -- {S} outputs; in incremental mode they are per-changed-variation staging
+    -- temps ({P}.stg_*), merged into {S} after the parse steps.
+    -----------------------------------------------------------------------
+    IF eff_incremental THEN
+      SET vl_head = '{CT} {P}.stg_variation_loc';
+      SET vh_head = '{CT} {P}.stg_variation_hgvs';
+      SET vx_head = '{CT} {P}.stg_variation_xref';
+      SET vi_head = '{CT} {P}.stg_variation_identity';
+      SET vl_ref  = '{P}.stg_variation_loc';
+      SET vh_ref  = '{P}.stg_variation_hgvs';
+      SET vx_ref  = '{P}.stg_variation_xref';
+      SET vfilter = 'AND v.id IN (SELECT variation_id FROM {P}.changed_variation_ids)';
+      SET xm_ctes = '';
+      SET mappings_col = '';
+      SET mappings_join = '';
+    ELSE
+      SET vl_head = 'CREATE OR REPLACE TABLE `{S}.variation_loc`';
+      SET vh_head = 'CREATE OR REPLACE TABLE `{S}.variation_hgvs`';
+      SET vx_head = 'CREATE OR REPLACE TABLE `{S}.variation_xref`';
+      SET vi_head = 'CREATE OR REPLACE TABLE `{S}.variation_identity`';
+      SET vl_ref  = '`{S}.variation_loc`';
+      SET vh_ref  = '`{S}.variation_hgvs`';
+      SET vx_ref  = '`{S}.variation_xref`';
+      SET vfilter = '';
+      SET xm_ctes = """,
+        x AS (
+          SELECT
+            x.id as variation_id,
+            x.db as system,
+            x.id as code,
+            IF(x.db='ClinGen', 'closeMatch', 'relatedMatch') as relation
+          FROM `{S}.variation_xref` x
+          group by
+            x.id,
+            x.db,
+            x.id
+        ),
+        m as (
+          SELECT
+            x.variation_id,
+            ARRAY_AGG(STRUCT(x.system, x.code, x.relation)) as mappings
+          FROM x
+          GROUP BY x.variation_id
+        )""";
+      SET mappings_col = """
+          m.mappings,""";
+      SET mappings_join = """
+        LEFT JOIN m
+        ON tv.variation_id = m.variation_id""";
+    END IF;
 
     -- Clean up any persistent temp tables from a prior debug run
     IF NOT debug THEN
       CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
-        'temp_variation', 'temp_variation_spdi', 'temp_variation_members'
+        'temp_variation', 'temp_variation_spdi', 'temp_variation_members',
+        'stg_variation_loc', 'stg_variation_hgvs', 'stg_variation_xref',
+        'stg_variation_identity', 'changed_variation_ids', 'removed_variation_ids'
       ]);
+    END IF;
+
+    -----------------------------------------------------------------------
+    -- Step 0 (incremental only): build the changed / removed variation sets.
+    --   changed = diff_variation(new|modified) ∪ copy-number cascade, minus removed.
+    --   removed = diff_variation(removed).
+    -- The copy-number cascade covers variations whose `variation` row is byte-
+    -- identical but whose CopyNumber-bearing SCV data changed (added/removed/
+    -- modified), resolved over BOTH the compare {S} and baseline {base} snapshots
+    -- (a removed CAV/CA no longer appears in {S}).
+    -----------------------------------------------------------------------
+    IF eff_incremental THEN
+      SET query_changed_set = REPLACE("""
+        {CT} {P}.removed_variation_ids AS
+        SELECT id AS variation_id
+        FROM `{S}.diff_variation`
+        WHERE change_type = 'removed'
+      """, '{BASE}', baseline_schema);
+      SET query_changed_set = REPLACE(query_changed_set, '{CT}', temp_create);
+      SET query_changed_set = REPLACE(query_changed_set, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+      SET query_changed_set = REPLACE(query_changed_set, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_changed_set;
+
+      SET query_changed_set = REPLACE("""
+        {CT} {P}.changed_variation_ids AS
+        WITH changed_cav AS (
+          SELECT id FROM `{S}.diff_clinical_assertion_variation`
+          WHERE change_type IN ('new','modified','removed')
+        ),
+        changed_ca AS (
+          SELECT id FROM `{S}.diff_clinical_assertion`
+          WHERE change_type IN ('new','modified','removed')
+        ),
+        cn_cascade AS (
+          SELECT DISTINCT ca.variation_id AS variation_id
+          FROM `{S}.clinical_assertion_variation` cav
+          JOIN `{S}.clinical_assertion` ca
+            ON ca.id = cav.clinical_assertion_id AND ca.statement_type IS NOT NULL
+          WHERE cav.content LIKE '%CopyNumber%'
+            AND (
+              cav.id IN (SELECT id FROM changed_cav)
+              OR cav.clinical_assertion_id IN (SELECT id FROM changed_ca)
+            )
+          UNION DISTINCT
+          SELECT DISTINCT ca.variation_id AS variation_id
+          FROM `{BASE}.clinical_assertion_variation` cav
+          JOIN `{BASE}.clinical_assertion` ca
+            ON ca.id = cav.clinical_assertion_id AND ca.statement_type IS NOT NULL
+          WHERE cav.content LIKE '%CopyNumber%'
+            AND (
+              cav.id IN (SELECT id FROM changed_cav)
+              OR cav.clinical_assertion_id IN (SELECT id FROM changed_ca)
+            )
+        )
+        SELECT variation_id FROM (
+          SELECT id AS variation_id FROM `{S}.diff_variation` WHERE change_type IN ('new','modified')
+          UNION DISTINCT
+          SELECT variation_id FROM cn_cascade
+        )
+        WHERE variation_id NOT IN (SELECT variation_id FROM {P}.removed_variation_ids)
+      """, '{BASE}', baseline_schema);
+      SET query_changed_set = REPLACE(query_changed_set, '{CT}', temp_create);
+      SET query_changed_set = REPLACE(query_changed_set, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+      SET query_changed_set = REPLACE(query_changed_set, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_changed_set;
     END IF;
 
     -------------------------------------------------------------------------
@@ -101,6 +282,7 @@ BEGIN
           v.id not in (
             "3027503" -- two variants in one! two locations, etc, but different snvs?!
           )
+          {VFILTER}
       )
       SELECT
         var.variation_id,
@@ -136,9 +318,10 @@ BEGIN
         END as issue,
         var.content
       FROM var
-    """, '{S}', rec.schema_name);
+    """, '{VFILTER}', vfilter);
     SET temp_variation_query = REPLACE(temp_variation_query, '{CT}', temp_create);
     SET temp_variation_query = REPLACE(temp_variation_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET temp_variation_query = REPLACE(temp_variation_query, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE temp_variation_query;
 
@@ -147,7 +330,7 @@ BEGIN
     --         expressions
     -------------------------------------------------------------------------
     SET query_variation_loc = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.variation_loc` AS
+      {VLHEAD} AS
       WITH l AS (
         SELECT
           v.variation_id,
@@ -211,9 +394,10 @@ BEGIN
         -- use additional assembly string match since mito accessions are duplicated across assemblies
         -- without this it will produce a cartesian product of rows for all mito variants.
         li.assembly = l.assembly
-    """, '{S}', rec.schema_name);
+    """, '{VLHEAD}', vl_head);
     SET query_variation_loc = REPLACE(query_variation_loc, '{CT}', temp_create);
     SET query_variation_loc = REPLACE(query_variation_loc, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET query_variation_loc = REPLACE(query_variation_loc, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_variation_loc;
 
@@ -222,7 +406,7 @@ BEGIN
     --         MANE designations
     -------------------------------------------------------------------------
     SET query_variation_hgvs = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.variation_hgvs` AS
+      {VHHEAD} AS
 
       WITH h AS (
         -- clinvar has thousands of variants that have multiple representations on the same accession
@@ -238,8 +422,8 @@ BEGIN
           hgvs.assembly,
           hgvs.nucleotide_expression.expression as nucleotide,
           hgvs.protein_expression.expression as protein,
-          STRING_AGG(DISTINCT IF(STARTS_WITH(mc.id, mc.db), mc.id, FORMAT('%s:%s', mc.db, mc.id)) ) as consq_id,
-          STRING_AGG(DISTINCT mc.type) as consq_label,
+          STRING_AGG(DISTINCT IF(STARTS_WITH(mc.id, mc.db), mc.id, FORMAT('%s:%s', mc.db, mc.id)) ORDER BY IF(STARTS_WITH(mc.id, mc.db), mc.id, FORMAT('%s:%s', mc.db, mc.id)) ) as consq_id,
+          STRING_AGG(DISTINCT mc.type ORDER BY mc.type) as consq_label,
           hgvs.nucleotide_expression.mane_select,
           hgvs.nucleotide_expression.mane_plus_clinical as mane_plus,
           -- calculate whether there is a balanced # of parens in the hgvs expression
@@ -324,7 +508,14 @@ BEGIN
                 h_issues.consq_label DESC,
                 h_issues.has_balanced_parens DESC,
                 h_issues.protein DESC,
-                LENGTH(h_issues.nucleotide)
+                LENGTH(h_issues.nucleotide),
+                -- total order tie-break so the representative pick is deterministic
+                -- across runs (equivalent alternate HGVS on the same accession)
+                h_issues.nucleotide,
+                h_issues.type,
+                h_issues.assembly,
+                h_issues.mane_select,
+                h_issues.mane_plus
             ) AS rn
           FROM h_issues
         )
@@ -373,9 +564,10 @@ BEGIN
         h_top.varlen_precedence,
         h_top.start_pos,
         h_top.end_pos
-    """, '{S}', rec.schema_name);
+    """, '{VHHEAD}', vh_head);
     SET query_variation_hgvs = REPLACE(query_variation_hgvs, '{CT}', temp_create);
     SET query_variation_hgvs = REPLACE(query_variation_hgvs, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET query_variation_hgvs = REPLACE(query_variation_hgvs, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_variation_hgvs;
 
@@ -403,8 +595,8 @@ BEGIN
             vl.variation_id,
             vl.has_range_endpoints,
             vl.derived_variant_length,
-            row_number() over (partition by vl.variation_id order by vl.varlen_precedence, vl.derived_variant_length DESC NULLS LAST) as rn
-          FROM `{S}.variation_loc` vl
+            row_number() over (partition by vl.variation_id order by vl.varlen_precedence, vl.derived_variant_length DESC NULLS LAST, vl.has_range_endpoints DESC, vl.accession) as rn
+          FROM {VL} vl
         )
         WHERE rn = 1
         UNION DISTINCT
@@ -415,9 +607,9 @@ BEGIN
             vh.variation_id,
             vh.has_range_endpoints,
             vh.derived_variant_length,
-            row_number() over (partition by vh.variation_id order by vh.varlen_precedence, vh.derived_variant_length DESC NULLS LAST) as rn
-          FROM `{S}.variation_hgvs` vh
-          LEFT JOIN `{S}.variation_loc` vl
+            row_number() over (partition by vh.variation_id order by vh.varlen_precedence, vh.derived_variant_length DESC NULLS LAST, vh.has_range_endpoints DESC, vh.accession) as rn
+          FROM {VH} vh
+          LEFT JOIN {VL} vl
           on
             vl.variation_id = vh.variation_id
           WHERE
@@ -428,9 +620,11 @@ BEGIN
       WHERE
         var.variation_id = tv.variation_id and
         tv.vrs_class is null
-    """, '{S}', rec.schema_name);
+    """, '{VL}', vl_ref);
+    SET query_refine_vrs_class = REPLACE(query_refine_vrs_class, '{VH}', vh_ref);
     SET query_refine_vrs_class = REPLACE(query_refine_vrs_class, '{CT}', temp_create);
     SET query_refine_vrs_class = REPLACE(query_refine_vrs_class, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET query_refine_vrs_class = REPLACE(query_refine_vrs_class, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_refine_vrs_class;
 
@@ -438,15 +632,16 @@ BEGIN
     -- Step 5: Extract cross-references to external databases
     -------------------------------------------------------------------------
     SET query_variation_xref = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.variation_xref` AS
+      {VXHEAD} AS
       SELECT
         v.variation_id,
         xref.*
       FROM {P}.temp_variation v
       CROSS JOIN UNNEST(`clinvar_ingest.parseXRefs`(JSON_EXTRACT(v.content, r'$.XRefList'))) as xref
-    """, '{S}', rec.schema_name);
+    """, '{VXHEAD}', vx_head);
     SET query_variation_xref = REPLACE(query_variation_xref, '{CT}', temp_create);
     SET query_variation_xref = REPLACE(query_variation_xref, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET query_variation_xref = REPLACE(query_variation_xref, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE query_variation_xref;
 
@@ -459,7 +654,7 @@ BEGIN
     -- (e.g. NC_000011.9), so hardcoding GRCh38/38 mislabels them. When the SPDI
     -- accession's assembly can't be resolved from variation_loc, emit NULL rather
     -- than guessing, so downstream flags it as an exception.
-    SET temp_variation_spdi_query = """
+    SET temp_variation_spdi_query = REPLACE("""
       {CT} {P}.temp_variation_spdi AS
       SELECT
         v.variation_id,
@@ -475,17 +670,17 @@ BEGIN
         -- consistent with the catvar temp_seqref dedup (which also prefers GRCh38) instead
         -- of picking arbitrarily.
         SELECT variation_id, accession, assembly, assembly_version
-        FROM `{S}.variation_loc`
+        FROM {VL}
         QUALIFY ROW_NUMBER() OVER (
           PARTITION BY variation_id, accession
-          ORDER BY assembly_version DESC NULLS LAST
+          ORDER BY assembly_version DESC NULLS LAST, assembly
         ) = 1
       ) a
       ON
         a.variation_id = v.variation_id
         AND a.accession = SPLIT(v.canonical_spdi, ':')[OFFSET(0)]
       WHERE v.canonical_spdi is not null
-    """;
+    """, '{VL}', vl_ref);
     SET temp_variation_spdi_query = REPLACE(temp_variation_spdi_query, '{CT}', temp_create);
     SET temp_variation_spdi_query = REPLACE(temp_variation_spdi_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     SET temp_variation_spdi_query = REPLACE(temp_variation_spdi_query, '{S}', rec.schema_name);
@@ -519,7 +714,7 @@ BEGIN
           vh.issue,
           -- #2 hgvs (genomic, top-level)
           2 as precedence
-        from  `{S}.variation_hgvs` vh
+        from  {VH} vh
         where
           vh.hgvs_source is not null
           and
@@ -534,7 +729,7 @@ BEGIN
           CAST(null AS STRING) as issue,
           -- #3 gnomad location-based (genomic 'top-level')
           3 as precedence
-        from  `{S}.variation_loc` vl
+        from  {VL} vl
         where
           vl.gnomad_source is not null
         UNION ALL
@@ -547,7 +742,7 @@ BEGIN
           vl.loc_hgvs_issue as issue,
           -- #4 derived hgvs for non-precise location regions (genomic 'top-level')
           4 as precedence
-        from  `{S}.variation_loc` vl
+        from  {VL} vl
         where
           vl.loc_hgvs_source is not null
           and
@@ -562,7 +757,7 @@ BEGIN
           vh.issue,
           -- #5 hgvs genomic (not top-level)
           5 as precedence
-        from  `{S}.variation_hgvs` vh
+        from  {VH} vh
         where
           vh.hgvs_source is not null
           and
@@ -577,7 +772,7 @@ BEGIN
           vh.issue,
           -- #6 hgvs coding mane select
           6 as precedence
-        from `{S}.variation_hgvs` vh
+        from {VH} vh
         where
           vh.hgvs_source is not null
           and
@@ -592,7 +787,7 @@ BEGIN
           vh.issue,
           -- #7 hgvs coding mane plus
           7 as precedence
-        from `{S}.variation_hgvs` vh
+        from {VH} vh
         where
           vh.hgvs_source is not null
           and
@@ -607,7 +802,7 @@ BEGIN
           vh.issue,
           -- #8 hgvs coding not mane select or plus
           8 as precedence
-        from `{S}.variation_hgvs` vh
+        from {VH} vh
         where
           vh.hgvs_source is not null
           and
@@ -622,7 +817,7 @@ BEGIN
           vh.issue,
           -- #9 hgvs not 'genomic, top-level' or 'genomic' or 'coding'
           9 as precedence
-        from `{S}.variation_hgvs` vh
+        from {VH} vh
         where
           vh.hgvs_source is not null
           and
@@ -668,20 +863,20 @@ BEGIN
           source,
           issue,
           precedence,
-          row_number() over (partition by variation_id, accession order by precedence) as rn
+          row_number() over (partition by variation_id, accession order by precedence, assembly_version DESC, fmt, source, issue) as rn
         from var_source
       ) vs
       join {P}.temp_variation tv
       on
         tv.variation_id = vs.variation_id
-      left join `{S}.variation_hgvs` vh
+      left join {VH} vh
       on
         vh.variation_id = vs.variation_id
         and
         vh.accession = vs.accession
         and
         IFNULL(vh.assembly_version,0) = IFNULL(vs.assembly_version,0)
-      left join `{S}.variation_loc` vl
+      left join {VL} vl
       on
         vl.variation_id = vs.variation_id
         and
@@ -691,18 +886,22 @@ BEGIN
       where vs.rn = 1
       -- 27,578,636 (2024-03-31)
       -- 27,576,509 (2024-04-07)
-    """, '{S}', rec.schema_name);
+    """, '{VH}', vh_ref);
+    SET temp_variation_members_query = REPLACE(temp_variation_members_query, '{VL}', vl_ref);
     SET temp_variation_members_query = REPLACE(temp_variation_members_query, '{CT}', temp_create);
     SET temp_variation_members_query = REPLACE(temp_variation_members_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET temp_variation_members_query = REPLACE(temp_variation_members_query, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE temp_variation_members_query;
 
     -------------------------------------------------------------------------
-    -- Step 8: Select single best expression per variation and build
-    --         final output with cross-reference mappings
+    -- Step 8: Select single best expression per variation and build final
+    --         output. Full mode attaches `mappings` inline; incremental mode
+    --         builds the core (no mappings) to staging and recomputes mappings
+    --         globally from the merged variation_xref after the merge.
     -------------------------------------------------------------------------
     SET query_variation_identity = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.variation_identity` AS
+      {VIHEAD} AS
         -- find potential resolvable originating alleles per variation_id
         WITH v AS (
           select
@@ -716,6 +915,139 @@ BEGIN
           where rn = 1
           -- 2,814,021 (2024-03-31)
           -- 2,797,069 (2024-04-07)
+        ){XM_CTES}
+        SELECT
+          tv.variation_id,
+          tv.name,
+          v.assembly_version,
+          v.accession,
+          IFNULL(v.vrs_class, IFNULL(tv.vrs_class, 'Unknown')) as vrs_class,
+          v.absolute_copies,
+          v.range_copies,
+          v.fmt,
+          v.source,
+          v.copy_change_type,
+          IFNULL(v.issue, IFNULL(tv.issue, IF(v.variation_id is null, 'No viable variation members identified.', null))) as issue,
+          v.precedence,
+          tv.variation_type,
+          tv.subclass_type,
+          tv.cytogenetic,
+          v.chr,
+          v.variant_length,{MAPPINGS_COL}
+
+        FROM {P}.temp_variation tv
+        LEFT JOIN v
+        ON
+          v.variation_id = tv.variation_id{MAPPINGS_JOIN}
+    """, '{VIHEAD}', vi_head);
+    SET query_variation_identity = REPLACE(query_variation_identity, '{XM_CTES}', xm_ctes);
+    SET query_variation_identity = REPLACE(query_variation_identity, '{MAPPINGS_COL}', mappings_col);
+    SET query_variation_identity = REPLACE(query_variation_identity, '{MAPPINGS_JOIN}', mappings_join);
+    SET query_variation_identity = REPLACE(query_variation_identity, '{CT}', temp_create);
+    SET query_variation_identity = REPLACE(query_variation_identity, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET query_variation_identity = REPLACE(query_variation_identity, '{S}', rec.schema_name);
+
+    EXECUTE IMMEDIATE query_variation_identity;
+
+    -----------------------------------------------------------------------
+    -- Step 9 (incremental only): UNION-CTAS merge the four outputs — carry
+    -- forward the unchanged baseline rows and union in the freshly parsed
+    -- changed rows. Explicit column lists so any schema/column-order drift
+    -- errors (the version-invalidation signal) instead of silently corrupting.
+    -- variation_xref is merged BEFORE variation_identity, because the global
+    -- `mappings` recompute reads the merged {S}.variation_xref.
+    -----------------------------------------------------------------------
+    IF eff_incremental THEN
+      -- merge variation_loc
+      SET query_merge = REPLACE("""
+        CREATE OR REPLACE TABLE `{S}.variation_loc` AS
+        SELECT
+          variation_id, variation_type, for_display, assembly, assembly_accession_version, assembly_status,
+          accession, chr, `start`, `stop`, inner_start, inner_stop, outer_start, outer_stop, variant_length,
+          display_start, display_stop, position_vcf, reference_allele_vcf, alternate_allele_vcf, strand,
+          reference_allele, alternate_allele, for_display_length, assembly_version, gnomad_source,
+          loc_hgvs_source, loc_hgvs_issue, varlen_precedence, has_range_endpoints, derived_variant_length,
+          derived_start, derived_stop
+        FROM `{BASE}.variation_loc`
+        WHERE variation_id NOT IN (
+          SELECT variation_id FROM {P}.changed_variation_ids
+          UNION DISTINCT
+          SELECT variation_id FROM {P}.removed_variation_ids
+        )
+        UNION ALL
+        SELECT
+          variation_id, variation_type, for_display, assembly, assembly_accession_version, assembly_status,
+          accession, chr, `start`, `stop`, inner_start, inner_stop, outer_start, outer_stop, variant_length,
+          display_start, display_stop, position_vcf, reference_allele_vcf, alternate_allele_vcf, strand,
+          reference_allele, alternate_allele, for_display_length, assembly_version, gnomad_source,
+          loc_hgvs_source, loc_hgvs_issue, varlen_precedence, has_range_endpoints, derived_variant_length,
+          derived_start, derived_stop
+        FROM {P}.stg_variation_loc
+      """, '{BASE}', baseline_schema);
+      SET query_merge = REPLACE(query_merge, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+      SET query_merge = REPLACE(query_merge, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_merge;
+
+      -- merge variation_hgvs
+      SET query_merge = REPLACE("""
+        CREATE OR REPLACE TABLE `{S}.variation_hgvs` AS
+        SELECT
+          variation_id, accession, type, hgvs_source, issue, assembly, assembly_version, consq_id,
+          consq_label, mane_select, mane_plus, has_range_endpoints, varlen_precedence, derived_variant_length, expr
+        FROM `{BASE}.variation_hgvs`
+        WHERE variation_id NOT IN (
+          SELECT variation_id FROM {P}.changed_variation_ids
+          UNION DISTINCT
+          SELECT variation_id FROM {P}.removed_variation_ids
+        )
+        UNION ALL
+        SELECT
+          variation_id, accession, type, hgvs_source, issue, assembly, assembly_version, consq_id,
+          consq_label, mane_select, mane_plus, has_range_endpoints, varlen_precedence, derived_variant_length, expr
+        FROM {P}.stg_variation_hgvs
+      """, '{BASE}', baseline_schema);
+      SET query_merge = REPLACE(query_merge, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+      SET query_merge = REPLACE(query_merge, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_merge;
+
+      -- merge variation_xref
+      SET query_merge = REPLACE("""
+        CREATE OR REPLACE TABLE `{S}.variation_xref` AS
+        SELECT variation_id, db, id, type, status, url, ref_field
+        FROM `{BASE}.variation_xref`
+        WHERE variation_id NOT IN (
+          SELECT variation_id FROM {P}.changed_variation_ids
+          UNION DISTINCT
+          SELECT variation_id FROM {P}.removed_variation_ids
+        )
+        UNION ALL
+        SELECT variation_id, db, id, type, status, url, ref_field
+        FROM {P}.stg_variation_xref
+      """, '{BASE}', baseline_schema);
+      SET query_merge = REPLACE(query_merge, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+      SET query_merge = REPLACE(query_merge, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_merge;
+
+      -- merge variation_identity core + recompute mappings GLOBALLY from merged {S}.variation_xref
+      SET query_merge = REPLACE("""
+        CREATE OR REPLACE TABLE `{S}.variation_identity` AS
+        WITH core AS (
+          SELECT
+            variation_id, name, assembly_version, accession, vrs_class, absolute_copies, range_copies,
+            fmt, source, copy_change_type, issue, precedence, variation_type, subclass_type, cytogenetic,
+            chr, variant_length
+          FROM `{BASE}.variation_identity`
+          WHERE variation_id NOT IN (
+            SELECT variation_id FROM {P}.changed_variation_ids
+            UNION DISTINCT
+            SELECT variation_id FROM {P}.removed_variation_ids
+          )
+          UNION ALL
+          SELECT
+            variation_id, name, assembly_version, accession, vrs_class, absolute_copies, range_copies,
+            fmt, source, copy_change_type, issue, precedence, variation_type, subclass_type, cytogenetic,
+            chr, variant_length
+          FROM {P}.stg_variation_identity
         ),
         x AS (
           SELECT
@@ -737,42 +1069,45 @@ BEGIN
           GROUP BY x.variation_id
         )
         SELECT
-          tv.variation_id,
-          tv.name,
-          v.assembly_version,
-          v.accession,
-          IFNULL(v.vrs_class, IFNULL(tv.vrs_class, 'Unknown')) as vrs_class,
-          v.absolute_copies,
-          v.range_copies,
-          v.fmt,
-          v.source,
-          v.copy_change_type,
-          IFNULL(v.issue, IFNULL(tv.issue, IF(v.variation_id is null, 'No viable variation members identified.', null))) as issue,
-          v.precedence,
-          tv.variation_type,
-          tv.subclass_type,
-          tv.cytogenetic,
-          v.chr,
-          v.variant_length,
-          m.mappings,
-
-        FROM {P}.temp_variation tv
-        LEFT JOIN v
-        ON
-          v.variation_id = tv.variation_id
+          core.*,
+          m.mappings
+        FROM core
         LEFT JOIN m
-        ON tv.variation_id = m.variation_id
-    """, '{S}', rec.schema_name);
-    SET query_variation_identity = REPLACE(query_variation_identity, '{CT}', temp_create);
-    SET query_variation_identity = REPLACE(query_variation_identity, '{P}', IF(debug, rec.schema_name, '_SESSION'));
-
-    EXECUTE IMMEDIATE query_variation_identity;
+        ON core.variation_id = m.variation_id
+      """, '{BASE}', baseline_schema);
+      SET query_merge = REPLACE(query_merge, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+      SET query_merge = REPLACE(query_merge, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_merge;
+    END IF;
 
     IF NOT debug THEN
       DROP TABLE _SESSION.temp_variation;
       DROP TABLE _SESSION.temp_variation_spdi;
       DROP TABLE _SESSION.temp_variation_members;
+      IF eff_incremental THEN
+        DROP TABLE IF EXISTS _SESSION.stg_variation_loc;
+        DROP TABLE IF EXISTS _SESSION.stg_variation_hgvs;
+        DROP TABLE IF EXISTS _SESSION.stg_variation_xref;
+        DROP TABLE IF EXISTS _SESSION.stg_variation_identity;
+        DROP TABLE IF EXISTS _SESSION.changed_variation_ids;
+        DROP TABLE IF EXISTS _SESSION.removed_variation_ids;
+      END IF;
     END IF;
 
   END FOR;
+END;
+
+
+-- Full rebuild (unchanged signature/behavior)
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.variation_identity`(on_date DATE, debug BOOL)
+BEGIN
+  CALL `clinvar_ingest.variation_identity_build`(on_date, debug, FALSE);
+END;
+
+
+-- Incremental rebuild (carry-forward + merge). Only assert this when the
+-- variation_identity transform is unchanged since the baseline release.
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.variation_identity_incremental`(on_date DATE, debug BOOL)
+BEGIN
+  CALL `clinvar_ingest.variation_identity_build`(on_date, debug, TRUE);
 END;
