@@ -52,7 +52,20 @@ Per table, a **full-rebuild == incremental oracle** before trusting it — the `
 3. **`gks_rcv_statement` / `gks_vcv_statement`** — build the changed-SCV → affected-parent mapping; recompute those aggregates. Hardest; lean on the oracle.
 4. **`gks_json_proc`** — assemble only changed records; reference carried-forward for the rest.
 
+## Delta datasets (future deliverable — reshapes the cost calculus)
+
+A planned future product: a per-release **delta dataset** containing only the new / changed / deleted records of each output table, for downstream users who want just the changes (alongside the full transformed data). Not built now, but it changes the incremental strategy:
+
+- The delta dataset **is the natural byproduct of incremental computation**: the recomputed impacted records = the **A/U** delta, the removed set = **D** tombstones, and `gks_change_log` (change_type + pk) is the **manifest**. The full output = prior-release carry-forward **UNION** the delta.
+- A **full rebuild produces no delta** — extracting one needs a *separate* diff pass (read current + prior, compare), i.e. extra cost on top of the full rebuild.
+- Therefore, once the delta is a required deliverable, **incremental (full + delta together) beats full-rebuild + separate-diff (full, then pay again for the delta)** — even for the procs that are break-even on the full-output cost alone. This justifies the uniform, change-log-driven, incremental-across-all approach.
+
+Design implication: treat the per-table **delta (impacted records + `change_type`, plus D tombstones) as a first-class materialized output**, and build the full table as `carry-forward UNION delta`. The v2 `variation_identity` build should stage its impacted rows in a delta-shaped way so the same pattern extends cleanly downstream.
+
 ## Open questions
 - Where to stamp `pipeline_version` (per-table label vs a metadata table) so the same-version gate is automatic rather than operator-asserted.
 - Whether the aggregate procs can be cleanly restricted to an impact set of parent keys, or need refactoring to accept a key filter (mirrors the `{VFILTER}` approach used in the variation_identity experiment).
-- Cost/benefit per table: like `variation_identity`, if a proc is cheap enough that the merge overhead ≈ a full rebuild, keep it full and only incrementalize the expensive ones. Measure each proc's full-run time first.
+- Cost/benefit per table — **measured (2026-08-05), and it reshaped the priority.** The metric is **execution cost (bytes/slot-time)**, not wall-clock. Incremental wins ⟺ **full-compute > ~2 × output-table size** (the carry-forward floor = read+write the unchanged output once, best done via **UNION-CTAS**, not the scattered-row DELETE+INSERT). Measured per run:
+  - **`variation_identity`: 124 GB compute → 0.83 GB output → ~70× win.** The standout — parses content blobs into a tiny output. See `2026-08-05-incremental-variation-identity-v2.md`.
+  - `gks_catvar_proc` 25 GB / 9.5 GB → ~1.3× (marginal); `gks_scv_statement` 27 / 13.8 → ~break-even; `gks_rcv/vcv_statement` 12.8/4.4, 10.1/3.6 → ~1.4–1.5× (modest).
+  - **Conclusion:** the output-heavy downstream procs are marginal (carrying their large JSON forward ≈ recomputing it), so they stay full rebuilds. **`variation_identity` is where incremental pays off**, and it's pursued in the v2 plan; this downstream plan is deprioritized accordingly.
