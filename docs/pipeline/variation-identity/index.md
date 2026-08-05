@@ -6,6 +6,11 @@ The `clinvar_ingest.variation_identity` stored procedure extracts and normalizes
 
 The procedure accepts a single parameter — `on_date DATE` — which identifies the ClinVar release schema to process.
 
+Two entry points share the same logic (BigQuery has no default parameters or overloading, so the mode is exposed as separate wrappers over an internal `variation_identity_build(on_date, debug, incremental)`):
+
+- `variation_identity(on_date, debug)` — **full rebuild**. Re-parses every variation. Always correct; use for the first release, after a transform change, or when a baseline is unavailable.
+- `variation_identity_incremental(on_date, debug)` — **incremental rebuild**. Re-parses only the variations changed since the prior release and carries the rest forward. See [Incremental Rebuild](#incremental-rebuild).
+
 ---
 
 ## Workflow
@@ -105,7 +110,7 @@ Consolidates all candidate expression sources — SPDI, HGVS, gnomAD, and locati
 | 8 | HGVS coding (other) | Transcript-level, non-MANE |
 | 9 | HGVS other | Remaining types (non-coding, etc.) |
 
-Within the same precedence level for a given variation + accession, ties are broken by row-number windowing (first row wins).
+Within the same precedence level for a given variation + accession, ties are broken by a **total-order** row-number windowing (assembly version, then format, source, and issue) so the selected source is deterministic across runs. Determinism matters for both reproducibility and the incremental carry-forward — see [Incremental Rebuild](#incremental-rebuild).
 
 **Output:** Internal temporary table consumed by Step 8. <span class="role-badge badge-internal">Internal</span>
 
@@ -130,8 +135,35 @@ See [Variation Identity](variation-identity.md) for full field documentation.
 
 ---
 
+## Incremental Rebuild
+
+`variation_identity_incremental` produces the same four output tables as a full rebuild, but re-runs the heavy per-variation content parsing (`parseSequenceLocations`, `parseHGVS`, `parseXRefs`, SPDI) only for the variations that changed since the prior release. On a typical weekly release this is roughly 0.4% of variations, cutting execution cost by **~7.5× slot-time** and **~2.1× bytes** while producing output that is byte-for-byte identical to a full rebuild (0 canonical diffs across all four tables).
+
+### How it works
+
+1. **Changed set** — the variations to recompute are `diff_variation` (`new` or `modified`) unioned with the **copy-number cascade**: variations whose `variation` row is byte-identical but whose CopyNumber-bearing `clinical_assertion_variation` / `clinical_assertion` changed (resolved over both the compare and baseline snapshots so removed submissions are caught). Removed variations are tracked separately.
+2. **Parse only the changed set** — Steps 1–8 run against the changed variations and write to per-variation staging tables.
+3. **Carry forward + merge** — each of the four outputs is rebuilt with a `UNION ALL` of the baseline rows for unchanged variations and the freshly parsed rows for changed ones (a `CREATE TABLE … AS SELECT` union, not row-level `DELETE`/`INSERT`, which avoids a scattered-row rewrite penalty). Explicit column lists ensure a schema drift errors rather than silently corrupting.
+4. **Global `mappings`** — the cross-reference `mappings` array is recomputed from the fully merged `variation_xref` (a cheap join), because a variation's mappings can be sourced from `variation_xref` rows keyed on an external id that belongs to other variations.
+
+### Fallback guard (automatic)
+
+`variation_identity_incremental` falls back to a full rebuild when the baseline release, its four output tables, or the current release's `diff_*` driver tables are missing. The full path is always correct, so a missing prerequisite is never an error.
+
+### Version-invalidation (operator-asserted)
+
+Carry-forward assumes the prior release was built by the **same** `variation_identity` transform.
+
+!!! warning "Reseed after a transform change"
+    After any change to the `variation_identity` procedure, run the full `variation_identity` once on the next release to reseed the baseline, then resume `variation_identity_incremental`. The fallback guard checks that prerequisites *exist*, not that the transform is unchanged — that assertion is the operator's.
+
+Producing `variation_identity` incrementally also yields the clean changed-variation set that the [VRS Processing](../vrs-processing.md) step consumes to shrink the expensive vrs-python payload.
+
+---
+
 ## Dependencies
 
 - **UDFs**: `clinvar_ingest.parseAttributeSet`, `clinvar_ingest.parseSequenceLocations`, `clinvar_ingest.deriveHGVS`, `clinvar_ingest.parseHGVS`, `clinvar_ingest.parseXRefs`, `clinvar_ingest.schema_on`
 - **Source Tables**: `variation`, `clinical_assertion_variation`, `clinical_assertion`
+- **Incremental drivers** (incremental mode only): `diff_variation`, `diff_clinical_assertion`, `diff_clinical_assertion_variation` (from `dataset_diff_on`), plus the prior release's `variation_identity` / `variation_loc` / `variation_hgvs` / `variation_xref` as the carry-forward baseline
 - **Downstream Consumers**: VRS Python processing pipeline, `gks_catvar_proc`

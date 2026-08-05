@@ -67,16 +67,39 @@ for the `clinvar_2025_03_23_v2_3_1` dataset in the `ClinGen Dev` GCP project
 ## STEP 1
 From BQ Console (NOTE: this example assumes CURRENT_DATE() will resolve to the 2025-03-23 clinvar release)
 
+**Default (incremental)** — carry forward the unchanged variations from the prior
+release and re-parse only the changed set:
+
+```
+CALL `clinvar_ingest.variation_identity_incremental`(CURRENT_DATE(), FALSE);
+```
+
+**Full rebuild** — first release, missing baseline, or after a `variation_identity`
+transform change (see version-invalidation below):
+
 ```
 CALL `clinvar_ingest.variation_identity`(CURRENT_DATE(), FALSE);
 ```
 
-> **Incremental strategy (see [dataset-diff.md](./dataset-diff.md)):** `variation_identity`
-> itself is always a full rebuild — it is cheap (~2 min) and the BigQuery transform is
-> not the bottleneck. The expensive step is vrs-python (STEP 3). The incremental win is
-> realized in STEP 2/3/4 by sending **only the variations whose VRS-relevant fields
-> changed** to vrs-python and carrying forward `gks_vrs` for the rest. See the
-> "Incremental vrsify" note under STEP 3.
+> **Incremental `variation_identity` (see [dataset-diff.md](./dataset-diff.md) and
+> `docs/superpowers/plans/2026-08-05-incremental-variation-identity-v2.md`):**
+> `variation_identity_incremental` re-runs the heavy per-variation content parsing
+> (`parseSequenceLocations` / `parseHGVS` / `parseXRefs` / SPDI) only for the variations
+> changed since the prior release (`diff_variation` new|modified ∪ the copy-number CAV/CA
+> cascade), carries the rest forward, and UNION-CTAS-merges the four outputs. `mappings` is
+> recomputed globally from the merged `variation_xref`. Measured **~7.5× slot-time / ~2.1×
+> bytes** per weekly release; the full-vs-incremental oracle is byte-identical (0 canonical
+> diffs across all four tables).
+>
+> - **Fallback guard (automatic):** if the baseline release, its four output tables, or the
+>   current release's `diff_*` driver tables are missing, `variation_identity_incremental`
+>   falls back to a full rebuild — the full path is always correct.
+> - **Version-invalidation (operator-asserted):** carry-forward assumes the prior release
+>   was built by the **same** `variation_identity` transform. **After any change to this
+>   proc, run the full `variation_identity` once** on the next release to reseed; resume
+>   `_incremental` afterward. (The guard cannot detect a transform change on its own.)
+> - Producing a correct `variation_identity` this way ALSO yields the clean changed-variation
+>   set that STEP 2/3 vrsify consumes — see the "Incremental vrsify" note under STEP 3.
 
 ## STEP 2
 From a terminal, extract `variation_identity` to `gs://clinvar-gks/<date>/dev/vi.jsonl.gz`.
