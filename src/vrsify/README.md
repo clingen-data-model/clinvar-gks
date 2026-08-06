@@ -21,6 +21,10 @@ gs://clinvar-gks/<date>/dev/vi-normalized-no-liftover.jsonl.gz
 
 - **`vrsify.sh`** — the driver (adapted from clinvar-gk-python `misc/clinvar-vrsification`).
 - **`requirements.txt`** — the resolver engine (`clinvar_gk_pilot`) pinned to an exact commit.
+- **`log_conf.json`** — the resolver's logging config. `clinvar_gk_pilot` reads this from its
+  `PROJECT_ROOT` at import, but it is not shipped as package data, so a pip install is missing
+  it and errors at import. `vrsify.sh` copies this vendored copy next to the installed package
+  if absent (a no-op for source-checkout runs).
 
 The heavy engine is installed as a **pinned dependency**, not forked into this repo — so
 the resolver stack (`ga4gh.vrs`, `variation-normalizer`, `gene-normalizer`, `cool-seq-tool`)

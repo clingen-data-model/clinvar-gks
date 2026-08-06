@@ -40,6 +40,8 @@ BUCKET_NAME="${BUCKET_NAME:-clinvar-gks}"
 PARALLELISM="${PARALLELISM:-2}"
 VRSIFY_CMD="${VRSIFY_CMD:-clinvar-gk-pilot}"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 DATE="${1:?Usage: $0 YYYY-MM-DD}"
 
 # Fake AWS credentials so boto3 targets the local endpoint instead of real AWS.
@@ -59,6 +61,24 @@ if (( ${#missing[@]} > 0 )); then
   echo "ERROR: required environment variables are not set: ${missing[*]}" >&2
   echo "       See src/vrsify/README.md for the SeqRepo/UTA/gene-norm setup." >&2
   exit 1
+fi
+
+# clinvar_gk_pilot reads log_conf.json from its PROJECT_ROOT (= parents[1] of the
+# module, i.e. site-packages when pip-installed), but that file is not shipped as
+# package data — so a pip install is missing it and errors at import. Place the
+# vendored copy beside the installed package if absent. No-op when the resolver
+# runs from a source checkout (VRSIFY_CMD) that already has the file, or when the
+# package is not importable by this python.
+pkg_parent="$(python3 - <<'PY' 2>/dev/null || true
+import importlib.util, pathlib
+spec = importlib.util.find_spec("clinvar_gk_pilot")
+if spec and spec.origin:
+    print(pathlib.Path(spec.origin).resolve().parents[1])
+PY
+)"
+if [[ -n "${pkg_parent}" && -d "${pkg_parent}" && ! -f "${pkg_parent}/log_conf.json" ]]; then
+  cp "${SCRIPT_DIR}/log_conf.json" "${pkg_parent}/log_conf.json"
+  echo "vrsify: installed log_conf.json into ${pkg_parent}"
 fi
 
 bucket_root="${BUCKET_NAME}/${DATE}/dev"
