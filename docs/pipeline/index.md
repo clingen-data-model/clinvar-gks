@@ -68,6 +68,20 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
 
 ## Running the Pipeline
 
+### Single-command run
+
+The whole release can be run end-to-end with the `run-release.sh` orchestrator, which chains variation identity, the GCS export, vrsification, and the transform/load/procedures/publish stages:
+
+```bash
+./src/scripts/run-release.sh YYYY-MM-DD              # incremental (default)
+./src/scripts/run-release.sh YYYY-MM-DD --full       # full rebuild / reseed
+./src/scripts/run-release.sh YYYY-MM-DD --start-step 4   # resume from a stage (1-4)
+```
+
+`--full` propagates version-invalidation across every stage; use it for the first release or after a `variation_identity` transform change or a vrsify-pin bump. The vrsify stage (stage 3) requires local SeqRepo / UTA / gene-normalizer services — see [`src/vrsify/README.md`](https://github.com/clingen-data-model/clinvar-gks/tree/main/src/vrsify) — so on hosts without them, run the BigQuery-side stages with `--start-step` and run vrsify separately.
+
+The individual stages are documented below.
+
 ### Step 1: Variation Identity
 
 From the BigQuery console — incremental by default, full rebuild when reseeding (see [Incremental Rebuild](variation-identity/index.md#incremental-rebuild)):

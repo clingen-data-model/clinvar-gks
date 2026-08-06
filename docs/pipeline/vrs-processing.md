@@ -100,10 +100,11 @@ The `out.location` record includes the flattened position fields: `start`, `end`
 !!! warning "Limited Scope"
     VRS processing currently resolves only the **single best expression** per variation — the defining allele for each Canonical Allele as selected by the [precedence hierarchy](variation-identity/index.md#precedence-hierarchy). Only variations that vrs-python can handle are successfully resolved; the remainder carry errors in the output.
 
-Two areas of improvement are planned:
+The full release now runs from a single command — `src/scripts/run-release.sh` chains variation identity, the export, this vrsify stage (via `src/vrsify/vrsify.sh`), and the transform/load/procedures/publish stages. See [Single-command run](index.md#single-command-run). The vrsify resolver is installed as a pinned dependency rather than forked (see [`src/vrsify/README.md`](https://github.com/clingen-data-model/clinvar-gks/tree/main/src/vrsify)); it still requires the local SeqRepo / UTA / gene-normalizer services.
+
+One area of improvement remains planned:
 
 - **Broader expression coverage** — expand VRS processing to resolve **all variant expressions** in ClinVar — the full `hgvs_list` preserved in the `variation_hgvs` table — rather than only the single selected source. This will provide richer downstream representation with multiple VRS identities per variation.
-- **Tighter pipeline integration** — the post-vrsify pipeline is already orchestrated by `vrs-to-bq-table.sh` (transform → load → procedures → publish), and the pre-vrsify export by `export-vi-table-to-gcs.sh`. The remaining gap is the external vrs-python invocation between them; vendoring that resolver into this repo would allow a single end-to-end pipeline invocation from `variation_identity` through final JSON export.
 
 ---
 
