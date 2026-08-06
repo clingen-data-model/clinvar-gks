@@ -36,6 +36,8 @@ set -o nounset
 set -o pipefail
 
 PROJECT_ID="${PROJECT_ID:-clingen-dev}"
+# Keep gcloud defaulting to the same project (avoids a mismatched --project_id).
+export CLOUDSDK_CORE_PROJECT="${PROJECT_ID}"
 BUCKET_NAME="${BUCKET_NAME:-clinvar-gks}"
 PARALLELISM="${PARALLELISM:-2}"
 VRSIFY_CMD="${VRSIFY_CMD:-clinvar-gk-pilot}"
