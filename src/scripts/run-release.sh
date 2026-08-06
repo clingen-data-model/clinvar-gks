@@ -31,6 +31,9 @@ set -o nounset
 set -o pipefail
 
 PROJECT_ID="${PROJECT_ID:-clingen-dev}"
+# Keep gcloud/bq defaulting to the same project so the bq wrapper does not prepend a
+# mismatched --project_id (a wrong gcloud default can wedge bq on status polling).
+export CLOUDSDK_CORE_PROJECT="${PROJECT_ID}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"

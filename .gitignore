@@ -27,3 +27,9 @@ venv/
 tmp/
 parquet/
 
+.venv-vrsify/
+
+# vrsify runtime scratch (src/vrsify/vrsify.sh + the resolver write these into the CWD)
+output/
+buckets/
+*-noliftover.log

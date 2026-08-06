@@ -34,10 +34,17 @@ set -o pipefail
 
 # Google Cloud Project ID
 PROJECT_ID='clingen-dev'
+# Force gcloud/bq to default to the same project. Otherwise the bq wrapper prepends
+# gcloud's core/project as a first --project_id ahead of our --project_id, and if they
+# differ (e.g. a stray clingen-cvc-dev default) the client can hang polling job status
+# against the wrong project. Keeping them identical avoids that.
+export CLOUDSDK_CORE_PROJECT="${PROJECT_ID}"
 # GCS Bucket for intermediate and final files
 BUCKET_NAME='clinvar-gks'
 # Public GCS Bucket for final distribution. Leave empty to skip public copy.
-PUBLIC_BUCKET_NAME='clingen-public/clinvar-gks'
+# Env-overridable: set PUBLIC_BUCKET_NAME="" to skip the public copy (e.g. dev/test
+# runs) without editing this file. Unset falls back to the default below.
+PUBLIC_BUCKET_NAME="${PUBLIC_BUCKET_NAME-clingen-public/clinvar-gks}"
 
 # Incremental gks_vrs load: carry the prior release's gks_vrs forward and merge in
 # only the changed variations (produced when export-vi-table-to-gcs.sh runs in its
