@@ -2,25 +2,31 @@
 #
 # run-release.sh — end-to-end ClinVar-GKS release pipeline for a single release date.
 #
-# Chains the four stages that turn an ingested ClinVar release into published GKS output:
+# Chains the five stages that turn an ingested ClinVar release into published GKS output:
 #
 #   1. variation_identity   BigQuery CALL   (incremental by default; full with --full)
 #   2. export-vi-to-gcs      src/scripts/export-vi-table-to-gcs.sh   -> gs://.../vi.jsonl.gz
 #   3. vrsify                src/vrsify/vrsify.sh   (external vrs-python; needs local services)
 #   4. vrs-to-bq             src/scripts/vrs-to-bq-table.sh
-#                            (Cloud Run transform -> load gks_vrs -> gks_* procs -> export/publish)
+#                            (Cloud Run transform -> load gks_vrs -> gks_* procs)
+#   5. release               src/scripts/release-gks.sh
+#                            (export dict bundle + Parquet -> assemble -> upload to Cloudflare R2)
 #
 # Stages 1 and 2 are incremental by default (recompute only changed variations, carry the
 # rest forward). Stage 4 self-corrects between incremental and full loads. --full forces a
-# full rebuild across the whole chain and is REQUIRED after any version-invalidating change
-# (the variation_identity transform, or the vrsify pin in src/vrsify/requirements.txt).
+# full rebuild across stages 1-2 and is REQUIRED after any version-invalidating change (the
+# variation_identity transform, or the vrsify pin in src/vrsify/requirements.txt).
+#
+# Stage 5 publishes to the public R2 bucket. Use --dry-run to run everything but have the
+# release stage only print what it would upload (no R2 writes) — use it for test runs.
 #
 # USAGE:
-#   ./src/scripts/run-release.sh YYYY-MM-DD [--full] [--start-step N]
+#   ./src/scripts/run-release.sh YYYY-MM-DD [--full] [--dry-run] [--start-step N]
 #
-#   --full          full rebuild of stage 1 + full export in stage 2 (reseed the baseline)
-#   --start-step N  begin at stage N (1-4); default 1. Stage 3 (vrsify) needs the local
-#                   SeqRepo/UTA/gene-norm services running — see src/vrsify/README.md.
+#   --full          full rebuild of stages 1-2 (reseed the baseline)
+#   --dry-run       stage 5 (release-gks.sh) runs in dry-run: no R2 upload / no GCS writes
+#   --start-step N  begin at stage N (1-5); default 1. Stage 3 (vrsify) needs the local
+#                   SeqRepo/UTA/gene-norm services — see src/vrsify/README.md.
 #
 # NOTE: stage 3 cannot run in CI/headless environments; run it on a host with the
 # variation-normalizer service topology, or use --start-step to run the BigQuery-side
@@ -40,11 +46,13 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 DATE=""
 FULL=false
+DRY_RUN=false
 START_STEP=1
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --full) FULL=true; shift ;;
+    --dry-run) DRY_RUN=true; shift ;;
     --start-step) START_STEP="${2:?--start-step needs a number}"; shift 2 ;;
     --start-step=*) START_STEP="${1#*=}"; shift ;;
     -*) echo "ERROR: unknown flag: $1" >&2; exit 1 ;;
@@ -53,20 +61,20 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$DATE" ]]; then
-  echo "Usage: $0 YYYY-MM-DD [--full] [--start-step N]" >&2
+  echo "Usage: $0 YYYY-MM-DD [--full] [--dry-run] [--start-step N]" >&2
   exit 1
 fi
 
-echo "=== run-release ${DATE} (full=${FULL}, start-step=${START_STEP}, project=${PROJECT_ID}) ==="
+echo "=== run-release ${DATE} (full=${FULL}, dry-run=${DRY_RUN}, start-step=${START_STEP}, project=${PROJECT_ID}) ==="
 
 # --- Stage 1: variation_identity -------------------------------------------------------
 if (( START_STEP <= 1 )); then
   if $FULL; then
-    echo ">>> [1/4] variation_identity (FULL rebuild)"
+    echo ">>> [1/5] variation_identity (FULL rebuild)"
     bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
       "CALL \`clinvar_ingest.variation_identity\`(DATE '${DATE}', FALSE)"
   else
-    echo ">>> [1/4] variation_identity_incremental"
+    echo ">>> [1/5] variation_identity_incremental"
     bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
       "CALL \`clinvar_ingest.variation_identity_incremental\`(DATE '${DATE}', FALSE)"
   fi
@@ -74,7 +82,7 @@ fi
 
 # --- Stage 2: export variation_identity to GCS -----------------------------------------
 if (( START_STEP <= 2 )); then
-  echo ">>> [2/4] export-vi-table-to-gcs.sh"
+  echo ">>> [2/5] export-vi-table-to-gcs.sh"
   if $FULL; then
     "${REPO_ROOT}/src/scripts/export-vi-table-to-gcs.sh" "${DATE}" --full
   else
@@ -84,14 +92,33 @@ fi
 
 # --- Stage 3: vrsify (external vrs-python) ---------------------------------------------
 if (( START_STEP <= 3 )); then
-  echo ">>> [3/4] vrsify.sh (vrs-python; requires local SeqRepo/UTA/gene-norm services)"
+  echo ">>> [3/5] vrsify.sh (vrs-python; requires local SeqRepo/UTA/gene-norm services)"
   "${REPO_ROOT}/src/vrsify/vrsify.sh" "${DATE}"
 fi
 
-# --- Stage 4: transform -> load gks_vrs -> gks_* procs -> export/publish ----------------
+# --- Stage 4: transform -> load gks_vrs -> gks_* procs ---------------------------------
 if (( START_STEP <= 4 )); then
-  echo ">>> [4/4] vrs-to-bq-table.sh"
+  echo ">>> [4/5] vrs-to-bq-table.sh (transform, load gks_vrs, run gks_* procs)"
   "${REPO_ROOT}/src/scripts/vrs-to-bq-table.sh" "${DATE}"
+fi
+
+# --- Stage 5: export bundle + Parquet, upload to R2 ------------------------------------
+if (( START_STEP <= 5 )); then
+  echo ">>> [5/5] release-gks.sh (export bundle + Parquet, upload to R2)"
+  # release-gks.sh needs the dataset version (e.g. v2_5_0); derive it from the dataset name.
+  DATE_US="${DATE//-/_}"
+  DATASET_ID="$(bq ls --project_id="${PROJECT_ID}" --max_results=10000 \
+    | awk '{$1=$1; print}' | grep "^clinvar_${DATE_US}_" | head -n 1)"
+  if [[ -z "${DATASET_ID}" ]]; then
+    echo "ERROR: no dataset found matching clinvar_${DATE_US}_* in ${PROJECT_ID}" >&2
+    exit 1
+  fi
+  DATASET_VERSION="${DATASET_ID#clinvar_"${DATE_US}"_}"
+  echo "    dataset=${DATASET_ID} version=${DATASET_VERSION}"
+
+  RELEASE_ARGS=("${DATE}" "${DATASET_VERSION}")
+  $DRY_RUN && RELEASE_ARGS+=("--dry-run")
+  "${REPO_ROOT}/src/scripts/release-gks.sh" "${RELEASE_ARGS[@]}"
 fi
 
 echo "=== run-release ${DATE} complete ==="
