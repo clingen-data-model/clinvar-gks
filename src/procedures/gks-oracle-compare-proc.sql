@@ -30,6 +30,7 @@ BEGIN
       COUNTIF(bh IS NULL) AS a_only,
       COUNTIF(ah IS NULL) AS b_only,
       COUNTIF(ah IS NOT NULL AND bh IS NOT NULL
+              AND ah != bh
               AND `clinvar_ingest.canonicalize_json`(ah) != `clinvar_ingest.canonicalize_json`(bh)) AS canonical_diffs
     FROM joined
   """;

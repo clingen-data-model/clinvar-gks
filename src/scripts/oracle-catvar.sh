@@ -6,6 +6,8 @@
 # USAGE: ./src/scripts/oracle-catvar.sh <COMPARE_DATE> [PROJECT_ID]
 #   Requires: gks_vrs + variation_* + diff_* already built for COMPARE_DATE, and a
 #   same-gate baseline release present. Run after Chunk 3 is deployed.
+# NOTE: the ${SCHEMA}_oracle_full / _oracle_incr scratch datasets are left behind for
+#   inspection; they are dropped as part of the Chunk 3/4 cleanup step.
 set -o errexit -o nounset -o pipefail
 DATE="${1:?compare date YYYY-MM-DD}"
 PROJECT_ID="${2:-clingen-dev}"
@@ -13,6 +15,9 @@ export CLOUDSDK_CORE_PROJECT="${PROJECT_ID}"
 
 SCHEMA=$(bq query --project_id="$PROJECT_ID" --use_legacy_sql=false --format=csv --quiet \
   "SELECT schema_name FROM \`clinvar_ingest.schema_on\`(DATE '${DATE}')" | tail -1 | tr -d '[:space:]')
+if [[ -z "$SCHEMA" || "$SCHEMA" == "schema_name" ]]; then
+  echo "❌ no ClinVar release found for ${DATE}" >&2; exit 1
+fi
 FULL_DS="${SCHEMA}_oracle_full"
 INCR_DS="${SCHEMA}_oracle_incr"
 
