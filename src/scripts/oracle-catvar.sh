@@ -56,9 +56,9 @@ done
 
 echo ">>> compare"
 FAIL=0
-for t in "${TABLES[@]}"; do n="${t%%:*}"; pk="${t##*:}"
+for t in "${TABLES[@]}"; do n="${t%%:*}"
   OUT=$(bq query --project_id="$PROJECT_ID" --use_legacy_sql=false --format=csv --quiet \
-    "CALL \`clinvar_ingest.gks_oracle_compare\`('${FULL_DS}','${INCR_DS}','${n}','${pk}')" | tail -1)
+    "CALL \`clinvar_ingest.gks_oracle_compare\`('${FULL_DS}','${INCR_DS}','${n}')" | tail -1)
   echo "  ${OUT}"
   echo "${OUT}" | awk -F, '{ if ($2+$3+$4 != 0) exit 1 }' || FAIL=1
 done
