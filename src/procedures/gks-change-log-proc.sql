@@ -38,7 +38,15 @@ BEGIN
     STRUCT('gks_catvar'        AS name, 'id' AS pk),
     STRUCT('gks_scv_statement',       'id'),
     STRUCT('gks_rcv_statement',       'id'),
-    STRUCT('gks_vcv_statement',       'id')
+    STRUCT('gks_vcv_statement',       'id'),
+    -- catvar outputs (Plan 1)
+    STRUCT('gks_dict_variation',              'id'),
+    STRUCT('gks_dict_sequence_reference',     'key'),
+    STRUCT('gks_dict_location',               'key'),
+    STRUCT('gks_dict_allele',                 'key'),
+    STRUCT('gks_dict_copy_number_count',      'key'),
+    STRUCT('gks_dict_copy_number_change',     'key'),
+    STRUCT('gks_dict_gene',                   'key')
   ];
   DECLARE i INT64 DEFAULT 0;
   DECLARE t STRUCT<name STRING, pk STRING>;

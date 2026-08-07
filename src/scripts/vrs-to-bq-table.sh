@@ -197,6 +197,15 @@ execute_bq_procedures() {
   fi
   echo "    ✅ Success."
 
+  echo "  - Calling procedure: clinvar_ingest.gks_change_log..."
+  bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+    "CALL \`clinvar_ingest.gks_change_log\`('$release_date')" > /dev/null \
+    || { echo "❌ gks_change_log FAILED"; return 1; }
+  echo "  - Calling procedure: clinvar_ingest.gks_delta_build..."
+  bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+    "CALL \`clinvar_ingest.gks_delta_build\`('$release_date')" > /dev/null \
+    || { echo "❌ gks_delta_build FAILED"; return 1; }
+
   echo "✅ All BigQuery procedures completed successfully."; return 0;
 }
 
