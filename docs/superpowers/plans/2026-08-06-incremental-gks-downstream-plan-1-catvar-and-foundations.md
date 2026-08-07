@@ -403,7 +403,7 @@ After the guard, set the per-query alias-correct filter fragments and the `gks_d
 ```sql
 IF eff_incremental THEN
   -- one fragment per consuming query, each with that query's alias for variation_id
-  SET vfilter_ctx = 'AND vrs.in.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)'; -- Step 3 temp_ctxvar
+  SET vfilter_ctx = 'WHERE vrs.in.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)'; -- Step 3 temp_ctxvar (ctxvar CTE has NO existing WHERE → use WHERE)
   SET vfilter_ext = 'WHERE x.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';     -- Step 4 outer select
   SET vfilter_map = 'AND m.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';        -- Step 5 (see note)
   SET vfilter_dv  = 'AND ctx.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';      -- Step 6 catvar CTE
@@ -418,7 +418,7 @@ Add `DECLARE vfilter_ctx STRING; DECLARE vfilter_ext STRING; DECLARE vfilter_map
 
 > **Step 4 / 5 filter placement:** `temp_catvar_extension`'s final select is `... FROM cat_ext_item x ... GROUP BY x.variation_id` — insert `vfilter_ext` as the `WHERE` before `GROUP BY` (note it is a full `WHERE`, not an `AND`, since that select has no existing WHERE). `temp_catvar_mappings`'s final select is `... FROM catvar_mappings m GROUP BY m.variation_id` — same: `vfilter_map` must be a `WHERE` there (adjust the `AND`→`WHERE` when the target select has no existing predicate). Verify each target select's existing WHERE/no-WHERE and set the fragment's leading keyword (`AND` vs `WHERE`) accordingly.
 
-> The `{VFILTER}` is applied in the final `gks_dict_variation` assembly (Step 6) on the `catvar` CTE's `variation_id`, and in the per-variation temps (Step 2, 3, 4, 5) so those temps only compute the changed set. Add `{VFILTER}` to: `temp_ctxvar_expression` (filter each UNION arm's source by `variation_id IN changed`), `temp_ctxvar`, `temp_catvar_extension`, `temp_catvar_mappings`. Because those temps are keyed by `variation_id`, the filter is a straightforward `WHERE`/`AND`. The six global dict queries (Steps 1c, 1d, 2b, 2c, 2d, 4b) are **NOT** filtered — they read the whole-snapshot temps (`temp_seqref`, `temp_seqloc`) or `gks_vrs`/`gene` directly and must stay global.
+> The per-query filters are applied ONLY to: `temp_ctxvar` (proc Step 3), `temp_catvar_extension` (proc Step 4), `temp_catvar_mappings` (proc Step 5), and the final `gks_dict_variation` assembly (proc Step 6) — see Step 6 below for exact placement. The six global dict queries (proc Steps 1c, 1d, 2b, 2c, 2d, 4b) are **NOT** filtered — they read the whole-snapshot temps (`temp_seqref`, `temp_seqloc`) or `gks_vrs`/`gene` directly and must stay global. `temp_ctxvar_expression` (proc Step 2) also stays **unfiltered** (see the Important note below).
 
 **Important:** the global dicts depend on `temp_seqref`/`temp_seqloc`/`temp_ctxvar_expression`. `temp_seqref`/`temp_seqloc` are built from all of `gks_vrs` (Steps 1a/1b — leave unfiltered). But `temp_ctxvar_expression` feeds BOTH `gks_dict_allele` (global, needs all alleles) AND `gks_dict_variation` (per-variation). **So `temp_ctxvar_expression` must stay GLOBAL** (unfiltered) — filtering it would break `gks_dict_allele`. Only `temp_ctxvar`, `temp_catvar_extension`, `temp_catvar_mappings`, and the final `gks_dict_variation` assembly take `{VFILTER}`. Verify each temp's downstream consumers before filtering it.
 
