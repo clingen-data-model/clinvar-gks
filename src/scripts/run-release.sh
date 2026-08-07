@@ -3,6 +3,8 @@
 # run-release.sh — end-to-end ClinVar-GKS release pipeline for a single release date.
 #
 # Chains the five stages that turn an ingested ClinVar release into published GKS output:
+# Stage 0 (dataset_diff_on) runs ahead of stage 1 to build the {S}.diff_* drivers, and a
+# version stamp (gks_pipeline_version) is written between stages 3 and 4.
 #
 #   1. variation_identity   BigQuery CALL   (incremental by default; full with --full)
 #   2. export-vi-to-gcs      src/scripts/export-vi-table-to-gcs.sh   -> gs://.../vi.jsonl.gz
@@ -73,7 +75,7 @@ echo "=== run-release ${DATE} (full=${FULL}, dry-run=${DRY_RUN}, start-step=${ST
 # Idempotent (CREATE OR REPLACE). On the first release it emits a warning and writes no
 # diff tables, which correctly makes the incremental guards fall back to a full rebuild.
 if (( START_STEP <= 1 )); then
-  echo ">>> [0] dataset_diff_on (build {S}.diff_* drivers)"
+  echo ">>> [0/5] dataset_diff_on (build {S}.diff_* drivers)"
   bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
     "CALL \`clinvar_ingest.dataset_diff_on\`(DATE '${DATE}')"
 fi
@@ -111,13 +113,17 @@ fi
 # audit_stamp = full git describe (provenance, always). gate_key = last commit touching the
 # build-relevant paths (only advances when build logic changes; docs-only commits don't).
 if (( START_STEP <= 4 )); then
-  AUDIT_STAMP="$(cd "${REPO_ROOT}" && git describe --tags --always --dirty)"
-  GATE_KEY="$(cd "${REPO_ROOT}" && git log -1 --format=%H -- src/procedures src/scripts src/vrsify)"
+  AUDIT_STAMP="$(git -C "${REPO_ROOT}" describe --tags --always --dirty)"
   if $FULL; then
     # A forced full rebuild deliberately invalidates carry-forward: stamp a unique gate so no
     # baseline can match it this release (the downstream procs then all full-rebuild).
-    GATE_KEY="FULL-${AUDIT_STAMP}-$(cd "${REPO_ROOT}" && git rev-parse HEAD)"
+    GATE_KEY="FULL-${AUDIT_STAMP}-$(git -C "${REPO_ROOT}" rev-parse HEAD)"
+  else
+    GATE_KEY="$(git -C "${REPO_ROOT}" log -1 --format=%H -- src/procedures src/scripts src/vrsify)"
   fi
+  # These values are spliced into a single-quoted SQL literal below; a stray single quote
+  # would break out of it. Abort rather than emit malformed SQL.
+  case "${AUDIT_STAMP}${GATE_KEY}" in *\'*) echo "ERROR: version stamp contains a single quote" >&2; exit 1;; esac
   echo ">>> stamping pipeline_version audit=${AUDIT_STAMP} gate=${GATE_KEY}"
   bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
     "CALL \`clinvar_ingest.gks_pipeline_version\`(DATE '${DATE}', '${AUDIT_STAMP}', '${GATE_KEY}')"
