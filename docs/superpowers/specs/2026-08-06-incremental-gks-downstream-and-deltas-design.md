@@ -88,18 +88,26 @@ procs), and produce **each dict's delta by a `dataset_diff` pass** (freshly-reco
 `{base}`, keyed by the dict's key) → `A`/`U`/`D`. Correct by construction (a global recompute cannot
 miss a dropped reference) and avoids the reference-counting dedup-removal trap.
 
-**Eight global dicts** — six from `gks_catvar_proc`, two from `gks_scv_condition_proc`:
+**Eight global dicts** — six from `gks_catvar_proc`, two from `gks_scv_condition_proc`. **Every
+dict's delta is produced the same way: a content diff of the freshly-recomputed dict vs `{base}`,
+keyed by the dict's key** (never derived from a source-table `diff_*` keyset — a dict's content can
+depend on inputs a source diff would miss, e.g. `gks_dict_condition_set` depends on trait-set
+composition / `membershipOperator` and `gks_xref_iri_templates`, so a `diff_trait` keyset would
+under-publish its delta while the globally-recomputed full table stays correct):
 
-| Dict | Proc | Key | Diff driver for its delta |
-|---|---|---|---|
-| `gks_dict_sequence_reference` | catvar | refgetAccession | (derived from `gks_vrs`; diff dict vs `{base}`) |
-| `gks_dict_location` | catvar | location id | diff dict vs `{base}` |
-| `gks_dict_allele` | catvar | VRS digest | diff dict vs `{base}` |
-| `gks_dict_copy_number_count` | catvar | VRS digest | diff dict vs `{base}` |
-| `gks_dict_copy_number_change` | catvar | VRS digest | diff dict vs `{base}` |
-| `gks_dict_gene` | catvar | gene | diff dict vs `{base}` |
-| `gks_dict_condition` | scv_condition | `clinvar.trait:*` | driven by `diff_trait` |
-| `gks_dict_condition_set` | scv_condition | `clinvar.traitset:*` | driven by `diff_trait` + `diff_trait_set` |
+| Dict | Proc | Key |
+|---|---|---|
+| `gks_dict_sequence_reference` | catvar | refgetAccession |
+| `gks_dict_location` | catvar | location id |
+| `gks_dict_allele` | catvar | VRS digest |
+| `gks_dict_copy_number_count` | catvar | VRS digest |
+| `gks_dict_copy_number_change` | catvar | VRS digest |
+| `gks_dict_gene` | catvar | gene |
+| `gks_dict_condition` | scv_condition | `clinvar.trait:*` |
+| `gks_dict_condition_set` | scv_condition | `clinvar.traitset:*` |
+
+(`diff_trait` / `diff_trait_set` are *impact drivers* for the SCV-keyed `gks_scv_condition_sets` in
+§3 — not the dict-delta mechanism.)
 
 `gks_catvar_proc` emits 7 outputs; only **`gks_dict_variation`** is per-variation and uses the
 `UNION-CTAS` carry-forward primitive (§1). `gks_scv_condition_proc` emits 3 outputs: the two global
@@ -328,6 +336,13 @@ so the pattern (payload table + manifest + stamp) is set once and reused by ever
   condition impact sets (the diff tables already exist — see §3).
 - **Confirm all global-dict A/U/D (catvar's six + the two condition dicts) feed `gks_change_log`** so
   the §4 delta-chain consumer can reconstruct global-dict deletes.
+- **`gks_scv_condition_sets` normalization-input coverage.** Its embedded normalized fields derive
+  from `trait` / `trait_set` (covered) but also from `trait_mapping` (diffed *without a stable key*,
+  `distinct_rows=TRUE`) and the `gks_xref_iri_templates` config table (not a `diff_*` source). A
+  change to either would leave stale carried-forward SCV rows without tripping a driver. Decide during
+  planning: fold `gks_xref_iri_templates` into the pipeline-version gate, and conservatively recompute
+  `gks_scv_condition_sets` when `diff_trait_mapping` is non-empty. Rare; the §6 oracle catches it on
+  any tested release, but the correctness-first posture wants an explicit call.
 - **Cost measurement per table** post-implementation — confirm the delta-deliverable justification
   holds (downstream procs are cost-marginal to break-even; the delta product, not slot-time, is the
   primary justification for going incremental across all of them).
