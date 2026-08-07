@@ -16,8 +16,12 @@
 #
 # Stages 1 and 2 are incremental by default (recompute only changed variations, carry the
 # rest forward). Stage 4 self-corrects between incremental and full loads. --full forces a
-# full rebuild across stages 1-2 and is REQUIRED after any version-invalidating change (the
-# variation_identity transform, or the vrsify pin in src/vrsify/requirements.txt).
+# full rebuild across stages 1-2 AND forces catvar full in Stage 4 (propagated as
+# CATVAR_FULL to vrs-to-bq-table.sh) — REQUIRED after any version-invalidating change (the
+# variation_identity transform, or the vrsify pin in src/vrsify/requirements.txt). The
+# version-stamp gate written between stages 3 and 4 is always the honest plain build-path
+# hash, even on --full, so a --full release still leaves a valid baseline for next week's
+# normal run to resume incremental from.
 #
 # Stage 5 publishes to the public R2 bucket. Use --dry-run to run everything but have the
 # release stage only print what it would upload (no R2 writes) — use it for test runs.
@@ -27,7 +31,8 @@
 # USAGE:
 #   ./src/scripts/run-release.sh YYYY-MM-DD [--full] [--dry-run] [--start-step N]
 #
-#   --full          full rebuild of stages 1-2 (reseed the baseline)
+#   --full          full rebuild of stages 1-2 and catvar in stage 4 (reseed the baseline);
+#                   the version-stamp gate is unaffected, so next week resumes incremental
 #   --dry-run       stage 5 (release-gks.sh) runs in dry-run: no R2 upload / no GCS writes
 #   --start-step N  begin at stage N (1-5); default 1. Stage 3 (vrsify) needs the local
 #                   SeqRepo/UTA/gene-norm services — see src/vrsify/README.md.
@@ -112,15 +117,13 @@ fi
 # --- Version stamp: record provenance + the carry-forward gate key -----------------------
 # audit_stamp = full git describe (provenance, always). gate_key = last commit touching the
 # build-relevant paths (only advances when build logic changes; docs-only commits don't).
+# gate_key is ALWAYS the honest plain build-path hash, even on --full: a forced full rebuild
+# this week must still leave a valid baseline so next week's normal run can resume
+# incremental via a matching gate. --full forces catvar full THIS week via an explicit flag
+# propagated into Stage 4 below, not by poisoning the gate.
 if (( START_STEP <= 4 )); then
   AUDIT_STAMP="$(git -C "${REPO_ROOT}" describe --tags --always --dirty)"
-  if $FULL; then
-    # A forced full rebuild deliberately invalidates carry-forward: stamp a unique gate so no
-    # baseline can match it this release (the downstream procs then all full-rebuild).
-    GATE_KEY="FULL-${AUDIT_STAMP}-$(git -C "${REPO_ROOT}" rev-parse HEAD)"
-  else
-    GATE_KEY="$(git -C "${REPO_ROOT}" log -1 --format=%H -- src/procedures src/scripts src/vrsify)"
-  fi
+  GATE_KEY="$(git -C "${REPO_ROOT}" log -1 --format=%H -- src/procedures src/scripts src/vrsify)"
   # These values are spliced into a single-quoted SQL literal below; a stray single quote
   # would break out of it. Abort rather than emit malformed SQL.
   case "${AUDIT_STAMP}${GATE_KEY}" in *\'*) echo "ERROR: version stamp contains a single quote" >&2; exit 1;; esac
@@ -132,7 +135,7 @@ fi
 # --- Stage 4: transform -> load gks_vrs -> gks_* procs ---------------------------------
 if (( START_STEP <= 4 )); then
   echo ">>> [4/5] vrs-to-bq-table.sh (transform, load gks_vrs, run gks_* procs)"
-  "${REPO_ROOT}/src/scripts/vrs-to-bq-table.sh" "${DATE}"
+  CATVAR_FULL="${FULL}" "${REPO_ROOT}/src/scripts/vrs-to-bq-table.sh" "${DATE}"
 fi
 
 # --- Stage 5: export bundle + Parquet, upload to R2 ------------------------------------
