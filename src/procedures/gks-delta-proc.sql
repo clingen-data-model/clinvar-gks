@@ -6,7 +6,8 @@
 -- upserts it by pk directly). D tombstones are NOT payload rows; they live in the
 -- manifest (gks_change_log) only. Requires gks_change_log to have been built first.
 --
--- `tables` mirrors gks_change_log's tracked set (name + pk expression). Keep in sync.
+-- `tables` mirrors the catvar-output subset of gks_change_log's `tracked` array
+-- (name + pk expression). Keep in sync.
 -- ============================================================================
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_delta_build`(on_date DATE)
 BEGIN
