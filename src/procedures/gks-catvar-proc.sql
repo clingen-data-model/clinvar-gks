@@ -39,7 +39,6 @@ BEGIN
   DECLARE catvar_id_mismatch INT64;
 
   DECLARE temp_create STRING;
-  DECLARE temp_prefix STRING;
 
   -- incremental control / fallback guard
   DECLARE eff_incremental BOOL DEFAULT FALSE;
@@ -117,6 +116,8 @@ BEGIN
           SELECT (SELECT gate_key FROM `%s.gks_pipeline_version`)
                = (SELECT gate_key FROM `%s.gks_pipeline_version`)
         """, baseline_schema, rec.schema_name) INTO gate_ok;
+        -- an empty stamp table yields NULL; NULL-strict so the guard falls back to full
+        SET gate_ok = IFNULL(gate_ok, FALSE);
       END IF;
 
       SET eff_incremental = base_ok AND diff_ok AND gate_ok;

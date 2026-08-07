@@ -21,15 +21,15 @@ fi
 FULL_DS="${SCHEMA}_oracle_full"
 INCR_DS="${SCHEMA}_oracle_incr"
 
-# The seven catvar outputs and their primary keys.
+# The seven catvar outputs.
 TABLES=(
-  "gks_dict_variation:id"
-  "gks_dict_sequence_reference:key"
-  "gks_dict_location:key"
-  "gks_dict_allele:key"
-  "gks_dict_copy_number_count:key"
-  "gks_dict_copy_number_change:key"
-  "gks_dict_gene:key"
+  "gks_dict_variation"
+  "gks_dict_sequence_reference"
+  "gks_dict_location"
+  "gks_dict_allele"
+  "gks_dict_copy_number_count"
+  "gks_dict_copy_number_change"
+  "gks_dict_gene"
 )
 
 # gks_catvar writes into {S}; to compare two builds we run full, snapshot the 7 tables
@@ -40,7 +40,7 @@ echo ">>> full build"
 bq query --project_id="$PROJECT_ID" --use_legacy_sql=false \
   "CALL \`clinvar_ingest.gks_catvar_proc\`(DATE '${DATE}', FALSE)"
 bq mk --project_id="$PROJECT_ID" --dataset --force "${FULL_DS}" 2>/dev/null || true
-for t in "${TABLES[@]}"; do n="${t%%:*}"
+for n in "${TABLES[@]}"; do
   bq query --project_id="$PROJECT_ID" --use_legacy_sql=false \
     "CREATE OR REPLACE TABLE \`${FULL_DS}.${n}\` CLONE \`${SCHEMA}.${n}\`"
 done
@@ -49,14 +49,14 @@ echo ">>> incremental build"
 bq query --project_id="$PROJECT_ID" --use_legacy_sql=false \
   "CALL \`clinvar_ingest.gks_catvar_proc_incremental\`(DATE '${DATE}', FALSE)"
 bq mk --project_id="$PROJECT_ID" --dataset --force "${INCR_DS}" 2>/dev/null || true
-for t in "${TABLES[@]}"; do n="${t%%:*}"
+for n in "${TABLES[@]}"; do
   bq query --project_id="$PROJECT_ID" --use_legacy_sql=false \
     "CREATE OR REPLACE TABLE \`${INCR_DS}.${n}\` CLONE \`${SCHEMA}.${n}\`"
 done
 
 echo ">>> compare"
 FAIL=0
-for t in "${TABLES[@]}"; do n="${t%%:*}"
+for n in "${TABLES[@]}"; do
   OUT=$(bq query --project_id="$PROJECT_ID" --use_legacy_sql=false --format=csv --quiet \
     "CALL \`clinvar_ingest.gks_oracle_compare\`('${FULL_DS}','${INCR_DS}','${n}')" | tail -1)
   echo "  ${OUT}"
