@@ -100,6 +100,23 @@ bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
 
 Place this inside a `if (( START_STEP <= 4 ));` guard (it must run whenever the proc stage runs). Put it immediately before the Stage 4 block (line 99-103).
 
+> **`--dry-run` still stamps.** `--dry-run` only gates Stage 5 (R2 upload). This stamp `CALL` writes `{S}.gks_pipeline_version` to BigQuery even under `--dry-run` — that is intended (the BigQuery-side build is real; only R2 publishing is suppressed). Note it in the run-release header comment so a "dry" run isn't assumed side-effect-free.
+
+Additionally, wire the **diff driver** into the pipeline. `variation_identity_incremental` (Stage 1) and the new incremental catvar both require the `{S}.diff_*` tables, but `dataset_diff_on` is currently **not called anywhere** in the pipeline (only documented as manual usage) — so without this, every incremental proc silently falls back to full. Add a diff stage that runs before Stage 1 (it needs only the ingested `{S}` base tables). Insert immediately after the header echo (line 68), inside `if (( START_STEP <= 1 ));`:
+
+```bash
+# --- Stage 0: dataset diff (produces {S}.diff_* — drivers for all incremental procs) ----
+# Idempotent (CREATE OR REPLACE). On the first release it emits a warning and writes no
+# diff tables, which correctly makes the incremental guards fall back to a full rebuild.
+if (( START_STEP <= 1 )); then
+  echo ">>> [0] dataset_diff_on (build {S}.diff_* drivers)"
+  bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
+    "CALL \`clinvar_ingest.dataset_diff_on\`(DATE '${DATE}')"
+fi
+```
+
+> This also fixes a latent gap for the already-merged `variation_identity_incremental`, which needs the same drivers. If it turns out the upstream ClinVar ingest already produces `{S}.diff_*`, this call is a harmless idempotent refresh — verify during execution and keep it either way (belt-and-suspenders; the guard tolerates their presence).
+
 - [ ] **Step 5: Verify run-release stamps a real git value (dry, stage 4 only)**
 
 Run: `PROJECT_ID="${PROJECT_ID:-clingen-dev}" ./src/scripts/run-release.sh 2026-07-20 --start-step 4 --dry-run` — interrupt after the stamp line prints (or let it proceed if the environment is set up). Then:
@@ -274,8 +291,9 @@ Refactor `gks_catvar_proc` into the build/wrapper/guard structure and make `gks_
 - Modify: `src/procedures/gks-catvar-proc.sql` (whole-file refactor)
 - Modify: `src/scripts/vrs-to-bq-table.sh` (call the incremental wrapper for catvar)
 
-**Impact set (spec §3):** `gks_dict_variation` changed set =
-`variation_vrs_changed` (already = `variation_identity` new+modified, and `gks_vrs.in` is that row, so it captures identity/loc/hgvs/xref *and* VRS changes) **∪** `gene_association` changes (from `{S}.diff_gene_association`, any change_type → its `variation_id`), **minus** removed (`variation_vrs_removed`).
+**Impact set (spec §3) — do NOT use `variation_vrs_changed` as the base.** `variation_vrs_changed` is a canonical diff of the **`variation_identity` row only** (it drives vrsify). But `gks_dict_variation` reads `variation_hgvs` and `variation_loc` **directly** (`temp_catvar_extension`'s `clinvarHgvsList`: consequence codes, MANE flags, protein expressions; `temp_ctxvar_expression`'s expressions/name). A variation whose `variation.content` changed in a way that alters `variation_hgvs`/`variation_loc` **without** changing the selected fields in the `variation_identity` row is absent from `variation_vrs_changed` → catvar would carry forward a stale record. So the catvar changed set must be the **same broad set `variation_identity` itself recomputes** — `diff_variation(new|modified)` (covers all content-derived loc/hgvs/xref/identity) **∪ the copy-number cascade** (covers the SCV-copy-number path that feeds `gks_vrs` → `temp_ctxvar`) — **∪ `gene_association` changes** (`{S}.diff_gene_association`, any change_type → `variation_id`), **minus** removed (`diff_variation` removed).
+
+This is exactly `variation_identity`'s Step-0 changed/removed set (mirror `variation-identity-proc.sql:156-210`) with a `gene_association` union added. `gks_vrs` changes need no separate driver: within a same-gate release `gks_vrs` changes iff its `variation_identity` row changed, which ⊆ `diff_variation(new|modified) ∪ cn-cascade`.
 
 The six global dicts (`temp_seqref`/`temp_seqloc` → seqref/location; `temp_ctxvar_expression`/gks_vrs → allele/cn_count/cn_change; gene → gene) are **always globally recomputed** — unchanged from today. Only the per-variation temps and the final `gks_dict_variation` are filtered/merged.
 
@@ -298,7 +316,10 @@ BEGIN
   DECLARE base_ok BOOL DEFAULT FALSE;
   DECLARE diff_ok BOOL DEFAULT FALSE;
   DECLARE gate_ok BOOL DEFAULT FALSE;
-  DECLARE vfilter STRING;            -- '' in full mode; changed-set filter in incremental
+  DECLARE vfilter_ctx STRING;       -- per-query changed-set filters ('' in full mode); see Step 4
+  DECLARE vfilter_ext STRING;
+  DECLARE vfilter_map STRING;
+  DECLARE vfilter_dv STRING;
   DECLARE dv_head STRING;           -- gks_dict_variation target (real table vs stg temp)
   -- ... existing temp_create setup ...
 ```
@@ -339,38 +360,63 @@ IF baseline_schema IS NOT NULL THEN
             WHERE table_name IN ('gks_dict_variation','gks_dict_sequence_reference','gks_dict_location',
               'gks_dict_allele','gks_dict_copy_number_count','gks_dict_copy_number_change','gks_dict_gene')) = 7
   """, baseline_schema) INTO base_ok;
-  -- current release must have the change drivers (variation_vrs_changed/removed + diff_gene_association)
+  -- current release must have the diff drivers: the same three variation_identity uses
+  -- (diff_variation / diff_clinical_assertion / diff_clinical_assertion_variation for the
+  -- content + copy-number cascade) PLUS diff_gene_association for the gene path.
   EXECUTE IMMEDIATE FORMAT("""
     SELECT (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES`
-            WHERE table_name IN ('variation_vrs_changed','variation_vrs_removed','diff_gene_association')) = 3
+            WHERE table_name IN ('diff_variation','diff_clinical_assertion',
+              'diff_clinical_assertion_variation','diff_gene_association')) = 4
   """, rec.schema_name) INTO diff_ok;
-  -- version gate: baseline gate_key must equal this release's gate_key
-  EXECUTE IMMEDIATE FORMAT("""
-    SELECT
-      (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name='gks_pipeline_version')=1
-      AND (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name='gks_pipeline_version')=1
-      AND (SELECT gate_key FROM `%s.gks_pipeline_version`) = (SELECT gate_key FROM `%s.gks_pipeline_version`)
-  """, baseline_schema, rec.schema_name, baseline_schema, rec.schema_name) INTO gate_ok;
+
+  -- version gate — TWO statements. BigQuery resolves table refs at analysis time and AND
+  -- does NOT short-circuit that resolution, so a single combined statement that references
+  -- {base}.gks_pipeline_version would ERROR (not return FALSE) when a pre-feature baseline
+  -- lacks the stamp — defeating the fail-safe. First check both stamps exist; only then
+  -- compare gate_key.
+  BEGIN
+    DECLARE stamps_exist BOOL DEFAULT FALSE;
+    EXECUTE IMMEDIATE FORMAT("""
+      SELECT
+        (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name='gks_pipeline_version')=1
+        AND
+        (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name='gks_pipeline_version')=1
+    """, baseline_schema, rec.schema_name) INTO stamps_exist;
+    IF stamps_exist THEN
+      EXECUTE IMMEDIATE FORMAT("""
+        SELECT (SELECT gate_key FROM `%s.gks_pipeline_version`)
+             = (SELECT gate_key FROM `%s.gks_pipeline_version`)
+      """, baseline_schema, rec.schema_name) INTO gate_ok;
+    END IF;
+  END;
 
   SET eff_incremental = base_ok AND diff_ok AND gate_ok;
 END IF;
 ```
 
-> If the gate table is missing on either side, the inner `SELECT gate_key` would error; guard by structuring the check so the `INFORMATION_SCHEMA` counts short-circuit — split into two `EXECUTE IMMEDIATE`s (first check both tables exist → bool; only if true, compare gate_key) to avoid referencing a missing table. Implement as two statements, not one, for safety.
+> Declare `stamps_exist` in an inner `BEGIN...END` block (BigQuery allows nested `DECLARE` inside a `BEGIN` block) or hoist it to the top-level `DECLARE`s — either works; the two-statement structure is what matters.
 
 - [ ] **Step 4: Set mode-dependent fragments**
 
-After the guard, set the per-variation filter and the `gks_dict_variation` target:
+After the guard, set the per-query alias-correct filter fragments and the `gks_dict_variation` target. Use **distinct variables per query** because each query filters on a different alias (Step 6 lists them); a single generic `vfilter` with a wrong alias will not compile:
 
 ```sql
 IF eff_incremental THEN
-  SET vfilter = 'AND cv.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';
+  -- one fragment per consuming query, each with that query's alias for variation_id
+  SET vfilter_ctx = 'AND vrs.in.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)'; -- Step 3 temp_ctxvar
+  SET vfilter_ext = 'WHERE x.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';     -- Step 4 outer select
+  SET vfilter_map = 'AND m.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';        -- Step 5 (see note)
+  SET vfilter_dv  = 'AND ctx.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';      -- Step 6 catvar CTE
   SET dv_head = '{CT} {P}.stg_gks_dict_variation';   -- stage changed rows, merge after
 ELSE
-  SET vfilter = '';
+  SET vfilter_ctx = ''; SET vfilter_ext = ''; SET vfilter_map = ''; SET vfilter_dv = '';
   SET dv_head = 'CREATE OR REPLACE TABLE `{S}.gks_dict_variation`';
 END IF;
 ```
+
+Add `DECLARE vfilter_ctx STRING; DECLARE vfilter_ext STRING; DECLARE vfilter_map STRING; DECLARE vfilter_dv STRING;` to the top-level DECLAREs.
+
+> **Step 4 / 5 filter placement:** `temp_catvar_extension`'s final select is `... FROM cat_ext_item x ... GROUP BY x.variation_id` — insert `vfilter_ext` as the `WHERE` before `GROUP BY` (note it is a full `WHERE`, not an `AND`, since that select has no existing WHERE). `temp_catvar_mappings`'s final select is `... FROM catvar_mappings m GROUP BY m.variation_id` — same: `vfilter_map` must be a `WHERE` there (adjust the `AND`→`WHERE` when the target select has no existing predicate). Verify each target select's existing WHERE/no-WHERE and set the fragment's leading keyword (`AND` vs `WHERE`) accordingly.
 
 > The `{VFILTER}` is applied in the final `gks_dict_variation` assembly (Step 6) on the `catvar` CTE's `variation_id`, and in the per-variation temps (Step 2, 3, 4, 5) so those temps only compute the changed set. Add `{VFILTER}` to: `temp_ctxvar_expression` (filter each UNION arm's source by `variation_id IN changed`), `temp_ctxvar`, `temp_catvar_extension`, `temp_catvar_mappings`. Because those temps are keyed by `variation_id`, the filter is a straightforward `WHERE`/`AND`. The six global dict queries (Steps 1c, 1d, 2b, 2c, 2d, 4b) are **NOT** filtered — they read the whole-snapshot temps (`temp_seqref`, `temp_seqloc`) or `gks_vrs`/`gene` directly and must stay global.
 
@@ -378,39 +424,68 @@ END IF;
 
 - [ ] **Step 5: Add the Step-0 changed/removed set (incremental only)**
 
-Before Step 1a, add (mirror variation_identity:156-210):
+Before Step 1a, add (mirror `variation-identity-proc.sql:156-210` for the removed set + cn-cascade; `{BASE}` = `baseline_schema`):
 
 ```sql
 IF eff_incremental THEN
-  -- changed = variation_vrs_changed (identity/loc/hgvs/xref/vrs) ∪ gene_association changes; minus removed
+  -- removed = diff_variation removed
   SET <q> = REPLACE("""
     {CT} {P}.catvar_removed_ids AS
-    SELECT variation_id FROM `{S}.variation_vrs_removed`
-  """, ...); EXECUTE IMMEDIATE ...;
+    SELECT id AS variation_id FROM `{S}.diff_variation` WHERE change_type = 'removed'
+  """, '{BASE}', baseline_schema);
+  -- resolve {CT}/{P}/{S}; EXECUTE IMMEDIATE
 
+  -- changed = diff_variation(new|modified) ∪ copy-number cascade ∪ gene_association changes; minus removed.
+  -- The cn_cascade block is copied verbatim from variation-identity-proc.sql:170-203 (it resolves
+  -- changed CopyNumber-bearing SCVs over BOTH {S} and {BASE}). Only the final SELECT adds the
+  -- gene_association union.
   SET <q> = REPLACE("""
     {CT} {P}.catvar_changed_ids AS
-    SELECT variation_id FROM (
-      SELECT variation_id FROM `{S}.variation_vrs_changed`
+    WITH changed_cav AS (
+      SELECT id FROM `{S}.diff_clinical_assertion_variation` WHERE change_type IN ('new','modified','removed')
+    ),
+    changed_ca AS (
+      SELECT id FROM `{S}.diff_clinical_assertion` WHERE change_type IN ('new','modified','removed')
+    ),
+    cn_cascade AS (
+      SELECT DISTINCT ca.variation_id AS variation_id
+      FROM `{S}.clinical_assertion_variation` cav
+      JOIN `{S}.clinical_assertion` ca ON ca.id = cav.clinical_assertion_id AND ca.statement_type IS NOT NULL
+      WHERE cav.content LIKE '%CopyNumber%'
+        AND (cav.id IN (SELECT id FROM changed_cav) OR cav.clinical_assertion_id IN (SELECT id FROM changed_ca))
       UNION DISTINCT
-      SELECT DISTINCT variation_id FROM `{S}.diff_gene_association`
-      WHERE change_type IN ('new','modified','removed')
+      SELECT DISTINCT ca.variation_id AS variation_id
+      FROM `{BASE}.clinical_assertion_variation` cav
+      JOIN `{BASE}.clinical_assertion` ca ON ca.id = cav.clinical_assertion_id AND ca.statement_type IS NOT NULL
+      WHERE cav.content LIKE '%CopyNumber%'
+        AND (cav.id IN (SELECT id FROM changed_cav) OR cav.clinical_assertion_id IN (SELECT id FROM changed_ca))
+    )
+    SELECT variation_id FROM (
+      SELECT id AS variation_id FROM `{S}.diff_variation` WHERE change_type IN ('new','modified')
+      UNION DISTINCT SELECT variation_id FROM cn_cascade
+      UNION DISTINCT
+      SELECT DISTINCT variation_id FROM `{S}.diff_gene_association` WHERE change_type IN ('new','modified','removed')
     )
     WHERE variation_id NOT IN (SELECT variation_id FROM {P}.catvar_removed_ids)
-  """, ...); EXECUTE IMMEDIATE ...;
+  """, '{BASE}', baseline_schema);
+  -- resolve {CT}/{P}/{S}; EXECUTE IMMEDIATE
 END IF;
 ```
 
-Resolve `{CT}`/`{P}`/`{S}` exactly as the other queries do. Add these temp names to the `cleanup_temp_tables` list (line 32-35) and the `DROP TABLE` block (line 974-981), guarded by `IF eff_incremental`.
+Resolve `{CT}`/`{P}`/`{S}` exactly as the other queries do (the `{BASE}` REPLACE must come first, before `{S}`, because `{BASE}` values contain no `{S}` token but resolving order matters for safety — follow the variation_identity ordering). Add `catvar_changed_ids`, `catvar_removed_ids`, and `stg_gks_dict_variation` to the `cleanup_temp_tables` list (line 32-35) and, guarded by `IF eff_incremental`, to the `DROP TABLE IF EXISTS _SESSION.*` block (line 974-981) — mirror `variation-identity-proc.sql:1087-1093`.
 
-- [ ] **Step 6: Apply `{VFILTER}` and `{DVHEAD}` in the per-variation queries**
+> The guard's `diff_ok` (Step 3) already requires `diff_variation`, `diff_clinical_assertion`, `diff_clinical_assertion_variation`, and `diff_gene_association` — the exact tables this changed-set query reads — so if any driver is missing the proc falls back to full before reaching here.
 
-- In `temp_ctxvar_query` (Step 3): add `{VFILTER}` to the `ctxvar` CTE's outer WHERE (it selects from `gks_vrs vrs`; filter `vrs.in.variation_id IN (...)`). Adjust the placeholder alias (`cv`→`vrs.in`). Add `REPLACE(..., '{VFILTER}', vfilter)`.
-- In `temp_catvar_ext_query` (Step 4): the final `cat_ext_item` unions many per-variation sources; the cleanest filter is on the outer `SELECT ... FROM cat_ext_item x ... GROUP BY x.variation_id` → add `WHERE x.variation_id IN (...)`. Add `{VFILTER}` there.
-- In `temp_catvar_map_query` (Step 5): filter the final `GROUP BY m.variation_id` outer select with `{VFILTER}` on `m.variation_id`.
-- In `dict_variation_query` (Step 6): change the head to `{DVHEAD}` (was `CREATE OR REPLACE TABLE \`{S}.gks_dict_variation\``) and add `{VFILTER}` on the `catvar` CTE (`WHERE ctx.variation_id is not null {VFILTER}`, aliasing on `ctx.variation_id`). Add `REPLACE(..., '{DVHEAD}', dv_head)` and `REPLACE(..., '{VFILTER}', vfilter)`.
+- [ ] **Step 6: Apply the per-query filters and `{DVHEAD}` in the per-variation queries**
 
-Make each `vfilter` fragment reference the correct alias for that query (e.g. `AND vrs.in.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)` in Step 3, `AND x.variation_id IN (...)` in Step 4). Keep a single `vfilter` variable but set the alias-specific text per query, OR use distinct fragments — simplest is per-query REPLACE of a `{VFILTER}` token with an alias-correct string. Prefer distinct small variables (`vfilter_ctx`, `vfilter_ext`, `vfilter_map`, `vfilter_dv`) set in the mode block for clarity.
+Each query gets a distinct `{VFILTER}` token replaced with its alias-correct fragment from Step 4 (`vfilter_ctx`/`vfilter_ext`/`vfilter_map`/`vfilter_dv`). Add the token to the query string and a matching `REPLACE(..., '{VFILTER}', <fragment>)` after the existing REPLACEs:
+
+- In `temp_ctxvar_query` (proc Step 3): add `{VFILTER}` to the `ctxvar` CTE's outer WHERE (selects from `gks_vrs vrs`) → `REPLACE(..., '{VFILTER}', vfilter_ctx)` (fragment: `AND vrs.in.variation_id IN (...)`).
+- In `temp_catvar_ext_query` (proc Step 4): the final `SELECT ... FROM cat_ext_item x ... GROUP BY x.variation_id` has **no existing WHERE** → add `{VFILTER}` before `GROUP BY` and use `vfilter_ext` (a full `WHERE x.variation_id IN (...)`).
+- In `temp_catvar_map_query` (proc Step 5): the final `SELECT ... FROM catvar_mappings m ... GROUP BY m.variation_id` has **no existing WHERE** → add `{VFILTER}` before `GROUP BY` and use `vfilter_map` (a full `WHERE m.variation_id IN (...)`).
+- In `dict_variation_query` (proc Step 6): change the head to `{DVHEAD}` (was `CREATE OR REPLACE TABLE \`{S}.gks_dict_variation\``) and add `{VFILTER}` on the `catvar` CTE (`WHERE ctx.variation_id is not null {VFILTER}`) using `vfilter_dv` (an `AND ctx.variation_id IN (...)`). Add `REPLACE(..., '{DVHEAD}', dv_head)` and `REPLACE(..., '{VFILTER}', vfilter_dv)`.
+
+The leading keyword (`AND` vs `WHERE`) of each fragment matches whether its target select already has a WHERE — verify against the current proc before wiring (Step 4's note covers the `WHERE`-vs-`AND` distinction for ext/map).
 
 - [ ] **Step 7: Add the UNION-CTAS merge for gks_dict_variation (incremental only)**
 
@@ -447,11 +522,12 @@ The existing validation (lines 956-972) asserts `gks_dict_variation`'s id set ex
 Run:
 ```bash
 bq query --project_id="${PROJECT_ID:-clingen-dev}" --use_legacy_sql=false < src/procedures/gks-catvar-proc.sql
-# ensure drivers exist for the compare release: dataset_diff_on (diff_gene_association),
-# variation_vrs_changed, and a stamped gate on BOTH baseline and compare.
+# ensure drivers exist for the compare release: dataset_diff_on produces ALL diff_* tables
+# (diff_variation, diff_clinical_assertion, diff_clinical_assertion_variation,
+# diff_gene_association) that catvar's changed-set query + guard require; plus a matching
+# stamped gate on BOTH baseline and compare so the version gate passes.
 bq query --project_id="${PROJECT_ID:-clingen-dev}" --use_legacy_sql=false \
   "CALL \`clinvar_ingest.dataset_diff_on\`(DATE '2026-07-20');
-   CALL \`clinvar_ingest.variation_vrs_changed\`(DATE '2026-07-20');
    CALL \`clinvar_ingest.gks_pipeline_version\`(DATE '2026-07-15','seed','GATE1');
    CALL \`clinvar_ingest.gks_pipeline_version\`(DATE '2026-07-20','seed','GATE1')"
 ./src/scripts/oracle-catvar.sh 2026-07-20
