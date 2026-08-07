@@ -78,27 +78,36 @@ so the guard is fail-safe.
 
 ---
 
-## 2. Catvar exception — six global dictionaries
+## 2. Global dictionary tables — global recompute + diff-for-delta
 
-`gks_catvar_proc` emits **7 outputs**. Only `gks_dict_variation` is per-variation. The other six are
-**globally deduped** dictionaries keyed by content digest / accession / gene, derived from
-whole-snapshot temps built off all of `gks_vrs`:
+Several outputs are **globally deduped dictionaries** keyed by content digest / accession / gene /
+trait, derived from whole-snapshot temps. A changed input can *add* a new shared entry or drop the
+*last reference* to a shared one, so a clean per-key carry-forward does not apply. **Decision
+(Approach 1): recompute every global dict globally each release** (they are the cheap part of their
+procs), and produce **each dict's delta by a `dataset_diff` pass** (freshly-recomputed dict vs
+`{base}`, keyed by the dict's key) → `A`/`U`/`D`. Correct by construction (a global recompute cannot
+miss a dropped reference) and avoids the reference-counting dedup-removal trap.
 
-- `gks_dict_sequence_reference` (by refgetAccession)
-- `gks_dict_location` (by location id)
-- `gks_dict_allele` (by VRS digest)
-- `gks_dict_copy_number_count` (by VRS digest)
-- `gks_dict_copy_number_change` (by VRS digest)
-- `gks_dict_gene` (by gene)
+**Eight global dicts** — six from `gks_catvar_proc`, two from `gks_scv_condition_proc`:
 
-Because a changed variation can *add* a new shared entry or drop the *last reference* to a shared
-one, a clean per-variation carry-forward does not apply. **Decision (Approach 1): recompute the six
-global dicts globally every release** (they are the cheap part of an already-marginal ~25 GB proc),
-and produce **their delta by a `dataset_diff` pass** (freshly-recomputed global dict vs `{base}`,
-keyed by digest/accession/gene) → `A`/`U`/`D`. This is correct by construction (a global recompute
-cannot miss a dropped reference) and avoids the reference-counting dedup-removal trap.
+| Dict | Proc | Key | Diff driver for its delta |
+|---|---|---|---|
+| `gks_dict_sequence_reference` | catvar | refgetAccession | (derived from `gks_vrs`; diff dict vs `{base}`) |
+| `gks_dict_location` | catvar | location id | diff dict vs `{base}` |
+| `gks_dict_allele` | catvar | VRS digest | diff dict vs `{base}` |
+| `gks_dict_copy_number_count` | catvar | VRS digest | diff dict vs `{base}` |
+| `gks_dict_copy_number_change` | catvar | VRS digest | diff dict vs `{base}` |
+| `gks_dict_gene` | catvar | gene | diff dict vs `{base}` |
+| `gks_dict_condition` | scv_condition | `clinvar.trait:*` | driven by `diff_trait` |
+| `gks_dict_condition_set` | scv_condition | `clinvar.traitset:*` | driven by `diff_trait` + `diff_trait_set` |
 
-Only **`gks_dict_variation`** uses the `UNION-CTAS` carry-forward primitive (§1).
+`gks_catvar_proc` emits 7 outputs; only **`gks_dict_variation`** is per-variation and uses the
+`UNION-CTAS` carry-forward primitive (§1). `gks_scv_condition_proc` emits 3 outputs: the two global
+condition dicts above, plus the SCV-keyed **`gks_scv_condition_sets`** (handled in §3).
+
+Each global dict's **delta payload** = the freshly-recomputed full dict **filtered to the diff's
+`A`∪`U` keyset**; **`D`** rows (dropped-last-reference deletes) go to the manifest only. All A/U/D
+are fed into `gks_change_log` so the delta-chain consumer (§4) can reconstruct global-dict deletes.
 
 ---
 
@@ -110,24 +119,37 @@ copy-number CAV/CA cascade), `variation_vrs_changed` (`gks_vrs` A/U), `gks_chang
 
 | Table | pk | Impact set = recompute when… |
 |---|---|---|
-| `gks_catvar` → `gks_dict_variation` | variation_id | `variation_identity` changed set **∪** `gks_vrs` changes **∪ `gene_association` changes**. Six global dicts: global recompute + diff-for-delta (§2). |
-| `gks_scv_condition` | scv_id (+condition) | **aggregate-significant SCV set** (§3.1) |
+| `gks_catvar` → `gks_dict_variation` | variation_id | `variation_identity` changed set **∪** `gks_vrs` changes **∪ `gene_association` changes** (via `diff_gene_association`). Six catvar global dicts: global recompute + diff-for-delta (§2). |
+| `gks_scv_condition` → global dicts | trait / traitset | global recompute + diff-for-delta driven by `diff_trait` / `diff_trait_set` (§2) |
+| `gks_scv_condition` → `gks_scv_condition_sets` | scv_id | **aggregate-significant SCV set** (§3.1) **∪** SCVs whose referenced traits changed (`diff_trait` / `diff_trait_set` → affected SCVs) |
 | `gks_scv_statement` | scv_id | **aggregate-significant SCV set** |
 | `gks_rcv` / `gks_rcv_statement` | rcv_id | **RCV impact set** (§3.2) |
 | `gks_vcv` / `gks_vcv_statement` | vcv_id | **VCV impact set** (§3.2) |
-| `gks_json` | record key | union of all upstream A/U/D read directly from `gks_change_log` |
+| `gks_json` | record key | union of all upstream A/U/D read directly from `gks_change_log` (each `gks_json` output is a 1:1 JSON render of its source dict, keyed by the same `id`) |
 
-**Known gap to close:** `gene_association` is **not** currently in `dataset_diff_on`'s `diff_*` set.
-It **must be added** so catvar can catch gene-only changes.
+**Diff drivers already exist — the work is wiring, not producing them.** `dataset_diff_all`
+(→ `dataset_diff_on`) already emits `diff_gene_association`, `diff_trait`, and `diff_trait_set`
+(`dataset-diff-all-proc.sql:38,45,47`). The task is to consume them in the impact sets above, not to
+add them to the diff producer.
 
 **`gks_json` is driven directly by `gks_change_log`** — the union of all upstream A/U/D keys *is* its
 impact set; it assembles only changed keys and references carried-forward records for the rest.
 
 ### 3.1 The aggregate-significant SCV predicate (single source of truth)
 
-The entire downstream cascade collapses to **one driver: the aggregate-significant SCV set**.
-Condition/trait changes are **not** a separate driver — a condition change always manifests as an SCV
-change (version bump), so it is already captured here.
+The **aggregate statement** cascade (SCV/RCV/VCV statements) collapses to **one driver: the
+aggregate-significant SCV set**. The statements reference the variation and the condition by **stable
+pointer** (`#/variation/clinvar:*`, `#/condition…` via `gks_scv_condition_sets`), so VRS-only or
+trait-content-only changes do **not** perturb statement rows *as long as the referenced dicts are
+refreshed* (§2). This pointer-insulation is a design invariant the SCV-only driver depends on.
+
+**Caveat — trait-table content is a separate driver for the condition-dict layer, not for the
+statements.** A condition change made *via an SCV submission* bumps the SCV version (captured here).
+But ClinVar's global `trait` / `trait_set` tables can change independently (name, xref,
+MedGen↔MONDO resolution) with **no** SCV version or review-status bump — altering `gks_dict_condition`,
+`gks_dict_condition_set`, and the normalized-mapping fields embedded in `gks_scv_condition_sets`.
+Those changes are driven by `diff_trait` / `diff_trait_set` (§2 and the §3 table), not by this SCV
+predicate. Because trait diffs are explicit A/U/D, no "unexplained" detection is needed for them.
 
 ```
 scv_significant_change(scv) :=
@@ -189,9 +211,12 @@ predicate needs to grow. These should be rare, so the extra recomputes are negli
 ### Delta record shape
 
 - **Per-table delta payload** = a file with the **exact same schema as the target table**,
-  containing only the recomputed `A`∪`U` rows (the "recomputed impacted" arm of §1's UNION). No
-  `change_type` column, no ragged pk-only rows — a consumer upserts it by pk directly; it is
-  literally a small version of the table.
+  containing only the `A`∪`U` rows. No `change_type` column, no ragged pk-only rows — a consumer
+  upserts it by pk directly; it is literally a small version of the table. Two origin paths, same
+  shape:
+  - **UNION-CTAS tables** (§1): the payload **is** the "recomputed impacted" staged arm of the UNION.
+  - **Global-dict tables** (§2): the payload = the freshly-recomputed full dict **filtered to the
+    diff pass's `A`∪`U` keyset**. (`D` rows go to the manifest only, in both paths.)
 - **Manifest** = a per-release slice of `gks_change_log` (`table_name`, `pk`, `change_type` A/U/D,
   `baseline_release`, `compare_release`). Deletes live here (D = pk only, which is what the manifest
   schema is designed for). The manifest also tells a consumer which payload rows were A vs U, and its
@@ -279,10 +304,12 @@ the per-release oracle.
 Oracle each phase before moving to the next.
 
 1. **`gks_catvar`** — establishes the global-dict pattern (§2), the novel piece; closest to the
-   proven `variation_identity` model, and its change-log already validates the diff. Also close the
-   `gene_association` diff-driver gap here.
-2. **`gks_scv_condition` + `gks_scv_statement`** — SCV-driven, no aggregation; establishes the
-   `scv_significant_change` predicate (§3.1) and the `gks_scv_change_audit` detector (§3.3).
+   proven `variation_identity` model, and its change-log already validates the diff. Wire
+   `diff_gene_association` into `gks_dict_variation`'s impact set here.
+2. **`gks_scv_condition` (three tables) + `gks_scv_statement`** — reuses the §2 global-dict pattern
+   for the two condition dicts (driven by `diff_trait` / `diff_trait_set`), and establishes the
+   `scv_significant_change` predicate (§3.1) + the `gks_scv_change_audit` detector (§3.3) for
+   `gks_scv_condition_sets` and `gks_scv_statement`.
 3. **`gks_rcv` / `gks_rcv_statement` + `gks_vcv` / `gks_vcv_statement`** — the parallel aggregation
    cascade (§3.2), the hardest correctness piece; lean hard on the oracle.
 4. **`gks_json`** — assembles only changed keys, change-log-driven.
@@ -297,7 +324,10 @@ so the pattern (payload table + manifest + stamp) is set once and reused by ever
 - **Exact `{KFILTER}` mechanism** per aggregate proc — whether each proc can be cleanly restricted to
   an impact set of parent keys via a filter parameter, or needs light refactoring (mirrors the
   `{VFILTER}` approach in `variation_identity`).
-- **`gene_association` diff wiring** — where to add it to `dataset_diff_on`'s `diff_*` set.
+- **Wiring the existing `diff_gene_association` / `diff_trait` / `diff_trait_set`** into the catvar and
+  condition impact sets (the diff tables already exist — see §3).
+- **Confirm all global-dict A/U/D (catvar's six + the two condition dicts) feed `gks_change_log`** so
+  the §4 delta-chain consumer can reconstruct global-dict deletes.
 - **Cost measurement per table** post-implementation — confirm the delta-deliverable justification
   holds (downstream procs are cost-marginal to break-even; the delta product, not slot-time, is the
   primary justification for going incremental across all of them).
