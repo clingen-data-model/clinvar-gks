@@ -19,6 +19,8 @@
 #
 # Stage 5 publishes to the public R2 bucket. Use --dry-run to run everything but have the
 # release stage only print what it would upload (no R2 writes) — use it for test runs.
+# NOTE: --dry-run still writes the pipeline_version stamp to BigQuery; --dry-run only gates
+# Stage 5 / R2 upload.
 #
 # USAGE:
 #   ./src/scripts/run-release.sh YYYY-MM-DD [--full] [--dry-run] [--start-step N]
@@ -67,6 +69,15 @@ fi
 
 echo "=== run-release ${DATE} (full=${FULL}, dry-run=${DRY_RUN}, start-step=${START_STEP}, project=${PROJECT_ID}) ==="
 
+# --- Stage 0: dataset diff (produces {S}.diff_* — drivers for all incremental procs) ----
+# Idempotent (CREATE OR REPLACE). On the first release it emits a warning and writes no
+# diff tables, which correctly makes the incremental guards fall back to a full rebuild.
+if (( START_STEP <= 1 )); then
+  echo ">>> [0] dataset_diff_on (build {S}.diff_* drivers)"
+  bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
+    "CALL \`clinvar_ingest.dataset_diff_on\`(DATE '${DATE}')"
+fi
+
 # --- Stage 1: variation_identity -------------------------------------------------------
 if (( START_STEP <= 1 )); then
   if $FULL; then
@@ -94,6 +105,22 @@ fi
 if (( START_STEP <= 3 )); then
   echo ">>> [3/5] vrsify.sh (vrs-python; requires local SeqRepo/UTA/gene-norm services)"
   "${REPO_ROOT}/src/vrsify/vrsify.sh" "${DATE}"
+fi
+
+# --- Version stamp: record provenance + the carry-forward gate key -----------------------
+# audit_stamp = full git describe (provenance, always). gate_key = last commit touching the
+# build-relevant paths (only advances when build logic changes; docs-only commits don't).
+if (( START_STEP <= 4 )); then
+  AUDIT_STAMP="$(cd "${REPO_ROOT}" && git describe --tags --always --dirty)"
+  GATE_KEY="$(cd "${REPO_ROOT}" && git log -1 --format=%H -- src/procedures src/scripts src/vrsify)"
+  if $FULL; then
+    # A forced full rebuild deliberately invalidates carry-forward: stamp a unique gate so no
+    # baseline can match it this release (the downstream procs then all full-rebuild).
+    GATE_KEY="FULL-${AUDIT_STAMP}-$(cd "${REPO_ROOT}" && git rev-parse HEAD)"
+  fi
+  echo ">>> stamping pipeline_version audit=${AUDIT_STAMP} gate=${GATE_KEY}"
+  bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
+    "CALL \`clinvar_ingest.gks_pipeline_version\`(DATE '${DATE}', '${AUDIT_STAMP}', '${GATE_KEY}')"
 fi
 
 # --- Stage 4: transform -> load gks_vrs -> gks_* procs ---------------------------------
