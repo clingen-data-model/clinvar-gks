@@ -61,8 +61,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCHEMA_FILE_PATH="${SCRIPT_DIR}/../../schemas/vrs_output_2_0_1.schema.json"
 
 # BigQuery Stored Procedures to run in order.
+# NOTE: gks_catvar is NOT listed here — it is called via its incremental wrapper
+# (gks_catvar_proc_incremental) ahead of this loop in execute_bq_procedures.
 BIGQUERY_PROCEDURES=(
-  'clinvar_ingest.gks_catvar_proc'
   'clinvar_ingest.gks_scv_condition_proc'
   'clinvar_ingest.gks_scv_statement_proc'
   'clinvar_ingest.gks_rcv_proc'
@@ -173,6 +174,14 @@ load_vrs_data() {
 execute_bq_procedures() {
   local release_date=$1
   echo "Executing BigQuery stored procedures for date: $release_date"
+
+  # catvar is incremental (Plan 1); its build proc self-guards + falls back to full.
+  echo "  - Calling procedure: clinvar_ingest.gks_catvar_proc_incremental..."
+  if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+      "CALL \`clinvar_ingest.gks_catvar_proc_incremental\`('$release_date', FALSE)" > /dev/null; then
+    echo "❌ gks_catvar_proc_incremental FAILED"; return 1;
+  fi
+  echo "    ✅ Success."
 
   for proc in "${BIGQUERY_PROCEDURES[@]}"; do
     echo "  - Calling procedure: $proc..."

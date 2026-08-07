@@ -1,4 +1,25 @@
-CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_catvar_proc`(on_date DATE, debug BOOL)
+-------------------------------------------------------------------------------
+-- gks_catvar — build the categorical-variant dictionary tables from a release
+--
+-- Three entry points:
+--   gks_catvar_proc(on_date, debug)              -> full rebuild (unchanged behavior)
+--   gks_catvar_proc_incremental(on_date, debug)  -> incremental (carry-forward + merge)
+--   gks_catvar_build(on_date, debug, incremental) -> internal implementation
+--
+-- Incremental strategy (see docs/superpowers/plans/2026-08-06-incremental-gks-
+-- downstream-plan-1-catvar-and-foundations.md):
+--   The six global dedup dictionaries (sequence_reference, location, allele,
+--   copy_number_count, copy_number_change, gene) are ALWAYS globally recomputed —
+--   their content is a whole-snapshot dedup, so filtering would corrupt them.
+--   Only gks_dict_variation is per-variation: in incremental mode the per-variation
+--   temps (temp_ctxvar / temp_catvar_extension / temp_catvar_mappings) and the final
+--   assembly are filtered to the changed set, staged, and merged with the carried-
+--   forward baseline rows via UNION-CTAS.
+--   Version-invalidation: the guard falls back to a full rebuild when the baseline
+--   is missing/incomplete, the diff drivers are absent, or the pipeline gate_key
+--   mismatches. Call the *_incremental wrapper only when carry-forward is safe.
+-------------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_catvar_build`(on_date DATE, debug BOOL, incremental BOOL)
 BEGIN
   DECLARE temp_seqref_query STRING;
   DECLARE temp_seqloc_query STRING;
@@ -13,10 +34,28 @@ BEGIN
   DECLARE dict_gene_query STRING;
   DECLARE temp_catvar_map_query STRING;
   DECLARE dict_variation_query STRING;
+  DECLARE query_changed_set STRING;
+  DECLARE query_merge STRING;
   DECLARE catvar_id_mismatch INT64;
 
   DECLARE temp_create STRING;
   DECLARE temp_prefix STRING;
+
+  -- incremental control / fallback guard
+  DECLARE eff_incremental BOOL DEFAULT FALSE;
+  DECLARE baseline_schema STRING DEFAULT NULL;
+  DECLARE base_ok BOOL DEFAULT FALSE;
+  DECLARE diff_ok BOOL DEFAULT FALSE;
+  DECLARE gate_ok BOOL DEFAULT FALSE;
+  DECLARE stamps_exist BOOL DEFAULT FALSE;
+
+  -- per-query changed-set filter fragments ('' in full mode). Distinct variables
+  -- because each consuming query filters on a different alias for variation_id.
+  DECLARE vfilter_ctx STRING;   -- Step 3 temp_ctxvar   (ctxvar CTE, no WHERE -> full WHERE on vrs.in.variation_id)
+  DECLARE vfilter_ext STRING;   -- Step 4 temp_catvar_extension (final select, no WHERE -> full WHERE on x.variation_id)
+  DECLARE vfilter_map STRING;   -- Step 5 temp_catvar_mappings  (final select, no WHERE -> full WHERE on m.variation_id)
+  DECLARE vfilter_dv STRING;    -- Step 6 catvar CTE (already has WHERE ... is not null -> AND on ctx.variation_id)
+  DECLARE dv_head STRING;       -- gks_dict_variation target (real table vs stg temp)
 
   IF debug THEN
     SET temp_create = 'CREATE OR REPLACE TABLE';
@@ -24,19 +63,165 @@ BEGIN
     SET temp_create = 'CREATE TEMP TABLE';
   END IF;
 
-  FOR rec IN (select s.schema_name FROM clinvar_ingest.schema_on(on_date) as s)
+  FOR rec IN (select s.schema_name, s.prev_release_date FROM clinvar_ingest.schema_on(on_date) as s)
   DO
+
+    -----------------------------------------------------------------------
+    -- Resolve baseline + fallback guard: incremental is only safe when the
+    -- prior release exists with all seven catvar outputs, the current release
+    -- has the four diff driver tables, AND the pipeline gate_key matches the
+    -- baseline (build logic unchanged). Otherwise fall back to a full rebuild.
+    -----------------------------------------------------------------------
+    SET eff_incremental = FALSE;
+    SET baseline_schema = NULL;
+    SET base_ok = FALSE;
+    SET diff_ok = FALSE;
+    SET gate_ok = FALSE;
+    SET stamps_exist = FALSE;
+
+    IF incremental AND rec.prev_release_date IS NOT NULL THEN
+      SET baseline_schema = (
+        SELECT s2.schema_name FROM clinvar_ingest.schema_on(rec.prev_release_date) AS s2 LIMIT 1
+      );
+    END IF;
+
+    IF baseline_schema IS NOT NULL THEN
+      -- baseline must have all 7 catvar outputs
+      EXECUTE IMMEDIATE FORMAT("""
+        SELECT (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES`
+                WHERE table_name IN ('gks_dict_variation','gks_dict_sequence_reference','gks_dict_location',
+                  'gks_dict_allele','gks_dict_copy_number_count','gks_dict_copy_number_change','gks_dict_gene')) = 7
+      """, baseline_schema) INTO base_ok;
+
+      -- current release must have the diff drivers: the three variation_identity uses
+      -- (content + copy-number cascade) PLUS diff_gene_association for the gene path.
+      EXECUTE IMMEDIATE FORMAT("""
+        SELECT (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES`
+                WHERE table_name IN ('diff_variation','diff_clinical_assertion',
+                  'diff_clinical_assertion_variation','diff_gene_association')) = 4
+      """, rec.schema_name) INTO diff_ok;
+
+      -- version gate — TWO statements. BigQuery resolves table refs at analysis time
+      -- and does NOT short-circuit that resolution, so a single combined statement
+      -- referencing {base}.gks_pipeline_version would ERROR (not return FALSE) when a
+      -- pre-feature baseline lacks the stamp — defeating the fail-safe. First confirm
+      -- both stamps exist; only then compare gate_key.
+      EXECUTE IMMEDIATE FORMAT("""
+        SELECT
+          (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name='gks_pipeline_version')=1
+          AND
+          (SELECT COUNT(*) FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name='gks_pipeline_version')=1
+      """, baseline_schema, rec.schema_name) INTO stamps_exist;
+      IF stamps_exist THEN
+        EXECUTE IMMEDIATE FORMAT("""
+          SELECT (SELECT gate_key FROM `%s.gks_pipeline_version`)
+               = (SELECT gate_key FROM `%s.gks_pipeline_version`)
+        """, baseline_schema, rec.schema_name) INTO gate_ok;
+      END IF;
+
+      SET eff_incremental = base_ok AND diff_ok AND gate_ok;
+    END IF;
+
+    -----------------------------------------------------------------------
+    -- Mode-dependent fragments. In full mode all filters are empty and the
+    -- final assembly writes straight to {S}.gks_dict_variation. In incremental
+    -- mode the per-variation temps + assembly are filtered to the changed set
+    -- and the assembly is staged to {P}.stg_gks_dict_variation for the merge.
+    -----------------------------------------------------------------------
+    IF eff_incremental THEN
+      SET vfilter_ctx = 'WHERE vrs.in.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';
+      SET vfilter_ext = 'WHERE x.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';
+      SET vfilter_map = 'WHERE m.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';
+      SET vfilter_dv  = 'AND ctx.variation_id IN (SELECT variation_id FROM {P}.catvar_changed_ids)';
+      SET dv_head = '{CT} {P}.stg_gks_dict_variation';
+    ELSE
+      SET vfilter_ctx = '';
+      SET vfilter_ext = '';
+      SET vfilter_map = '';
+      SET vfilter_dv = '';
+      SET dv_head = 'CREATE OR REPLACE TABLE `{S}.gks_dict_variation`';
+    END IF;
 
     -- Clean up any persistent temp tables from a prior debug run
     IF NOT debug THEN
       CALL `clinvar_ingest.cleanup_temp_tables`(rec.schema_name, [
         'temp_seqref', 'temp_seqloc', 'temp_ctxvar_expression',
-        'temp_ctxvar', 'temp_catvar_extension', 'temp_catvar_mappings'
+        'temp_ctxvar', 'temp_catvar_extension', 'temp_catvar_mappings',
+        'catvar_changed_ids', 'catvar_removed_ids', 'stg_gks_dict_variation'
       ]);
     END IF;
 
+    -----------------------------------------------------------------------
+    -- Step 0 (incremental only): build the changed / removed variation sets.
+    --   removed = diff_variation(removed).
+    --   changed = diff_variation(new|modified) ∪ copy-number cascade
+    --             ∪ diff_gene_association changes, minus removed.
+    -- The cn-cascade covers variations whose `variation` row is byte-identical
+    -- but whose CopyNumber-bearing SCV data changed, resolved over BOTH the
+    -- compare {S} and baseline {base} snapshots. gene_association changes are
+    -- added because temp_catvar_extension's clinvarGeneList reads gene_association
+    -- directly (a variation whose only change is a gene link would otherwise carry
+    -- forward stale). NOT keyed off variation_vrs_changed (which is a diff of the
+    -- variation_identity row only and misses hgvs/loc-derived extension changes).
+    -----------------------------------------------------------------------
+    IF eff_incremental THEN
+      SET query_changed_set = REPLACE("""
+        {CT} {P}.catvar_removed_ids AS
+        SELECT id AS variation_id FROM `{S}.diff_variation` WHERE change_type = 'removed'
+      """, '{BASE}', baseline_schema);
+      SET query_changed_set = REPLACE(query_changed_set, '{CT}', temp_create);
+      SET query_changed_set = REPLACE(query_changed_set, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+      SET query_changed_set = REPLACE(query_changed_set, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_changed_set;
+
+      SET query_changed_set = REPLACE("""
+        {CT} {P}.catvar_changed_ids AS
+        WITH changed_cav AS (
+          SELECT id FROM `{S}.diff_clinical_assertion_variation`
+          WHERE change_type IN ('new','modified','removed')
+        ),
+        changed_ca AS (
+          SELECT id FROM `{S}.diff_clinical_assertion`
+          WHERE change_type IN ('new','modified','removed')
+        ),
+        cn_cascade AS (
+          SELECT DISTINCT ca.variation_id AS variation_id
+          FROM `{S}.clinical_assertion_variation` cav
+          JOIN `{S}.clinical_assertion` ca
+            ON ca.id = cav.clinical_assertion_id AND ca.statement_type IS NOT NULL
+          WHERE cav.content LIKE '%CopyNumber%'
+            AND (
+              cav.id IN (SELECT id FROM changed_cav)
+              OR cav.clinical_assertion_id IN (SELECT id FROM changed_ca)
+            )
+          UNION DISTINCT
+          SELECT DISTINCT ca.variation_id AS variation_id
+          FROM `{BASE}.clinical_assertion_variation` cav
+          JOIN `{BASE}.clinical_assertion` ca
+            ON ca.id = cav.clinical_assertion_id AND ca.statement_type IS NOT NULL
+          WHERE cav.content LIKE '%CopyNumber%'
+            AND (
+              cav.id IN (SELECT id FROM changed_cav)
+              OR cav.clinical_assertion_id IN (SELECT id FROM changed_ca)
+            )
+        )
+        SELECT variation_id FROM (
+          SELECT id AS variation_id FROM `{S}.diff_variation` WHERE change_type IN ('new','modified')
+          UNION DISTINCT
+          SELECT variation_id FROM cn_cascade
+          UNION DISTINCT
+          SELECT DISTINCT variation_id FROM `{S}.diff_gene_association` WHERE change_type IN ('new','modified','removed')
+        )
+        WHERE variation_id NOT IN (SELECT variation_id FROM {P}.catvar_removed_ids)
+      """, '{BASE}', baseline_schema);
+      SET query_changed_set = REPLACE(query_changed_set, '{CT}', temp_create);
+      SET query_changed_set = REPLACE(query_changed_set, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+      SET query_changed_set = REPLACE(query_changed_set, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_changed_set;
+    END IF;
+
     -------------------------------------------------------------------------
-    -- Step 1a: Enriched sequence references (small lookup table)
+    -- Step 1a: Enriched sequence references (small lookup table) — GLOBAL
     -------------------------------------------------------------------------
     SET temp_seqref_query = REPLACE("""
       {CT} {P}.temp_seqref
@@ -78,7 +263,7 @@ BEGIN
     EXECUTE IMMEDIATE temp_seqref_query;
 
     -------------------------------------------------------------------------
-    -- Step 1b: Sequence locations with sequence reference join
+    -- Step 1b: Sequence locations with sequence reference join — GLOBAL
     -------------------------------------------------------------------------
     SET temp_seqloc_query = REPLACE("""
       {CT} {P}.temp_seqloc
@@ -168,7 +353,9 @@ BEGIN
     EXECUTE IMMEDIATE dict_location_query;
 
     -------------------------------------------------------------------------
-    -- Step 2: Contextual variant expressions with precedence-ranked naming
+    -- Step 2: Contextual variant expressions with precedence-ranked naming — GLOBAL
+    -- MUST stay unfiltered: feeds BOTH gks_dict_allele (global, needs all alleles)
+    -- and temp_ctxvar (per-variation). Filtering it would corrupt gks_dict_allele.
     -------------------------------------------------------------------------
     SET temp_ctxvar_expr_query = REPLACE("""
       {CT} {P}.temp_ctxvar_expression
@@ -292,7 +479,7 @@ BEGIN
     EXECUTE IMMEDIATE temp_ctxvar_expr_query;
 
     -------------------------------------------------------------------------
-    -- Step 2b: Dictionary table - alleles (Allele type only)
+    -- Step 2b: Dictionary table - alleles (Allele type only) — GLOBAL
     -- Uses temp_ctxvar_expression for full expression set (spdi + hgvs + gnomad)
     -------------------------------------------------------------------------
     SET dict_allele_query = REPLACE("""
@@ -330,7 +517,7 @@ BEGIN
     EXECUTE IMMEDIATE dict_allele_query;
 
     -------------------------------------------------------------------------
-    -- Step 2c: Dictionary table - copy number counts (CopyNumberCount type only)
+    -- Step 2c: Dictionary table - copy number counts (CopyNumberCount type only) — GLOBAL
     -------------------------------------------------------------------------
     SET dict_copy_number_count_query = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_dict_copy_number_count`
@@ -354,7 +541,7 @@ BEGIN
     EXECUTE IMMEDIATE dict_copy_number_count_query;
 
     -------------------------------------------------------------------------
-    -- Step 2d: Dictionary table - copy number changes (CopyNumberChange type only)
+    -- Step 2d: Dictionary table - copy number changes (CopyNumberChange type only) — GLOBAL
     -------------------------------------------------------------------------
     SET dict_copy_number_change_query = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_dict_copy_number_change`
@@ -378,7 +565,7 @@ BEGIN
     EXECUTE IMMEDIATE dict_copy_number_change_query;
 
     -------------------------------------------------------------------------
-    -- Step 3: Contextual variants with VRS type mapping
+    -- Step 3: Contextual variants with VRS type mapping — per-variation ({VFILTER})
     -------------------------------------------------------------------------
     SET temp_ctxvar_query = REPLACE("""
       {CT} {P}.temp_ctxvar
@@ -397,6 +584,7 @@ BEGIN
           vrs.in.name,
           vrs.out.*
         FROM `{S}.gks_vrs` vrs
+        {VFILTER}
       )
       SELECT DISTINCT
         ctxvar.variation_id,
@@ -421,6 +609,7 @@ BEGIN
       ON
         sl.id = ctxvar.location.id
     """, '{S}', rec.schema_name);
+    SET temp_ctxvar_query = REPLACE(temp_ctxvar_query, '{VFILTER}', vfilter_ctx);
     SET temp_ctxvar_query = REPLACE(temp_ctxvar_query, '{CT}', temp_create);
     SET temp_ctxvar_query = REPLACE(temp_ctxvar_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
@@ -428,6 +617,7 @@ BEGIN
 
     -------------------------------------------------------------------------
     -- Step 4: Categorical variant extensions (HGVS list, gene lists, type metadata)
+    --         per-variation ({VFILTER} on the final select)
     -------------------------------------------------------------------------
     SET temp_catvar_ext_query = REPLACE("""
       {CT} {P}.temp_catvar_extension
@@ -674,16 +864,18 @@ BEGIN
             )
           ) as extensions
         FROM cat_ext_item x
+        {VFILTER}
         GROUP BY
           x.variation_id
     """, '{S}', rec.schema_name);
+    SET temp_catvar_ext_query = REPLACE(temp_catvar_ext_query, '{VFILTER}', vfilter_ext);
     SET temp_catvar_ext_query = REPLACE(temp_catvar_ext_query, '{CT}', temp_create);
     SET temp_catvar_ext_query = REPLACE(temp_catvar_ext_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE temp_catvar_ext_query;
 
     -------------------------------------------------------------------------
-    -- Step 4b: Dictionary table - genes (MappableConcept, keyed by ncbigene:{id})
+    -- Step 4b: Dictionary table - genes (MappableConcept, keyed by ncbigene:{id}) — GLOBAL
     -------------------------------------------------------------------------
     SET dict_gene_query = REPLACE("""
       CREATE OR REPLACE TABLE `{S}.gks_dict_gene`
@@ -731,6 +923,7 @@ BEGIN
 
     -------------------------------------------------------------------------
     -- Step 5: Cross-reference mappings for categorical variants
+    --         per-variation ({VFILTER} on the final select)
     -------------------------------------------------------------------------
     SET temp_catvar_map_query = REPLACE("""
       {CT} {P}.temp_catvar_mappings
@@ -784,18 +977,22 @@ BEGIN
         m.variation_id,
         ARRAY_AGG(STRUCT(m.coding, m.relation)) as mappings
       FROM catvar_mappings m
+      {VFILTER}
       GROUP BY m.variation_id
     """, '{S}', rec.schema_name);
+    SET temp_catvar_map_query = REPLACE(temp_catvar_map_query, '{VFILTER}', vfilter_map);
     SET temp_catvar_map_query = REPLACE(temp_catvar_map_query, '{CT}', temp_create);
     SET temp_catvar_map_query = REPLACE(temp_catvar_map_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
 
     EXECUTE IMMEDIATE temp_catvar_map_query;
 
     -------------------------------------------------------------------------
-    -- Step 6: Assemble preliminary categorical variant records with constraints
+    -- Step 6: Assemble categorical variant records with constraints
+    --         per-variation ({VFILTER} on catvar CTE; {DVHEAD} targets real
+    --         table in full mode, stg temp in incremental mode)
     -------------------------------------------------------------------------
     SET dict_variation_query = REPLACE("""
-      CREATE OR REPLACE TABLE `{S}.gks_dict_variation`
+      {DVHEAD}
       AS
       WITH catvar AS (
         SELECT
@@ -812,6 +1009,7 @@ BEGIN
         FROM {P}.temp_ctxvar ctx
         -- safe guard for upstream vrs process that returns bad records
         WHERE ctx.variation_id is not null
+        {VFILTER}
       ),
       cv_constraint_item AS (
         -- DefiningAlleleConstraint for CanonicalAllele
@@ -942,16 +1140,47 @@ BEGIN
       LEFT JOIN {P}.temp_catvar_mappings vm
       ON
         vm.variation_id = cv.variation_id
-    """, '{S}', rec.schema_name);
+    """, '{DVHEAD}', dv_head);
+    SET dict_variation_query = REPLACE(dict_variation_query, '{VFILTER}', vfilter_dv);
+    SET dict_variation_query = REPLACE(dict_variation_query, '{CT}', temp_create);
     SET dict_variation_query = REPLACE(dict_variation_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+    SET dict_variation_query = REPLACE(dict_variation_query, '{S}', rec.schema_name);
 
     EXECUTE IMMEDIATE dict_variation_query;
+
+    -----------------------------------------------------------------------
+    -- Step 7 (incremental only): UNION-CTAS merge gks_dict_variation — carry
+    -- forward the unchanged baseline rows and union in the freshly staged
+    -- changed rows. Explicit column list so any schema/column-order drift
+    -- errors (the version-invalidation signal) instead of silently corrupting.
+    -- The id is 'clinvar:<variation_id>'; strip the prefix to match the id sets.
+    -----------------------------------------------------------------------
+    IF eff_incremental THEN
+      SET query_merge = REPLACE("""
+        CREATE OR REPLACE TABLE `{S}.gks_dict_variation` AS
+        SELECT id, type, name, constraints, members, extensions, mappings
+        FROM `{BASE}.gks_dict_variation`
+        WHERE SPLIT(id, ':')[OFFSET(1)] NOT IN (
+          SELECT variation_id FROM {P}.catvar_changed_ids
+          UNION DISTINCT
+          SELECT variation_id FROM {P}.catvar_removed_ids
+        )
+        UNION ALL
+        SELECT id, type, name, constraints, members, extensions, mappings
+        FROM {P}.stg_gks_dict_variation
+      """, '{BASE}', baseline_schema);
+      SET query_merge = REPLACE(query_merge, '{P}', IF(debug, rec.schema_name, '_SESSION'));
+      SET query_merge = REPLACE(query_merge, '{S}', rec.schema_name);
+      EXECUTE IMMEDIATE query_merge;
+    END IF;
 
     -------------------------------------------------------------------------
     -- Validation: gks_dict_variation must carry EXACTLY the variation-table id
     -- set (its id is 'clinvar:<variation_id>' — strip the namespace prefix to
     -- compare) with exactly one row per variation. A nonzero delta means a
     -- missing, extra, or duplicate categorical-variant record — fail loudly.
+    -- Runs in BOTH modes; in incremental mode it also proves the merge is
+    -- complete (no carry-forward gap, no double-count).
     -------------------------------------------------------------------------
     EXECUTE IMMEDIATE FORMAT("""
       SELECT
@@ -978,8 +1207,28 @@ BEGIN
       DROP TABLE _SESSION.temp_ctxvar;
       DROP TABLE _SESSION.temp_catvar_extension;
       DROP TABLE _SESSION.temp_catvar_mappings;
+      IF eff_incremental THEN
+        DROP TABLE IF EXISTS _SESSION.catvar_changed_ids;
+        DROP TABLE IF EXISTS _SESSION.catvar_removed_ids;
+        DROP TABLE IF EXISTS _SESSION.stg_gks_dict_variation;
+      END IF;
     END IF;
 
   END FOR;
 
+END;
+
+
+-- Full rebuild (unchanged public signature/behavior)
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_catvar_proc`(on_date DATE, debug BOOL)
+BEGIN
+  CALL `clinvar_ingest.gks_catvar_build`(on_date, debug, FALSE);
+END;
+
+
+-- Incremental rebuild (carry-forward + merge). Guarded: falls back to full when the
+-- baseline is missing/incomplete, the diff drivers are missing, or the pipeline gate mismatches.
+CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_catvar_proc_incremental`(on_date DATE, debug BOOL)
+BEGIN
+  CALL `clinvar_ingest.gks_catvar_build`(on_date, debug, TRUE);
 END;
