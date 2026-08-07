@@ -480,7 +480,7 @@ Resolve `{CT}`/`{P}`/`{S}` exactly as the other queries do (the `{BASE}` REPLACE
 
 Each query gets a distinct `{VFILTER}` token replaced with its alias-correct fragment from Step 4 (`vfilter_ctx`/`vfilter_ext`/`vfilter_map`/`vfilter_dv`). Add the token to the query string and a matching `REPLACE(..., '{VFILTER}', <fragment>)` after the existing REPLACEs:
 
-- In `temp_ctxvar_query` (proc Step 3): add `{VFILTER}` to the `ctxvar` CTE's outer WHERE (selects from `gks_vrs vrs`) → `REPLACE(..., '{VFILTER}', vfilter_ctx)` (fragment: `AND vrs.in.variation_id IN (...)`).
+- In `temp_ctxvar_query` (proc Step 3): the `ctxvar` CTE selects from `gks_vrs vrs` with **no existing WHERE** — add `{VFILTER}` at the end of that CTE and use `vfilter_ctx`, which is a full `WHERE vrs.in.variation_id IN (...)`. `REPLACE(..., '{VFILTER}', vfilter_ctx)`.
 - In `temp_catvar_ext_query` (proc Step 4): the final `SELECT ... FROM cat_ext_item x ... GROUP BY x.variation_id` has **no existing WHERE** → add `{VFILTER}` before `GROUP BY` and use `vfilter_ext` (a full `WHERE x.variation_id IN (...)`).
 - In `temp_catvar_map_query` (proc Step 5): the final `SELECT ... FROM catvar_mappings m ... GROUP BY m.variation_id` has **no existing WHERE** → add `{VFILTER}` before `GROUP BY` and use `vfilter_map` (a full `WHERE m.variation_id IN (...)`).
 - In `dict_variation_query` (proc Step 6): change the head to `{DVHEAD}` (was `CREATE OR REPLACE TABLE \`{S}.gks_dict_variation\``) and add `{VFILTER}` on the `catvar` CTE (`WHERE ctx.variation_id is not null {VFILTER}`) using `vfilter_dv` (an `AND ctx.variation_id IN (...)`). Add `REPLACE(..., '{DVHEAD}', dv_head)` and `REPLACE(..., '{VFILTER}', vfilter_dv)`.
