@@ -139,6 +139,8 @@ git commit -m "feat(pipeline): git-derived pipeline_version stamp + gate key"
 
 The oracle is the non-negotiable correctness gate (spec §6): for a release, an incremental build must be byte-for-byte (canonically) identical to a full build of the same release from the same-version baseline. Reused by every phase. Model it on the two-tier canonicalize compare already in `gks_change_log` (lines 95-125).
 
+> **Superseded during execution (2026-08-07):** the shipped `gks_oracle_compare` is **3-arg** `(schema_a, schema_b, table_name)` and compares a **canonical-row multiset**, not the 4-arg pk-keyed version shown in the code blocks below. The change was required because `gks_dict_allele` has pre-existing duplicate keys (8 keys), which the pk-collapse compared nondeterministically. The multiset compare is dup-key-safe and strictly stronger. **When running any `gks_oracle_compare` snippet in this chunk or Chunk 4, drop the trailing `pk` argument.** The final source of truth is `src/procedures/gks-oracle-compare-proc.sql` on the branch.
+
 **Files:**
 - Create: `src/procedures/gks-oracle-compare-proc.sql`
 - Create: `src/scripts/oracle-catvar.sh` (runbook that builds full + incremental into scratch datasets and compares)
