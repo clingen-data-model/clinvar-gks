@@ -1109,15 +1109,19 @@ BEGIN
     -- changed / removed sets are the persistent {S} tables from gks_scv_changed.
     -----------------------------------------------------------------------
     IF eff_incremental THEN
+      -- NULL-safe anti-join (LEFT JOIN … IS NULL) rather than NOT IN: NOT IN over a
+      -- subquery that yields any NULL scv_id goes UNKNOWN for every row -> empty
+      -- carry-forward. Consistent with the gks_scv_changed pattern.
       SET query_merge = REPLACE("""
         CREATE OR REPLACE TABLE `{S}.gks_scv_condition_sets` AS
-        SELECT scv_id, extensions
-        FROM `{BASE}.gks_scv_condition_sets`
-        WHERE scv_id NOT IN (
+        SELECT b.scv_id, b.extensions
+        FROM `{BASE}.gks_scv_condition_sets` b
+        LEFT JOIN (
           SELECT scv_id FROM `{S}.scv_changed_ids`
           UNION DISTINCT
           SELECT scv_id FROM `{S}.scv_removed_ids`
-        )
+        ) x ON x.scv_id = b.scv_id
+        WHERE x.scv_id IS NULL
         UNION ALL
         SELECT scv_id, extensions
         FROM {P}.stg_gks_scv_condition_sets

@@ -31,9 +31,12 @@
 -- its trait_mapping.medgen_id, yet its baseline pointer still read clinvar.trait:3280.
 -- The two resolutions:
 --   mapped_trait_id  (proc :754-761): trait matched by medgen on lookup_medgen_id =
---     COALESCE(trait_mapping.medgen_id, clinical_assertion_trait.medgen_id).
---     -> add SCVs whose mapped/submitted medgen = a CHANGED trait's medgen_id
---        (changed medgens: cur trait for new/modified, base trait for removed).
+--     COALESCE(trait_mapping.medgen_id, clinical_assertion_trait.medgen_id), where
+--     cat_medgen_id = IFNULL(medgen.code, cat.medgen_id) and medgen.code = UPPER(xref.id)
+--     for a MedGen/UMLS xref (proc :487-488,522).
+--     -> add SCVs whose mapped/submitted medgen = a CHANGED trait's medgen_id — matching
+--        BOTH the clinical_assertion_trait.medgen_id column AND MedGen/UMLS xref-derived
+--        medgen (changed medgens: cur trait for new/modified, base trait for removed).
 --     NB this is trait.medgen_id ↔ SCV medgen — the CORRECT keyspace; it is NOT the
 --     rejected "diff_trait.id vs submitted MedGen 'C…' id" join.
 --   normalized_trait_id (proc :791-849): resolved from the RCV trait set
@@ -49,6 +52,16 @@
 --   clinical_assertion_trait cascade: {S}.diff_clinical_assertion_trait (keyed id) —
 --     its id is '{scv}.{n}' (proc reads via SPLIT(id,'.'), see gks-scv-condition-proc
 --     :454-456), so scv = SPLIT(id,'.')[OFFSET(0)], non-exact rows.
+--   clinical_assertion_trait_set cascade: {S}.diff_clinical_assertion_trait_set
+--     (keyed id) — 1:1 with the SCV; its id IS the scv id (proc joins rmt.scv_id =
+--     cats.id, :269,279-281), some carry a '.{n}' suffix so normalize via SPLIT.
+--     Drives @multipleConditionExplanation (output) + cats_trait_count (STEP 9 gate).
+--
+-- All-or-nothing driver gate: dataset_diff_all wraps each table diff in an EXCEPTION
+-- handler and continues, so a required diff_* can be silently absent. If ANY required
+-- driver is missing (diff_clinical_assertion, diff_trait, diff_trait_set,
+-- diff_trait_mapping, diff_clinical_assertion_trait, diff_clinical_assertion_trait_set,
+-- diff_rcv_mapping) we take the everything-changed fallback rather than a partial set.
 --
 -- RCV-mapping cascade: an RCV whose mapping changed (diff_rcv_mapping non-exact) can
 -- flip its SCVs' normalized assignment with no SCV/trait edit. Expand changed RCVs to
@@ -67,11 +80,10 @@
 -- review_status_changed likewise, unexplained = present-in-both AND neither changed.
 --
 -- Baseline = nearest existing prior release (schema_on(prev_release_date)).
--- FIRST RUN / no usable baseline (baseline missing, base lacks scv_summary, or
--- diff_clinical_assertion absent): scv_changed_ids = ALL scv ids from {S}.scv_summary,
--- scv_removed_ids empty, gks_scv_change_audit empty. Any absent diff driver only
--- skips its own arm (trait+traitset / trait_mapping / clinical_assertion_trait /
--- rcv_mapping).
+-- FIRST RUN / no usable baseline (baseline missing, base lacks scv_summary, or ANY
+-- required diff driver absent — see the all-or-nothing gate above): scv_changed_ids =
+-- ALL scv ids from {S}.scv_summary, scv_removed_ids empty, gks_scv_change_audit empty.
+-- The per-arm *_present guards remain only as defense-in-depth on the incremental path.
 -- ============================================================================
 
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_scv_changed`(on_date DATE)
@@ -85,7 +97,9 @@ BEGIN
   DECLARE diff_trait_set_present BOOL DEFAULT FALSE;
   DECLARE diff_trait_mapping_present BOOL DEFAULT FALSE;
   DECLARE diff_cat_present BOOL DEFAULT FALSE;
+  DECLARE diff_cats_present BOOL DEFAULT FALSE;
   DECLARE diff_rcv_mapping_present BOOL DEFAULT FALSE;
+  DECLARE all_drivers_present BOOL DEFAULT FALSE;
   DECLARE content_ctes STRING;
   DECLARE content_arm STRING;
   DECLARE submitted_arm STRING;
@@ -117,6 +131,9 @@ BEGIN
       "SELECT COUNT(*) = 1 FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name = 'diff_clinical_assertion_trait'",
       rec.schema_name) INTO diff_cat_present;
     EXECUTE IMMEDIATE FORMAT(
+      "SELECT COUNT(*) = 1 FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name = 'diff_clinical_assertion_trait_set'",
+      rec.schema_name) INTO diff_cats_present;
+    EXECUTE IMMEDIATE FORMAT(
       "SELECT COUNT(*) = 1 FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name = 'diff_rcv_mapping'",
       rec.schema_name) INTO diff_rcv_mapping_present;
     IF base_schema IS NOT NULL THEN
@@ -125,8 +142,20 @@ BEGIN
         base_schema) INTO base_has_summary;
     END IF;
 
-    IF base_schema IS NULL OR NOT diff_ca_present OR NOT base_has_summary THEN
-      -- First run / no usable baseline: everything changed, nothing removed, no audit.
+    -- All-or-nothing gate: dataset_diff_all wraps each table diff in an EXCEPTION
+    -- handler and CONTINUES on failure, so a single diff_* can be absent while others
+    -- exist. A per-arm skip would then silently produce a partial (wrong-looking-valid)
+    -- changed set. So require the FULL required-driver set; if ANY is missing, take the
+    -- everything-changed fallback (same safe path as no-baseline). Per-arm guards below
+    -- remain as defense-in-depth.
+    SET all_drivers_present =
+      diff_ca_present AND diff_trait_present AND diff_trait_set_present
+      AND diff_trait_mapping_present AND diff_cat_present AND diff_cats_present
+      AND diff_rcv_mapping_present;
+
+    IF base_schema IS NULL OR NOT base_has_summary OR NOT all_drivers_present THEN
+      -- First run / no usable baseline / any required diff driver missing:
+      -- everything changed, nothing removed, no audit (safe conservative fallback).
       EXECUTE IMMEDIATE FORMAT(
         "CREATE OR REPLACE TABLE `%s.scv_changed_ids` AS SELECT id AS scv_id FROM `%s.scv_summary`",
         rec.schema_name, rec.schema_name);
@@ -212,6 +241,15 @@ BEGIN
           SELECT SPLIT(cat.id, '.')[OFFSET(0)] AS scv_id
           FROM `{S}.clinical_assertion_trait` cat
           WHERE cat.medgen_id IN (SELECT medgen_id FROM changed_trait_medgen)
+          -- mapped_trait_id: changed-trait medgen ↔ SCV MedGen/UMLS xref-derived medgen.
+          -- cat_medgen_id = IFNULL(medgen.code, cat.medgen_id) where medgen.code =
+          -- UPPER(xref.id) for db IN ('MedGen','UMLS') (proc :487-488,522). Covers SCVs
+          -- with a NULL medgen_id column but a MedGen/UMLS xref to a changed trait.
+          UNION DISTINCT
+          SELECT SPLIT(cat.id, '.')[OFFSET(0)] AS scv_id
+          FROM `{S}.clinical_assertion_trait` cat, UNNEST(cat.xrefs) x
+          WHERE JSON_VALUE(x, '$.db') IN ('MedGen','UMLS')
+            AND UPPER(JSON_VALUE(x, '$.id')) IN (SELECT medgen_id FROM changed_trait_medgen)
           -- normalized_trait_id: SCV's RCV trait_set contains a changed trait
           UNION DISTINCT
           SELECT scv AS scv_id
@@ -244,6 +282,18 @@ BEGIN
           UNION DISTINCT
           SELECT SPLIT(id, '.')[OFFSET(0)] AS scv_id
           FROM `{S}.diff_clinical_assertion_trait`
+          WHERE change_type <> 'exact_match'
+        """;
+      END IF;
+      IF diff_cats_present THEN
+        SET submitted_arm = submitted_arm || """
+          -- clinical_assertion_trait_set changed -> scv. Its id IS the scv id
+          -- (temp_gks_scv_trait_sets joins rmt.scv_id = cats.id, proc :269,279-281);
+          -- some ids carry a '.{n}' version suffix, so normalize via SPLIT. Drives
+          -- @multipleConditionExplanation (output extension) + cats_trait_count (STEP 9).
+          UNION DISTINCT
+          SELECT SPLIT(id, '.')[OFFSET(0)] AS scv_id
+          FROM `{S}.diff_clinical_assertion_trait_set`
           WHERE change_type <> 'exact_match'
         """;
       END IF;
