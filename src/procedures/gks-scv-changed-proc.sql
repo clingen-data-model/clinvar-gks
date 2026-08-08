@@ -34,7 +34,9 @@
 --     single-condition extensions.value_submitted_condition (NON-array struct):
 --         .normalized_match  '#/condition/clinvar.trait:{id}'  (always populated)
 --         .direct_match      '#/condition/clinvar.trait:{id}'
---         .conditionSet      '#/conditionSet/clinvar.traitset:{id}'  (usually null for singles)
+--     (no single-condition traitset arm: value_submitted_condition.conditionSet is
+--      only populated when rcv_trait_count>1, but singles are scv_trait_count=1, so
+--      that field is ALWAYS NULL there — the clause would never match.)
 --   normalized_match is the reliably-populated field (proc line ~913,
 --   FORMAT('#/condition/clinvar.trait:%s', normalized_trait_id)); direct_match and the
 --   conditionSet arms are added for completeness. BOTH the multi-condition concepts[]
@@ -63,6 +65,7 @@ BEGIN
   DECLARE diff_ca_present BOOL DEFAULT FALSE;
   DECLARE diff_trait_present BOOL DEFAULT FALSE;
   DECLARE diff_trait_set_present BOOL DEFAULT FALSE;
+  DECLARE trait_ctes STRING;
   DECLARE trait_arm STRING;
   DECLARE q STRING;
 
@@ -133,7 +136,12 @@ BEGIN
           (NOT (cur.version IS DISTINCT FROM base.version)
              AND NOT (cur.review_status IS DISTINCT FROM base.review_status)) AS unexplained
         FROM `{S}.diff_clinical_assertion` d
+        -- INNER by design: a 'modified' SCV with no current scv_summary row produces
+        -- no GKS output, so it's dropped from the audit (still recomputed via
+        -- scv_changed_ids, which is built from diff_clinical_assertion directly).
         JOIN `{S}.scv_summary` cur ON cur.id = d.id
+        -- LEFT (not INNER): if the baseline scv_summary row is somehow absent, the
+        -- IS DISTINCT FROM comparisons still resolve (NULL base -> version_changed).
         LEFT JOIN `{BASE}.scv_summary` base ON base.id = d.id
         WHERE d.change_type = 'modified'
       """;
@@ -150,49 +158,66 @@ BEGIN
       -- Each arm is a top-level (uncorrelated) query: the concepts[] UNNEST is a
       -- FROM cross join and the changed-trait id sets are uncorrelated IN subqueries.
       -- (A correlated IN inside EXISTS(UNNEST(...)) can't be de-correlated by BQ.)
+      -- The changed-trait/traitset id sets are factored into two CTEs
+      -- (changed_trait_ids / changed_traitset_ids) so the change_type list is a
+      -- one-line edit. A plain CTE queried via IN stays uncorrelated (no
+      -- de-correlation error). Both the CTEs and the trait arms are emitted only
+      -- when the diff drivers + baseline condition_sets are present.
+      SET trait_ctes = "";
       SET trait_arm = "";
       IF diff_trait_present AND diff_trait_set_present AND base_has_condsets THEN
+        SET trait_ctes = """
+          changed_trait_ids AS (
+            SELECT id FROM `{S}.diff_trait` WHERE change_type IN ('new','modified','removed')
+          ),
+          changed_traitset_ids AS (
+            SELECT id FROM `{S}.diff_trait_set` WHERE change_type IN ('new','modified','removed')
+          ),
+        """;
         SET trait_arm = """
           -- multi-condition concepts[] (clinvar.trait pointers)
           UNION DISTINCT
           SELECT cs.scv_id
           FROM `{BASE}.gks_scv_condition_sets` cs,
                UNNEST(cs.extensions.value_submitted_condition_set.concepts) c
-          WHERE REGEXP_EXTRACT(c.normalized_match, r'clinvar\\.trait:(.+)$')
-                  IN (SELECT id FROM `{S}.diff_trait` WHERE change_type IN ('new','modified','removed'))
-             OR REGEXP_EXTRACT(c.direct_match, r'clinvar\\.trait:(.+)$')
-                  IN (SELECT id FROM `{S}.diff_trait` WHERE change_type IN ('new','modified','removed'))
+          WHERE REGEXP_EXTRACT(c.normalized_match, r'clinvar\\.trait:(.+)$') IN (SELECT id FROM changed_trait_ids)
+             OR REGEXP_EXTRACT(c.direct_match,     r'clinvar\\.trait:(.+)$') IN (SELECT id FROM changed_trait_ids)
           -- multi-condition conditionSet (clinvar.traitset pointer)
           UNION DISTINCT
           SELECT cs.scv_id
           FROM `{BASE}.gks_scv_condition_sets` cs
           WHERE REGEXP_EXTRACT(cs.extensions.value_submitted_condition_set.conditionSet, r'clinvar\\.traitset:(.+)$')
-                  IN (SELECT id FROM `{S}.diff_trait_set` WHERE change_type IN ('new','modified','removed'))
-          -- single-condition (NON-array struct): trait + traitset pointers
+                  IN (SELECT id FROM changed_traitset_ids)
+          -- single-condition (NON-array struct): trait pointers only
+          -- (its .conditionSet is always NULL for singles — see header)
           UNION DISTINCT
           SELECT cs.scv_id
           FROM `{BASE}.gks_scv_condition_sets` cs
           WHERE REGEXP_EXTRACT(cs.extensions.value_submitted_condition.normalized_match, r'clinvar\\.trait:(.+)$')
-                  IN (SELECT id FROM `{S}.diff_trait` WHERE change_type IN ('new','modified','removed'))
+                  IN (SELECT id FROM changed_trait_ids)
              OR REGEXP_EXTRACT(cs.extensions.value_submitted_condition.direct_match, r'clinvar\\.trait:(.+)$')
-                  IN (SELECT id FROM `{S}.diff_trait` WHERE change_type IN ('new','modified','removed'))
-             OR REGEXP_EXTRACT(cs.extensions.value_submitted_condition.conditionSet, r'clinvar\\.traitset:(.+)$')
-                  IN (SELECT id FROM `{S}.diff_trait_set` WHERE change_type IN ('new','modified','removed'))
+                  IN (SELECT id FROM changed_trait_ids)
         """;
       END IF;
 
+      -- NULL-safe anti-join for "changed minus removed" (NOT IN goes UNKNOWN for
+      -- all rows if any removed scv_id is NULL -> silently empty; mirrors
+      -- variation-vrs-changed-proc.sql:74-81).
       SET q = """
         CREATE OR REPLACE TABLE `{S}.scv_changed_ids` AS
-        WITH u AS (
+        WITH {TRAIT_CTES}
+        u AS (
           SELECT id AS scv_id
           FROM `{S}.diff_clinical_assertion`
           WHERE change_type IN ('new','modified')
           {TRAIT_ARM}
         )
-        SELECT DISTINCT scv_id
+        SELECT DISTINCT u.scv_id
         FROM u
-        WHERE scv_id NOT IN (SELECT scv_id FROM `{S}.scv_removed_ids`)
+        LEFT JOIN `{S}.scv_removed_ids` r ON r.scv_id = u.scv_id
+        WHERE r.scv_id IS NULL
       """;
+      SET q = REPLACE(q, '{TRAIT_CTES}', trait_ctes);
       SET q = REPLACE(q, '{TRAIT_ARM}', trait_arm);
       SET q = REPLACE(q, '{BASE}', base_schema);
       SET q = REPLACE(q, '{S}', rec.schema_name);
