@@ -16,8 +16,8 @@
 #
 # Stages 1 and 2 are incremental by default (recompute only changed variations, carry the
 # rest forward). Stage 4 self-corrects between incremental and full loads. --full forces a
-# full rebuild across stages 1-2 AND forces catvar full in Stage 4 (propagated as
-# CATVAR_FULL to vrs-to-bq-table.sh) — REQUIRED after any version-invalidating change (the
+# full rebuild across stages 1-2 AND forces the incremental gks procs (catvar + scv) full
+# in Stage 4 (propagated as GKS_FULL to vrs-to-bq-table.sh) — REQUIRED after any version-invalidating change (the
 # variation_identity transform, or the vrsify pin in src/vrsify/requirements.txt). The
 # version-stamp gate written between stages 3 and 4 is always the honest plain build-path
 # hash, even on --full, so a --full release still leaves a valid baseline for next week's
@@ -135,7 +135,7 @@ fi
 # --- Stage 4: transform -> load gks_vrs -> gks_* procs ---------------------------------
 if (( START_STEP <= 4 )); then
   echo ">>> [4/5] vrs-to-bq-table.sh (transform, load gks_vrs, run gks_* procs)"
-  CATVAR_FULL="${FULL}" "${REPO_ROOT}/src/scripts/vrs-to-bq-table.sh" "${DATE}"
+  GKS_FULL="${FULL}" "${REPO_ROOT}/src/scripts/vrs-to-bq-table.sh" "${DATE}"
 fi
 
 # --- Stage 5: export bundle + Parquet, upload to R2 ------------------------------------
