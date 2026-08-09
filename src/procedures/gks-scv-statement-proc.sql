@@ -28,9 +28,15 @@
 --     * gks_dict_evidence_line, gks_dict_scv — in incremental mode the final writes
 --       (and temp_scv_condition_names, which feeds ONLY gks_dict_scv) are filtered to
 --       the changed set, staged, and merged with the carried-forward baseline rows via
---       UNION-CTAS. The qualifier temps and temp_scv_citations / temp_scv_method are
---       LEFT-JOINed by scv id into the already-filtered finals, so they are safely
---       over-computed globally.
+--       UNION-CTAS. temp_scv_citations / temp_scv_method feed ONLY gks_dict_scv and are
+--       LEFT-JOINed by scv id into that already-filtered final, so they are safely
+--       over-computed globally. (The gene-context / MOI / penetrance qualifier temps,
+--       Steps 2-4, feed ONLY the global temp_gks_scv_proposition / _target_proposition
+--       — i.e. gks_dict_proposition — never the per-SCV finals.)
+--   A built-in coverage validation runs unconditionally (both modes) after the writes:
+--   gks_dict_scv must be exactly 1:1 with scv_summary(id, version) and every
+--   gks_dict_evidence_line scv-id must exist in scv_summary — RAISE otherwise (catches
+--   a silent drop/dup/orphan the single-window oracle cannot prove).
 --   The changed / removed SCV sets are the persistent {S} tables scv_changed_ids /
 --   scv_removed_ids produced by gks_scv_changed (driver-complete for the
 --   clinical_assertion + trait cascades; a trait/traitset edit re-derives the affected
@@ -61,7 +67,10 @@ BEGIN
   DECLARE dict_evidence_line_query STRING;
   DECLARE query_statement_scv_pre STRING;
   DECLARE temp_create STRING;
-  DECLARE temp_prefix STRING;
+
+  -- coverage-validation results (both modes)
+  DECLARE scv_cov_mismatch INT64 DEFAULT 0;
+  DECLARE el_orphan_count INT64 DEFAULT 0;
 
   -- incremental control / fallback guard
   DECLARE eff_incremental BOOL DEFAULT FALSE;
@@ -305,8 +314,9 @@ BEGIN
     EXECUTE IMMEDIATE query_scv_records;
 
     ---------------------------------------------------------------------------
-    -- Step 2: Create temp gene context qualifiers — GLOBAL (over-computed; LEFT-JOINed
-    -- by scv id into the already-filtered per-SCV finals)
+    -- Step 2: Create temp gene context qualifiers — GLOBAL (over-computed). Feeds ONLY
+    -- the global temp_gks_scv_proposition / temp_gks_scv_target_proposition (Steps 5-6
+    -- -> gks_dict_proposition), never the per-SCV finals, so it stays unfiltered.
     ---------------------------------------------------------------------------
     SET query_gene_context_qualifiers = REPLACE("""
       {CT} {P}.temp_gene_context_qualifiers
@@ -1104,6 +1114,55 @@ BEGIN
       SET query_merge = REPLACE(query_merge, '{S}', rec.schema_name);
       EXECUTE IMMEDIATE query_merge;
 
+    END IF;
+
+    -------------------------------------------------------------------------
+    -- Coverage validation (BOTH modes; in incremental mode it also proves the merge
+    -- is complete — no carry-forward gap, no double-count).
+    -- gks_dict_scv is strictly 1:1 with scv_summary(id, version): its id is
+    -- 'clinvar.submission:{scv}.{ver}', so SPLIT(id,':')[OFFSET(1)] = '{scv}.{ver}',
+    -- which must equal CONCAT(scv_summary.id, '.', version). A nonzero delta =
+    -- missing / extra / duplicate statement record. The count-equality term catches a
+    -- duplicate (scv,ver) that the set-EXCEPT terms would dedup away. (Verified 1:1 on
+    -- 2026-07-20: 6,397,248 rows both sides, 0 dups, 0 orphans either way.)
+    -------------------------------------------------------------------------
+    EXECUTE IMMEDIATE FORMAT("""
+      SELECT
+        ABS((SELECT COUNT(*) FROM `%s.scv_summary`) - (SELECT COUNT(*) FROM `%s.gks_dict_scv`))
+        + (SELECT COUNT(*) FROM (
+             SELECT CONCAT(id, '.', CAST(version AS STRING)) FROM `%s.scv_summary`
+             EXCEPT DISTINCT
+             SELECT SPLIT(id, ':')[OFFSET(1)] FROM `%s.gks_dict_scv`))
+        + (SELECT COUNT(*) FROM (
+             SELECT SPLIT(id, ':')[OFFSET(1)] FROM `%s.gks_dict_scv`
+             EXCEPT DISTINCT
+             SELECT CONCAT(id, '.', CAST(version AS STRING)) FROM `%s.scv_summary`))
+    """, rec.schema_name, rec.schema_name, rec.schema_name, rec.schema_name,
+         rec.schema_name, rec.schema_name)
+    INTO scv_cov_mismatch;
+
+    IF scv_cov_mismatch != 0 THEN
+      RAISE USING MESSAGE = FORMAT(
+        'gks_scv_statement validation FAILED for %s: gks_dict_scv is not 1:1 with scv_summary(id,version) (count/set delta = %t) — missing, extra, or duplicate statement record',
+        rec.schema_name, scv_cov_mismatch);
+    END IF;
+
+    -- gks_dict_evidence_line is NOT 1:1 (only clinical-impact SCVs get one). Weak
+    -- invariant: every evidence_line scv-id must exist in scv_summary (no orphans).
+    EXECUTE IMMEDIATE FORMAT("""
+      SELECT COUNT(*) FROM (
+        SELECT DISTINCT SPLIT(SPLIT(id, ':')[OFFSET(1)], '.')[OFFSET(0)] AS scv
+        FROM `%s.gks_dict_evidence_line`
+      ) el
+      LEFT JOIN `%s.scv_summary` s ON s.id = el.scv
+      WHERE s.id IS NULL
+    """, rec.schema_name, rec.schema_name)
+    INTO el_orphan_count;
+
+    IF el_orphan_count != 0 THEN
+      RAISE USING MESSAGE = FORMAT(
+        'gks_scv_statement validation FAILED for %s: %t gks_dict_evidence_line scv-id(s) have no matching scv_summary row (orphan evidence line)',
+        rec.schema_name, el_orphan_count);
     END IF;
 
     IF NOT debug THEN
