@@ -1166,15 +1166,15 @@ BEGIN
     END IF;
 
     IF NOT debug THEN
-      DROP TABLE _SESSION.temp_gks_scv;
-      DROP TABLE _SESSION.temp_gene_context_qualifiers;
-      DROP TABLE _SESSION.temp_moi_qualifiers;
-      DROP TABLE _SESSION.temp_penetrance_qualifiers;
-      DROP TABLE _SESSION.temp_gks_scv_proposition;
-      DROP TABLE _SESSION.temp_gks_scv_target_proposition;
-      DROP TABLE _SESSION.temp_scv_condition_names;
-      DROP TABLE _SESSION.temp_scv_citations;
-      DROP TABLE _SESSION.temp_scv_method;
+      DROP TABLE IF EXISTS _SESSION.temp_gks_scv;
+      DROP TABLE IF EXISTS _SESSION.temp_gene_context_qualifiers;
+      DROP TABLE IF EXISTS _SESSION.temp_moi_qualifiers;
+      DROP TABLE IF EXISTS _SESSION.temp_penetrance_qualifiers;
+      DROP TABLE IF EXISTS _SESSION.temp_gks_scv_proposition;
+      DROP TABLE IF EXISTS _SESSION.temp_gks_scv_target_proposition;
+      DROP TABLE IF EXISTS _SESSION.temp_scv_condition_names;
+      DROP TABLE IF EXISTS _SESSION.temp_scv_citations;
+      DROP TABLE IF EXISTS _SESSION.temp_scv_method;
       IF eff_incremental THEN
         DROP TABLE IF EXISTS _SESSION.stg_gks_dict_evidence_line;
         DROP TABLE IF EXISTS _SESSION.stg_gks_dict_scv;
