@@ -61,11 +61,19 @@
 -- handler and continues, so a required diff_* can be silently absent. If ANY required
 -- driver is missing (diff_clinical_assertion, diff_trait, diff_trait_set,
 -- diff_trait_mapping, diff_clinical_assertion_trait, diff_clinical_assertion_trait_set,
--- diff_rcv_mapping) we take the everything-changed fallback rather than a partial set.
+-- diff_rcv_mapping, diff_submitter) we take the everything-changed fallback rather than
+-- a partial set.
 --
 -- RCV-mapping cascade: an RCV whose mapping changed (diff_rcv_mapping non-exact) can
 -- flip its SCVs' normalized assignment with no SCV/trait edit. Expand changed RCVs to
 -- SCVs via rcv_mapping.scv_accessions from BOTH cur and base (membership moves).
+--
+-- Submitter cascade: gks_dict_scv embeds submitter.name INLINE in its classification
+-- description (gks-scv-statement-proc.sql ~:763), sourced from the DENORMALIZED
+-- scv_summary.submitter_name. A submitter RENAME (diff_submitter new/modified/removed)
+-- changes that name for all its SCVs while their clinical_assertion stays byte-identical
+-- (exact_match) — no other arm sees it, so gks_dict_scv/evidence_line would carry them
+-- forward stale. Expand changed submitters to SCVs via scv_summary.submitter_id.
 --
 -- diff_clinical_assertion is keyed on ['id','version'], so a VERSION BUMP shows the
 -- same scv_id as BOTH change_type='new' (id.newver) AND 'removed' (id.oldver). Thus
@@ -99,11 +107,13 @@ BEGIN
   DECLARE diff_cat_present BOOL DEFAULT FALSE;
   DECLARE diff_cats_present BOOL DEFAULT FALSE;
   DECLARE diff_rcv_mapping_present BOOL DEFAULT FALSE;
+  DECLARE diff_submitter_present BOOL DEFAULT FALSE;
   DECLARE all_drivers_present BOOL DEFAULT FALSE;
   DECLARE content_ctes STRING;
   DECLARE content_arm STRING;
   DECLARE submitted_arm STRING;
   DECLARE rcvmap_arm STRING;
+  DECLARE submitter_arm STRING;
   DECLARE q STRING;
 
   FOR rec IN (SELECT s.schema_name FROM `clinvar_ingest.schema_on`(on_date) AS s)
@@ -136,6 +146,9 @@ BEGIN
     EXECUTE IMMEDIATE FORMAT(
       "SELECT COUNT(*) = 1 FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name = 'diff_rcv_mapping'",
       rec.schema_name) INTO diff_rcv_mapping_present;
+    EXECUTE IMMEDIATE FORMAT(
+      "SELECT COUNT(*) = 1 FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name = 'diff_submitter'",
+      rec.schema_name) INTO diff_submitter_present;
     IF base_schema IS NOT NULL THEN
       EXECUTE IMMEDIATE FORMAT(
         "SELECT COUNT(*) = 1 FROM `%s.INFORMATION_SCHEMA.TABLES` WHERE table_name = 'scv_summary'",
@@ -151,7 +164,7 @@ BEGIN
     SET all_drivers_present =
       diff_ca_present AND diff_trait_present AND diff_trait_set_present
       AND diff_trait_mapping_present AND diff_cat_present AND diff_cats_present
-      AND diff_rcv_mapping_present;
+      AND diff_rcv_mapping_present AND diff_submitter_present;
 
     IF base_schema IS NULL OR NOT base_has_summary OR NOT all_drivers_present THEN
       -- First run / no usable baseline / any required diff driver missing:
@@ -316,6 +329,23 @@ BEGIN
         """;
       END IF;
 
+      -- Submitter cascade: gks_dict_scv embeds submitter.name INLINE in its
+      -- classification description (gks-scv-statement-proc.sql ~:763), sourced from
+      -- the DENORMALIZED scv_summary.submitter_name. A submitter RENAME changes that
+      -- name for all the submitter's SCVs while their clinical_assertion stays
+      -- byte-identical (diff_clinical_assertion=exact_match) — no other arm catches it,
+      -- so gks_dict_scv/evidence_line would carry them forward stale. Expand changed
+      -- submitters to their SCVs via scv_summary.submitter_id.
+      SET submitter_arm = "";
+      IF diff_submitter_present THEN
+        SET submitter_arm = """
+          UNION DISTINCT
+          SELECT s.id AS scv_id
+          FROM `{S}.scv_summary` s
+          WHERE s.submitter_id IN (SELECT id FROM `{S}.diff_submitter` WHERE change_type IN ('new','modified','removed'))
+        """;
+      END IF;
+
       -- NULL-safe anti-join for "changed minus removed" (NOT IN goes UNKNOWN for
       -- all rows if any removed scv_id is NULL -> silently empty; mirrors
       -- variation-vrs-changed-proc.sql:74-81). Also drop any NULL scv_id a parse
@@ -330,6 +360,7 @@ BEGIN
           {CONTENT_ARM}
           {SUBMITTED_ARM}
           {RCVMAP_ARM}
+          {SUBMITTER_ARM}
         )
         SELECT DISTINCT u.scv_id
         FROM u
@@ -341,6 +372,7 @@ BEGIN
       SET q = REPLACE(q, '{CONTENT_ARM}', content_arm);
       SET q = REPLACE(q, '{SUBMITTED_ARM}', submitted_arm);
       SET q = REPLACE(q, '{RCVMAP_ARM}', rcvmap_arm);
+      SET q = REPLACE(q, '{SUBMITTER_ARM}', submitter_arm);
       SET q = REPLACE(q, '{BASE}', base_schema);
       SET q = REPLACE(q, '{S}', rec.schema_name);
       EXECUTE IMMEDIATE q;
