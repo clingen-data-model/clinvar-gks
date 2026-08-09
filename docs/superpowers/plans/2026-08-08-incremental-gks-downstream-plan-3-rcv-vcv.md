@@ -172,7 +172,7 @@ Mirror Chunk 3, VCV side. Outputs `gks_dict_vcv_evidence_line`, `gks_dict_vcv_pr
 - [ ] All 4 rcv/vcv `_proc_incremental` wrappers build their outputs; every oracle reports **0 diffs** vs full (12 outputs across 4 oracle scripts).
 - [ ] `gks_rcvvcv_changed` produces `rcv_impacted_ids` / `vcv_impacted_ids` membership-first (over current+baseline membership, from `scv_changed_ids ∪ scv_removed_ids`), behind an all-or-nothing driver gate.
 - [ ] RCV and VCV remain **independent** (VCV never reads RCV).
-- [ ] change-log + delta cover the published rcv/vcv outputs; reconstruction verified (0,0,0) for `gks_dict_rcv` + `gks_dict_vcv`.
+- [ ] change-log + delta cover the six published rcv/vcv outputs; reconstruction verified (0,0,0) for `gks_dict_rcv`, `gks_dict_vcv`, a proposition, and an evidence_line output.
 - [ ] Pipeline wires `gks_rcvvcv_changed` before the 4 procs; incremental wrappers called; `GKS_FULL` forces full.
 
 ## Deferred / follow-ups
