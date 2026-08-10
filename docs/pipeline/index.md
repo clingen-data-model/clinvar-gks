@@ -53,9 +53,9 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 8. JSON Output               │  gks_json_proc
-│    Build dictionary tables   │  → gks_dict_* tables
-│    for bundle assembly       │
+│ 8. Change log + deltas       │  gks_change_log +
+│    A/U/D per dict + delta     │  gks_delta_build
+│    payloads for publishing    │  → gks_change_log, delta_<dict>
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
@@ -110,7 +110,8 @@ CALL `clinvar_ingest.gks_vcv_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_vcv_statement_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_rcv_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_rcv_statement_proc`(CURRENT_DATE(), FALSE);
-CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all');
+-- NOTE: gks_json_proc is retired (Plan 4) — its JSON-render tables were unpublished;
+-- the gks_dict_* tables are the published product and are built by the procs above.
 ```
 
 ### Step 4: Export & Distribute
