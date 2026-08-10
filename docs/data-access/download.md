@@ -2,28 +2,35 @@
 
 ClinVar-GKS releases are hosted on Cloudflare R2 object storage. All downloads are free with no authentication required and no egress fees.
 
-Each release includes a gzip-compressed JSON bundle file containing all variations, statements, propositions, conditions, and supporting reference data for a ClinVar release. Typed Parquet files (one per bundle section) are also available for analytical workloads.
+Distribution follows a **full + delta** model:
+
+- The complete **monthly full bundle** — a gzip-compressed JSON file (plus typed Parquet, one file per section) — is published once a month. It contains every variation, statement, proposition, condition, and supporting reference record for that release.
+- A **weekly delta** is published for every ClinVar release. Each delta carries only the records that were added or updated since the prior release, in the same section structure as the full bundle, alongside a `manifest.json` that lists per-section adds, updates, and deletes.
+
+A consumer that wants the current state takes the latest monthly full and replays the weekly deltas published since it. See [Weekly Deltas](#weekly-deltas) for the replay model.
 
 ---
 
 ## Latest Release
 
-Download the most recent releases using the stable URLs below:
+Download the most recent full bundle and the most recent weekly delta using the stable URLs below:
 
-| Format | Download | Description |
+| Product | Download | Description |
 | --- | --- | --- |
-| Monthly (JSON) | [clinvar-gks_00-latest.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz) | Latest monthly release (first weekly of each month) |
-| Weekly (JSON) | [clinvar-gks_00-latest_weekly.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz) | Latest weekly release |
-| Parquet | See [download instructions](#download) | Typed Parquet files (one per bundle section), always latest release |
+| Monthly full (JSON) | [clinvar-gks_00-latest.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz) | Latest monthly full bundle |
+| Weekly delta (JSON) | [clinvar-gks-delta_00-latest.json.gz](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/deltas/00-latest/clinvar-gks-delta_00-latest.json.gz) | Latest weekly delta (added + updated records) |
+| Delta manifest | [manifest.json](https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/deltas/00-latest/manifest.json) | Per-section adds, updates, and deletes for the latest delta |
+| Parquet (full) | See [download instructions](#download) | Typed Parquet files (one per bundle section), always latest monthly full |
 
 ### Download with curl
 
 ```bash
-# Latest monthly release (JSON bundle)
+# Latest monthly full bundle (JSON)
 curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz
 
-# Latest weekly release (JSON bundle)
-curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz
+# Latest weekly delta + its manifest
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/deltas/00-latest/clinvar-gks-delta_00-latest.json.gz
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/deltas/00-latest/manifest.json
 
 # Decompress
 gunzip clinvar-gks_00-latest.json.gz
@@ -48,31 +55,41 @@ import urllib.request
 
 BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev"
 
-# Download latest monthly release
+# Download latest monthly full bundle
 urllib.request.urlretrieve(
     f"{BASE}/datasets/clinvar-gks_00-latest.json.gz",
     "clinvar-gks_00-latest.json.gz"
 )
 
-# Download a specific monthly release
+# Download a specific monthly full bundle
 urllib.request.urlretrieve(
     f"{BASE}/datasets/clinvar-gks_2026-06.json.gz",
     "clinvar-gks_2026-06.json.gz"
 )
 
-# Download a specific weekly release
+# Download the latest weekly delta + manifest
 urllib.request.urlretrieve(
-    f"{BASE}/datasets/weekly/clinvar-gks_2026-0614.json.gz",
-    "clinvar-gks_2026-0614.json.gz"
+    f"{BASE}/deltas/00-latest/clinvar-gks-delta_00-latest.json.gz",
+    "clinvar-gks-delta_00-latest.json.gz"
+)
+urllib.request.urlretrieve(
+    f"{BASE}/deltas/00-latest/manifest.json",
+    "manifest.json"
 )
 
-# Download an archived release from a prior year
+# Download a specific weekly delta (release 2026-07-06 -> dir 2026-0706)
+urllib.request.urlretrieve(
+    f"{BASE}/deltas/2026-0706/clinvar-gks-delta_2026-0706.json.gz",
+    "clinvar-gks-delta_2026-0706.json.gz"
+)
+
+# Download an archived full bundle from a prior year
 urllib.request.urlretrieve(
     f"{BASE}/archives/2025/clinvar-gks_2025-03.json.gz",
     "clinvar-gks_2025-03.json.gz"
 )
 
-# Download a Parquet section
+# Download a Parquet section from the monthly full
 urllib.request.urlretrieve(
     f"{BASE}/datasets/parquet/scv.parquet",
     "scv.parquet"
@@ -81,9 +98,126 @@ urllib.request.urlretrieve(
 
 ---
 
+## Weekly Deltas
+
+A weekly delta is published for every ClinVar release under `deltas/<YYYY-MMDD>/`. Each release directory contains three artifact kinds:
+
+```text
+deltas/2026-0706/
+  clinvar-gks-delta_2026-0706.json.gz   added + updated records (same section structure as the full bundle)
+  manifest.json                         per-section adds, updates, and deletes for this release
+  parquet/<section>.parquet             typed Parquet for the changed records only
+```
+
+The most recent delta is mirrored at `deltas/00-latest/` under stable filenames (`clinvar-gks-delta_00-latest.json.gz`, `manifest.json`, `parquet/<section>.parquet`).
+
+### Delta Bundle
+
+The delta bundle has the **same shape as the monthly full** — a single JSON object with bundle sections at the root, each a keyed collection of objects. The difference is content: a delta contains only the records **added or updated** since its baseline release. Sections with no additions or updates are absent from the delta bundle. **Deleted records are not present in the bundle** — they are listed only in the manifest.
+
+### manifest.json
+
+The manifest describes exactly what changed and which full bundle the delta chain roots at:
+
+```json
+{
+  "release": "2026-07-06",
+  "baseline_release": "2026-06-29",
+  "compare_release": "2026-07-06",
+  "pipeline_version": "clinvar-gks vX.Y.Z @ 2026-07-06T00:00:00Z",
+  "checkpoint_full": { "path": "datasets/clinvar-gks_2026-06.json.gz", "release": "2026-06" },
+  "sections": {
+    "allele":  { "added": 812,  "updated": 34,  "deleted": ["ga4gh:VA.oldDigest1"] },
+    "scv":     { "added": 1203, "updated": 517, "deleted": ["clinvar.submission:SCV000000001.1"] },
+    "vcv":     { "added": 44,   "updated": 96,  "deleted": [] }
+  },
+  "counts": { "A": 2063, "U": 647, "D": 2 }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `release` | The ClinVar release date this delta represents |
+| `baseline_release` | The prior release this delta was diffed against — `null` only on the very first release |
+| `compare_release` | The release the changes are computed to (equals `release`) |
+| `pipeline_version` | The pipeline build stamp that produced the delta |
+| `checkpoint_full` | The monthly full bundle this delta chain replays onto — `{path, release}`; `null` before the first monthly full is published |
+| `sections` | Per-section change summary — `added` and `updated` counts plus a `deleted` list of primary keys |
+| `counts` | Roll-up totals across all sections — `A` (added), `U` (updated), `D` (deleted) |
+
+**Deletes live only in the manifest.** For each section, `deleted` is the list of keys that must be removed; the delta bundle itself carries only the added and updated records.
+
+### Consumer Replay Model
+
+To reconstruct the current state, take the latest monthly full and replay the contiguous weekly deltas published since it. For each delta, apply the manifest's deletes first, then upsert every record present in the delta bundle — section by section.
+
+Verify chain integrity while replaying: each delta's `baseline_release` must equal the previous delta's `compare_release`, and the earliest delta must root at the manifest's `checkpoint_full` (the release the monthly full was cut from). A mismatch means a weekly release is missing from the chain — re-bootstrap from the monthly full rather than applying a partial chain.
+
+```python
+import gzip
+import json
+import urllib.request
+
+BASE = "https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev"
+
+
+def fetch_json(url):
+    with urllib.request.urlopen(url) as r:
+        return json.load(r)
+
+
+def fetch_json_gz(url):
+    with urllib.request.urlopen(url) as r:
+        return json.loads(gzip.decompress(r.read()))
+
+
+# 1. Discover releases from the index.
+index = fetch_json(f"{BASE}/index.json")
+
+# 2. Load the latest monthly full as the baseline state: {section: {key: record}}.
+state = fetch_json_gz(f"{BASE}/datasets/clinvar-gks_00-latest.json.gz")
+
+# 3. Order the dated weekly deltas oldest -> newest (skip the 00-latest mirror,
+#    which duplicates one of the dated directories).
+deltas = sorted(
+    (d for d in index["deltas"] if d["release"] != "latest"),
+    key=lambda d: d["release"],
+)
+
+# 4. Replay each delta onto the baseline, verifying the chain as we go.
+prev_compare = None
+for d in deltas:
+    manifest = fetch_json(f"{BASE}/{d['manifest']}")
+
+    # Chain check: this delta must build on the previous delta's compare_release.
+    # The earliest delta must instead root at checkpoint_full (the release the
+    # monthly full was cut from). A mismatch => a missing week; re-bootstrap.
+    if prev_compare is not None and manifest["baseline_release"] != prev_compare:
+        raise SystemExit(
+            f"broken chain before {manifest['release']}: re-bootstrap from a monthly full"
+        )
+
+    dirname = d["path"].strip("/").split("/")[-1]            # "2026-0706"
+    delta = fetch_json_gz(f"{BASE}/{d['path']}clinvar-gks-delta_{dirname}.json.gz")
+
+    # 4a. Apply deletes (manifest only), then 4b. upsert added + updated records.
+    for section, info in manifest["sections"].items():
+        target = state.setdefault(section, {})
+        for pk in info["deleted"]:
+            target.pop(pk, None)
+    for section, records in delta.items():
+        state.setdefault(section, {}).update(records)
+
+    prev_compare = manifest["compare_release"]
+
+# `state` now reflects the most recent weekly release.
+```
+
+---
+
 ## Browse All Releases
 
-The file browser below shows all available releases organized by year and month. It is populated from the release index and updated automatically with each weekly upload.
+The file browser below shows all available releases — monthly full bundles, weekly deltas, and archives. It is populated from the release index and updated automatically with each weekly delta and monthly full upload.
 
 <div id="r2-browser" markdown>
 
@@ -181,25 +315,62 @@ curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3
     return folder;
   }
 
+  function renderDelta(d) {
+    var div = el("div", {className: "r2-file"});
+    var dirname = d.path.replace(/^deltas\//, "").replace(/\/$/, "");
+    var bundleUrl = BASE_URL + "/" + d.path + "clinvar-gks-delta_" + dirname + ".json.gz";
+    div.appendChild(el("a", {href: bundleUrl, text: dirname}));
+    div.appendChild(el("span", {className: "r2-size"}, [
+      el("a", {href: BASE_URL + "/" + d.manifest, text: "manifest.json"})
+    ]));
+    if (d.latest) {
+      div.appendChild(el("span", {className: "r2-badge", text: "latest"}));
+    }
+    return div;
+  }
+
+  function renderDeltaGroup(label, deltas, open) {
+    if (!deltas || deltas.length === 0) return null;
+    var folder = el("details", {className: "r2-folder"});
+    if (open) folder.setAttribute("open", "");
+    folder.appendChild(el("summary", {text: label}));
+    var group = el("div", {className: "r2-group"});
+    deltas.forEach(function(d) { group.appendChild(renderDelta(d)); });
+    folder.appendChild(group);
+    return folder;
+  }
+
   function buildTree(data) {
     var container = document.getElementById("r2-tree");
     var datasets = data.datasets || {};
     var archives = data.archives || {};
     var hasContent = false;
 
-    // Current releases
-    if ((datasets.monthly && datasets.monthly.length) || (datasets.weekly && datasets.weekly.length)) {
+    // Monthly full bundles
+    if (datasets.monthly && datasets.monthly.length) {
       hasContent = true;
       var section = el("div", {className: "r2-section"});
-      section.appendChild(el("div", {className: "r2-section-title", text: "Current Releases"}));
+      section.appendChild(el("div", {className: "r2-section-title", text: "Monthly Full Bundles"}));
 
-      var mGroup = renderFileGroup("Monthly", datasets.monthly, true);
+      var mGroup = renderFileGroup("datasets/", datasets.monthly, true);
       if (mGroup) section.appendChild(mGroup);
 
-      var wGroup = renderFileGroup("Weekly", datasets.weekly, true);
-      if (wGroup) section.appendChild(wGroup);
-
       container.appendChild(section);
+    }
+
+    // Weekly deltas — each entry links to its delta bundle and manifest
+    var deltas = (data.deltas || []).slice().sort(function(a, b) {
+      if (a.release === "latest") return -1;
+      if (b.release === "latest") return 1;
+      return b.release.localeCompare(a.release);
+    });
+    if (deltas.length) {
+      hasContent = true;
+      var dSection = el("div", {className: "r2-section"});
+      dSection.appendChild(el("div", {className: "r2-section-title", text: "Weekly Deltas"}));
+      var dGroup = renderDeltaGroup("deltas/", deltas, true);
+      if (dGroup) dSection.appendChild(dGroup);
+      container.appendChild(dSection);
     }
 
     // Parquet files (static list — always the same 15 sections at fixed paths)
@@ -275,18 +446,26 @@ curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3
 
 ```text
 datasets/
-  clinvar-gks_00-latest.json.gz         latest monthly release (stable URL)
-  clinvar-gks_YYYY-MM.json.gz           monthly releases (current year)
-
-datasets/weekly/
-  clinvar-gks_00-latest_weekly.json.gz  latest weekly release (stable URL)
-  clinvar-gks_YYYY-MMDD.json.gz         weekly releases (current month only)
+  clinvar-gks_00-latest.json.gz              latest monthly full bundle (stable URL)
+  clinvar-gks_YYYY-MM.json.gz                monthly full bundles (current year)
 
 datasets/parquet/
-  {section}.parquet                     typed Parquet files (always latest release)
+  {section}.parquet                          typed Parquet for the latest monthly full
+
+deltas/00-latest/
+  clinvar-gks-delta_00-latest.json.gz        latest weekly delta bundle (stable URL)
+  manifest.json                              latest delta manifest
+  parquet/{section}.parquet                  typed Parquet for the latest delta
+
+deltas/YYYY-MMDD/
+  clinvar-gks-delta_YYYY-MMDD.json.gz        weekly delta bundle (added + updated records)
+  manifest.json                              per-release change manifest
+  parquet/{section}.parquet                  typed Parquet for the changed records
 
 archives/{YYYY}/
-  clinvar-gks_YYYY-MM.json.gz           monthly releases from prior years
+  clinvar-gks_YYYY-MM.json.gz                monthly full bundles from prior years
+
+index.json                                   release index (datasets, archives, deltas)
 ```
 
 ---
@@ -557,11 +736,13 @@ LIMIT 20;
 
 ## Release Cadence
 
-New releases are published weekly, typically within 1-2 days of each ClinVar XML release.
+A **weekly delta** is published for every ClinVar release, typically within 1-2 days of each ClinVar XML release. Each delta lands under `deltas/<YYYY-MMDD>/` and is mirrored at `deltas/00-latest/`.
 
-**Monthly releases** represent the most current data available at the start of each month. When the first release of a new month is uploaded, the previous month's final weekly release is promoted as that new month's official monthly release and the `00-latest` pointer is updated. Weekly releases within a month do not affect the monthly release or latest pointer.
+A **monthly full bundle** is published once a month. The full for a given month corresponds to the last release of that month and is published retroactively — when the first release of the next month runs. That upload writes `datasets/clinvar-gks_YYYY-MM.json.gz` and updates the `datasets/clinvar-gks_00-latest.json.gz` pointer along with `datasets/parquet/`. Each delta manifest's `checkpoint_full` records which monthly full its chain replays onto.
 
-At month boundaries, the prior month's weekly files are deleted — only the current month's weeklies are retained in `datasets/weekly/`. At year boundaries, the prior year's monthly files are moved to `archives/{YYYY}/`. All monthly archives are retained indefinitely.
+At year boundaries, the prior year's monthly full bundles are moved to `archives/{YYYY}/`. All monthly archives are retained indefinitely.
+
+There is no weekly full bundle — weekly changes are distributed as deltas only. Consumers that need the full weekly state reconstruct it by replaying deltas onto the latest monthly full, as shown in [Consumer Replay Model](#consumer-replay-model).
 
 ---
 
