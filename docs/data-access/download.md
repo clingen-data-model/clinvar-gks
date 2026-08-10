@@ -149,9 +149,9 @@ The manifest describes exactly what changed and which full bundle the delta chai
 
 ### Consumer Replay Model
 
-To reconstruct the current state, take the latest monthly full and replay the contiguous weekly deltas published since it. For each delta, apply the manifest's deletes first, then upsert every record present in the delta bundle — section by section.
+To reconstruct the current state, bootstrap from the monthly full that the latest delta's manifest names in `checkpoint_full`, then replay the contiguous weekly deltas published after it. For each delta, apply the manifest's deletes first, then upsert every record present in the delta bundle — section by section.
 
-Verify chain integrity while replaying: each delta's `baseline_release` must equal the previous delta's `compare_release`, and the earliest delta must root at the manifest's `checkpoint_full` (the release the monthly full was cut from). A mismatch means a weekly release is missing from the chain — re-bootstrap from the monthly full rather than applying a partial chain.
+`checkpoint_full` tells you *which* monthly full to start from (`{path, release}`, where `release` is the `YYYY-MM` of the full). Replay only the deltas from later months — the deltas within the checkpoint's own month are already reflected in the monthly full. Verify chain integrity as you replay: each delta's `baseline_release` must equal the previous delta's `compare_release`. A mismatch means a weekly release is missing from the chain — re-bootstrap from the monthly full rather than applying a partial chain.
 
 ```python
 import gzip
@@ -171,16 +171,24 @@ def fetch_json_gz(url):
         return json.loads(gzip.decompress(r.read()))
 
 
-# 1. Discover releases from the index.
+# 1. The latest delta's manifest names the monthly full to bootstrap from.
+latest = fetch_json(f"{BASE}/deltas/00-latest/manifest.json")
+checkpoint = latest["checkpoint_full"]        # {"path": "datasets/clinvar-gks_2026-06.json.gz",
+                                              #  "release": "2026-06"}  (None on initial rollout,
+                                              #  before any monthly full exists)
+
+# 2. Load that monthly full as the baseline state: {section: {key: record}}.
+state = fetch_json_gz(f"{BASE}/{checkpoint['path']}")
+checkpoint_month = checkpoint["release"]      # "2026-06"
+
+# 3. From the index, take the dated weekly deltas published AFTER the checkpoint month,
+#    oldest -> newest. (A delta dir is named YYYY-MMDD packed as "2026-0706", so the first
+#    7 chars are its YYYY-MM.) Skip the "latest" mirror and any delta in the checkpoint
+#    month or earlier — those are already folded into the monthly full.
 index = fetch_json(f"{BASE}/index.json")
-
-# 2. Load the latest monthly full as the baseline state: {section: {key: record}}.
-state = fetch_json_gz(f"{BASE}/datasets/clinvar-gks_00-latest.json.gz")
-
-# 3. Order the dated weekly deltas oldest -> newest (skip the 00-latest mirror,
-#    which duplicates one of the dated directories).
 deltas = sorted(
-    (d for d in index["deltas"] if d["release"] != "latest"),
+    (d for d in index["deltas"]
+     if d["release"] != "latest" and d["release"][:7] > checkpoint_month),
     key=lambda d: d["release"],
 )
 
@@ -189,9 +197,9 @@ prev_compare = None
 for d in deltas:
     manifest = fetch_json(f"{BASE}/{d['manifest']}")
 
-    # Chain check: this delta must build on the previous delta's compare_release.
-    # The earliest delta must instead root at checkpoint_full (the release the
-    # monthly full was cut from). A mismatch => a missing week; re-bootstrap.
+    # Chain check: after the first, each delta must build on the previous compare_release.
+    # The first delta builds on the checkpoint month's final release. A mismatch => a
+    # missing week; re-bootstrap from the monthly full.
     if prev_compare is not None and manifest["baseline_release"] != prev_compare:
         raise SystemExit(
             f"broken chain before {manifest['release']}: re-bootstrap from a monthly full"
