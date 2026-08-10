@@ -198,6 +198,17 @@ echo ""
 echo "--- Refreshing ${LATEST_PREFIX}/ ---"
 r2_copy "${PREFIX}/${DELTA_NAME}" "${LATEST_PREFIX}/${LATEST_DELTA_NAME}"
 r2_copy "${PREFIX}/manifest.json" "${LATEST_PREFIX}/manifest.json"
+# Clear stale sections from 00-latest/parquet/ before copying THIS release's sections.
+# The delta's per-section parquet set varies release to release, so without a wipe a section
+# from a prior release (that had no changes this release) would linger in 00-latest/parquet/
+# alongside the current sections and misrepresent the latest delta. The bundle + manifest are
+# single files (cleanly overwritten by r2_copy above), so only parquet/ needs this.
+if $DRY_RUN; then
+  echo "  [dry-run] clear ${LATEST_PREFIX}/parquet/ (drop stale prior-release sections)"
+else
+  aws s3 rm "s3://${R2_BUCKET}/${LATEST_PREFIX}/parquet/" --recursive \
+    --endpoint-url "${R2_ENDPOINT}" --profile "${R2_PROFILE}" --quiet 2>/dev/null || true
+fi
 if [[ ${#PARQUET_SECTIONS[@]} -gt 0 ]]; then
   for section in "${PARQUET_SECTIONS[@]}"; do
     r2_copy "${PREFIX}/parquet/${section}.parquet" "${LATEST_PREFIX}/parquet/${section}.parquet"
