@@ -15,8 +15,10 @@ The parent handoff framed Plan 4-A as "make `gks_json_proc` incremental." Invest
   `export-gks-dicts.sh` → `assemble-gks-dicts.py` (`SECTIONS` = dict tables). Those dicts are
   already incremental (Plans 1–3) and already have `delta_<dict>` payloads (`gks_delta_build`).
 - `gks_json_proc`'s four outputs (`gks_catvar`, `gks_scv_statement`, `gks_rcv_statement`,
-  `gks_vcv_statement`) are referenced **only** by the archived `src/scripts/archive/export-gks-files-to-gcs.sh`.
-  They are still built every release and tracked in `gks_change_log`, but never published and never
+  `gks_vcv_statement`) have no live consumer. The archived `src/scripts/archive/export-gks-files-to-gcs.sh`
+  references older `gks_scv_statement_by_ref`/`gks_scv_statement_inline` variants and `gks_catvar` /
+  `gks_vcv_statement` / `gks_rcv_statement` — the current `gks_scv_statement` table has no consumer at all.
+  All four are still built every release and tracked in `gks_change_log`, but never published and never
   given a delta payload (`gks_delta_build` excludes them). They are **fully-inlined** records (all
   `#/...` references resolved) — a form judged less useful than the compact, pointer-referenced bundle.
 - Confirmed with the user (2026-08-09): **no live consumer** of the `gks_json` outputs.
@@ -108,17 +110,33 @@ delta table's shards under the **same section basename** the full export uses.
 5. **Upload** the delta bundle + per-section Parquet + `manifest.json` to `deltas/YYYY-MMDD/` and
    refresh `deltas/00-latest/`; extend `index.json` with a `deltas` list.
 
-### Month-end run (last release of the month) — full
+### Month-end run — full (retroactive, on the first release of the next month)
 
-On the last release of the month, assemble the **full** bundle from that release's always-built
-dicts and upload it directly to the monthly slot (`datasets/` + `datasets/00-latest`). This replaces
-the current `promote_monthly` (which copied a weekly full file — there is no weekly full file any
-more). Weekly releases publish **no** full bundle and do **not** write `datasets/weekly/`.
+"Last release of the month" is only *known* once the next month's first release appears, so the
+month-end full is published **retroactively**, matching the timing (not the mechanism) of today's
+`promote_monthly`:
 
-The full table is still **built in BigQuery every release** (next release's carry-forward baseline);
-only the R2 *publish* cadence changes. "Last release of the month" is detected the same way
-`upload-gks-to-r2.sh` already detects month boundaries (compare the release month against the most
-recent published release's month).
+- On each weekly run, detect a **month boundary** = the current release's month differs from the
+  **previous release's** month. Because `datasets/weekly/` full files are retired (they were the old
+  detection input in `upload-gks-to-r2.sh:152,162-166`), the boundary is derived instead from the
+  **release calendar in BigQuery** — `clinvar_ingest.schema_on(prev_release_date)` gives the prior
+  release date; compare its month to the current release's month. (The newest `deltas/YYYY-MMDD/`
+  dir is an equivalent fallback signal.)
+- When a boundary is detected while processing release **M+1₀** (first of the new month), the
+  **previous** release **Mₙ** (last of the prior month) is the one to promote to full. Its BigQuery
+  dataset is still present, so assemble **Mₙ's** full bundle from **Mₙ's** dicts (a full-mode run of
+  the export→assemble→upload path targeting date `Mₙ`, not the current `M+1₀` release) and upload it
+  to the monthly slot (`datasets/clinvar-gks_YYYY-MM.json.gz` + `datasets/00-latest` +
+  `datasets/parquet/`). Year rollover archives the prior year exactly as today.
+
+Weekly releases (including `M+1₀` itself) publish **only** deltas — **no** full bundle — and do
+**not** write `datasets/weekly/`. The full table is still **built in BigQuery every release** (next
+release's carry-forward baseline); only the R2 *publish* cadence changes.
+
+> **Note:** this "full = re-export a prior release" step means the month-end run exports/assembles a
+> release other than the one just processed. The plan must make this explicit (a full-mode
+> `release-gks.sh <Mₙ>` invocation), since `release-gks.sh` today targets only the current release's
+> `BQ_DATASET`.
 
 ### R2 layout
 
@@ -146,7 +164,7 @@ repointed as part of the cadence change.
   "baseline_release": "2026-07-15",
   "compare_release": "2026-07-20",
   "pipeline_version": "<audit stamp from {S}.gks_pipeline_version>",
-  "checkpoint_full": { "path": "datasets/clinvar-gks_2026-07.json.gz", "release": "2026-07-27" },
+  "checkpoint_full": { "path": "datasets/clinvar-gks_2026-06.json.gz", "release": "2026-06-29" },
   "sections": {
     "variation": { "added": 13975, "updated": 3273, "deleted": ["clinvar:12345", "..."] },
     "vcv":       { "added": 42,    "updated": 1180, "deleted": [] }
@@ -161,7 +179,9 @@ repointed as part of the cadence change.
   rows). A∪U keys are the payload; the manifest carries per-section **counts**, not the full A/U key
   lists (those are derivable from the payload files).
 - `checkpoint_full` names the monthly full this delta chain roots at, so a fallen-behind consumer
-  knows which full to re-bootstrap from.
+  knows which full to re-bootstrap from. Invariant: `checkpoint_full.release` is at or before the
+  earliest replayed delta's `baseline_release` (a checkpoint always **predates** the deltas layered
+  on top of it — in the example the July-20 delta roots at the June monthly full).
 
 ### Consumer model & chain integrity
 
@@ -185,12 +205,36 @@ monthly full. The `baseline_release`/`compare_release` stamps make the chain sel
 
 ### Correctness gate — delta-reconstruction oracle (THE gate for the delta product)
 
-For a tested release pair, prove `baseline dicts − D + upsert(delta A∪U) == current full dicts`,
-per section, via the canonical-row multiset compare (`clinvar_ingest.gks_oracle_compare`, the
-3-arg dup-safe compare used throughout the initiative). Concretely: materialize a reconstructed
-dict = `(baseline_dict WHERE key NOT IN manifest.deleted[section]) UNION ALL delta_<table>`, then
-`gks_oracle_compare(reconstructed, current_full_dict)` must be `(0,0,0)`. Run on the standard test
-pair (baseline `2026-07-15`, compare `2026-07-20`). Clean up `*_recon` scratch datasets when done.
+For a tested release pair, prove `baseline dicts − D − U_old + upsert(delta A∪U) == current full
+dicts`, per section, via the canonical-row multiset compare (`clinvar_ingest.gks_oracle_compare`,
+the 3-arg dup-safe compare used throughout the initiative).
+
+Concretely, materialize the reconstructed dict under the **same table name** as the target dict in a
+separate `_recon` dataset, mirroring the parent design's §1 carry-forward primitive — the delta's
+own keys must be **excluded from the carry-forward arm** (not just the `D` deletes), because a `U`
+key is present in the baseline with its **old** content *and* in `delta_<table>` with its **new**
+content; a plain `UNION ALL` would emit it twice and, under the multiset compare, the stale old row
+would show as `a_only > 0`:
+
+```sql
+CREATE OR REPLACE TABLE `<recon_ds>.<dict_name>` AS
+SELECT <explicit cols> FROM `<baseline_ds>.<dict_name>`
+WHERE <key> NOT IN (SELECT pk FROM manifest.deleted[section])
+  AND <key> NOT IN (SELECT <key> FROM `<release_ds>.delta_<table>`)   -- exclude A∪U keys
+UNION ALL
+SELECT <explicit cols> FROM `<release_ds>.delta_<table>`              -- recomputed A∪U
+```
+
+(Excluding `A` keys is a no-op since they are not in the baseline; the exclusion matters for `U`.)
+Then `gks_oracle_compare('<recon_ds>', '<release_ds>', '<dict_name>')` must be `(0,0,0)`. Run on the
+standard test pair (baseline `2026-07-15`, compare `2026-07-20`). Clean up `*_recon` scratch datasets
+when done.
+
+For the two **merged** sections (`proposition`, `evidenceLine`), the three source delta tables are
+oracled independently against their own targets; this is sound because the three key spaces are
+**disjoint by construction** (SCV/VCV/RCV proposition and evidence-line ids are namespaced by
+accession prefix), so the assemble-time merge into one section is collision-free — the same property
+the full bundle already relies on.
 
 ---
 
@@ -212,10 +256,11 @@ removed), applied to **both** the full and delta JSON bundles. Semantics match
 - Applies to the passthrough sections; **idempotent** on the already-clean KV sections.
 - **JSON bundle only** — the typed Parquet exports keep their columnar form (empty repeated fields
   are schema-valid there).
-- The cost lands on the **monthly** full assembly (weekly is delta-only), so the extra per-record
+- The **bulk** of the cost lands on the **monthly** full assembly; the weekly **delta** assembly
+  pays the same per-record strip but on its much smaller row set. Either way the extra
   parse/strip/re-serialize is affordable. This does mean `stream_passthrough`'s current
   raw-line-passthrough optimization is replaced by parse → strip → re-serialize for passthrough
-  sections.
+  sections (in both the full and delta paths).
 - Purely a publish-layer transform — the BQ tables, change-log, deltas, and the (B)
   reconstruction oracle all operate on the pre-cleanup tables, so cleanup is **orthogonal** to
   incremental correctness. Expect a **one-time content change** in the first cleaned bundle.
