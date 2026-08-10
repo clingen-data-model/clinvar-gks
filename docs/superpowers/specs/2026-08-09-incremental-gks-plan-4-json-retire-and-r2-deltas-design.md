@@ -200,8 +200,10 @@ monthly full. The `baseline_release`/`compare_release` stamps make the chain sel
 - New manifest builder — `gks_change_log` slice → `manifest.json`.
 - `upload-gks-to-r2.sh` (or a delta-specific companion) — delta tree + `index.json` `deltas` list +
   the cadence change (full only at month-end; no weekly full).
-- `release-gks.sh` — cadence-aware: weekly → delta path; month-end → full path. `run-release.sh`
-  Stage 5 calls it as today.
+- `release-gks.sh` — cadence-aware: every weekly run publishes **only** its delta; a detected month
+  boundary **additionally** triggers a retroactive full-mode run for the prior release `Mₙ` (the
+  boundary release `M+1₀` still publishes only its own delta, never a full). `run-release.sh` Stage 5
+  calls it as today.
 
 ### Correctness gate — delta-reconstruction oracle (THE gate for the delta product)
 
