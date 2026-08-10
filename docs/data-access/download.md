@@ -373,7 +373,7 @@ curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3
       container.appendChild(dSection);
     }
 
-    // Parquet files (static list — always the same 15 sections at fixed paths)
+    // Parquet files (static list — always the same 19 sections at fixed paths)
     var parquetSections = [
       "sequenceReference", "location", "allele", "copyNumberCount", "copyNumberChange",
       "gene", "variation", "condition", "conditionSet", "submitter",
