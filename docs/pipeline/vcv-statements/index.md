@@ -4,11 +4,12 @@
 
 VCV statement generation aggregates individual SCV (submission-level) classifications into variant-level summary statements. The process combines submissions across conditions and submission levels to produce a hierarchical set of aggregate classification statements for each variant.
 
-The pipeline is implemented across two stored procedures plus a JSON serialization step:
+The pipeline is implemented across two stored procedures:
 
 1. **`gks_vcv_proc`** — builds the aggregation tables through a two-layer aggregation hierarchy
-2. **`gks_vcv_statement_proc`** — transforms the aggregation tables into GKS-formatted VCV statements with nested evidence lines
-3. **`gks_json_proc`** — serializes the final statements to JSON with null/empty field stripping
+2. **`gks_vcv_statement_proc`** — transforms the aggregation tables into GKS-formatted VCV statements with nested evidence lines, written to `gks_dict_vcv`
+
+`gks_dict_vcv` is the published product for VCV statements. Null/empty field stripping is applied during bundle assembly at export time (`assemble-gks-dicts.py`).
 
 ---
 

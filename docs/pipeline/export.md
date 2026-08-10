@@ -1,8 +1,13 @@
 # Export & Distribute
 
-The final pipeline step exports dictionary tables from BigQuery, assembles them into a single bundled JSON file, exports Parquet files directly from BigQuery, and uploads both to Cloudflare R2 for public distribution.
+The final pipeline step exports the `gks_dict_*` tables from BigQuery, assembles them into a single keyed JSON bundle, exports Parquet files directly from BigQuery, and uploads to Cloudflare R2 for public distribution.
 
-This step runs after `gks_json_proc` has built all dictionary and statement tables.
+The `gks_dict_*` tables **are** the published product — they are built directly by the statement procedures (steps 5–7) and the change-log step (step 8). The retired `gks_json_proc` is not part of this path; its inlined JSON-render tables were never published. See [Retired: gks_json_proc](#retired-gks_json_proc).
+
+Distribution follows a **full + delta** model:
+
+- The complete **monthly full bundle** (JSON + Parquet) is published once a month via `release-gks.sh` / `upload-gks-to-r2.sh`.
+- A **weekly delta** — added and updated records plus a change manifest — is published for every release via `release-gks-delta.sh` / `upload-gks-delta-to-r2.sh`.
 
 ---
 
@@ -113,16 +118,16 @@ The export produces 19 Parquet files — one per dictionary table. Statement and
 
 See [Parquet Files](../data-access/download.md#parquet-files) for download URLs and query examples.
 
-### Step 4: Upload to R2
+### Step 4: Upload the Monthly Full to R2
 
-`upload-gks-to-r2.sh` uploads the assembled bundle and Parquet files to Cloudflare R2 for public access.
+`upload-gks-to-r2.sh` uploads the assembled full bundle and Parquet files to Cloudflare R2. As of the delta distribution model, the full bundle is published **month-end only** — it corresponds to the last release of a month and is uploaded retroactively when the first release of the next month runs.
 
 ```bash
 ./src/scripts/upload-gks-to-r2.sh <export_date> <dataset_version> <bundle_file> [--parquet-dir=DIR] [--dry-run]
 ```
 
 ```bash
-# Upload bundle + Parquet files
+# Upload full bundle + Parquet files
 ./src/scripts/upload-gks-to-r2.sh 2026-06-14 v2_5_0 /tmp/clinvar-gks-2026-06-14.json.gz \
   --parquet-dir=/tmp/clinvar-gks-2026-06-14-parquet
 
@@ -130,14 +135,39 @@ See [Parquet Files](../data-access/download.md#parquet-files) for download URLs 
 ./src/scripts/upload-gks-to-r2.sh 2026-06-14 v2_5_0 /tmp/clinvar-gks-2026-06-14.json.gz --dry-run
 ```
 
-The script manages four R2 directories:
+The script manages the monthly full slots:
 
-- **`datasets/weekly/`** — weekly JSON bundles for the current month (`clinvar-gks_yyyy-mmdd.json.gz`) plus a stable `clinvar-gks_00-latest_weekly.json.gz`
-- **`datasets/`** — monthly JSON bundles for the current year (`clinvar-gks_yyyy-mm.json.gz`) plus a stable `clinvar-gks_00-latest.json.gz`
-- **`datasets/parquet/`** — Parquet files (one per dictionary table), always overwritten with the latest release
-- **`archives/{yyyy}/`** — monthly files from prior years
+- **`datasets/`** — monthly full bundles for the current year (`clinvar-gks_yyyy-mm.json.gz`) plus a stable `clinvar-gks_00-latest.json.gz`
+- **`datasets/parquet/`** — Parquet files (one per dictionary table), always overwritten with the latest monthly full
+- **`archives/{yyyy}/`** — monthly full bundles from prior years
 
-The script auto-detects month and year boundaries. When a new month begins, the last weekly is promoted to a monthly release and the prior month's weekly files are deleted (not archived). When a new year begins, the prior year's monthly files are moved to `archives/{yyyy}/`.
+There is **no weekly full bundle** — weekly changes are published as deltas (see [Step 5](#step-5-publish-the-weekly-delta)). The monthly upload is unconditional; boundary detection now governs only year rollover — when a new year begins, the prior year's monthly full bundles are moved to `archives/{yyyy}/`. After upload, `generate-r2-index.sh` regenerates `index.json`, which lists the monthly `datasets`, the `archives`, and the `deltas`.
+
+### Step 5: Publish the Weekly Delta
+
+`release-gks-delta.sh` publishes the per-release delta for every ClinVar release. It exports the `delta_<dict>` change tables produced by step 8 of the pipeline, assembles a delta bundle (added + updated records, same section structure as the full), merges per-section delta Parquet, builds `manifest.json`, and uploads the delta tree to R2.
+
+```bash
+./src/scripts/release-gks-delta.sh <export_date> <dataset_version> [--start-step=N] [--dry-run]
+```
+
+```bash
+# Publish the weekly delta for a release
+./src/scripts/release-gks-delta.sh 2026-07-06 v2_5_0
+```
+
+The four internal steps are: export delta tables to GCS, assemble the delta bundle, merge delta Parquet, then build the manifest (`build-delta-manifest.py`) and upload (`upload-gks-delta-to-r2.sh`). The uploader writes:
+
+- **`deltas/<yyyy-mmdd>/`** — the delta bundle (`clinvar-gks-delta_<yyyy-mmdd>.json.gz`), `manifest.json`, and `parquet/<section>.parquet`
+- **`deltas/00-latest/`** — a server-side mirror of the most recent delta under stable filenames
+
+`build-delta-manifest.py` derives each section's `added` / `updated` counts and `deleted` primary-key list from the dataset's `gks_change_log`, and records `baseline_release`, `compare_release`, `pipeline_version`, and `counts`. The uploader then resolves `checkpoint_full` — the newest monthly full currently in `datasets/` — so a consumer knows which full bundle the delta chain replays onto. See [Downloads](../data-access/download.md#weekly-deltas) for the manifest shape and the consumer replay model.
+
+---
+
+## Retired: gks_json_proc
+
+`gks_json_proc` previously rendered the statement and dictionary tables into inlined JSON columns. Those render tables were **never published** — the export assembles the bundle directly from the `gks_dict_*` tables — so the procedure has been retired from the hot path. The null/empty stripping it used to perform is now applied during assembly (`assemble-gks-dicts.py`), matching the old `remove_empty` cleanup. `gks_json_proc` is not a live pipeline step and not a downstream consumer of the dictionary tables.
 
 ---
 
@@ -153,15 +183,21 @@ The script auto-detects month and year boundaries. When a new month begins, the 
 
 ## Full Example
 
-A complete release for June 14, 2026:
+Publish the monthly full bundle for June 14, 2026:
 
 ```bash
 ./src/scripts/release-gks.sh 2026-06-14 v2_5_0
 ```
 
-This runs all four steps: export to GCS, assemble JSON bundle, download and merge Parquet, upload to R2.
+This runs Steps 1–4: export to GCS, assemble JSON bundle, download and merge Parquet, upload the monthly full to R2.
 
-Steps 1 and 2 can also be run individually. Steps 3–4 (Parquet download, shard merging, and upload) are handled internally by `release-gks.sh` — use `--start-step` to resume from a specific step.
+Publish the weekly delta for the same release:
+
+```bash
+./src/scripts/release-gks-delta.sh 2026-06-14 v2_5_0
+```
+
+Steps 1 and 2 of the full can also be run individually. Steps 3–4 (Parquet download, shard merging, and upload) are handled internally by `release-gks.sh` — use `--start-step` to resume from a specific step.
 
 ```bash
 # 1. Export dictionary tables to GCS (NDJSON + Parquet)

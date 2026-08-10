@@ -116,9 +116,14 @@ CALL `clinvar_ingest.gks_rcv_statement_proc`(CURRENT_DATE(), FALSE);
 
 ### Step 4: Export & Distribute
 
+The `gks_dict_*` tables are the published product. The monthly full bundle and the weekly delta are published by separate scripts:
+
 ```bash
-# Run the full release pipeline (export, assemble, download Parquet, upload to R2)
+# Monthly full bundle (export, assemble, download Parquet, upload to R2)
 ./src/scripts/release-gks.sh 2026-06-14 v2_5_0
+
+# Weekly delta (added + updated records + change manifest)
+./src/scripts/release-gks-delta.sh 2026-06-14 v2_5_0
 ```
 
 Steps 1 and 2 can also be run individually. Steps 3–4 (Parquet download, shard merging, and upload) are handled internally by `release-gks.sh` — use `--start-step` to resume from a specific step.
