@@ -35,12 +35,12 @@
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_change_log`(on_date DATE)
 BEGIN
   DECLARE tracked ARRAY<STRUCT<name STRING, pk STRING>> DEFAULT [
-    STRUCT('gks_catvar'        AS name, 'id' AS pk),
-    STRUCT('gks_scv_statement',       'id'),
-    STRUCT('gks_rcv_statement',       'id'),
-    STRUCT('gks_vcv_statement',       'id'),
-    -- catvar outputs (Plan 1)
-    STRUCT('gks_dict_variation',              'id'),
+    -- catvar outputs (Plan 1). NOTE: the gks_json JSON-render outputs (gks_catvar,
+    -- gks_scv_statement, gks_rcv_statement, gks_vcv_statement) were REMOVED in Plan 4 —
+    -- gks_json_proc is retired from the hot path, so those tables are no longer built and
+    -- must not be diffed here (missing-table analysis error). The published product is the
+    -- gks_dict_* set below.
+    STRUCT('gks_dict_variation'        AS name, 'id' AS pk),
     STRUCT('gks_dict_sequence_reference',     'key'),
     STRUCT('gks_dict_location',               'key'),
     STRUCT('gks_dict_allele',                 'key'),
@@ -56,8 +56,7 @@ BEGIN
     STRUCT('gks_dict_evidence_line',          'id'),
     STRUCT('gks_dict_scv',                    'id'),
     -- rcv/vcv statement outputs (Plan 3). The 3 per-side `_agg` intermediates are
-    -- deliberately NOT tracked — they feed these dict/proposition/evidence_line
-    -- outputs and the gks_rcv_statement/gks_vcv_statement JSON renders above.
+    -- deliberately NOT tracked — they feed these dict/proposition/evidence_line outputs.
     STRUCT('gks_dict_rcv',                    'id'),
     STRUCT('gks_dict_rcv_proposition',        'key'),
     STRUCT('gks_dict_rcv_evidence_line',      'id'),
