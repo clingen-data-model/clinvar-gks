@@ -71,6 +71,10 @@ extract_parquet_typed() {
   sql=$(<"${schema_path}")
   sql="${sql//\{DATASET\}/${DATASET}}"
   if $DELTA; then
+    # Typed-Parquet can't use src_table() (the table name is embedded inside the schema SQL,
+    # not passed as a CLI arg). Every parquet-schemas/*.sql references exactly ONE
+    # {DATASET}.gks_dict_* table and never uses "gks_dict_" in any alias/column/literal, so
+    # this qualified-reference rewrite is safe. Invariant future schema authors must preserve.
     sql="${sql//.gks_dict_/.delta_gks_dict_}"
   fi
   echo "  Exporting ${sql_file%.sql} -> ${sharded} (Parquet via EXPORT DATA)"

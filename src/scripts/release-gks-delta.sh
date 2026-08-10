@@ -14,6 +14,9 @@ for arg in "$@"; do case "$arg" in
   --start-step=*) START_STEP="${arg#--start-step=}" ;;
   *) echo "ERROR: unknown arg '${arg}'"; exit 1 ;;
 esac; done
+if ! [[ "$START_STEP" =~ ^[1-4]$ ]]; then
+  echo "ERROR: --start-step must be 1, 2, 3, or 4, got '${START_STEP}'"; exit 1
+fi
 
 GCS_BUCKET="clinvar-gks"
 GCS_DELTAS_PREFIX="gks-deltas"
@@ -49,7 +52,7 @@ fi
 if (( START_STEP <= 2 )); then
   echo "=== [2/4] assemble delta bundle ==="
   if $DRY_RUN; then
-    echo "  [dry-run] assemble-gks-dicts.py ${GCS_DELTAS_PATH}/ ${EXPORT_DATE} --delta-name"
+    echo "  [dry-run] assemble-gks-dicts.py ${GCS_DELTAS_PATH}/ ${EXPORT_DATE} --output ${DELTA_BUNDLE}"
   else
     "${PYTHON}" "${SCRIPT_DIR}/assemble-gks-dicts.py" "${GCS_DELTAS_PATH}/" "${EXPORT_DATE}" --output "${DELTA_BUNDLE}"
   fi
@@ -83,7 +86,11 @@ if (( START_STEP <= 4 )); then
   fi
   UPLOAD_ARGS=("${EXPORT_DATE}" "${DELTA_BUNDLE}" "${MANIFEST_FILE}" "--parquet-dir=${DELTA_PARQUET_DIR}")
   $DRY_RUN && UPLOAD_ARGS+=("--dry-run")
-  "${SCRIPT_DIR}/upload-gks-delta-to-r2.sh" "${UPLOAD_ARGS[@]}"
+  if [[ -x "${SCRIPT_DIR}/upload-gks-delta-to-r2.sh" ]]; then
+    "${SCRIPT_DIR}/upload-gks-delta-to-r2.sh" "${UPLOAD_ARGS[@]}"
+  else
+    echo "  NOTE: upload-gks-delta-to-r2.sh not present yet (built in Plan 4 Chunk 4) — skipping R2 upload."
+  fi
 fi
 
 if ! $DRY_RUN; then rm -f "${DELTA_BUNDLE}" "${MANIFEST_FILE}"; rm -rf "${DELTA_PARQUET_DIR}"; fi

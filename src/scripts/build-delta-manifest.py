@@ -4,6 +4,7 @@
 Usage: build-delta-manifest.py <release_date> <dataset_version> <output_path>
 """
 import json
+import os
 import subprocess
 import sys
 
@@ -29,7 +30,7 @@ TABLE_SECTION = {
     "gks_dict_vcv": "vcv",
     "gks_dict_rcv": "rcv",
 }
-PROJECT = "clingen-dev"
+PROJECT = os.environ.get("CLOUDSDK_CORE_PROJECT", "clingen-dev")
 
 
 def bq_json(sql):
@@ -47,10 +48,19 @@ def main():
     release, version, out_path = sys.argv[1], sys.argv[2], sys.argv[3]
     ds = f"clinvar_{release.replace('-', '_')}_{version}"
 
+    # Derive baseline/compare from schema_on (NOT from change-log rows) so a zero-change
+    # release still reports its true baseline instead of a spurious null (which is reserved
+    # for the genuine first release, where prev_release_date IS NULL).
+    rel = bq_json(
+        f"SELECT CAST(release_date AS STRING) AS compare, "
+        f"CAST(prev_release_date AS STRING) AS baseline "
+        f"FROM `clinvar_ingest.schema_on`(DATE '{release}')"
+    )
+    compare = rel[0]["compare"] if rel else release
+    baseline = rel[0]["baseline"] if rel else None   # null only on the true first release
+
     rows = bq_json(
-        f"SELECT table_name, change_type, pk, "
-        f"CAST(baseline_release AS STRING) AS baseline_release, "
-        f"CAST(compare_release AS STRING) AS compare_release "
+        f"SELECT table_name, change_type, pk "
         f"FROM `{ds}.gks_change_log` "
         f"WHERE table_name IN ({','.join(repr(t) for t in TABLE_SECTION)})"
     )
@@ -58,7 +68,6 @@ def main():
     pv = bq_json(f"SELECT ANY_VALUE(audit_stamp) AS a FROM `{ds}.gks_pipeline_version`")
     pipeline_version = pv[0]["a"] if pv and pv[0].get("a") else None
 
-    baseline = compare = None
     sections = {}
     for r in rows:
         sec = TABLE_SECTION[r["table_name"]]
@@ -70,8 +79,6 @@ def main():
             s["updated"] += 1
         elif ct == "D":
             s["deleted"].append(r["pk"])
-        baseline = baseline or r["baseline_release"]
-        compare = compare or r["compare_release"]
 
     totals = {"A": 0, "U": 0, "D": 0}
     for s in sections.values():
@@ -79,8 +86,8 @@ def main():
 
     manifest = {
         "release": release,
-        "baseline_release": baseline,   # null on the first release
-        "compare_release": compare or release,
+        "baseline_release": baseline,   # null only on the genuine first release
+        "compare_release": compare,
         "pipeline_version": pipeline_version,
         "checkpoint_full": None,        # filled by the uploader from current R2 monthly state
         "sections": dict(sorted(sections.items())),

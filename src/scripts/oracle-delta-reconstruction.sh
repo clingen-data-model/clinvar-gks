@@ -6,10 +6,14 @@
 # Usage: ./oracle-delta-reconstruction.sh <baseline_date> <compare_date> <version>
 set -euo pipefail
 BASE="${1:?baseline date}"; COMP="${2:?compare date}"; VER="${3:?version}"
-PROJECT="clingen-dev"
+PROJECT="${CLOUDSDK_CORE_PROJECT:-clingen-dev}"
 BDS="clinvar_${BASE//-/_}_${VER}"
 CDS="clinvar_${COMP//-/_}_${VER}"
 RECON="clinvar_${COMP//-/_}_${VER}_recon"
+
+# Drop the scratch recon dataset on ANY exit (including a mid-loop bq failure), not just the
+# happy path — otherwise set -e would abort before cleanup and leak the dataset.
+trap 'bq --project_id="$PROJECT" rm -r -f -d "$RECON" >/dev/null 2>&1 || true' EXIT
 
 bq --project_id="$PROJECT" mk -f --dataset "$RECON" >/dev/null 2>&1 || true
 
@@ -49,6 +53,5 @@ for pair in "${PAIRS[@]}"; do
   echo "${OUT}" | awk -F, '{ if ($2+$3+$4 != 0) exit 1 }' || { echo "  MISMATCH on ${T}"; FAIL=1; }
 done
 
-bq --project_id="$PROJECT" rm -r -f -d "$RECON" >/dev/null 2>&1 || true
 if (( FAIL )); then echo "FAILED delta reconstruction oracle"; exit 1; fi
 echo "PASSED delta reconstruction oracle: all sections 0,0,0"
