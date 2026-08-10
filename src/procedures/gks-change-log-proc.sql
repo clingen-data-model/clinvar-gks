@@ -54,7 +54,16 @@ BEGIN
     STRUCT('gks_dict_submitter',              'key'),
     STRUCT('gks_dict_proposition',            'key'),
     STRUCT('gks_dict_evidence_line',          'id'),
-    STRUCT('gks_dict_scv',                    'id')
+    STRUCT('gks_dict_scv',                    'id'),
+    -- rcv/vcv statement outputs (Plan 3). The 3 per-side `_agg` intermediates are
+    -- deliberately NOT tracked — they feed these dict/proposition/evidence_line
+    -- outputs and the gks_rcv_statement/gks_vcv_statement JSON renders above.
+    STRUCT('gks_dict_rcv',                    'id'),
+    STRUCT('gks_dict_rcv_proposition',        'key'),
+    STRUCT('gks_dict_rcv_evidence_line',      'id'),
+    STRUCT('gks_dict_vcv',                    'id'),
+    STRUCT('gks_dict_vcv_proposition',        'key'),
+    STRUCT('gks_dict_vcv_evidence_line',      'id')
   ];
   DECLARE i INT64 DEFAULT 0;
   DECLARE t STRUCT<name STRING, pk STRING>;

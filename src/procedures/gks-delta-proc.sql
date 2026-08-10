@@ -6,8 +6,10 @@
 -- upserts it by pk directly). D tombstones are NOT payload rows; they live in the
 -- manifest (gks_change_log) only. Requires gks_change_log to have been built first.
 --
--- `tables` mirrors the catvar+scv-output subset of gks_change_log's `tracked` array
--- (name + pk expression). Keep in sync.
+-- `tables` mirrors the catvar+scv+rcv/vcv-output subset of gks_change_log's `tracked`
+-- array (name + pk expression). Keep in sync. The rcv/vcv `_agg` intermediates are
+-- intentionally excluded (same as gks_change_log): only the published dict/proposition/
+-- evidence_line outputs get delta payloads.
 -- ============================================================================
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_delta_build`(on_date DATE)
 BEGIN
@@ -26,7 +28,14 @@ BEGIN
     STRUCT('gks_dict_submitter',              'key'),
     STRUCT('gks_dict_proposition',            'key'),
     STRUCT('gks_dict_evidence_line',          'id'),
-    STRUCT('gks_dict_scv',                    'id')
+    STRUCT('gks_dict_scv',                    'id'),
+    -- rcv/vcv statement outputs (Plan 3)
+    STRUCT('gks_dict_rcv',                    'id'),
+    STRUCT('gks_dict_rcv_proposition',        'key'),
+    STRUCT('gks_dict_rcv_evidence_line',      'id'),
+    STRUCT('gks_dict_vcv',                    'id'),
+    STRUCT('gks_dict_vcv_proposition',        'key'),
+    STRUCT('gks_dict_vcv_evidence_line',      'id')
   ];
   DECLARE i INT64 DEFAULT 0;
   DECLARE t STRUCT<name STRING, pk STRING>;
