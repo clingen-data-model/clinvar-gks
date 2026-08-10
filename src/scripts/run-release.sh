@@ -171,7 +171,12 @@ if (( START_STEP <= 5 )); then
     else
       PREV_VER="${PREV_DS#clinvar_"${PREV_US}"_}"
       FULL_ARGS=("${PREV_DATE}" "${PREV_VER}"); $DRY_RUN && FULL_ARGS+=("--dry-run")
-      "${REPO_ROOT}/src/scripts/release-gks.sh" "${FULL_ARGS[@]}"
+      # Non-fatal: a transient failure of the retroactive monthly full must NOT suppress the
+      # weekly delta below. The delta chain's integrity does not depend on the full existing
+      # (the full is a checkpoint convenience; contiguous deltas bridge it), and the full is
+      # recoverable by re-running this release.
+      "${REPO_ROOT}/src/scripts/release-gks.sh" "${FULL_ARGS[@]}" \
+        || echo "WARNING: retroactive monthly FULL failed for ${PREV_DATE}; continuing to weekly delta" >&2
     fi
   fi
 
