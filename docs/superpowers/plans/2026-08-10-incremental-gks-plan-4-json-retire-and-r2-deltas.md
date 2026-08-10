@@ -890,26 +890,32 @@ Expected: a retroactive monthly FULL publish for the prior (last-of-July) releas
 
 ---
 
-## Chunk 5: Documentation
+## Chunk 5: Documentation (comprehensive pass)
 
-### Task 5.1: Document the delta product + retired `gks_json`
+The mkdocs site is behind on the whole incremental model (Plans 1–3, already merged) as well as Plan 4 — treat this as a **full audit + rebring-up-to-speed**, not just a delta-product addendum. Use the `write-docs` skill for every page. This chunk is larger than a single task; execute it as an audit → per-area edits → validate loop.
 
-**Files:**
-- Modify/Create under `docs/` (use the `write-docs` skill for structure/tone)
+### Task 5.1: Audit — inventory impacted pages
 
-- [ ] **Step 1: Add/refresh docs** for: the delta product (R2 layout `deltas/<date>/…`, `manifest.json` shape, consumer model = last monthly full + replay contiguous weekly deltas, chain-gap detection), the new cadence (deltas weekly / full month-end), and the retired `gks_json` step. Update `docs/pipeline/` and any "distribution"/"downloads" page. Cross-check `r2-readme.txt` (`src/scripts/r2-readme.txt`) — update the bucket overview to describe `deltas/`.
+**Files:** read-only survey of `docs/` + `mkdocs.yml`.
 
-- [ ] **Step 2: Validate**
+- [ ] **Step 1: Inventory.** List every page and grep for content now stale under the incremental + delta + retired-`gks_json` model. At minimum: `docs/pipeline/` (the whole flow — incremental procs, change-log/delta, retired gks_json, run-release stages), any **downloads/distribution/data-access** page (the R2 layout, the new deltas tree, cadence, consumer replay model), architecture/overview pages, and `mkdocs.yml` nav. Produce a short checklist of pages × what's wrong. Cross-reference the standing "docs rework needed" memo (Parquet-pipeline drift) and fold that in.
 
-Run: `venv/3.12/bin/python3 -m mkdocs build --strict`
-Expected: clean build.
+- [ ] **Step 2: Commit the audit checklist** (as a scratch note in the PR description or a `docs/` TODO comment — no separate commit needed if folded into 5.2).
 
-- [ ] **Step 3: Commit**
+### Task 5.2: Pipeline + architecture pages
 
-```bash
-git add docs/ src/scripts/r2-readme.txt
-git commit -m "docs: R2 delta product, cadence, and retired gks_json step"
-```
+- [ ] **Step 1:** Rewrite `docs/pipeline/` for the current model: incremental build (carry-forward + UNION-CTAS), `dataset_diff` drivers, `gks_change_log` + `gks_delta_build`, the version gate, `run-release.sh` stages, and the retired `gks_json` step (dicts are the product). Remove/repoint every `gks_json_proc` reference.
+- [ ] **Step 2:** `mkdocs build --strict` (clean). **Step 3:** commit.
+
+### Task 5.3: Downloads / distribution / consumer pages
+
+- [ ] **Step 1:** Document the delta product end to end: R2 layout (`datasets/` monthly full, `datasets/parquet/`, `deltas/<YYYY-MMDD>/{bundle,manifest.json,parquet/}`, `deltas/00-latest/`, `archives/`, `index.json`), `manifest.json` shape, the **cadence** (deltas weekly / full only at month-end, retroactive), the **consumer model** (last monthly full + replay contiguous weekly deltas; chain-gap detection via `baseline_release`/`compare_release` + `checkpoint_full`), and the one-time bundle-cleanup content change. Update `src/scripts/r2-readme.txt` (bucket overview) to match.
+- [ ] **Step 2:** `mkdocs build --strict` (clean). **Step 3:** commit `docs: R2 delta product, cadence, consumer model + downloads`.
+
+### Task 5.4: Sweep remaining impacted content + final validate
+
+- [ ] **Step 1:** Grep the whole `docs/` tree for residual stale references (`gks_json`, "full rebuild every release", weekly-full-bundle language, any pre-incremental phrasing) and fix. Update `mkdocs.yml` nav if pages were added.
+- [ ] **Step 2:** `venv/3.12/bin/python3 -m mkdocs build --strict` — clean build, no warnings. **Step 3:** commit.
 
 ---
 
@@ -919,6 +925,37 @@ git commit -m "docs: R2 delta product, cadence, and retired gks_json step"
 - [ ] Re-run the delta-reconstruction oracle on the test pair → all sections `0,0,0`.
 - [ ] Confirm scratch datasets/GCS prefixes are cleaned up (`*_recon`, `gks-deltas-test*`).
 - [ ] Use superpowers:requesting-code-review for a holistic pass, then superpowers:finishing-a-development-branch → stacked PR (base = Plan 3 branch, per the initiative's stacked-PR model; merge order #74 → #75 → #76 → this).
+
+## Production rollout (fresh-start, AFTER build + PR) — user-directed 2026-08-10
+
+Run only after Chunks 1–5 are built, oracle-green, dry-run-clean, and reviewed. This is a **live public
+R2** operation — destructive and outward-facing; get explicit user confirmation at the wipe step.
+
+**Target releases (verified in `clingen-dev`):** first FULL = **2026-06-27** (last June release); first
+delta = **2026-07-06** (first July release; baseline/checkpoint = 06-27); then build forward 07-15, 07-20,
+07-27, … to current.
+
+- [ ] **R1: Point the Chunk-3 reconstruction oracle at the real first pair.** Run
+  `oracle-delta-reconstruction.sh 2026-06-27 2026-07-06 v2_5_0` → all sections `0,0,0` before publishing
+  anything. (Prereq: `gks_change_log` + `gks_delta_build` for 2026-07-06 with baseline 2026-06-27.)
+- [ ] **R2: Back up the current bucket first (irreversible wipe ahead).** Snapshot everything under
+  `s3://clinvar-gks/` to a dated backup (a `pre-plan4-backup-YYYYMMDD/` R2 prefix or a GCS copy) so the
+  current `datasets/`, `archives/`, `README.txt`, `index.json` are recoverable. **Confirm scope with the
+  user** (complete wipe incl. `archives/`, or preserve `archives/`?).
+- [ ] **R3: Wipe R2** (after explicit user OK) — remove all live objects so the new layout starts clean.
+- [ ] **R4: Publish the June-27 FULL as the bootstrap monthly.** Full-mode publish of 2026-06-27
+  (`release-gks.sh 2026-06-27 v2_5_0`, i.e. the month-end/full path) → `datasets/clinvar-gks_2026-06.json.gz`
+  + `datasets/00-latest.json.gz` + `datasets/parquet/`. Dry-run first, then live. Verify the bundle is
+  cleaned (no null/empty leaks).
+- [ ] **R5: Publish the July-06 DELTA.** `release-gks-delta.sh 2026-07-06 v2_5_0` (dry-run then live) →
+  `deltas/2026-0706/{bundle, manifest.json, parquet/}` + `deltas/00-latest/`; `index.json` lists it;
+  `manifest.checkpoint_full` = the June-27 monthly. **Consumer-side acceptance:** apply the published 07-06
+  delta onto the published 06-27 full → byte-equals the 07-06 full dict set (the BQ oracle already proves
+  this; spot-check the published artifacts too).
+- [ ] **R6: Build forward** — run the weekly delta for 07-15, 07-20, 07-27 in order; confirm the delta
+  chain is contiguous (`baseline_release[i] == compare_release[i-1]`). At the first release of the NEXT
+  month, confirm the retroactive July monthly full publishes automatically (Task 4.4 path). Continue to
+  current.
 
 ## Notes / risks carried from the spec
 - **Initial rollout:** until the first month-end monthly full exists, `checkpoint_full` is `null`; the first-ever delta equals the full set (baseline `null`), so a new consumer can bootstrap from it. Document this.
