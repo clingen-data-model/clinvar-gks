@@ -2,22 +2,28 @@
 # export-gks-dicts.sh
 # Export all GKS dictionary tables to GCS as NDJSON and/or Parquet
 #
-# Usage: ./export-gks-dicts.sh <dataset> <gcs_bucket> [prefix] [--parquet-only]
+# Usage: ./export-gks-dicts.sh <dataset> <gcs_bucket> [prefix] [--parquet-only] [--delta]
 # Example: ./export-gks-dicts.sh clinvar_2025_06_08 clinvar-gks gks-dicts
 # Example: ./export-gks-dicts.sh clinvar_2025_06_08 clinvar-gks gks-dicts --parquet-only
 
 set -euo pipefail
 
 # Parse positional args and flags
-DATASET="${1:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only]}"
-BUCKET="${2:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only]}"
+DATASET="${1:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only] [--delta]}"
+BUCKET="${2:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only] [--delta]}"
 PREFIX="${3:-gks-dicts}"
 PARQUET_ONLY=false
+DELTA=false
 for arg in "$@"; do
   case "$arg" in
     --parquet-only) PARQUET_ONLY=true ;;
+    --delta) DELTA=true ;;
   esac
 done
+
+src_table() {           # $1 = base dict table, e.g. gks_dict_scv
+  if $DELTA; then echo "delta_$1"; else echo "$1"; fi
+}
 
 GCS_PATH="gs://${BUCKET}/${PREFIX}"
 PARQUET_PREFIX="${PREFIX}-parquet"
@@ -64,6 +70,9 @@ extract_parquet_typed() {
   local sql
   sql=$(<"${schema_path}")
   sql="${sql//\{DATASET\}/${DATASET}}"
+  if $DELTA; then
+    sql="${sql//.gks_dict_/.delta_gks_dict_}"
+  fi
   echo "  Exporting ${sql_file%.sql} -> ${sharded} (Parquet via EXPORT DATA)"
   bq query --use_legacy_sql=false --nouse_cache \
     "EXPORT DATA OPTIONS(
@@ -79,33 +88,33 @@ if ! $PARQUET_ONLY; then
   echo "Exporting NDJSON files to ${GCS_PATH}"
 
   # Cat-VRS dictionaries (from gks_catvar_proc)
-  extract gks_dict_sequence_reference sequenceReference.ndjson.gz
-  extract gks_dict_location location.ndjson.gz
-  extract gks_dict_allele allele.ndjson.gz
-  extract gks_dict_copy_number_count copyNumberCount.ndjson.gz
-  extract gks_dict_copy_number_change copyNumberChange.ndjson.gz
-  extract gks_dict_gene gene.ndjson.gz
-  extract gks_dict_variation variation.ndjson.gz
+  extract "$(src_table gks_dict_sequence_reference)" sequenceReference.ndjson.gz
+  extract "$(src_table gks_dict_location)" location.ndjson.gz
+  extract "$(src_table gks_dict_allele)" allele.ndjson.gz
+  extract "$(src_table gks_dict_copy_number_count)" copyNumberCount.ndjson.gz
+  extract "$(src_table gks_dict_copy_number_change)" copyNumberChange.ndjson.gz
+  extract "$(src_table gks_dict_gene)" gene.ndjson.gz
+  extract "$(src_table gks_dict_variation)" variation.ndjson.gz
 
   # Condition dictionaries (from gks_scv_condition_proc)
-  extract gks_dict_condition condition.ndjson.gz
-  extract gks_dict_condition_set conditionSet.ndjson.gz
+  extract "$(src_table gks_dict_condition)" condition.ndjson.gz
+  extract "$(src_table gks_dict_condition_set)" conditionSet.ndjson.gz
 
   # SCV dictionaries (from gks_scv_statement_proc)
-  extract gks_dict_submitter submitter.ndjson.gz
-  extract gks_dict_proposition proposition.ndjson.gz
-  extract gks_dict_evidence_line evidenceLine.ndjson.gz
+  extract "$(src_table gks_dict_submitter)" submitter.ndjson.gz
+  extract "$(src_table gks_dict_proposition)" proposition.ndjson.gz
+  extract "$(src_table gks_dict_evidence_line)" evidenceLine.ndjson.gz
 
   # VCV/RCV proposition and evidence line dictionaries
-  extract gks_dict_vcv_proposition vcv_proposition.ndjson.gz
-  extract gks_dict_vcv_evidence_line vcv_evidenceLine.ndjson.gz
-  extract gks_dict_rcv_proposition rcv_proposition.ndjson.gz
-  extract gks_dict_rcv_evidence_line rcv_evidenceLine.ndjson.gz
+  extract "$(src_table gks_dict_vcv_proposition)" vcv_proposition.ndjson.gz
+  extract "$(src_table gks_dict_vcv_evidence_line)" vcv_evidenceLine.ndjson.gz
+  extract "$(src_table gks_dict_rcv_proposition)" rcv_proposition.ndjson.gz
+  extract "$(src_table gks_dict_rcv_evidence_line)" rcv_evidenceLine.ndjson.gz
 
   # Statement outputs
-  extract gks_dict_scv scv.ndjson.gz
-  extract gks_dict_vcv vcv.ndjson.gz
-  extract gks_dict_rcv rcv.ndjson.gz
+  extract "$(src_table gks_dict_scv)" scv.ndjson.gz
+  extract "$(src_table gks_dict_vcv)" vcv.ndjson.gz
+  extract "$(src_table gks_dict_rcv)" rcv.ndjson.gz
 fi
 
 echo ""
@@ -121,7 +130,7 @@ extract_parquet_typed gene.parquet gene.sql
 extract_parquet_typed variation.parquet variation.sql
 
 # Conditions
-extract_parquet gks_dict_condition condition.parquet
+extract_parquet "$(src_table gks_dict_condition)" condition.parquet
 extract_parquet_typed conditionSet.parquet conditionSet.sql
 
 # SCV
