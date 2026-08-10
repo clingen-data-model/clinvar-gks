@@ -163,9 +163,16 @@ if (( START_STEP <= 5 )); then
     echo ">>> [5/5] month boundary: publishing retroactive monthly FULL for ${PREV_DATE}"
     PREV_US="${PREV_DATE//-/_}"
     PREV_DS="$(bq ls --project_id="${PROJECT_ID}" --max_results=10000 | awk '{$1=$1;print}' | grep "^clinvar_${PREV_US}_" | head -n1)"
-    PREV_VER="${PREV_DS#clinvar_"${PREV_US}"_}"
-    FULL_ARGS=("${PREV_DATE}" "${PREV_VER}"); $DRY_RUN && FULL_ARGS+=("--dry-run")
-    "${REPO_ROOT}/src/scripts/release-gks.sh" "${FULL_ARGS[@]}"
+    if [[ -z "${PREV_DS}" ]]; then
+      # Prior month's dataset was pruned — can't rebuild its full. Warn and skip the
+      # retroactive full, but DO NOT abort: the weekly delta below must still publish
+      # (it is decoupled from the full's success).
+      echo "WARNING: no dataset for prior release ${PREV_DATE}; skipping retroactive monthly FULL" >&2
+    else
+      PREV_VER="${PREV_DS#clinvar_"${PREV_US}"_}"
+      FULL_ARGS=("${PREV_DATE}" "${PREV_VER}"); $DRY_RUN && FULL_ARGS+=("--dry-run")
+      "${REPO_ROOT}/src/scripts/release-gks.sh" "${FULL_ARGS[@]}"
+    fi
   fi
 
   echo ">>> [5/5] publishing weekly DELTA for ${DATE}"
