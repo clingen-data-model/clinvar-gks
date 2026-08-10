@@ -27,6 +27,7 @@ Dependencies:
 import argparse
 import gzip
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -52,6 +53,10 @@ except ImportError:
 
     def json_dumps_key(key):
         return json.dumps(key)
+
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gks_json_cleanup import strip_empty
 
 
 # Dictionary sections in output order.
@@ -130,23 +135,22 @@ def open_local_file(path):
 
 
 def stream_passthrough(filepath, key_field):
-    """
-    Yield (key_json, raw_line) pairs. Parses only the key field;
-    passes the raw JSON line through as the value to avoid re-serialization.
-    """
+    """Yield (key_json, value_json) pairs; the value is the record with null/empty
+    values stripped (remove_empty parity)."""
     with open_local_file(filepath) as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             rec = json_loads(line)
-            yield json_dumps_key(rec[key_field]), line
+            cleaned = strip_empty(rec)
+            yield json_dumps_key(rec[key_field]), json_dumps_key(cleaned)
 
 
 def stream_kv(filepath, key_field, value_field):
     """
     Yield (key_json, value_json) pairs from key/value NDJSON records.
-    String values are passed through directly without re-serialization.
+    The value (a JSON string or object) is stripped for remove_empty parity.
     """
     with open_local_file(filepath) as f:
         for line in f:
@@ -156,7 +160,8 @@ def stream_kv(filepath, key_field, value_field):
             rec = json_loads(line)
             key_json = json_dumps_key(rec[key_field])
             raw = rec[value_field]
-            value_json = raw if isinstance(raw, str) else json_dumps_key(raw)
+            obj = json_loads(raw) if isinstance(raw, str) else raw
+            value_json = json_dumps_key(strip_empty(obj))
             yield key_json, value_json
 
 
@@ -216,28 +221,20 @@ def assemble(source, output_path, is_gcs):
                 entry_count = 0
                 first_entry = True
 
-                if value_field is None:
-                    for filepath in local_files:
-                        for key_json, raw_json in stream_passthrough(filepath, key_field):
-                            if not first_entry:
-                                buf.extend(b",\n")
-                            first_entry = False
-                            buf.extend(f"    {key_json}: {raw_json}".encode())
-                            entry_count += 1
-                            if len(buf) >= WRITE_BUFFER_SIZE:
-                                out.write(bytes(buf))
-                                buf.clear()
-                else:
-                    for filepath in local_files:
-                        for key_json, value_json in stream_kv(filepath, key_field, value_field):
-                            if not first_entry:
-                                buf.extend(b",\n")
-                            first_entry = False
-                            buf.extend(f"    {key_json}: {value_json}".encode())
-                            entry_count += 1
-                            if len(buf) >= WRITE_BUFFER_SIZE:
-                                out.write(bytes(buf))
-                                buf.clear()
+                for filepath in local_files:
+                    if value_field is None:
+                        pairs = stream_passthrough(filepath, key_field)
+                    else:
+                        pairs = stream_kv(filepath, key_field, value_field)
+                    for key_json, value_json in pairs:
+                        if not first_entry:
+                            buf.extend(b",\n")
+                        first_entry = False
+                        buf.extend(f"    {key_json}: {value_json}".encode())
+                        entry_count += 1
+                        if len(buf) >= WRITE_BUFFER_SIZE:
+                            out.write(bytes(buf))
+                            buf.clear()
 
                 buf.extend(b"\n  }")
                 section_count += 1
