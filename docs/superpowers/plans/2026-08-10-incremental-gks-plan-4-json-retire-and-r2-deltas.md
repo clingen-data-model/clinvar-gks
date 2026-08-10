@@ -668,20 +668,21 @@ RECON="clinvar_${COMP//-/_}_${VER}_recon"
 
 bq --project_id="$PROJECT" mk -f --dataset "$RECON" >/dev/null 2>&1 || true
 
-# base dict table -> (pk expr). Merged sections listed per underlying table.
-declare -A PK=(
-  [gks_dict_sequence_reference]=key [gks_dict_location]=key [gks_dict_allele]=key
-  [gks_dict_copy_number_count]=key [gks_dict_copy_number_change]=key [gks_dict_gene]=key
-  [gks_dict_submitter]=key [gks_dict_proposition]=key [gks_dict_vcv_proposition]=key
-  [gks_dict_rcv_proposition]=key
-  [gks_dict_variation]=id [gks_dict_condition]=id [gks_dict_condition_set]=id
-  [gks_dict_evidence_line]=id [gks_dict_vcv_evidence_line]=id [gks_dict_rcv_evidence_line]=id
-  [gks_dict_scv]=id [gks_dict_vcv]=id [gks_dict_rcv]=id
+# base dict table + pk expr as "table pk" pairs (indexed array — works on macOS bash 3.2;
+# `declare -A` associative arrays do NOT). Merged sections listed per underlying table.
+PAIRS=(
+  "gks_dict_sequence_reference key" "gks_dict_location key" "gks_dict_allele key"
+  "gks_dict_copy_number_count key" "gks_dict_copy_number_change key" "gks_dict_gene key"
+  "gks_dict_submitter key" "gks_dict_proposition key" "gks_dict_vcv_proposition key"
+  "gks_dict_rcv_proposition key"
+  "gks_dict_variation id" "gks_dict_condition id" "gks_dict_condition_set id"
+  "gks_dict_evidence_line id" "gks_dict_vcv_evidence_line id" "gks_dict_rcv_evidence_line id"
+  "gks_dict_scv id" "gks_dict_vcv id" "gks_dict_rcv id"
 )
 
 FAIL=0
-for T in "${!PK[@]}"; do
-  K="${PK[$T]}"
+for pair in "${PAIRS[@]}"; do
+  T="${pair%% *}"; K="${pair##* }"
   # reconstruct into RECON.<T>
   bq --project_id="$PROJECT" query --quiet --use_legacy_sql=false "
     CREATE OR REPLACE TABLE \`${RECON}.${T}\` AS
