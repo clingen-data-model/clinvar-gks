@@ -152,9 +152,24 @@ if (( START_STEP <= 5 )); then
   DATASET_VERSION="${DATASET_ID#clinvar_"${DATE_US}"_}"
   echo "    dataset=${DATASET_ID} version=${DATASET_VERSION}"
 
-  RELEASE_ARGS=("${DATE}" "${DATASET_VERSION}")
-  $DRY_RUN && RELEASE_ARGS+=("--dry-run")
-  "${REPO_ROOT}/src/scripts/release-gks.sh" "${RELEASE_ARGS[@]}"
+  # Resolve previous release + month-boundary (retroactive monthly full).
+  PREV_DATE="$(bq --project_id="${PROJECT_ID}" query --use_legacy_sql=false --format=csv --quiet \
+    "SELECT CAST(prev_release_date AS STRING) FROM \`clinvar_ingest.schema_on\`(DATE '${DATE}')" \
+    | tail -n1 | tr -d '[:space:]')"
+
+  DELTA_ARGS=("${DATE}" "${DATASET_VERSION}"); $DRY_RUN && DELTA_ARGS+=("--dry-run")
+
+  if [[ -n "${PREV_DATE}" && "${PREV_DATE:0:7}" != "${DATE:0:7}" ]]; then
+    echo ">>> [5/5] month boundary: publishing retroactive monthly FULL for ${PREV_DATE}"
+    PREV_US="${PREV_DATE//-/_}"
+    PREV_DS="$(bq ls --project_id="${PROJECT_ID}" --max_results=10000 | awk '{$1=$1;print}' | grep "^clinvar_${PREV_US}_" | head -n1)"
+    PREV_VER="${PREV_DS#clinvar_"${PREV_US}"_}"
+    FULL_ARGS=("${PREV_DATE}" "${PREV_VER}"); $DRY_RUN && FULL_ARGS+=("--dry-run")
+    "${REPO_ROOT}/src/scripts/release-gks.sh" "${FULL_ARGS[@]}"
+  fi
+
+  echo ">>> [5/5] publishing weekly DELTA for ${DATE}"
+  "${REPO_ROOT}/src/scripts/release-gks-delta.sh" "${DELTA_ARGS[@]}"
 fi
 
 echo "=== run-release ${DATE} complete ==="
