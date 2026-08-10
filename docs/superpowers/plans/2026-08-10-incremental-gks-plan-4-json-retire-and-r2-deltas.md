@@ -73,10 +73,10 @@ Run (on the existing compare dataset, which still has the old gks_json tables fr
 bq query --project_id=clingen-dev --use_legacy_sql=false \
  "CALL \`clinvar_ingest.gks_change_log\`(DATE '2026-07-20');
   SELECT COUNTIF(table_name IN ('gks_catvar','gks_scv_statement','gks_rcv_statement','gks_vcv_statement')) AS retired_rows,
-         COUNT(DISTINCT table_name) AS tracked_tables
+         COUNT(DISTINCT table_name) AS tables_with_changes
   FROM \`clinvar_2026_07_20_v2_5_0.gks_change_log\`"
 ```
-Expected: `retired_rows = 0`, `tracked_tables` = 20 (the dict set). No error.
+Expected (hard assertion): `retired_rows = 0` and no error. `tables_with_changes` is only the tracked tables that had ≥1 A/U/D row this week (≤ 20 — low-churn dicts can legitimately have zero), so do **not** assert `== 20`; the real invariant is that none of the four retired names appear.
 
 - [ ] **Step 4: Commit**
 
@@ -131,6 +131,11 @@ git commit -m "feat(delta): retire gks_json_proc from the incremental pipeline (
 ```
 
 (Adjust adjacent step numbers/arrows so the diagram stays consistent. `gks_json_proc` is no longer in the flow.)
+
+- [ ] **Step 1b: Sweep remaining stale `gks_json` references.** Also remove/annotate the runnable example `CALL clinvar_ingest.gks_json_proc(CURRENT_DATE(), 'all');` at `docs/pipeline/index.md:113` (drop it or mark it retired). Then confirm no other live doc/script still invokes it:
+
+Run: `grep -rn "gks_json_proc" docs/ src/scripts/ | grep -v "archive/"`
+Expected: no `CALL`/invocation lines remain (comments noting the retirement are fine). Optionally tidy the now-stale proc comments in `src/procedures/gks-change-log-proc.sql:58-60` (the "gks_rcv_statement/gks_vcv_statement JSON renders above" phrasing) — those renders are no longer tracked.
 
 - [ ] **Step 2: Validate docs build**
 
@@ -382,7 +387,7 @@ src_table() {           # $1 = base dict table, e.g. gks_dict_scv
   fi
 ```
 
-- [ ] **Step 4: Parameterize the GCS output prefix.** Add a 4th optional positional or a `--gcs-prefix=` so delta and full exports don't collide. Default keeps today's `gks-dicts` / `gks-dicts-parquet`; delta runs pass `gks-deltas` / `gks-deltas-parquet` (wired from Task 3.2). Ensure `PARQUET_PREFIX`/`GCS_PARQUET_PATH` derive from the passed prefix.
+- [ ] **Step 4: Confirm the GCS prefix already parameterizes output — no change needed.** `export-gks-dicts.sh:14` already takes the 3rd positional `PREFIX="${3:-gks-dicts}"` and derives both `GCS_PATH` and `PARQUET_PREFIX`/`GCS_PARQUET_PATH` from it, so delta runs just pass `gks-deltas` as the prefix (Task 3.2 does this). Do **not** add a 4th positional or `--gcs-prefix=` (would collide with the new `--delta` flag in the `for arg` loop). Keep only the `--delta` / `src_table` / typed-substitution edits from Steps 1-3.
 
 - [ ] **Step 5: Manual verify (delta export to a scratch GCS prefix)**
 
@@ -405,7 +410,7 @@ git commit -m "feat(delta): --delta export mode over delta_<dict> tables (NDJSON
 **Files:**
 - Create: `src/scripts/release-gks-delta.sh`
 
-Mirrors `release-gks.sh` steps 1-3 but on delta tables and with a different output name + GCS prefix; adds a manifest step (Task 3.3); hands the delta dir to the delta uploader (Task 4.1). This task creates the export+assemble+manifest orchestration; the upload call is stubbed until Chunk 4.
+Mirrors `release-gks.sh` steps 1-3 but on delta tables and with a different output name + GCS prefix; adds a manifest step (Task 3.3); hands the delta dir to the delta uploader (Task 4.2). This task creates the export+assemble+manifest orchestration; the upload call is stubbed until Chunk 4.
 
 - [ ] **Step 1: Write the script.** Full content:
 
@@ -502,12 +507,12 @@ if ! $DRY_RUN; then rm -f "${DELTA_BUNDLE}" "${MANIFEST_FILE}"; rm -rf "${DELTA_
 echo "=== DELTA release ${EXPORT_DATE} complete ==="
 ```
 
-- [ ] **Step 2: Add an `--output` option to `assemble-gks-dicts.py`.** Currently the output path is derived from the date (`/tmp/clinvar-gks-{date}.json.gz`). Add an optional `--output PATH` arg that overrides `derive_output_path`. Keep the default behavior when absent. (This lets the delta bundle be named `clinvar-gks-delta-{date}.json.gz`.)
+- [ ] **Step 2: Add an `--output` option to `assemble-gks-dicts.py`.** Currently the output path is derived from the date (`/tmp/clinvar-gks-{date}.json.gz`). Add an optional `--output PATH` arg that overrides `derive_output_path`. Keep the default behavior when absent. (This lets the delta bundle be named `clinvar-gks-delta-{date}.json.gz`.) Update the module docstring/Usage block (lines ~8, 11-22) to document `--output`.
 
 - [ ] **Step 3: `chmod +x` + syntax check**
 
-Run: `chmod +x src/scripts/release-gks-delta.sh && bash -n src/scripts/release-gks-delta.sh && bash -n src/scripts/assemble-gks-dicts.py 2>/dev/null; venv/3.12/bin/python3 -c "import ast; ast.parse(open('src/scripts/assemble-gks-dicts.py').read())"`
-Expected: no syntax errors.
+Run: `chmod +x src/scripts/release-gks-delta.sh && bash -n src/scripts/release-gks-delta.sh && venv/3.12/bin/python3 -c "import ast; ast.parse(open('src/scripts/assemble-gks-dicts.py').read())"`
+Expected: no syntax errors. (Don't `bash -n` the `.py` — it's Python; the `ast.parse` is the real check.)
 
 - [ ] **Step 4: Commit**
 
@@ -730,20 +735,48 @@ git commit -m "test(delta): delta-reconstruction oracle (baseline - D - U_old + 
 
 Publish the delta tree to R2 weekly, switch the full bundle to month-end-only (retroactive), and wire it into `run-release.sh`. Test with `--dry-run` (no R2 writes) before any live publish.
 
-### Task 4.1: `upload-gks-delta-to-r2.sh` (delta tree + index)
+**Authored first** (both uploaders call it): Task 4.1 (`generate-r2-index.sh`) → Task 4.2 (delta uploader) → Task 4.3 (month-end full uploader) → Task 4.4 (cadence) → Task 4.5 (dry-run).
+
+### Task 4.1: Shared `generate-r2-index.sh`
+
+**Files:**
+- Create: `src/scripts/generate-r2-index.sh`
+
+One `index.json` generator listing `datasets` (monthly), `archives`, and `deltas`, reflecting current R2 state. Called by both uploaders (Tasks 4.2, 4.3) so the index is consistent regardless of which ran. **Author this before the uploaders** — they invoke it under `set -e`, so it must exist for their dry-runs.
+
+- [ ] **Step 1: Write it.** Reuse the R2 config + `r2_ls`/`r2_ls_with_size`/`r2_upload` helpers. Sections:
+  - `datasets.monthly`: `build_file_array "datasets/" "${LATEST_MONTHLY}"` (drop the weekly section entirely).
+  - `archives`: unchanged per-year discovery.
+  - `deltas`: list `deltas/` release dirs; for each, include `{release, path, manifest: "deltas/<r>/manifest.json"}` and (optional) its `baseline_release`/`compare_release`/`checkpoint_full` by fetching the manifest (or leave to consumers). Keep it lean: list release dirs + manifest paths + mark `deltas/00-latest`.
+  - Write `index.json` (`application/json`).
+  - Honor `--dry-run` (print, no writes).
+
+- [ ] **Step 2: Syntax check**
+
+Run: `chmod +x src/scripts/generate-r2-index.sh && bash -n src/scripts/generate-r2-index.sh`
+Expected: no errors.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/scripts/generate-r2-index.sh
+git commit -m "feat(delta): shared R2 index generator (monthly + archives + deltas)"
+```
+
+### Task 4.2: `upload-gks-delta-to-r2.sh` (delta tree + index)
 
 **Files:**
 - Create: `src/scripts/upload-gks-delta-to-r2.sh`
 
-Uploads `deltas/<YYYY-MMDD>/{clinvar-gks-delta_<date>.json.gz, manifest.json, parquet/<section>.parquet}` + refreshes `deltas/00-latest/`, then regenerates `index.json` (Task 4.3). Resolves `checkpoint_full` = the newest `datasets/clinvar-gks_YYYY-MM.json.gz` monthly full currently in R2 and patches it into the manifest before upload.
+Uploads `deltas/<YYYY-MMDD>/{clinvar-gks-delta_<date>.json.gz, manifest.json, parquet/<section>.parquet}` + refreshes `deltas/00-latest/`, then regenerates `index.json` (Task 4.1). Resolves `checkpoint_full` = the newest `datasets/clinvar-gks_YYYY-MM.json.gz` monthly full currently in R2 and patches it into the manifest before upload.
 
-- [ ] **Step 1: Write the uploader.** Reuse the R2 config + `r2_upload`/`r2_ls`/`r2_copy` helpers from `upload-gks-to-r2.sh` (copy the config block + helpers; factor to a shared file only if Task 4.3 does so). Full behavior:
+- [ ] **Step 1: Write the uploader.** Reuse the R2 config + `r2_upload`/`r2_ls`/`r2_copy` helpers from `upload-gks-to-r2.sh` (copy the config block + helpers; factor to a shared file only if convenient). Full behavior:
   - Args: `<export_date> <delta_bundle> <manifest_file> [--parquet-dir=DIR] [--dry-run]`.
   - `PREFIX="deltas/${YEAR}-${MMDD}"`.
   - Resolve `checkpoint_full`: `r2_ls "datasets/clinvar-gks_"` filtered to `YYYY-MM.json.gz` (exclude `00-latest`), take the lexically-last → patch `manifest.checkpoint_full = {path, release}` via a tiny `python3 -c` in-place edit (or `jq` if available; prefer `python3` for portability). If none exists yet (initial rollout), leave `null` and log a warning.
   - Upload bundle → `${PREFIX}/clinvar-gks-delta_${YEAR}-${MMDD}.json.gz`; manifest → `${PREFIX}/manifest.json` (`application/json`); each `parquet-dir/*.parquet` → `${PREFIX}/parquet/<section>.parquet` (`application/vnd.apache.parquet`).
   - Refresh `deltas/00-latest/`: copy the three artifact kinds to `deltas/00-latest/…` (overwrite).
-  - Call `generate-r2-index.sh` (Task 4.3) at the end.
+  - Call `generate-r2-index.sh` (Task 4.1) at the end.
   - Honor `--dry-run` (print, no writes) exactly like `upload-gks-to-r2.sh`.
 
 - [ ] **Step 2: Syntax check**
@@ -765,7 +798,7 @@ git add src/scripts/upload-gks-delta-to-r2.sh
 git commit -m "feat(delta): upload-gks-delta-to-r2.sh (delta tree + 00-latest + checkpoint resolve)"
 ```
 
-### Task 4.2: Switch `upload-gks-to-r2.sh` to month-end full-only
+### Task 4.3: Switch `upload-gks-to-r2.sh` to month-end full-only
 
 **Files:**
 - Modify: `src/scripts/upload-gks-to-r2.sh`
@@ -776,9 +809,9 @@ The full bundle is no longer published weekly. This script becomes the **monthly
 
 - [ ] **Step 2: Replace `promote_monthly` with a direct monthly upload.** Instead of copying a (now-absent) weekly file, upload the passed bundle directly to `datasets/clinvar-gks_${YEAR}-${MM}.json.gz` and `datasets/${LATEST_MONTHLY}`. The caller passes the last-of-month release's assembled full bundle (Task 4.4 targets `Mₙ`).
 
-- [ ] **Step 3: Fix month/year boundary detection.** `detect_boundaries` currently derives the prior month from `datasets/weekly/` filenames, which are gone. Replace with detection from `datasets/clinvar-gks_YYYY-MM.json.gz` monthly filenames (the most recent monthly full's `YYYY-MM` vs the release being published). Year rollover archiving keys off the same monthly listing.
+- [ ] **Step 3: Fix month/year boundary detection.** `detect_boundaries` currently derives the prior month from `datasets/weekly/` filenames, which are gone. This uploader now always publishes the passed bundle **unconditionally to the monthly slot** (the caller only invokes it for the retroactive month-end full — Task 4.4), so the only remaining use of boundary detection is **year-rollover archiving**: list `datasets/clinvar-gks_YYYY-MM.json.gz` monthly filenames, and if the newest existing monthly's year differs from the release being published, run `archive_yearly` (move prior-year monthlies to `archives/{yyyy}/`) before uploading. No weekly-derived detection remains.
 
-- [ ] **Step 4: Delegate `index.json` to the shared generator** (Task 4.3) — remove the inline `generate_index` (which listed weekly) and call `generate-r2-index.sh`.
+- [ ] **Step 4: Delegate `index.json` to the shared generator** (Task 4.1) — remove the inline `generate_index` (which listed weekly) and call `generate-r2-index.sh`.
 
 - [ ] **Step 5: Syntax check + dry-run**
 
@@ -793,32 +826,6 @@ Expected: no syntax errors; dry-run prints monthly-slot + parquet + index target
 ```bash
 git add src/scripts/upload-gks-to-r2.sh
 git commit -m "feat(delta): full bundle publishes to monthly slot only (weekly full retired)"
-```
-
-### Task 4.3: Shared `generate-r2-index.sh`
-
-**Files:**
-- Create: `src/scripts/generate-r2-index.sh`
-
-One `index.json` generator listing `datasets` (monthly), `archives`, and `deltas`, reflecting current R2 state. Called by both uploaders so the index is consistent regardless of which ran.
-
-- [ ] **Step 1: Write it.** Reuse the R2 config + `r2_ls`/`r2_ls_with_size`/`r2_upload` helpers. Sections:
-  - `datasets.monthly`: `build_file_array "datasets/" "${LATEST_MONTHLY}"` (drop the weekly section entirely).
-  - `archives`: unchanged per-year discovery.
-  - `deltas`: list `deltas/` release dirs; for each, include `{release, path, manifest: "deltas/<r>/manifest.json"}` and (optional) its `baseline_release`/`compare_release`/`checkpoint_full` by fetching the manifest (or leave to consumers). Keep it lean: list release dirs + manifest paths + mark `deltas/00-latest`.
-  - Write `index.json` (`application/json`).
-  - Honor `--dry-run`.
-
-- [ ] **Step 2: Syntax check**
-
-Run: `chmod +x src/scripts/generate-r2-index.sh && bash -n src/scripts/generate-r2-index.sh`
-Expected: no errors.
-
-- [ ] **Step 3: Commit**
-
-```bash
-git add src/scripts/generate-r2-index.sh
-git commit -m "feat(delta): shared R2 index generator (monthly + archives + deltas)"
 ```
 
 ### Task 4.4: Cadence wiring in `run-release.sh` Stage 5
