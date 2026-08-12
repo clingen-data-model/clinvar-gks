@@ -298,7 +298,12 @@ Expected: exactly `Disease`/`Phenotype`/`Condition`/`Trait`; NO `Finding`/`Named
 - [ ] superpowers:requesting-code-review, then superpowers:finishing-a-development-branch → **stacked PR** (base = `chore/update-va-spec-1.1.0-ballot-2026-07-2`).
 
 ## Notes / risks
+- **DOC-SITE FOLLOW-UP (eventually, not blocking):** publish the Chunk-6 ClinVar→va-spec `conceptType`
+  mapping table (`Disease→Disease`, `Finding→Phenotype`, `DrugResponse→Condition`,
+  `BloodGroup`/`NamedProteinVariant`/`PhenotypeInstruction`→`Trait`) on the doc site — e.g. a
+  Conditions & Traits reference page under `docs/pipeline/conditions-and-traits/` (use the `write-docs`
+  skill). Track as a follow-on docs task after Phase 1 lands.
 - **Qualifiers `value` as JSON** — chosen because the 3 SCV qualifier temps have differing MappableConcept struct schemas (gene has `mappings`; moi/penetrance have `extensions`), so a uniform `ARRAY<STRUCT<name,value>>` needs `value JSON`. Verify the emitted `qualifiers[].value` renders as the MappableConcept object (not a JSON-string) in the bundle.
-- **VCV ConditionSet (Chunk 4)** and **Oncogenicity objectTumorType (Chunk 5)** are investigate-first and may reveal larger/blocked work — surface to the controller rather than fabricating.
+- **VCV synthetic ConditionSets (Chunk 4)** are a new `gks_dict_condition_set` producer touching the incremental/delta cascade — the riskiest chunk; re-review before executing.
 - **Delta churn** — every custom proposition's `value` changes; expect a one-time full custom-proposition delta on the next release (no code change).
 - **Standard "unchanged"** means shape-preserved, not that Chunks 4-5 are optional — they are true conformance fixes.
