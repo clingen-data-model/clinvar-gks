@@ -216,43 +216,53 @@ Expected: `tt` set, `oc` null. (No separate commit — the change lands in the C
 
 ---
 
-## Chunk 6: Condition `conceptType` — map `Finding` → `Phenotype`
+## Chunk 6: Condition `conceptType` — map ClinVar trait types to the va-spec enum
 
-**Decision (user, 2026-08-12):** KEEP the current `conceptType` (`t.type`, the ClinVar trait type) as
-developed; the ONLY change is to map the value `Finding` → `Phenotype` (ClinVar "Finding" traits are
-phenotypes). Do NOT remap the other values. `gks_dict_condition.conceptType` is set at
-`gks-scv-condition-proc.sql:92`; conditions are referenced by pointer so this propagates to every
-proposition's `objectCondition`/`object`/`objectTumorType`. (Verified `2026-07-20`: 2,213 `Finding`
-conditions become `Phenotype`; `Disease`/`NamedProteinVariant`/`DrugResponse`/`BloodGroup`/
-`PhenotypeInstruction` unchanged.)
+**Decision (user, 2026-08-12):** map `gks_dict_condition.conceptType` (currently `t.type`, the ClinVar
+trait type) to the standard va-spec Condition `conceptType` enum `[Condition, Phenotype, Disease, Trait,
+Absent]`, so every value is conformant **without** needing a custom-enum extension. Mapping (verified
+counts on `2026-07-20`):
 
-**Dependency (user-owned schema change):** the retained non-standard values (`NamedProteinVariant`,
-`DrugResponse`, `BloodGroup`, `PhenotypeInstruction`) are NOT in the base va-spec Condition
-`conceptType` set — the **user is extending the Condition `conceptType` to allow custom enumerations** so
-these remain schema-valid. The Chunk-7 conformance validator must run against that **extended** Condition
-schema (once the user's change lands + is regenerated), or those conditions will falsely fail validation.
-This chunk does NOT modify the Condition enum itself.
+| ClinVar `t.type` | → conceptType |
+|---|---|
+| `Disease` (18,840) | `Disease` |
+| `Finding` (2,213) | `Phenotype` |
+| `DrugResponse` (162) | `Condition` |
+| `BloodGroup` (46), `NamedProteinVariant` (1,104), `PhenotypeInstruction` (1) | `Trait` |
+| anything else (unexpected) | `Condition` (safe fallback) |
 
-### Task 6.1: Map `Finding` → `Phenotype`
+`gks-scv-condition-proc.sql:92`; conditions are referenced by pointer, so this single fix propagates to
+every proposition's `objectCondition`/`object`/`objectTumorType`. Result: `conceptType` ∈
+`{Disease, Phenotype, Condition, Trait}` only.
+
+### Task 6.1: Apply the conceptType mapping
 
 **Files:** Modify `src/procedures/gks-scv-condition-proc.sql:92`.
 
 - [ ] **Step 1: Replace** `t.type as conceptType,` with:
 
 ```sql
-        IF(t.type = 'Finding', 'Phenotype', t.type) as conceptType,
+        CASE t.type
+          WHEN 'Disease' THEN 'Disease'
+          WHEN 'Finding' THEN 'Phenotype'
+          WHEN 'DrugResponse' THEN 'Condition'
+          WHEN 'BloodGroup' THEN 'Trait'
+          WHEN 'NamedProteinVariant' THEN 'Trait'
+          WHEN 'PhenotypeInstruction' THEN 'Trait'
+          ELSE 'Condition'
+        END as conceptType,
 ```
 
-- [ ] **Step 2: Deploy + verify** — no `Finding` remains; `Phenotype` count rose by the former `Finding` count; other values unchanged:
+- [ ] **Step 2: Deploy + verify** — only `{Disease, Phenotype, Condition, Trait}` remain, with the counts implied by the mapping (Phenotype≈2,213; Trait≈1,151; Condition≈162 + any fallback; Disease≈18,840):
 
 ```bash
 bq query --project_id=clingen-dev --use_legacy_sql=false --format=pretty \
  "CALL \`clinvar_ingest.gks_scv_condition_proc\`(DATE '2026-07-20', FALSE);
   SELECT conceptType, COUNT(*) n FROM \`clinvar_2026_07_20_v2_5_0.gks_dict_condition\` GROUP BY 1 ORDER BY n DESC"
 ```
-Expected: no `Finding` row; `Phenotype` present (~2,213); `Disease`/`NamedProteinVariant`/etc. unchanged.
+Expected: exactly `Disease`/`Phenotype`/`Condition`/`Trait`; NO `Finding`/`NamedProteinVariant`/`DrugResponse`/`BloodGroup`/`PhenotypeInstruction`.
 
-- [ ] **Step 3: Commit** `git add src/procedures/gks-scv-condition-proc.sql && git commit -m "fix(gks): condition conceptType maps Finding -> Phenotype"`
+- [ ] **Step 3: Commit** `git add src/procedures/gks-scv-condition-proc.sql && git commit -m "fix(gks): condition conceptType mapped to va-spec enum (Disease/Phenotype/Condition/Trait)"`
 
 ---
 
