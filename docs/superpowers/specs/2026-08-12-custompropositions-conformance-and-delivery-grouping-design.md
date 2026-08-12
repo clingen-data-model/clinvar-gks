@@ -69,8 +69,9 @@ evidence lines (somatic). Pathogenicity/ClinicalSignificance/Oncogenicity + all 
 
 **Note on standard object shapes:** the standard types are NOT all `variant×condition` — Oncogenicity
 uses `objectTumorType` and TherapeuticResponse uses `objectTherapy`. So grouping by signature yields
-multiple standard groups, not one. (The current proc emits `objectCondition` uniformly even for the
-somatic target propositions — a pre-existing conformance question flagged in §6.)
+multiple standard groups, not one. (The current proc emits `objectCondition` for the **subject**
+Oncogenicity proposition where va-spec wants `objectTumorType` — flagged in §3.5/§6; the somatic
+**target** props already emit `objectTherapy`/`conditionQualifier`.)
 
 ---
 
@@ -154,8 +155,11 @@ otherwise):
    `objectCondition`/custom `object` is a **single** `Condition|ConditionSet|iriReference`. Fix: emit a
    single **`ConditionSet`** pointer (grouping the members via its `concepts[]`) instead of a bare
    array — the natural aggregate model — for VCV standard **and** custom propositions. This also makes
-   the VCV custom `object` conform. (RCV already emits a single value; SCV single. Note the
-   `rcv_proposition.sql` extractor uses `JSON_VALUE_ARRAY` — reconcile it to single.)
+   the VCV custom `object` conform. **Single-member rule:** when a VCV aggregates exactly one condition,
+   emit a bare **`Condition`** pointer (mirroring RCV/SCV), and a **`ConditionSet`** only when there is
+   >1 member — keeps the single-condition shape consistent across levels and stable in the delta.
+   (RCV already emits a single value; SCV single. Note the `rcv_proposition.sql` extractor uses
+   `JSON_VALUE_ARRAY` — reconcile it to single.)
 2. **VariantOncogenicity object field.** Oncogenicity is a **subject** proposition (all three subject
    builders emit uniform `objectCondition`), but va-spec requires **`objectTumorType`**. Fix: emit
    `objectTumorType` for `gks_type = 'VariantOncogenicityProposition'`. (The somatic **target** props'
