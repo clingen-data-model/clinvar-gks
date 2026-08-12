@@ -7,11 +7,11 @@
    "maturity": "draft",
    "allOf": [
       {
-         "$refCurie": "va-spec:ClinicalVariantProposition"
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarGermlineCustomProposition"
       }
    ],
    "properties": {
-      "type": {
+      "customPropositionType": {
          "type": "string",
          "const": "ClinvarAssociationProposition",
          "default": "ClinvarAssociationProposition",
@@ -22,22 +22,8 @@
          "const": "isAssociatedWith",
          "default": "isAssociatedWith",
          "description": "The relationship the Proposition describes between the subject variant and object condition. MUST be \"isAssociatedWith\"."
-      },
-      "objectCondition": {
-         "oneOf": [
-            {
-               "$ref": "/ga4gh/schema/gks-core/1.1.0/json/iriReference"
-            },
-            {
-               "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/Condition"
-            }
-         ],
-         "description": "The condition with which the variant is associated."
       }
    },
-   "required": [
-      "objectCondition",
-      "predicate"
-   ],
+   "required": [],
    "additionalProperties": false
 }

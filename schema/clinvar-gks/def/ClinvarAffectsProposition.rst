@@ -20,7 +20,7 @@ A proposition describing a variant that affects a condition without implying cau
       - Type
       - Limits
       - Description
-   *  - type
+   *  - customPropositionType
       -
       - string
       - 0..1
@@ -28,10 +28,5 @@ A proposition describing a variant that affects a condition without implying cau
    *  - predicate
       -
       - string
-      - 1..1
+      - 0..1
       - The relationship the Proposition describes between the subject variant and object condition. MUST be "hasAffectFor".
-   *  - objectCondition
-      -
-      - :ref:`Condition` | :ref:`iriReference`
-      - 1..1
-      - The condition that is affected by the variant.

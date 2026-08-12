@@ -1,7 +1,9 @@
-all: clinvar-gks
+all: clinvar-gks-all
+
+clean: clinvar-gks-clean
 	
-clinvar-gks:
+clinvar-gks-all:
 	(cd clinvar-gks; make all)
 
-clean:
+clinvar-gks-clean:
 	(cd clinvar-gks; make clean)

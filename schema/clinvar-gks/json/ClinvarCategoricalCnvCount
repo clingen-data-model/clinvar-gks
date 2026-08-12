@@ -6,7 +6,7 @@
    "maturity": "draft",
    "allOf": [
       {
-         "$ref": "/ga4gh/schema/cat-vrs/1.0.0/json/CategoricalCnv"
+         "$ref": "/ga4gh/schema/cat-vrs/1.1.0-ballot.2026-07.1/json/CategoricalCnv"
       },
       {
          "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarCategoricalVariant#/$defs/ClinvarCategoricalVariantProperties"
