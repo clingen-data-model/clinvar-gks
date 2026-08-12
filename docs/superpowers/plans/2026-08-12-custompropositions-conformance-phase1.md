@@ -81,7 +81,7 @@ grep -c '"qualifiers"' schema/clinvar-gks/json/ClinvarRiskFactorProposition
 
 **Files:** Modify `schema/clinvar-gks/{json,def}/*`, `docs/output-reference/classes/Clinvar*Proposition.md` (+ propositions page).
 
-- [ ] **Step 1: Regenerate** `cd schema/clinvar-gks && make all` then, for the docs, run the class-page generator (same flow PR #78 used) — confirm the 10 `Clinvar*Proposition.md` + the new `ClinvarUndefinedProposition` page + `ClinvarProposition.md` union page regenerate. Add the new class page to `mkdocs.yml` nav.
+- [ ] **Step 1: Regenerate `json/`+`def/`** with `cd schema/clinvar-gks && make all`. Then regenerate the **class docs pages** with the standalone generator (NOT wired into the Makefile): `cd schema/clinvar-gks && python3 y2md.py clinvar-proposition-source.yaml` (writes to `schema/clinvar-gks/md/`; confirm the output dir + args by reading `y2md.py`'s `argparse`/`__main__`). Copy/refresh the generated pages into `docs/output-reference/classes/` (the repo's existing convention — check how the current `classes/Clinvar*Proposition.md` were produced/placed). **Expect ALL 10 custom class pages to change**, not just the new one: the current `classes/Clinvar*Proposition.md` are stale vs the new schema (they still show `type` const = the specific type and `subjectVariant`; they must become `customPropositionType`/`subject`). Add the new `ClinvarUndefinedProposition.md` to `mkdocs.yml` nav.
 - [ ] **Step 2: Drop reorder churn.** For each modified `json/*`, if `diff <(git show HEAD:<f> | jq -S .) <(jq -S . <f>)` is empty, `git restore` it (reorder-only). Stage only files with real content changes (the new `ClinvarUndefinedProposition`, the union, and any `qualifiers` addition).
 - [ ] **Step 3: Validate docs** `mkdocs build --strict` (via the repo's mkdocs). Expected: clean.
 - [ ] **Step 4: Commit** `git add schema/clinvar-gks/json schema/clinvar-gks/def docs/ mkdocs.yml && git commit -m "docs(schema): regenerate proposition artifacts + docs for ClinvarUndefinedProposition"`
@@ -92,9 +92,11 @@ grep -c '"qualifiers"' schema/clinvar-gks/json/ClinvarRiskFactorProposition
 
 ### Task 2.1: Reshape the SCV subject proposition (`gks-scv-statement-proc.sql`)
 
-**Files:** Modify `src/procedures/gks-scv-statement-proc.sql` (proposition STRUCT, ~L343-355; note `sgq`/`smq`/`spq` = `temp_gene_context_qualifiers`/`temp_moi_qualifiers`/`temp_penetrance_qualifiers` joined at ~L357-363).
+**Files:** Modify `src/procedures/gks-scv-statement-proc.sql`. NOTE the SCV structure differs from RCV/VCV: Step 5 (~L339-372) builds a **flat temp table** `temp_gks_scv_proposition` with plain column selects (NO `TO_JSON` wrapper); the JSON wrapper is separate, at **Step 7e** (~L618-620), which already assembles the dict via `JSON_STRIP_NULLS(TO_JSON((SELECT AS STRUCT sp.* EXCEPT(scv_id))), remove_empty => TRUE)` — **already correct, no change needed there.** So Task 2.1 edits the flat column list at ~L343-355; `sgq`/`smq`/`spq` = `temp_gene_context_qualifiers`/`temp_moi_qualifiers`/`temp_penetrance_qualifiers` joined at ~L357-363.
 
-- [ ] **Step 1: Replace the proposition STRUCT fields.** The current struct is `{ id, type:scv.proposition.type, subjectVariant, predicate, objectCondition, geneContextQualifier, modeOfInheritanceQualifier, penetranceQualifier }`. Replace with a wide branched struct (`is_custom := scv.proposition.type LIKE 'Clinvar%'`):
+- [ ] **Step 0: Handle the NULL proposition type first.** `is_custom := <type> LIKE 'Clinvar%'` evaluates to NULL (falsy) for an undef row whose `scv.proposition.type` is NULL — which would wrongly emit `type=NULL` (the very case `ClinvarUndefinedProposition` is being added for). First **verify** what `scv.proposition.type` holds for an undef row (`SELECT DISTINCT type FROM temp_gks_scv_proposition source …` or inspect the L47-51 fallback — it sets `'ClinvarUndefinedProposition'`, so type is likely non-null). If it CAN be NULL, coalesce it to `'ClinvarUndefinedProposition'` before the branch. Use that coalesced value as `p_type` in Step 1.
+
+- [ ] **Step 1: Replace the flat column list.** The current columns are `{ id, type:scv.proposition.type, subjectVariant, predicate, objectCondition:COALESCE(4 sources), geneContextQualifier, modeOfInheritanceQualifier, penetranceQualifier }`. Replace with the branched columns (`p_type` = the Step-0 coalesced type; `is_custom := p_type LIKE 'Clinvar%'`; compute the 4-source `objectCondition` COALESCE **once** as a prior column/CTE `obj_ref` and reference it in both branches — do not retype it):
 
 ```sql
           FORMAT('%s-%s', scv.id, UPPER(IFNULL(scv.proposition_type_code, 'UNDEF'))) as id,
@@ -103,8 +105,8 @@ grep -c '"qualifiers"' schema/clinvar-gks/json/ClinvarRiskFactorProposition
           IF(scv.proposition.type LIKE 'Clinvar%', NULL, FORMAT('#/variation/clinvar:%s', scv.variation_id)) as subjectVariant,
           IF(scv.proposition.type LIKE 'Clinvar%', FORMAT('#/variation/clinvar:%s', scv.variation_id), NULL) as subject,
           scv.proposition.pred as predicate,
-          IF(scv.proposition.type LIKE 'Clinvar%', NULL, <the existing COALESCE(...) 4-source objectCondition>) as objectCondition,
-          IF(scv.proposition.type LIKE 'Clinvar%', <the existing COALESCE(...) 4-source objectCondition>, NULL) as object,
+          IF(is_custom, NULL, obj_ref) as objectCondition,   -- obj_ref = the existing 4-source COALESCE, computed once
+          IF(is_custom, obj_ref, NULL) as object,
           -- standard keeps typed qualifiers; custom nulls them
           IF(scv.proposition.type LIKE 'Clinvar%', NULL, (SELECT AS STRUCT sgq.* EXCEPT(scv_id))) as geneContextQualifier,
           IF(scv.proposition.type LIKE 'Clinvar%', NULL, (SELECT AS STRUCT smq.* EXCEPT(scv_id))) as modeOfInheritanceQualifier,
@@ -118,7 +120,7 @@ grep -c '"qualifiers"' schema/clinvar-gks/json/ClinvarRiskFactorProposition
             ),
             NULL) as qualifiers
 ```
-Keep the surrounding `JSON_STRIP_NULLS(TO_JSON(STRUCT( … )), remove_empty => TRUE)` wrapper — verify it uses `remove_empty => TRUE` (needed to drop an empty `qualifiers[]`); add it if absent. Preserve the exact existing `COALESCE(...)` objectCondition expression (do not retype it).
+The Step-5 temp table `temp_gks_scv_proposition` gains new columns `customPropositionType STRING`, `subject STRING`, `object STRING`, and `qualifiers ARRAY<STRUCT<name STRING, value JSON>>`. **Type the NULL branches explicitly** (e.g. `CAST(NULL AS STRING)`, `CAST(NULL AS ARRAY<STRUCT<name STRING, value JSON>>)`) so the physical temp-table schema unifies. The JSON wrapper at **Step 7e (~L618)** already does `JSON_STRIP_NULLS(TO_JSON(…), remove_empty => TRUE)` — no change there; `remove_empty => TRUE` drops the empty custom `qualifiers[]` and the null standard fields. `SELECT AS STRUCT sp.* EXCEPT(scv_id)` at Step 7e picks up the new columns automatically.
 
 - [ ] **Step 2: Deploy** `bq query --project_id=clingen-dev --use_legacy_sql=false < src/procedures/gks-scv-statement-proc.sql` (expect `Created`/`Replaced`, no error).
 - [ ] **Step 3: Verify emitted shapes** (custom + standard):
@@ -189,7 +191,7 @@ Expected (custom): `type=CustomProposition`, `customPropositionType=ClinvarRiskF
 
 ### Task 6.1: Interim Parquet columns for both shapes
 
-**Files:** Modify `src/scripts/parquet-schemas/{proposition,rcv_proposition,vcv_proposition}.sql`.
+**Files:** Modify `src/scripts/parquet-schemas/{proposition,rcv_proposition,vcv_proposition}.sql`. **Sequencing:** `rcv_proposition.sql`/`vcv_proposition.sql` are ALSO edited in Chunk 4 (Task 4.2 Step 2, array→single `JSON_VALUE`); do Chunk 4 first, then layer this task's custom-column edits on top (don't revert the single-value conversion). (Note: `rcv_proposition.sql` is already mismatched today — `JSON_VALUE_ARRAY` over a scalar `rcd.condition_concept` — so Chunk 4's conversion is a genuine bugfix.)
 
 - [ ] **Step 1: Add custom-shape columns** alongside the standard ones so both parse: add `customPropositionType` (`JSON_VALUE($.customPropositionType)`), and make the subject/object columns `COALESCE(JSON_VALUE($.subjectVariant), JSON_VALUE($.subject))` / `COALESCE($.objectCondition,$.object)` (strip the `#/…/` prefix as today). Keep `type` (now `CustomProposition` for custom) and `data`. (Full per-signature typing is Phase 2.)
 - [ ] **Step 2: Smoke-test** one typed-Parquet export for `proposition` against `clinvar_2026_07_20_v2_5_0` (a scratch GCS prefix; `bq query EXPORT DATA` via `export-gks-dicts.sh` is the runner — or run the schema SQL directly with `LIMIT`), confirm custom + standard rows both yield populated `customPropositionType`/subject/object columns. Clean up scratch GCS.
