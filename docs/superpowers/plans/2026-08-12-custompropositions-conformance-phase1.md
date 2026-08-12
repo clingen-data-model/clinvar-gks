@@ -105,7 +105,10 @@ grep -c '"qualifiers"' schema/clinvar-gks/json/ClinvarRiskFactorProposition
           IF(scv.proposition.type LIKE 'Clinvar%', NULL, FORMAT('#/variation/clinvar:%s', scv.variation_id)) as subjectVariant,
           IF(scv.proposition.type LIKE 'Clinvar%', FORMAT('#/variation/clinvar:%s', scv.variation_id), NULL) as subject,
           scv.proposition.pred as predicate,
-          IF(is_custom, NULL, obj_ref) as objectCondition,   -- obj_ref = the existing 4-source COALESCE, computed once
+          -- object field is 3-way: custom->object, standard Oncogenicity->objectTumorType, other standard->objectCondition.
+          -- obj_ref = the existing 4-source COALESCE (a Condition/ConditionSet pointer), computed once; same value in all 3.
+          IF(is_custom OR p_type='VariantOncogenicityProposition', NULL, obj_ref) as objectCondition,
+          IF((NOT is_custom) AND p_type='VariantOncogenicityProposition', obj_ref, NULL) as objectTumorType,
           IF(is_custom, obj_ref, NULL) as object,
           -- standard keeps typed qualifiers; custom nulls them
           IF(scv.proposition.type LIKE 'Clinvar%', NULL, (SELECT AS STRUCT sgq.* EXCEPT(scv_id))) as geneContextQualifier,
@@ -146,48 +149,114 @@ Expected (custom): `type=CustomProposition`, `customPropositionType=ClinvarRiskF
 
 **Files:** Modify `src/procedures/gks-rcv-statement-proc.sql` (proposition structs ~L344-419: base layer + two siblings). RCV proposition = `{type:cpt.gks_type, id, subjectVariant, predicate:<CASE>, objectCondition:rcd.condition_concept}` — no qualifiers.
 
-- [ ] **Step 1: Apply the same branch to each of the 3 layers.** For each, replace `cpt.gks_type AS type` / `subjectVariant` / `objectCondition` with the branched fields (`is_custom := cpt.gks_type LIKE 'Clinvar%'`): `type=IF(is_custom,'CustomProposition',cpt.gks_type)`, `customPropositionType=IF(is_custom,cpt.gks_type,NULL)`, `subjectVariant=IF(NOT is_custom, '#/variation/clinvar:'||…, NULL)`, `subject=IF(is_custom, …, NULL)`, `objectCondition=IF(NOT is_custom, rcd.condition_concept, NULL)`, `object=IF(is_custom, rcd.condition_concept, NULL)`; keep the `predicate` CASE and `id` unchanged. No `qualifiers` (RCV has none). Ensure the wrapper is `JSON_STRIP_NULLS(TO_JSON(STRUCT(…)), remove_empty => TRUE)`.
+- [ ] **Step 1: Apply the same branch to each of the 3 layers.** For each, replace `cpt.gks_type AS type` / `subjectVariant` / `objectCondition` with the branched fields (`p_type := cpt.gks_type`; `is_custom := p_type LIKE 'Clinvar%'`; `obj_ref := rcd.condition_concept`): `type=IF(is_custom,'CustomProposition',p_type)`, `customPropositionType=IF(is_custom,p_type,NULL)`, `subjectVariant=IF(NOT is_custom, '#/variation/clinvar:'||…, NULL)`, `subject=IF(is_custom, …, NULL)`, and the **3-way object branch** (same as SCV Task 2.1): `objectCondition=IF(is_custom OR p_type='VariantOncogenicityProposition', NULL, obj_ref)`, `objectTumorType=IF((NOT is_custom) AND p_type='VariantOncogenicityProposition', obj_ref, NULL)`, `object=IF(is_custom, obj_ref, NULL)`; keep the `predicate` CASE and `id` unchanged. No `qualifiers` (RCV has none). Type NULL branches explicitly. Ensure the wrapper is `JSON_STRIP_NULLS(TO_JSON(STRUCT(…)), remove_empty => TRUE)`.
 - [ ] **Step 2: Deploy** the proc.
 - [ ] **Step 3: Verify** one custom + one standard RCV proposition shape (mirror Task 2.1 Step 3 against `gks_dict_rcv_proposition`).
 - [ ] **Step 4: Commit** `git commit -am "feat(gks): RCV custom propositions emit CustomProposition shape (all 3 layers)"`
 
 ---
 
-## Chunk 4: VCV proc — custom reshape + array→ConditionSet fix (investigate first)
+## Chunk 4: VCV — synthetic ConditionSets + proposition reshape
 
-### Task 4.1: Investigate the VCV `objectCondition` array + ConditionSet source
+**Decision (user, 2026-08-12): build synthetic ConditionSets** for multi-condition VCV aggregates (16% /
+~1.46M of VCV propositions reference >1 condition). `membershipOperator: "OR"`. **The `concepts[]` are
+heterogeneous** — a member may be a `#/condition/…` OR a `#/conditionSet/…` pointer (SCV/RCV members can
+themselves be ConditionSets); va-spec `ConditionSet.concepts` allows `Condition|ConditionSet`, so nesting
+is valid. Single-member VCV → emit the bare pointer (no ConditionSet).
 
-**Files:** Read `src/procedures/gks-vcv-proc.sql` (~L125-150, 235, 322 — `unique_conditions = ARRAY_AGG(DISTINCT condition_ref)`), `gks-vcv-statement-proc.sql` (~L331/357/383), `gks-scv-condition-proc.sql` (how `gks_dict_condition_set` ids are formed), `parquet-schemas/{vcv,rcv}_proposition.sql`.
+### Task 4.1: Produce synthetic VCV ConditionSet dict entries
 
-- [ ] **Step 1: Determine the target shape for VCV `object`.** `unique_conditions` is an ARRAY of `#/condition/…`/`#/conditionSet/…` IRI strings; the schema `object`/`objectCondition` is a SINGLE `Condition|ConditionSet|iriReference`. Document the options and pick one:
-  - **(a)** When the array has exactly 1 element → emit that bare pointer; when >1 → the VCV needs a single `ConditionSet` pointer. Determine whether an existing `gks_dict_condition_set` entry already groups exactly the VCV's condition set (is there a VCV-level conditionSet id upstream?), OR whether a **synthetic** ConditionSet dict entry must be created (id + `concepts[]` members) — this is the crux; if synthetic entries are required, that is a `gks_dict_condition_set` producer change, not just a statement-proc change.
-  - **(b)** If synthetic ConditionSets are out of scope for Phase 1, the fallback is: emit the single element when len=1 and **defer** the multi-condition VCV case with a logged note (still non-conformant for multi-condition VCV, but bounded).
-- [ ] **Step 2: Record the decision** as a comment block at the VCV proposition struct and in the plan's execution notes. **STOP and surface to the controller if option (a) requires synthetic ConditionSet creation** (a larger change than a statement-proc edit) — the controller decides scope before proceeding.
+**Files:** Modify `src/procedures/gks-vcv-proc.sql` (`unique_conditions = ARRAY_AGG(DISTINCT condition_ref)`, ~L125-150/235/322) and `src/procedures/gks-scv-condition-proc.sql` STEP 5 (`gks_dict_condition_set`, ~L275-304) — OR add the synthetic producer where the VCV aggregate is known. Read both first to choose the cleanest insertion point (VCV aggregates are computed AFTER the SCV-side condition_set dict is built, so the synthetic entries must be UNIONed into `gks_dict_condition_set` after VCV aggregation — likely a new step in the VCV proc that appends to `gks_dict_condition_set`).
 
-### Task 4.2: Reshape the VCV proposition struct (custom branch) + apply the object decision
+- [ ] **Step 1: Define the synthetic ConditionSet.** For each distinct multi-member `unique_conditions` set (ARRAY_LENGTH > 1), build one ConditionSet row:
+  - `id`: content-keyed so identical sets dedupe across VCVs — e.g. `FORMAT('clinvar.conditionset:vcv-%s', TO_HEX(MD5(ARRAY_TO_STRING(<sorted-distinct member refs>, '|'))))`. (Confirm the id namespace/prefix convention with the existing `clinvar.traitset:*` ids; pick a distinct prefix so synthetic sets are identifiable.)
+  - `concepts`: the sorted-distinct member pointers as-is (each already a `#/condition/…` or `#/conditionSet/…` string).
+  - `membershipOperator`: `'OR'`.
+  - Match the exact column shape of the existing `gks_dict_condition_set` rows (id, concepts, membershipOperator, + any other columns at L279-304) so the UNION is schema-identical.
+- [ ] **Step 2: Append to `gks_dict_condition_set`.** UNION the synthetic rows with the existing trait-set rows (dedup by id — identical content-keyed ids collapse). Ensure this runs on both full and incremental VCV paths (the synthetic set depends only on the VCV's member conditions).
+- [ ] **Step 3: Wire the delta/change-log.** `gks_dict_condition_set` is already tracked in `gks_change_log`/`gks_delta_build`; confirm the synthetic entries flow through (they are new rows in the same table — no tracking change, but note the one-time churn).
+- [ ] **Step 4: Deploy + verify** a multi-condition VCV: its synthetic ConditionSet exists in `gks_dict_condition_set`, has `membershipOperator:"OR"`, and `concepts[]` contains the expected mix (verify at least one nested `#/conditionSet/…` member is preserved).
+- [ ] **Step 5: Commit** `git commit -am "feat(gks): synthetic ConditionSets for multi-condition VCV aggregates (OR; nested concepts)"`
 
-**Files:** Modify `src/procedures/gks-vcv-statement-proc.sql` (~L310-383, 3 layers).
+### Task 4.2: Reshape the VCV proposition struct + point object at the synthetic set
 
-- [ ] **Step 1: Apply the custom/standard branch** to each of the 3 layers (same as RCV: type/customPropositionType/subjectVariant/subject/objectCondition/object), using the Task-4.1 single-value `object`/`objectCondition` expression in place of the bare `agg.unique_conditions` array.
-- [ ] **Step 2: Reconcile the extractor** — update `src/scripts/parquet-schemas/vcv_proposition.sql` (and `rcv_proposition.sql`) from `JSON_VALUE_ARRAY` to single-value `JSON_VALUE` for the object/condition column, matching the new single-value shape.
-- [ ] **Step 3: Deploy + verify** custom + standard VCV proposition shapes; confirm `object`/`objectCondition` is a single value.
-- [ ] **Step 4: Commit** `git commit -am "feat(gks): VCV custom propositions emit CustomProposition shape + single-value object (was array)"`
+**Files:** Modify `src/procedures/gks-vcv-statement-proc.sql` (~L310-383, 3 layers), `src/scripts/parquet-schemas/{vcv,rcv}_proposition.sql`.
+
+- [ ] **Step 1: Compute the single object ref** per VCV proposition: `obj_ref = IF(ARRAY_LENGTH(agg.unique_conditions)=1, agg.unique_conditions[OFFSET(0)], FORMAT('#/conditionSet/%s', <the synthetic ConditionSet id from Task 4.1>))`. (The synthetic id must be available at the statement-proc site — carry it through the VCV agg, or recompute the same content digest.)
+- [ ] **Step 2: Apply the custom/standard/oncogenicity branch** to each of the 3 layers (identical to RCV Task 3.1's 3-way object branch: `objectCondition`/`objectTumorType`/`object` all from `obj_ref`; type/customPropositionType/subjectVariant/subject). No qualifiers.
+- [ ] **Step 3: Reconcile the extractors** — `vcv_proposition.sql` (and the already-mismatched `rcv_proposition.sql`) from `JSON_VALUE_ARRAY` → single `JSON_VALUE` for the object column (this is also the Chunk-6 file — do Chunk 4 first; see Chunk 6 note).
+- [ ] **Step 4: Deploy + verify** custom + standard VCV proposition shapes; confirm `object`/`objectCondition`/`objectTumorType` is a single value and multi-condition VCVs point at `#/conditionSet/…`.
+- [ ] **Step 5: Commit** `git commit -am "feat(gks): VCV propositions emit CustomProposition shape + single-value object via ConditionSet"`
 
 ---
 
-## Chunk 5: VariantOncogenicity object field (investigate; may defer)
+## Chunk 5: VariantOncogenicity object field — folded into Chunks 2–4 (RESOLVED)
 
-### Task 5.1: Investigate `objectTumorType` data availability
+**Decision (user, 2026-08-12): clean rename, no data gap.** `VariantOncogenicityProposition.objectTumorType`
+(`va-core-source.yaml:951-961`) is a **required** field whose oneOf is `Condition|ConditionSet|iriReference`
+— the identical value type as `objectCondition`; only the attribute name differs, and the tumor type IS a
+Condition/ConditionSet. The current procs emit `objectCondition` for Oncogenicity (see the stale example
+`examples/scv/SCV005093950.2-S-ONCO.json`, still showing `objectCondition`). So the fix is a rename, folded
+into the **3-way object branch** in the Chunk 2/3/4 struct edits: custom→`object`, standard
+Oncogenicity→`objectTumorType`, other standard→`objectCondition` (same `obj_ref` value in all three).
 
-**Files:** Read the subject-proposition builders + upstream condition source; check `submodules/va-spec/schema/va-spec/base/json/VariantOncogenicityProposition` for the exact `objectTumorType` shape.
+### Task 5.1: Confirm Oncogenicity rows emit `objectTumorType` (verification only)
 
-- [ ] **Step 1: Determine whether ClinVar provides tumor-type data** distinct from the condition. The procs emit `objectCondition` for Oncogenicity today; va-spec wants `objectTumorType`. Check whether any upstream field carries a tumor type, or whether Oncogenicity's "condition" IS the tumor type (rename only) vs a genuine data gap.
-- [ ] **Step 2: Decide + record.** If it is a clean rename (the condition value is the tumor type) → emit `objectTumorType` for `gks_type='VariantOncogenicityProposition'` in all 3 subject builders (a small `IF` on the object field name). If it is a data gap (no tumor-type data) → **defer** with a documented note in the spec's §6 and a tracking item; do NOT fabricate. **Surface the decision to the controller.**
-- [ ] **Step 3 (if rename): implement + deploy + verify + commit** `git commit -am "fix(gks): VariantOncogenicity emits objectTumorType (was objectCondition)"`. (If deferred: no commit; note it.)
+- [ ] **Step 1:** After Chunks 2–4 deploy, verify a `VariantOncogenicityProposition` row in each of
+  `gks_dict_{,vcv_,rcv_}proposition` has `objectTumorType` set and NO `objectCondition`/`object`:
+
+```bash
+bq query --project_id=clingen-dev --use_legacy_sql=false \
+ "SELECT JSON_QUERY(value,'\$.objectTumorType') tt, JSON_QUERY(value,'\$.objectCondition') oc
+  FROM \`clinvar_2026_07_20_v2_5_0.gks_dict_proposition\`
+  WHERE JSON_VALUE(value,'\$.type')='VariantOncogenicityProposition' LIMIT 2"
+```
+
+Expected: `tt` set, `oc` null. (No separate commit — the change lands in the Chunk 2/3/4 commits.)
 
 ---
 
-## Chunk 6: Parquet interim columns + conformance validation + oracle
+## Chunk 6: Condition `conceptType` — map `Finding` → `Phenotype`
+
+**Decision (user, 2026-08-12):** KEEP the current `conceptType` (`t.type`, the ClinVar trait type) as
+developed; the ONLY change is to map the value `Finding` → `Phenotype` (ClinVar "Finding" traits are
+phenotypes). Do NOT remap the other values. `gks_dict_condition.conceptType` is set at
+`gks-scv-condition-proc.sql:92`; conditions are referenced by pointer so this propagates to every
+proposition's `objectCondition`/`object`/`objectTumorType`. (Verified `2026-07-20`: 2,213 `Finding`
+conditions become `Phenotype`; `Disease`/`NamedProteinVariant`/`DrugResponse`/`BloodGroup`/
+`PhenotypeInstruction` unchanged.)
+
+**Dependency (user-owned schema change):** the retained non-standard values (`NamedProteinVariant`,
+`DrugResponse`, `BloodGroup`, `PhenotypeInstruction`) are NOT in the base va-spec Condition
+`conceptType` set — the **user is extending the Condition `conceptType` to allow custom enumerations** so
+these remain schema-valid. The Chunk-7 conformance validator must run against that **extended** Condition
+schema (once the user's change lands + is regenerated), or those conditions will falsely fail validation.
+This chunk does NOT modify the Condition enum itself.
+
+### Task 6.1: Map `Finding` → `Phenotype`
+
+**Files:** Modify `src/procedures/gks-scv-condition-proc.sql:92`.
+
+- [ ] **Step 1: Replace** `t.type as conceptType,` with:
+
+```sql
+        IF(t.type = 'Finding', 'Phenotype', t.type) as conceptType,
+```
+
+- [ ] **Step 2: Deploy + verify** — no `Finding` remains; `Phenotype` count rose by the former `Finding` count; other values unchanged:
+
+```bash
+bq query --project_id=clingen-dev --use_legacy_sql=false --format=pretty \
+ "CALL \`clinvar_ingest.gks_scv_condition_proc\`(DATE '2026-07-20', FALSE);
+  SELECT conceptType, COUNT(*) n FROM \`clinvar_2026_07_20_v2_5_0.gks_dict_condition\` GROUP BY 1 ORDER BY n DESC"
+```
+Expected: no `Finding` row; `Phenotype` present (~2,213); `Disease`/`NamedProteinVariant`/etc. unchanged.
+
+- [ ] **Step 3: Commit** `git add src/procedures/gks-scv-condition-proc.sql && git commit -m "fix(gks): condition conceptType maps Finding -> Phenotype"`
+
+---
+
+## Chunk 7: Parquet interim columns + conformance validation + oracle
 
 ### Task 6.1: Interim Parquet columns for both shapes
 
