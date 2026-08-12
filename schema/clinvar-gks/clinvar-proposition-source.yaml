@@ -20,9 +20,9 @@ imports:
 namespaces:
   gks.core: /ga4gh/schema/gks-core/1.2.0-ballot.2026-07.1/json/
   vrs: /ga4gh/schema/vrs/2.1.0-ballot.2026-07.1/json/
-  cat.vrs: /ga4gh/schema/cat-vrs/1.1.0-ballot.2026-07.1/json/
-  va.spec: /ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/
-  domain.entities: /ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/domain-entities/json/
+  cat-vrs: /ga4gh/schema/cat-vrs/1.1.0-ballot.2026-07.1/json/
+  va-spec: /ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/
+  domain-entities: /ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/domain-entities/json/
 
 $defs:
   ClinvarGermlineCustomPropositionProperties:
@@ -35,12 +35,12 @@ $defs:
       subject:
         oneOf:
           - $refCurie: vrs:MolecularVariation
-          - $refCurie: cat.vrs:CategoricalVariant
+          - $refCurie: cat-vrs:CategoricalVariant
           - $refCurie: gks.core:iriReference
         description: A variant that is the subject of the Proposition.
       object:
         oneOf:
-          - $refCurie: domain.entities:Condition
+          - $refCurie: domain-entities:Condition
           - $refCurie: gks.core:iriReference
         description: The condition for which the variant is associated.
 
@@ -52,7 +52,7 @@ $defs:
       categories such as "risk factor", "protective", "drug response", "affects", "association", "confers sensitivity", "other", "not provided", and
       "conflicting data from submitters". These custom proposition types are used to represent variant-condition associations in Clin
     allOf:
-      - $refCurie: va.spec:CustomProposition
+      - $refCurie: va-spec:CustomProposition
       - $ref: "#/$defs/ClinvarGermlineCustomPropositionProperties"
 
   ClinvarRiskFactorProposition:
@@ -276,9 +276,9 @@ $defs:
       significance) and ClinVar-specific proposition types for submission
       categories not covered by the GA4GH specifications.
     oneOf:
-      - $refCurie: va.spec:VariantPathogenicityProposition
-      - $refCurie: va.spec:VariantOncogenicityProposition
-      - $refCurie: va.spec:VariantClinicalSignificanceProposition
+      - $refCurie: va-spec:VariantPathogenicityProposition
+      - $refCurie: va-spec:VariantOncogenicityProposition
+      - $refCurie: va-spec:VariantClinicalSignificanceProposition
       - $ref: "#/$defs/ClinvarRiskFactorProposition"
       - $ref: "#/$defs/ClinvarProtectiveProposition"
       - $ref: "#/$defs/ClinvarDrugResponseProposition"
