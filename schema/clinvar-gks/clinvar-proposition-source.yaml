@@ -41,6 +41,7 @@ $defs:
       object:
         oneOf:
           - $refCurie: domain-entities:Condition
+          - $refCurie: domain-entities:ConditionSet
           - $refCurie: gks.core:iriReference
         description: The condition for which the variant is associated.
 
