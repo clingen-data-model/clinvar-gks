@@ -35,14 +35,22 @@ Two coupled deliverables:
   `gks-scv-statement-proc.sql:377-465`), not in the proposition dicts.
 - Current emitted shape (all types, uniform) — `gks-{scv,rcv,vcv}-statement-proc.sql`:
   `{ id, type:<specific gks_type>, subjectVariant:'#/variation/clinvar:{id}', predicate,
-     objectCondition:<single #/condition/… or #/conditionSet/… pointer> }` plus, for **SCV** subject
-  propositions, typed `geneContextQualifier`/`modeOfInheritanceQualifier`/`penetranceQualifier`
-  (MappableConcept structs). RCV/VCV proposition structs carry **no** proposition-level qualifiers.
+     objectCondition:<…> }` plus, for **SCV** subject propositions, typed
+  `geneContextQualifier`/`modeOfInheritanceQualifier`/`penetranceQualifier` (MappableConcept structs).
+  RCV/VCV proposition structs carry **no** proposition-level qualifiers.
+- **`objectCondition` cardinality differs by level (important):** SCV emits a **single** pointer
+  (`gks-scv-statement-proc.sql`), RCV a **single** COALESCE'd value (`rcd.condition_concept`), but **VCV
+  emits an ARRAY** — `agg.unique_conditions AS objectCondition` (`gks-vcv-statement-proc.sql:331/357/383`,
+  `unique_conditions = ARRAY_AGG(DISTINCT …)` in `gks-vcv-proc.sql`). va-spec `objectCondition` and the
+  clinvar custom `object` are **singular** (`Condition|ConditionSet|iriReference`; multiplicity is
+  expressed by a single `ConditionSet` whose `concepts[]` holds the members). So **VCV standard AND
+  custom propositions are already non-conformant** (array where the schema wants a single value) — see
+  §3.5.
 - The custom/standard split is by **`gks_type` name prefix**: `Clinvar*` = custom, `Variant*` =
   standard. There is **no** `is_custom` flag in the upstream `clinvar_ingest.clinvar_proposition_types`
-  table (columns: `code, label, gks_type, statement_type_code, display_order, conflict_detectable`);
-  the classification→`gks_type` mapping is owned upstream (`clinvar-ingest-bq-tools`). This repo only
-  reads it.
+  table (columns are upstream-sourced — `code, label, gks_type, statement_type_code, display_order,
+  conflict_detectable` — and not verifiable in this repo); the classification→`gks_type` mapping is owned
+  upstream (`clinvar-ingest-bq-tools`). This repo only reads it.
 
 ## 2. Proposition datatype signatures (the grouping key)
 
@@ -88,8 +96,12 @@ somatic target propositions — a pre-existing conformance question flagged in �
 
 ### 3.2 Target emitted shapes
 
-**Standard** (unchanged): `{ id, type:<specific>, subjectVariant, predicate, objectCondition,
-<typed qualifiers> }`.
+**Standard** (not converted to CustomProposition — keeps its per-type shape):
+`{ id, type:<specific>, subjectVariant, predicate, <object field>, <typed qualifiers> }`. But
+"unchanged" is **not** "already conformant" — two standard-type conformance gaps must also be resolved
+(§3.5): VariantOncogenicity's object is `objectTumorType` (the procs emit `objectCondition`), and the
+VCV object is an **array** (schema wants a single value). The `variant×condition` standard types
+(Pathogenicity, ClinicalSignificance) at SCV/RCV are already conformant.
 
 **Custom** (new): `{ id, type:"CustomProposition", customPropositionType:<gks_type>, subject,
 predicate, object, qualifiers?:[{name,value},…] }` where:
@@ -107,14 +119,17 @@ predicate, object, qualifiers?:[{name,value},…] }` where:
 
 Branch on `gks_type LIKE 'Clinvar%'` (custom) vs standard. Implementation approach (BigQuery-friendly):
 build **one wide struct** with all possible fields and `IF(is_custom, …, NULL)`-null the fields that
-don't apply, then `JSON_STRIP_NULLS` drops the nulls → the correct per-type JSON shape. Fields:
-`type` = `IF(is_custom,'CustomProposition', gks_type)`; `customPropositionType` =
+don't apply, then `JSON_STRIP_NULLS(…, remove_empty => TRUE)` drops the nulls **and empties** → the
+correct per-type JSON shape (`remove_empty => TRUE` is required to drop an empty custom `qualifiers[]`).
+Fields: `type` = `IF(is_custom,'CustomProposition', gks_type)`; `customPropositionType` =
 `IF(is_custom, gks_type, NULL)`; `subjectVariant`/`subject` mutually exclusive; `objectCondition`/`object`
 mutually exclusive; `predicate` unchanged; typed qualifiers only on standard SCV; `qualifiers[]` only on
 custom SCV (built conditionally). Applies to:
-- `gks-scv-statement-proc.sql` — subject proposition (Step 5, ~L343-355) **and** the target proposition
-  (Step 6, ~L409-443; note: somatic targets are standard `Variant*`, so target props are unaffected by
-  the custom reshape — but confirm the objectTherapy/objectTumorType conformance in §6).
+- `gks-scv-statement-proc.sql` — subject proposition (Step 5, ~L343-355). The **target** proposition
+  (Step 6, ~L409-443) is somatic-standard `Variant*` (Diagnostic/Prognostic/TherapeuticResponse) — the
+  custom reshape does NOT apply to it, and it **already** emits `objectTherapy` + `conditionQualifier`
+  for therapeutic vs `objectCondition` otherwise, so target props are verify-only for object
+  conformance.
 - `gks-rcv-statement-proc.sql` — the proposition struct across all 3 aggregation layers (~L344-419).
 - `gks-vcv-statement-proc.sql` — same, 3 layers (~L310-383).
 
@@ -127,6 +142,27 @@ custom SCV (built conditionally). Applies to:
 - **Delta/change-log:** every custom proposition's `value` JSON changes → one-time full churn of all
   custom-proposition records in the next release's delta. Expected; no code change.
 - **Docs:** regen the proposition class pages + the pipeline proposition pages.
+
+### 3.5 Standard-type conformance fixes (also Phase 1)
+
+The custom reshape is not the only conformance gap the ballot exposes; two **standard**-type gaps must
+be decided in Phase 1 (fix now, or explicitly defer — but the §7 validation gate will fail on them
+otherwise):
+
+1. **VCV object is an array.** `gks-vcv-statement-proc.sql` emits `agg.unique_conditions` (an
+   `ARRAY_AGG` of `#/condition/…` pointers) as `objectCondition` across all 3 layers, but the schema
+   `objectCondition`/custom `object` is a **single** `Condition|ConditionSet|iriReference`. Fix: emit a
+   single **`ConditionSet`** pointer (grouping the members via its `concepts[]`) instead of a bare
+   array — the natural aggregate model — for VCV standard **and** custom propositions. This also makes
+   the VCV custom `object` conform. (RCV already emits a single value; SCV single. Note the
+   `rcv_proposition.sql` extractor uses `JSON_VALUE_ARRAY` — reconcile it to single.)
+2. **VariantOncogenicity object field.** Oncogenicity is a **subject** proposition (all three subject
+   builders emit uniform `objectCondition`), but va-spec requires **`objectTumorType`**. Fix: emit
+   `objectTumorType` for `gks_type = 'VariantOncogenicityProposition'`. (The somatic **target** props'
+   `objectTherapy` is already handled — §3.3.)
+
+Decision needed: are #1 and #2 in-scope for this initiative's Phase 1 (recommended — they are true
+schema non-conformances the ballot surfaces), or split into their own standard-conformance change?
 
 ---
 
@@ -171,7 +207,9 @@ pointer; only the *organization* of the proposition store changes, not the refer
    they stay embedded? If extracted, evidence lines would reference them by pointer like statements do.
 4. **Qualifier column set per standard group.** Enumerate the exact typed qualifier columns per group
    from va-spec (gene/allele/penetrance/modeOfInheritance for G1; conditionQualifier + … for G3) so the
-   Parquet schema is complete.
+   Parquet schema is complete. **Note:** `alleleOriginQualifier` exists in va-spec (and is listed in the
+   §2/§4 G1 column set for completeness) but the pipeline does **not** currently populate it — SCV Step 5
+   builds only gene/moi/penetrance — so that column would be perpetually null until upstream provides it.
 5. **Where the grouping is computed.** In the statement procs (emit into grouped dict tables) vs a new
    post-processing/regroup proc vs only at export time (`export-gks-dicts.sh` + `parquet-schemas`).
    The lightest is export-time grouping (the dict tables stay per-level; the Parquet/bundle export
@@ -195,10 +233,11 @@ pointer; only the *organization* of the proposition store changes, not the refer
 
 - **`qualifiers` schema composition** — confirm the custom base actually permits the inherited
   `qualifiers` array under `additionalProperties:false` allOf composition (§3.1).
-- **Somatic target proposition object conformance** — the proc emits `objectCondition` for the somatic
-  target props, but va-spec has Oncogenicity=`objectTumorType`, TherapeuticResponse=`objectTherapy`. Is
-  the current emission conformant, or does the target-proposition builder also need object-field fixes
-  (independent of the custom reshape)? Spot-check the generated JSON for those 3 types.
+- **Standard object-field conformance** — resolved into §3.5 as concrete Phase-1 fixes: VCV array→single
+  `ConditionSet`, and VariantOncogenicity **subject** props `objectCondition`→`objectTumorType`. The
+  somatic **target** props already emit `objectTherapy`/`conditionQualifier` (verify-only). Spot-check
+  the generated JSON for `VariantOncogenicityProposition`/`VariantTherapeuticResponseProposition` to
+  confirm exact object field names before implementing.
 - **`ClinvarUndefinedProposition` frequency** — it never fired on the test datasets (upstream mapping
   fully resolved). Confirm whether to keep the proc fallback + schema type, or eliminate the fallback by
   guaranteeing the upstream mapping is total.
