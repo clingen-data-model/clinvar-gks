@@ -4,7 +4,6 @@
 BUILD_DIR := build
 DEF_DIR := def
 JSON_DIR := json
-MD_DIR := md
 IMPORT_DIR := import
 
 vpath %tag $(BUILD_DIR)
@@ -21,7 +20,7 @@ build-ordered: | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir $(BUILD_DIR)
 
-%.tag: %.classes %.json-tag %.defs-tag %.md-tag
+%.tag: %.classes %.json-tag %.defs-tag
 	touch $(BUILD_DIR)/$@
 
 %.classes: %-source.yaml
@@ -35,12 +34,6 @@ $(BUILD_DIR):
 	y2t $<
 	touch $(BUILD_DIR)/$@
 
-PYTHON := $(shell pyenv which python3 2>/dev/null || which python3)
-
-%.md-tag: %-source.yaml ${IMPORTS}
-	$(PYTHON) y2md.py $<
-	touch $(BUILD_DIR)/$@
-
 prune-tag: ${TAGS}
 	$(MAKE) -f prune.mk
 	touch $(BUILD_DIR)/$@
@@ -49,4 +42,3 @@ clean:
 	rm $(BUILD_DIR)/*
 	rm $(DEF_DIR)/*
 	rm $(JSON_DIR)/*
-	rm $(MD_DIR)/*
