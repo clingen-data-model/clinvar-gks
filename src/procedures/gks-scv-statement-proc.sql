@@ -338,34 +338,69 @@ BEGIN
     SET query_scv_proposition = REPLACE("""
       {CT} {P}.temp_gks_scv_proposition
       AS
+        WITH base AS (
+          SELECT
+            scv.id as scv_id,
+            scv.proposition_type_code,
+            scv.variation_id,
+            -- proposition.type is never null (Step 1 fallback sets 'ClinvarUndefinedProposition')
+            scv.proposition.type as p_type,
+            (scv.proposition.type LIKE 'Clinvar%') as is_custom,
+            scv.proposition.pred as predicate,
+            -- obj_ref = the 4-source objectCondition COALESCE, computed once (a Condition/ConditionSet pointer)
+            COALESCE(
+              scs.extensions.value_submitted_condition.condition,
+              scs.extensions.value_submitted_condition.conditionSet,
+              scs.extensions.value_submitted_condition_set.condition,
+              scs.extensions.value_submitted_condition_set.conditionSet
+            ) as obj_ref,
+            (SELECT AS STRUCT sgq.* EXCEPT(scv_id)) as gene_ctx,
+            (SELECT AS STRUCT smq.* EXCEPT(scv_id)) as moi_ctx,
+            (SELECT AS STRUCT spq.* EXCEPT(scv_id)) as penetrance_ctx,
+            (sgq.scv_id IS NOT NULL) as has_gene,
+            (smq.scv_id IS NOT NULL) as has_moi,
+            (spq.scv_id IS NOT NULL) as has_penetrance
+          FROM {P}.temp_gks_scv scv
+          LEFT JOIN {P}.temp_gene_context_qualifiers sgq
+          ON
+            sgq.scv_id = scv.id
+          LEFT JOIN {P}.temp_moi_qualifiers smq
+          ON
+            smq.scv_id = scv.id
+          LEFT JOIN {P}.temp_penetrance_qualifiers spq
+          ON
+            spq.scv_id = scv.id
+          LEFT JOIN `{S}.gks_scv_condition_sets` scs
+          ON
+            scs.scv_id = scv.id
+        )
         SELECT
-          scv.id as scv_id,
-          FORMAT('%s-%s', scv.id, UPPER(IFNULL(scv.proposition_type_code, 'UNDEF'))) as id,
-          scv.proposition.type as type,
-          FORMAT('#/variation/clinvar:%s', scv.variation_id) as subjectVariant,
-          scv.proposition.pred as predicate,
-          COALESCE(
-            scs.extensions.value_submitted_condition.condition,
-            scs.extensions.value_submitted_condition.conditionSet,
-            scs.extensions.value_submitted_condition_set.condition,
-            scs.extensions.value_submitted_condition_set.conditionSet
-          ) as objectCondition,
-          (SELECT AS STRUCT sgq.* EXCEPT(scv_id)) as geneContextQualifier,
-          (SELECT AS STRUCT smq.* EXCEPT(scv_id)) as modeOfInheritanceQualifier,
-          (SELECT AS STRUCT spq.* EXCEPT(scv_id)) as penetranceQualifier
-        FROM {P}.temp_gks_scv scv 
-        LEFT JOIN {P}.temp_gene_context_qualifiers sgq
-        ON
-          sgq.scv_id = scv.id
-        LEFT JOIN {P}.temp_moi_qualifiers smq
-        ON
-          smq.scv_id = scv.id
-        LEFT JOIN {P}.temp_penetrance_qualifiers spq
-        ON
-          spq.scv_id = scv.id
-        LEFT JOIN `{S}.gks_scv_condition_sets` scs
-        ON
-          scs.scv_id = scv.id
+          scv_id,
+          FORMAT('%s-%s', scv_id, UPPER(IFNULL(proposition_type_code, 'UNDEF'))) as id,
+          -- custom types collapse to CustomProposition + customPropositionType; standard keep their specific type
+          IF(is_custom, 'CustomProposition', p_type) as type,
+          IF(is_custom, p_type, CAST(NULL AS STRING)) as customPropositionType,
+          -- standard uses subjectVariant; custom uses subject (same variation pointer)
+          IF(is_custom, CAST(NULL AS STRING), FORMAT('#/variation/clinvar:%s', variation_id)) as subjectVariant,
+          IF(is_custom, FORMAT('#/variation/clinvar:%s', variation_id), CAST(NULL AS STRING)) as subject,
+          predicate,
+          -- object field is 3-way: custom->object, standard Oncogenicity->objectTumorType, other standard->objectCondition (same obj_ref value)
+          IF(is_custom OR p_type = 'VariantOncogenicityProposition', CAST(NULL AS STRING), obj_ref) as objectCondition,
+          IF((NOT is_custom) AND p_type = 'VariantOncogenicityProposition', obj_ref, CAST(NULL AS STRING)) as objectTumorType,
+          IF(is_custom, obj_ref, CAST(NULL AS STRING)) as object,
+          -- standard keeps typed qualifiers; custom nulls them (NULL typed by the struct branch)
+          IF(is_custom, NULL, gene_ctx) as geneContextQualifier,
+          IF(is_custom, NULL, moi_ctx) as modeOfInheritanceQualifier,
+          IF(is_custom, NULL, penetrance_ctx) as penetranceQualifier,
+          -- custom: generic qualifiers[] name/value (value carried as JSON to tolerate differing struct schemas)
+          IF(is_custom,
+            ARRAY_CONCAT(
+              IF(has_gene, [STRUCT('geneContext' AS name, TO_JSON(gene_ctx) AS value)], []),
+              IF(has_moi, [STRUCT('modeOfInheritance' AS name, TO_JSON(moi_ctx) AS value)], []),
+              IF(has_penetrance, [STRUCT('penetrance' AS name, TO_JSON(penetrance_ctx) AS value)], [])
+            ),
+            CAST(NULL AS ARRAY<STRUCT<name STRING, value JSON>>)) as qualifiers
+        FROM base
     """, '{S}', rec.schema_name);
     SET query_scv_proposition = REPLACE(query_scv_proposition, '{CT}', temp_create);
     SET query_scv_proposition = REPLACE(query_scv_proposition, '{P}', IF(debug, rec.schema_name, '_SESSION'));
