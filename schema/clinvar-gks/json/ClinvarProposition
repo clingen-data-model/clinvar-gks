@@ -33,6 +33,9 @@
          "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarRiskFactorProposition"
       },
       {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarUndefinedProposition"
+      },
+      {
          "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantClinicalSignificanceProposition"
       },
       {

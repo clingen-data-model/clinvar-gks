@@ -87,6 +87,7 @@ nav:
       - ClinvarOtherProposition: output-reference/classes/ClinvarOtherProposition.md
       - ClinvarNotProvidedProposition: output-reference/classes/ClinvarNotProvidedProposition.md
       - ClinvarConflictingDataFromSubmitterProposition: output-reference/classes/ClinvarConflictingDataFromSubmitterProposition.md
+      - ClinvarUndefinedProposition: output-reference/classes/ClinvarUndefinedProposition.md
     - Statements:
       - output-reference/classes/statements.md
       - ClinvarStatement: output-reference/classes/ClinvarStatement.md
