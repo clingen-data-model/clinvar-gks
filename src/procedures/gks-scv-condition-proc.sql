@@ -89,7 +89,15 @@ BEGIN
       SELECT
         FORMAT('clinvar.trait:%s', t.id) AS id,
         t.id as trait_id,
-        t.type as conceptType,
+        CASE t.type
+          WHEN 'Disease' THEN 'Disease'
+          WHEN 'Finding' THEN 'Phenotype'
+          WHEN 'DrugResponse' THEN 'Condition'
+          WHEN 'BloodGroup' THEN 'Trait'
+          WHEN 'NamedProteinVariant' THEN 'Trait'
+          WHEN 'PhenotypeInstruction' THEN 'Trait'
+          ELSE 'Condition'
+        END as conceptType,
         t.name,
         ANY_VALUE(
           IF(ARRAY_LENGTH(t.synonyms) > 0, t.synonyms, null)
