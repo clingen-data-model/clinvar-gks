@@ -22,4 +22,5 @@ Any proposition type valid in ClinVar-GKS statements. Includes the GA4GH standar
 - [ClinvarOtherProposition](ClinvarOtherProposition.md)
 - [ClinvarNotProvidedProposition](ClinvarNotProvidedProposition.md)
 - [ClinvarConflictingDataFromSubmitterProposition](ClinvarConflictingDataFromSubmitterProposition.md)
+- [ClinvarUndefinedProposition](ClinvarUndefinedProposition.md)
 

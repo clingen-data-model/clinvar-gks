@@ -41,8 +41,35 @@ $defs:
       object:
         oneOf:
           - $refCurie: domain-entities:Condition
+          - $refCurie: domain-entities:ConditionSet
           - $refCurie: gks.core:iriReference
         description: The condition for which the variant is associated.
+      qualifiers:
+        type: array
+        ordered: false
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              description: >-
+                A name for the qualifier. Should be indicative of its meaning and/or the type of
+                information its value represents.
+            value:
+              oneOf:
+                - $refCurie: gks.core:iriReference
+                - $refCurie: gks.core:MappableConcept
+              description: >-
+                The value of the qualifier - either a MappableConcept or an IRI reference.
+          required:
+            - name
+            - value
+          additionalProperties: false
+        description: >-
+          An array of custom qualifier objects that provide additional information about the
+          Proposition. Each qualifier is an object with a required 'name' (string) identifying the
+          qualifier, a required 'value' (a MappableConcept or an IRI reference), and an optional
+          'description' (string) explaining its meaning.
 
   ClinvarGermlineCustomProposition:
     maturity: draft
@@ -268,6 +295,29 @@ $defs:
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "isConflictingDataFromSubmittersFor".
 
+  ClinvarUndefinedProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A fallback custom proposition for a ClinVar submission whose classification does not
+      map to any defined ClinVar-GKS or GA4GH proposition type. Emitted only when the upstream
+      classification-to-type mapping yields no gks_type.
+    allOf:
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
+    properties:
+      customPropositionType:
+        type: string
+        const: ClinvarUndefinedProposition
+        default: ClinvarUndefinedProposition
+        description: MUST be "ClinvarUndefinedProposition"
+      predicate:
+        type: string
+        const: isClinvarUndefinedAssociationFor
+        default: isClinvarUndefinedAssociationFor
+        description: >-
+          The relationship the Proposition describes between the subject variant and object
+          condition. MUST be "isClinvarUndefinedAssociationFor".
+
   ClinvarProposition:
     maturity: draft
     description: >-
@@ -288,3 +338,4 @@ $defs:
       - $ref: "#/$defs/ClinvarOtherProposition"
       - $ref: "#/$defs/ClinvarNotProvidedProposition"
       - $ref: "#/$defs/ClinvarConflictingDataFromSubmitterProposition"
+      - $ref: "#/$defs/ClinvarUndefinedProposition"

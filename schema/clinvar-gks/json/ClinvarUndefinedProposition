@@ -1,0 +1,29 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarUndefinedProposition",
+   "title": "ClinvarUndefinedProposition",
+   "description": "A fallback custom proposition for a ClinVar submission whose classification does not map to any defined ClinVar-GKS or GA4GH proposition type. Emitted only when the upstream classification-to-type mapping yields no gks_type.",
+   "type": "object",
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarGermlineCustomProposition"
+      }
+   ],
+   "properties": {
+      "customPropositionType": {
+         "type": "string",
+         "const": "ClinvarUndefinedProposition",
+         "default": "ClinvarUndefinedProposition",
+         "description": "MUST be \"ClinvarUndefinedProposition\""
+      },
+      "predicate": {
+         "type": "string",
+         "const": "isClinvarUndefinedAssociationFor",
+         "default": "isClinvarUndefinedAssociationFor",
+         "description": "The relationship the Proposition describes between the subject variant and object condition. MUST be \"isClinvarUndefinedAssociationFor\"."
+      }
+   },
+   "required": [],
+   "additionalProperties": false
+}
