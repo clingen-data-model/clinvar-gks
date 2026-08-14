@@ -1,12 +1,13 @@
--- RCV propositions: objectCondition is an array of #/condition/ and #/conditionSet/ pointer strings.
+-- RCV propositions. object is a SINGLE #/condition/ or #/conditionSet/ pointer string.
+-- type is "CustomProposition" for the 10 custom types (specific type in customPropositionType);
+-- standard types keep their specific type. subject/object (custom) and
+-- subjectVariant/objectCondition|objectTumorType (standard) are unified into the columns below.
 SELECT
   key AS id,
   JSON_VALUE(value, '$.type') AS type,
+  JSON_VALUE(value, '$.customPropositionType') AS custom_proposition_type,
   JSON_VALUE(value, '$.predicate') AS predicate,
-  REGEXP_REPLACE(JSON_VALUE(value, '$.subjectVariant'), r'^#/[^/]+/', '') AS subject_variant_id,
-  ARRAY(
-    SELECT REGEXP_REPLACE(el, r'^#/[^/]+/', '')
-    FROM UNNEST(JSON_VALUE_ARRAY(value, '$.objectCondition')) AS el
-  ) AS object_condition_ids,
+  REGEXP_REPLACE(COALESCE(JSON_VALUE(value, '$.subjectVariant'), JSON_VALUE(value, '$.subject')), r'^#/[^/]+/', '') AS subject_variant_id,
+  REGEXP_REPLACE(COALESCE(JSON_VALUE(value, '$.objectCondition'), JSON_VALUE(value, '$.object'), JSON_VALUE(value, '$.objectTumorType')), r'^#/[^/]+/', '') AS object_condition_id,
   TO_JSON_STRING(value) AS data
 FROM {DATASET}.gks_dict_rcv_proposition
