@@ -710,7 +710,15 @@ BEGIN
       SELECT
         FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
         'EvidenceLine' as type,
-        FORMAT('#/proposition/%s', stp.id) as proposition,
+        -- Delivery-group-qualified target-proposition reference (Phase 2). Target props are always
+        -- standard: Diagnostic/Prognostic -> varcond, TherapeuticResponse -> vartherapy.
+        FORMAT('#/%s-proposition/%s',
+          CASE
+            WHEN stp.type = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+            WHEN stp.type IN ('VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+            ELSE ERROR(FORMAT('unmapped target proposition type: %t', stp.type))
+          END,
+          stp.id) as proposition,
         'supports' as directionOfEvidenceProvided,
         CASE scv.classification_code
           WHEN 'tier 1' THEN
@@ -781,7 +789,19 @@ BEGIN
       SELECT
         FORMAT('clinvar.submission:%s.%i', scv.id, scv.version) as id,
         'Statement' as type,
-        FORMAT('#/proposition/%s', sp.id) as proposition,
+        -- Delivery-group-qualified proposition reference (Phase 2). Canonical group mapping keyed on the
+        -- raw gks type (custom rows carry it in customPropositionType, standard rows in type).
+        FORMAT('#/%s-proposition/%s',
+          CASE
+            WHEN COALESCE(sp.customPropositionType, sp.type) LIKE 'Clinvar%' THEN 'varcustom'
+            WHEN COALESCE(sp.customPropositionType, sp.type) = 'VariantOncogenicityProposition' THEN 'vartumor'
+            WHEN COALESCE(sp.customPropositionType, sp.type) = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+            WHEN COALESCE(sp.customPropositionType, sp.type) IN (
+              'VariantPathogenicityProposition','VariantClinicalSignificanceProposition',
+              'VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+            ELSE ERROR(FORMAT('unmapped proposition type for delivery grouping: %t', COALESCE(sp.customPropositionType, sp.type)))
+          END,
+          sp.id) as proposition,
         STRUCT(
           'Classification' AS conceptType,
           scv.submitted_classification as name,
