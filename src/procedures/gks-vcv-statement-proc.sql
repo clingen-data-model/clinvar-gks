@@ -5,6 +5,7 @@ BEGIN
   DECLARE query_agg_contribution STRING;
   DECLARE dict_vcv_evidence_line_query STRING;
   DECLARE dict_vcv_proposition_query STRING;
+  DECLARE query_vcv_synthetic_condsets STRING;
   DECLARE query_vcv_pre STRING;
   DECLARE temp_create STRING;
 
@@ -310,9 +311,11 @@ BEGIN
       SELECT
         agg.prop_id as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          cpt.gks_type AS type,
+          IF(cpt.gks_type LIKE 'Clinvar%', 'CustomProposition', cpt.gks_type) AS type,
+          IF(cpt.gks_type LIKE 'Clinvar%', cpt.gks_type, CAST(NULL AS STRING)) AS customPropositionType,
           agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          IF(cpt.gks_type LIKE 'Clinvar%', CAST(NULL AS STRING), FORMAT('#/variation/clinvar:%s', agg.variation_id)) AS subjectVariant,
+          IF(cpt.gks_type LIKE 'Clinvar%', FORMAT('#/variation/clinvar:%s', agg.variation_id), CAST(NULL AS STRING)) AS subject,
           CASE cpt.gks_type
             WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
             WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
@@ -328,17 +331,27 @@ BEGIN
             WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
             ELSE 'isClinvarUndefinedAssociationFor'
           END AS predicate,
-          agg.unique_conditions AS objectCondition
+          IF(cpt.gks_type LIKE 'Clinvar%' OR cpt.gks_type = 'VariantOncogenicityProposition', CAST(NULL AS STRING), agg.obj_ref) AS objectCondition,
+          IF((NOT (cpt.gks_type LIKE 'Clinvar%')) AND cpt.gks_type = 'VariantOncogenicityProposition', agg.obj_ref, CAST(NULL AS STRING)) AS objectTumorType,
+          IF(cpt.gks_type LIKE 'Clinvar%', agg.obj_ref, CAST(NULL AS STRING)) AS object
         )), remove_empty => TRUE) as value
-      FROM `{S}.gks_vcv_classification_agg` agg
+      FROM (
+        SELECT a.*,
+          IF(ARRAY_LENGTH(a.unique_conditions) = 0, CAST(NULL AS STRING),
+            IF(ARRAY_LENGTH(a.unique_conditions) = 1, a.unique_conditions[OFFSET(0)],
+              CONCAT('#/conditionSet/clinvar.conditionset:vcv-', TO_HEX(MD5(ARRAY_TO_STRING(ARRAY(SELECT c FROM UNNEST(a.unique_conditions) c WHERE c IS NOT NULL ORDER BY c), '|')))))) AS obj_ref
+        FROM `{S}.gks_vcv_classification_agg` a
+      ) agg
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
       UNION ALL
       SELECT
         agg.prop_id as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          cpt.gks_type AS type,
+          IF(cpt.gks_type LIKE 'Clinvar%', 'CustomProposition', cpt.gks_type) AS type,
+          IF(cpt.gks_type LIKE 'Clinvar%', cpt.gks_type, CAST(NULL AS STRING)) AS customPropositionType,
           agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          IF(cpt.gks_type LIKE 'Clinvar%', CAST(NULL AS STRING), FORMAT('#/variation/clinvar:%s', agg.variation_id)) AS subjectVariant,
+          IF(cpt.gks_type LIKE 'Clinvar%', FORMAT('#/variation/clinvar:%s', agg.variation_id), CAST(NULL AS STRING)) AS subject,
           CASE cpt.gks_type
             WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
             WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
@@ -354,17 +367,27 @@ BEGIN
             WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
             ELSE 'isClinvarUndefinedAssociationFor'
           END AS predicate,
-          agg.unique_conditions AS objectCondition
+          IF(cpt.gks_type LIKE 'Clinvar%' OR cpt.gks_type = 'VariantOncogenicityProposition', CAST(NULL AS STRING), agg.obj_ref) AS objectCondition,
+          IF((NOT (cpt.gks_type LIKE 'Clinvar%')) AND cpt.gks_type = 'VariantOncogenicityProposition', agg.obj_ref, CAST(NULL AS STRING)) AS objectTumorType,
+          IF(cpt.gks_type LIKE 'Clinvar%', agg.obj_ref, CAST(NULL AS STRING)) AS object
         )), remove_empty => TRUE) as value
-      FROM `{S}.gks_vcv_priority_agg` agg
+      FROM (
+        SELECT a.*,
+          IF(ARRAY_LENGTH(a.unique_conditions) = 0, CAST(NULL AS STRING),
+            IF(ARRAY_LENGTH(a.unique_conditions) = 1, a.unique_conditions[OFFSET(0)],
+              CONCAT('#/conditionSet/clinvar.conditionset:vcv-', TO_HEX(MD5(ARRAY_TO_STRING(ARRAY(SELECT c FROM UNNEST(a.unique_conditions) c WHERE c IS NOT NULL ORDER BY c), '|')))))) AS obj_ref
+        FROM `{S}.gks_vcv_priority_agg` a
+      ) agg
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
       UNION ALL
       SELECT
         agg.prop_id as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          cpt.gks_type AS type,
+          IF(cpt.gks_type LIKE 'Clinvar%', 'CustomProposition', cpt.gks_type) AS type,
+          IF(cpt.gks_type LIKE 'Clinvar%', cpt.gks_type, CAST(NULL AS STRING)) AS customPropositionType,
           agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          IF(cpt.gks_type LIKE 'Clinvar%', CAST(NULL AS STRING), FORMAT('#/variation/clinvar:%s', agg.variation_id)) AS subjectVariant,
+          IF(cpt.gks_type LIKE 'Clinvar%', FORMAT('#/variation/clinvar:%s', agg.variation_id), CAST(NULL AS STRING)) AS subject,
           CASE cpt.gks_type
             WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
             WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
@@ -380,13 +403,58 @@ BEGIN
             WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
             ELSE 'isClinvarUndefinedAssociationFor'
           END AS predicate,
-          agg.unique_conditions AS objectCondition
+          IF(cpt.gks_type LIKE 'Clinvar%' OR cpt.gks_type = 'VariantOncogenicityProposition', CAST(NULL AS STRING), agg.obj_ref) AS objectCondition,
+          IF((NOT (cpt.gks_type LIKE 'Clinvar%')) AND cpt.gks_type = 'VariantOncogenicityProposition', agg.obj_ref, CAST(NULL AS STRING)) AS objectTumorType,
+          IF(cpt.gks_type LIKE 'Clinvar%', agg.obj_ref, CAST(NULL AS STRING)) AS object
         )), remove_empty => TRUE) as value
-      FROM `{S}.gks_vcv_aggregate_contribution` agg
+      FROM (
+        SELECT a.*,
+          IF(ARRAY_LENGTH(a.unique_conditions) = 0, CAST(NULL AS STRING),
+            IF(ARRAY_LENGTH(a.unique_conditions) = 1, a.unique_conditions[OFFSET(0)],
+              CONCAT('#/conditionSet/clinvar.conditionset:vcv-', TO_HEX(MD5(ARRAY_TO_STRING(ARRAY(SELECT c FROM UNNEST(a.unique_conditions) c WHERE c IS NOT NULL ORDER BY c), '|')))))) AS obj_ref
+        FROM `{S}.gks_vcv_aggregate_contribution` a
+      ) agg
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET dict_vcv_proposition_query = REPLACE(dict_vcv_proposition_query, '{P}', IF(debug, rec.schema_name, '_SESSION'));
     EXECUTE IMMEDIATE dict_vcv_proposition_query;
+
+    -------------------------------------------------------------------------
+    -- Synthetic ConditionSets for multi-condition VCV aggregates.
+    -- A VCV aggregates SCVs that may assert different conditions; the schema
+    -- object/objectCondition is a SINGLE Condition|ConditionSet|iriReference, so a
+    -- multi-condition VCV references ONE content-keyed ConditionSet (membershipOperator
+    -- 'OR'; concepts may themselves be #/conditionSet/ pointers — nesting is allowed).
+    -- The id digest here MUST match the obj_ref computed in the proposition build above.
+    -- Rebuild the dict as (trait-set rows) UNION (synthetic vcv- rows) so it is idempotent
+    -- across re-runs. NOTE: full-rebuild producer — if this proc is later made incremental,
+    -- the synthetic producer must run GLOBALLY (all VCVs, not just impacted) so
+    -- carried-forward VCV propositions' referenced ConditionSets remain present.
+    -------------------------------------------------------------------------
+    SET query_vcv_synthetic_condsets = REPLACE("""
+      CREATE OR REPLACE TABLE `{S}.gks_dict_condition_set` AS
+      SELECT * FROM `{S}.gks_dict_condition_set`
+      WHERE id NOT LIKE 'clinvar.conditionset:vcv-%'
+      UNION ALL
+      SELECT
+        CONCAT('clinvar.conditionset:vcv-', id_digest) AS id,
+        CAST(NULL AS STRING) AS conceptSetType,
+        ANY_VALUE(sc) AS concepts,
+        'OR' AS membershipOperator
+      FROM (
+        SELECT
+          ARRAY(SELECT c FROM UNNEST(unique_conditions) c WHERE c IS NOT NULL ORDER BY c) AS sc,
+          TO_HEX(MD5(ARRAY_TO_STRING(ARRAY(SELECT c FROM UNNEST(unique_conditions) c WHERE c IS NOT NULL ORDER BY c), '|'))) AS id_digest
+        FROM (
+          SELECT unique_conditions FROM `{S}.gks_vcv_classification_agg`
+          UNION ALL SELECT unique_conditions FROM `{S}.gks_vcv_priority_agg`
+          UNION ALL SELECT unique_conditions FROM `{S}.gks_vcv_aggregate_contribution`
+        )
+        WHERE ARRAY_LENGTH(unique_conditions) > 1
+      )
+      GROUP BY id_digest
+    """, '{S}', rec.schema_name);
+    EXECUTE IMMEDIATE query_vcv_synthetic_condsets;
 
     -------------------------------------------------------------------------
     -- FINAL: VCV statement pre (all statement layers)
