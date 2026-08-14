@@ -18,10 +18,10 @@ imports:
   gks-core: ../gks-core/gks-core-source.yaml
 
 namespaces:
-  gks.core: /ga4gh/schema/gks-core/1.1.0/json/
-  vrs: /ga4gh/schema/vrs/2.0.1/json/
-  cat-vrs: /ga4gh/schema/cat-vrs/1.0.0/json/
-  va-spec: /ga4gh/schema/va-spec/1.0.1/base/json/
+  gks.core: /ga4gh/schema/gks-core/1.2.0-ballot.2026-07.1/json/
+  vrs: /ga4gh/schema/vrs/2.1.0-ballot.2026-07.1/json/
+  cat-vrs: /ga4gh/schema/cat-vrs/1.1.0-ballot.2026-07.1/json/
+  va-spec: /ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/
   clinvar-gks: /ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/
 
 $defs:

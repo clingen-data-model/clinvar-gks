@@ -26,7 +26,7 @@
          "type": "array",
          "ordered": false,
          "items": {
-            "$ref": "/ga4gh/schema/gks-core/1.1.0/json/Coding"
+            "$ref": "/ga4gh/schema/gks-core/1.2.0-ballot.2026-07.1/json/Coding"
          },
          "description": "Cross-references submitted by the submitter for this condition."
       },

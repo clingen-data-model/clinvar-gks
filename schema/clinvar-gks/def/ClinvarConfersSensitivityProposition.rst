@@ -20,7 +20,7 @@ A proposition describing a variant that confers sensitivity to a condition or en
       - Type
       - Limits
       - Description
-   *  - type
+   *  - customPropositionType
       -
       - string
       - 0..1
@@ -28,10 +28,5 @@ A proposition describing a variant that confers sensitivity to a condition or en
    *  - predicate
       -
       - string
-      - 1..1
+      - 0..1
       - The relationship the Proposition describes between the subject variant and object condition. MUST be "confersSensitivityFor".
-   *  - objectCondition
-      -
-      - :ref:`Condition` | :ref:`iriReference`
-      - 1..1
-      - The condition or factor to which the variant confers sensitivity.

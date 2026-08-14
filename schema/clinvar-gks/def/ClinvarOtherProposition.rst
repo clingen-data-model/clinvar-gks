@@ -20,7 +20,7 @@ A proposition for ClinVar submissions classified as "other" that do not fit any 
       - Type
       - Limits
       - Description
-   *  - type
+   *  - customPropositionType
       -
       - string
       - 0..1
@@ -28,10 +28,5 @@ A proposition for ClinVar submissions classified as "other" that do not fit any 
    *  - predicate
       -
       - string
-      - 1..1
+      - 0..1
       - The relationship the Proposition describes between the subject variant and object condition. MUST be "isClinvarOtherAssociationFor".
-   *  - objectCondition
-      -
-      - :ref:`Condition` | :ref:`iriReference`
-      - 1..1
-      - The condition associated with the variant.
