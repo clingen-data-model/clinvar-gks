@@ -6,7 +6,7 @@
    "maturity": "draft",
    "allOf": [
       {
-         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/Statement"
+         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Statement"
       },
       {
          "$ref": "/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarAggregateStatement#/$defs/ClinvarAggregateStatementProperties"

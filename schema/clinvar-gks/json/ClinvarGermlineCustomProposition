@@ -1,0 +1,52 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://w3id.org/ga4gh/schema/clinvar-gks/1.x/clinvar-gks/json/ClinvarGermlineCustomProposition",
+   "title": "ClinvarGermlineCustomProposition",
+   "description": "A custom proposition type for ClinVar germline submissions that do not have a corresponding GA4GH VA-Spec proposition type. Includes ClinVar submission categories such as \"risk factor\", \"protective\", \"drug response\", \"affects\", \"association\", \"confers sensitivity\", \"other\", \"not provided\", and \"conflicting data from submitters\". These custom proposition types are used to represent variant-condition associations in Clin",
+   "$defs": {
+      "ClinvarGermlineCustomPropositionProperties": {
+         "type": "object",
+         "maturity": "draft",
+         "description": "ClinVar-specific properties for germline custom propositions.",
+         "protectedClassOf": "ClinvarGermlineCustomProposition",
+         "properties": {
+            "subject": {
+               "oneOf": [
+                  {
+                     "$ref": "/ga4gh/schema/vrs/2.1.0-ballot.2026-07.1/json/MolecularVariation"
+                  },
+                  {
+                     "$ref": "/ga4gh/schema/cat-vrs/1.1.0-ballot.2026-07.1/json/CategoricalVariant"
+                  },
+                  {
+                     "$ref": "/ga4gh/schema/gks-core/1.2.0-ballot.2026-07.1/json/iriReference"
+                  }
+               ],
+               "description": "A variant that is the subject of the Proposition."
+            },
+            "object": {
+               "oneOf": [
+                  {
+                     "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/Condition"
+                  },
+                  {
+                     "$ref": "/ga4gh/schema/gks-core/1.2.0-ballot.2026-07.1/json/iriReference"
+                  }
+               ],
+               "description": "The condition for which the variant is associated."
+            }
+         },
+         "required": [],
+         "additionalProperties": false
+      }
+   },
+   "maturity": "draft",
+   "allOf": [
+      {
+         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/CustomProposition"
+      },
+      {
+         "$ref": "#/$defs/ClinvarGermlineCustomPropositionProperties"
+      }
+   ]
+}

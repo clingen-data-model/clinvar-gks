@@ -20,7 +20,7 @@ A proposition for ClinVar submissions where the submitter did not provide a clin
       - Type
       - Limits
       - Description
-   *  - type
+   *  - customPropositionType
       -
       - string
       - 0..1
@@ -28,10 +28,5 @@ A proposition for ClinVar submissions where the submitter did not provide a clin
    *  - predicate
       -
       - string
-      - 1..1
+      - 0..1
       - The relationship the Proposition describes between the subject variant and object condition. MUST be "hasNoProvidedClassificationFor".
-   *  - objectCondition
-      -
-      - :ref:`Condition` | :ref:`iriReference`
-      - 1..1
-      - The condition for which no classification was provided.
