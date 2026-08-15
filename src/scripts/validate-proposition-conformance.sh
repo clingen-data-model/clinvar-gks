@@ -38,4 +38,60 @@ SELECT COUNTIF(conceptType NOT IN ('Condition','Phenotype','Disease','Trait','Ab
        COUNT(*) AS total
 FROM \`${DS}.gks_dict_condition\`"
 
+# --- Phase 2: proposition delivery-group reference integrity -------------------------------------
+# Every statement/evidence-line proposition pointer is now group-qualified (#/<group>-proposition/<id>).
+# The pointer's group prefix (computed proc-side) must equal the group recomputed from the referenced
+# proposition row's raw gks type; no old #/proposition/ pointers may remain; no dangling ids.
+echo "=== proposition reference integrity (group prefix == recomputed group; no old/dangling refs) ==="
+bq query --project_id="$PROJECT" --use_legacy_sql=false --format=pretty --quiet "
+WITH refs AS (
+  SELECT proposition FROM \`${DS}.gks_dict_scv\`
+  UNION ALL SELECT proposition FROM \`${DS}.gks_dict_rcv\`
+  UNION ALL SELECT proposition FROM \`${DS}.gks_dict_vcv\`
+  UNION ALL SELECT proposition FROM \`${DS}.gks_dict_evidence_line\`
+),
+props AS (
+  SELECT key, COALESCE(JSON_VALUE(value,'\$.customPropositionType'), JSON_VALUE(value,'\$.type')) AS raw_type
+  FROM \`${DS}.gks_dict_proposition\`
+  UNION ALL SELECT key, COALESCE(JSON_VALUE(value,'\$.customPropositionType'), JSON_VALUE(value,'\$.type'))
+  FROM \`${DS}.gks_dict_rcv_proposition\`
+  UNION ALL SELECT key, COALESCE(JSON_VALUE(value,'\$.customPropositionType'), JSON_VALUE(value,'\$.type'))
+  FROM \`${DS}.gks_dict_vcv_proposition\`
+),
+parsed AS (
+  SELECT
+    (proposition LIKE '#/proposition/%') AS is_old,
+    REGEXP_EXTRACT(proposition, r'^#/([a-z]+)-proposition/') AS ptr_group,
+    REGEXP_EXTRACT(proposition, r'^#/[a-z]+-proposition/(.+)\$') AS ref_id
+  FROM refs
+)
+SELECT
+  COUNTIF(parsed.is_old) AS leftover_old_ref_BAD,
+  COUNTIF(NOT parsed.is_old AND p.key IS NULL) AS dangling_ref_BAD,
+  COUNTIF(NOT parsed.is_old AND p.key IS NOT NULL AND parsed.ptr_group != CASE
+      WHEN p.raw_type LIKE 'Clinvar%' THEN 'varcustom'
+      WHEN p.raw_type = 'VariantOncogenicityProposition' THEN 'vartumor'
+      WHEN p.raw_type = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+      WHEN p.raw_type IN ('VariantPathogenicityProposition','VariantClinicalSignificanceProposition',
+                          'VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+      ELSE 'UNKNOWN' END) AS misrouted_ref_BAD,
+  COUNT(*) AS total_refs
+FROM parsed LEFT JOIN props p ON p.key = parsed.ref_id"
+
+# Every proposition's raw gks type must map to exactly one of the 4 delivery groups (total mapping).
+echo "=== proposition group coverage (every prop maps to a known group) ==="
+bq query --project_id="$PROJECT" --use_legacy_sql=false --format=pretty --quiet "
+WITH allp AS (
+  SELECT value FROM \`${DS}.gks_dict_proposition\`
+  UNION ALL SELECT value FROM \`${DS}.gks_dict_rcv_proposition\`
+  UNION ALL SELECT value FROM \`${DS}.gks_dict_vcv_proposition\`)
+SELECT COUNTIF(
+    COALESCE(JSON_VALUE(value,'\$.customPropositionType'), JSON_VALUE(value,'\$.type')) NOT IN
+      ('VariantOncogenicityProposition','VariantTherapeuticResponseProposition','VariantPathogenicityProposition',
+       'VariantClinicalSignificanceProposition','VariantDiagnosticProposition','VariantPrognosticProposition')
+    AND NOT COALESCE(JSON_VALUE(value,'\$.customPropositionType'), JSON_VALUE(value,'\$.type')) LIKE 'Clinvar%'
+  ) AS unknown_group_BAD,
+  COUNT(*) AS total
+FROM allp"
+
 echo "All *_BAD columns must be 0."
