@@ -5,7 +5,7 @@ ClinVar-GKS releases are hosted on Cloudflare R2 object storage. All downloads a
 Each release includes a gzip-compressed JSON bundle file containing all variations, statements, propositions, conditions, and supporting reference data for a ClinVar release. Typed Parquet files (one per bundle section) are also available for analytical workloads.
 
 !!! warning "Breaking change — proposition sections"
-    The single `proposition` bundle section (and its `proposition-*.parquet`) has been **replaced by four datatype-homogeneous sections**: `varcond-proposition` (variant×condition), `vartumor-proposition` (variant×tumorType), `vartherapy-proposition` (variant×therapy), and `varcustom-proposition` (custom variant×condition), each with a matching Parquet file. Proposition references are now group-qualified — `#/{group}-proposition/{id}` instead of `#/proposition/{id}`. Consumers reading the `proposition` section must switch to the four new keys. The RCV/VCV proposition Parquet `object_condition_ids` (array) is also now a scalar `object_condition_id`.
+    The single `proposition` bundle section (and its `proposition-*.parquet`) has been **replaced by four datatype-homogeneous sections**: `varcond-proposition` (variant×condition), `vartumor-proposition` (variant×tumorType), `vartherapy-proposition` (variant×therapy), and `varcustom-proposition` (custom variant×condition), each with a matching Parquet file. Proposition references are now group-qualified — `#/{group}-proposition/{id}` instead of `#/proposition/{id}`. Consumers reading the `proposition` section must switch to the four new keys, and the Parquet `proposition.parquet`/`vcv_proposition.parquet`/`rcv_proposition.parquet` files are replaced by `varcond-proposition.parquet`, `vartumor-proposition.parquet`, `vartherapy-proposition.parquet`, and `varcustom-proposition.parquet`.
 
 ---
 
@@ -205,11 +205,11 @@ curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3
       container.appendChild(section);
     }
 
-    // Parquet files (static list — always the same 15 sections at fixed paths)
+    // Parquet files (static list — always the same sections at fixed paths)
     var parquetSections = [
       "sequenceReference", "location", "allele", "copyNumberCount", "copyNumberChange",
       "gene", "variation", "condition", "conditionSet", "submitter",
-      "proposition", "vcv_proposition", "rcv_proposition",
+      "varcond-proposition", "vartumor-proposition", "vartherapy-proposition", "varcustom-proposition",
       "evidenceLine", "vcv_evidenceLine", "rcv_evidenceLine",
       "scv", "vcv", "rcv"
     ];
@@ -439,7 +439,7 @@ Statement sections (`scv`, `vcv`, `rcv`) share a common set of typed columns:
 | --- | --- | --- |
 | `id` | string | Statement identifier |
 | `type` | string | Statement type |
-| `proposition_id` | string | FK to proposition Parquet (`proposition` for SCV, `vcv_proposition` for VCV, `rcv_proposition` for RCV) |
+| `proposition_id` | string | FK to the matching proposition Parquet — one of `varcond-proposition`, `vartumor-proposition`, `vartherapy-proposition`, `varcustom-proposition`, per the proposition's datatype |
 | `classification` | string | Classification label (e.g., "Pathogenic") |
 | `strength` | string | Evidence strength (e.g., "definitive", "likely") |
 | `direction` | string | Evidence direction ("supports", "disputes", "neutral") |

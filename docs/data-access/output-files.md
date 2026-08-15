@@ -115,7 +115,10 @@ Each release file contains the following bundle sections:
 | `condition` | Trait and disease concepts |
 | `conditionSet` | Multi-condition groupings |
 | `submitter` | Submitting organizations |
-| `proposition` | Classification propositions (SCV, VCV, and RCV) |
+| `varcond-proposition` | Classification propositions, variant×condition (SCV, VCV, RCV) |
+| `vartumor-proposition` | Classification propositions, variant×tumorType (Oncogenicity) |
+| `vartherapy-proposition` | Classification propositions, variant×therapy (TherapeuticResponse) |
+| `varcustom-proposition` | Classification propositions, custom variant×condition (the 10 `Clinvar*` types) |
 | `evidenceLine` | Evidence lines (SCV, VCV, and RCV) |
 | `scv` | Submitted classification statements |
 | `vcv` | Variation-level aggregate statements |
