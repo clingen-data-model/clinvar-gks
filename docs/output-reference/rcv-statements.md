@@ -20,7 +20,7 @@ Each record is a `Statement` with the following top-level fields:
 | --- | --- | --- |
 | `id` | string | RCV layer ID — e.g., `RCV001781420.1-G-PATH-CP` |
 | `type` | string | Always `Statement` |
-| `proposition` | string | `#/proposition/{id}` reference to the aggregate proposition |
+| `proposition` | string | `#/{group}-proposition/{id}` reference to the aggregate proposition (group = `varcond`/`vartumor`/`varcustom` by datatype) |
 | `classification` | object | MappableConcept — the aggregate classification label. See [Classification](#classification) |
 | `strength` | object | MappableConcept — the aggregate evidence strength |
 | `direction` | string | `supports`, `disputes`, or `neutral` — derived from the aggregate classification |
@@ -54,7 +54,7 @@ For somatic clinical impact (SCI) propositions, the classification label may inc
 
 ## Proposition
 
-RCV propositions are stored in the `proposition` bundle section. Each RCV statement references its proposition via `#/proposition/{id}`.
+RCV propositions are delivered across the four `*-proposition` bundle sections (`varcond-proposition`, `vartumor-proposition`, `vartherapy-proposition`, `varcustom-proposition`) by their (subject, object) datatype signature. Each RCV statement references its proposition via `#/{group}-proposition/{id}`.
 
 A resolved RCV proposition contains:
 
