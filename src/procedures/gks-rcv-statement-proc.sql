@@ -109,7 +109,16 @@ BEGIN
           ) AS extensions
         ) AS classification,
 
-        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
+        FORMAT('#/%s-proposition/%s',
+          CASE
+            WHEN cpt.gks_type LIKE 'Clinvar%' THEN 'varcustom'
+            WHEN cpt.gks_type = 'VariantOncogenicityProposition' THEN 'vartumor'
+            WHEN cpt.gks_type = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+            WHEN cpt.gks_type IN ('VariantPathogenicityProposition','VariantClinicalSignificanceProposition',
+                                  'VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+            ELSE ERROR(FORMAT('unmapped proposition type for delivery grouping: %t', cpt.gks_type))
+          END,
+          agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -120,6 +129,7 @@ BEGIN
         [FORMAT('#/evidenceLine/%s.contributing', agg.id)] AS hasEvidenceLines
 
       FROM `{S}.gks_rcv_classification_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
     """, '{S}', rec.schema_name);
     SET query_classification = REPLACE(query_classification, '{CT}', temp_create);
@@ -169,7 +179,16 @@ BEGIN
           ) AS extensions
         ) AS classification,
 
-        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
+        FORMAT('#/%s-proposition/%s',
+          CASE
+            WHEN cpt.gks_type LIKE 'Clinvar%' THEN 'varcustom'
+            WHEN cpt.gks_type = 'VariantOncogenicityProposition' THEN 'vartumor'
+            WHEN cpt.gks_type = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+            WHEN cpt.gks_type IN ('VariantPathogenicityProposition','VariantClinicalSignificanceProposition',
+                                  'VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+            ELSE ERROR(FORMAT('unmapped proposition type for delivery grouping: %t', cpt.gks_type))
+          END,
+          agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -186,6 +205,7 @@ BEGIN
         ) AS hasEvidenceLines
 
       FROM `{S}.gks_rcv_priority_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
     """, '{S}', rec.schema_name);
     SET query_priority = REPLACE(query_priority, '{CT}', temp_create);
@@ -234,7 +254,16 @@ BEGIN
           ) AS extensions
         ) AS classification,
 
-        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
+        FORMAT('#/%s-proposition/%s',
+          CASE
+            WHEN cpt.gks_type LIKE 'Clinvar%' THEN 'varcustom'
+            WHEN cpt.gks_type = 'VariantOncogenicityProposition' THEN 'vartumor'
+            WHEN cpt.gks_type = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+            WHEN cpt.gks_type IN ('VariantPathogenicityProposition','VariantClinicalSignificanceProposition',
+                                  'VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+            ELSE ERROR(FORMAT('unmapped proposition type for delivery grouping: %t', cpt.gks_type))
+          END,
+          agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -251,6 +280,7 @@ BEGIN
         ) AS hasEvidenceLines
 
       FROM `{S}.gks_rcv_aggregate_contribution` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
     """, '{S}', rec.schema_name);
     SET query_agg_contribution = REPLACE(query_agg_contribution, '{CT}', temp_create);
     SET query_agg_contribution = REPLACE(query_agg_contribution, '{P}', IF(debug, rec.schema_name, '_SESSION'));
