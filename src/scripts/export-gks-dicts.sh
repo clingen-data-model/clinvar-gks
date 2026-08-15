@@ -75,6 +75,42 @@ extract_parquet_typed() {
     ${sql}"
 }
 
+# Proposition delivery-group split (Phase 2): the 3 per-level proposition dicts are delivered as 4
+# datatype-homogeneous sections. Group is keyed on the raw gks type (custom rows carry it in
+# customPropositionType, standard rows in type) — the SAME canonical mapping the statement procs use.
+# Quoted heredoc so nothing ($., single quotes) expands in bash.
+PROP_GROUP_CASE=$(cat <<'SQL'
+CASE
+  WHEN COALESCE(JSON_VALUE(value, '$.customPropositionType'), JSON_VALUE(value, '$.type')) LIKE 'Clinvar%' THEN 'varcustom'
+  WHEN COALESCE(JSON_VALUE(value, '$.customPropositionType'), JSON_VALUE(value, '$.type')) = 'VariantOncogenicityProposition' THEN 'vartumor'
+  WHEN COALESCE(JSON_VALUE(value, '$.customPropositionType'), JSON_VALUE(value, '$.type')) = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+  WHEN COALESCE(JSON_VALUE(value, '$.customPropositionType'), JSON_VALUE(value, '$.type')) IN
+    ('VariantPathogenicityProposition','VariantClinicalSignificanceProposition','VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+  ELSE ERROR(FORMAT('unmapped proposition type for delivery grouping: %t', COALESCE(JSON_VALUE(value, '$.customPropositionType'), JSON_VALUE(value, '$.type'))))
+END
+SQL
+)
+
+export_proposition_group_ndjson() {
+  local group="$1"
+  local sharded="${group}-proposition-*.ndjson.gz"
+  echo "  Exporting proposition group ${group} -> ${sharded} (NDJSON via EXPORT DATA)"
+  bq query --use_legacy_sql=false --nouse_cache \
+    "EXPORT DATA OPTIONS(
+      uri='${GCS_PATH}/${sharded}',
+      format='JSON',
+      compression='GZIP',
+      overwrite=true
+    ) AS
+    SELECT key, value FROM (
+      SELECT key, value, ${PROP_GROUP_CASE} AS _grp FROM (
+        SELECT key, value FROM \`${DATASET}.gks_dict_proposition\`
+        UNION ALL SELECT key, value FROM \`${DATASET}.gks_dict_rcv_proposition\`
+        UNION ALL SELECT key, value FROM \`${DATASET}.gks_dict_vcv_proposition\`
+      )
+    ) WHERE _grp = '${group}'"
+}
+
 if ! $PARQUET_ONLY; then
   echo "Exporting NDJSON files to ${GCS_PATH}"
 
@@ -93,13 +129,17 @@ if ! $PARQUET_ONLY; then
 
   # SCV dictionaries (from gks_scv_statement_proc)
   extract gks_dict_submitter submitter.ndjson.gz
-  extract gks_dict_proposition proposition.ndjson.gz
   extract gks_dict_evidence_line evidenceLine.ndjson.gz
 
-  # VCV/RCV proposition and evidence line dictionaries
-  extract gks_dict_vcv_proposition vcv_proposition.ndjson.gz
+  # Proposition delivery groups (Phase 2): the 3 per-level proposition dicts are split into 4
+  # datatype-homogeneous sections by the canonical group mapping.
+  export_proposition_group_ndjson varcond
+  export_proposition_group_ndjson vartumor
+  export_proposition_group_ndjson vartherapy
+  export_proposition_group_ndjson varcustom
+
+  # VCV/RCV evidence line dictionaries (propositions handled by the group split above)
   extract gks_dict_vcv_evidence_line vcv_evidenceLine.ndjson.gz
-  extract gks_dict_rcv_proposition rcv_proposition.ndjson.gz
   extract gks_dict_rcv_evidence_line rcv_evidenceLine.ndjson.gz
 
   # Statement outputs
@@ -126,13 +166,16 @@ extract_parquet_typed conditionSet.parquet conditionSet.sql
 
 # SCV
 extract_parquet_typed submitter.parquet submitter.sql
-extract_parquet_typed proposition.parquet proposition.sql
 extract_parquet_typed evidenceLine.parquet evidenceLine.sql
 
-# VCV/RCV
-extract_parquet_typed vcv_proposition.parquet vcv_proposition.sql
+# Proposition delivery groups (Phase 2): 4 typed group tables replace the 3 per-level tables.
+extract_parquet_typed varcond-proposition.parquet varcond-proposition.sql
+extract_parquet_typed vartumor-proposition.parquet vartumor-proposition.sql
+extract_parquet_typed vartherapy-proposition.parquet vartherapy-proposition.sql
+extract_parquet_typed varcustom-proposition.parquet varcustom-proposition.sql
+
+# VCV/RCV evidence lines
 extract_parquet_typed vcv_evidenceLine.parquet vcv_evidenceLine.sql
-extract_parquet_typed rcv_proposition.parquet rcv_proposition.sql
 extract_parquet_typed rcv_evidenceLine.parquet rcv_evidenceLine.sql
 
 # Statements
