@@ -4,6 +4,9 @@ ClinVar-GKS releases are hosted on Cloudflare R2 object storage. All downloads a
 
 Each release includes a gzip-compressed JSON bundle file containing all variations, statements, propositions, conditions, and supporting reference data for a ClinVar release. Typed Parquet files (one per bundle section) are also available for analytical workloads.
 
+!!! warning "Breaking change — proposition sections"
+    The single `proposition` bundle section (and its `proposition-*.parquet`) has been **replaced by four datatype-homogeneous sections**: `varcond-proposition` (variant×condition), `vartumor-proposition` (variant×tumorType), `vartherapy-proposition` (variant×therapy), and `varcustom-proposition` (custom variant×condition), each with a matching Parquet file. Proposition references are now group-qualified — `#/{group}-proposition/{id}` instead of `#/proposition/{id}`. Consumers reading the `proposition` section must switch to the four new keys. The RCV/VCV proposition Parquet `object_condition_ids` (array) is also now a scalar `object_condition_id`.
+
 ---
 
 ## Latest Release
@@ -447,7 +450,7 @@ Statement sections (`scv`, `vcv`, `rcv`) share a common set of typed columns:
 
 SCV statements include additional columns: `description`, `contributions`, `reported_in`, `specified_by`.
 
-The `proposition` section includes `subject_variant`, `predicate`, `object_condition`, `object_condition_set`, `type`, and qualifier columns — enabling JOINs across statements, variants, and conditions without parsing JSON.
+The four proposition sections are typed per datatype: `varcond-proposition` (`subject_variant_id`, `predicate`, `object_condition_id`, `type`, `gene_context_name`, `mode_of_inheritance`, `penetrance`), `vartumor-proposition` (`object_tumor_type_id`, …), `vartherapy-proposition` (`object_therapy`, `condition_qualifier_id`, …), and `varcustom-proposition` (`custom_proposition_type`, `subject_id`, `object_id`, `qualifiers`) — enabling JOINs across statements, variants, and conditions without parsing JSON.
 
 Every section includes `id` and `data` at minimum. Run `DESCRIBE` in DuckDB to see the full schema for any section.
 

@@ -18,7 +18,7 @@ Each record is a `Statement` with the following top-level fields:
 | --- | --- | --- |
 | `id` | string | VCV layer ID — e.g., `VCV000012582.63-G-PATH-CP` |
 | `type` | string | Always `Statement` |
-| `proposition` | string | `#/proposition/{id}` reference to the aggregate proposition |
+| `proposition` | string | `#/{group}-proposition/{id}` reference to the aggregate proposition (group = `varcond`/`vartumor`/`varcustom` by datatype) |
 | `classification` | object | MappableConcept — the aggregate classification label. See [Classification](#classification) |
 | `strength` | object | MappableConcept — the aggregate evidence strength. See [Strength](#strength) |
 | `direction` | string | `supports`, `disputes`, or `neutral` — derived from the aggregate classification |
@@ -74,7 +74,7 @@ For single-SCV aggregations, the strength is passed through from the contributin
 
 ## Proposition
 
-VCV propositions are stored in the `proposition` bundle section. Each VCV statement references its proposition via `#/proposition/{id}`.
+VCV propositions are delivered across the four `*-proposition` bundle sections (`varcond-proposition`, `vartumor-proposition`, `vartherapy-proposition`, `varcustom-proposition`) by their (subject, object) datatype signature. Each VCV statement references its proposition via `#/{group}-proposition/{id}`.
 
 A resolved VCV proposition contains:
 

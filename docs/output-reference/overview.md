@@ -19,9 +19,12 @@ This design eliminates duplication (a sequence reference shared by thousands of 
   "variation":         { "<key>": { ... }, ... },
   "condition":         { "<key>": { ... }, ... },
   "conditionSet":      { "<key>": { ... }, ... },
-  "submitter":         { "<key>": { ... }, ... },
-  "proposition":       { "<key>": { ... }, ... },
-  "evidenceLine":      { "<key>": { ... }, ... },
+  "submitter":            { "<key>": { ... }, ... },
+  "varcond-proposition":  { "<key>": { ... }, ... },
+  "vartumor-proposition": { "<key>": { ... }, ... },
+  "vartherapy-proposition": { "<key>": { ... }, ... },
+  "varcustom-proposition": { "<key>": { ... }, ... },
+  "evidenceLine":         { "<key>": { ... }, ... },
   "scv":               { "<key>": { ... }, ... },
   "vcv":               { "<key>": { ... }, ... },
   "rcv":               { "<key>": { ... }, ... }
@@ -60,7 +63,14 @@ These sections contain the condition, submitter, and proposition reference data:
 
 **`submitter`** — Submitting organizations with name and identifier. Keyed by `clinvar.submitter:{submitter_id}` (e.g., `clinvar.submitter:500139`).
 
-**`proposition`** — Classification propositions defining what a statement asserts — the proposition type, predicate, subject variant, and object condition. Contains SCV, VCV, and RCV propositions in a single merged section. Keyed by proposition ID (e.g., `SCV001234567-PATH` for SCVs, `VCV000012582.63-G-PATH-CP` for VCVs).
+**`varcond-proposition`, `vartumor-proposition`, `vartherapy-proposition`, `varcustom-proposition`** — Classification propositions defining what a statement asserts (proposition type, predicate, subject, object, qualifiers). Propositions are delivered in four datatype-homogeneous sections keyed by their (subject, object) signature so each is a fully-typed table:
+
+- **`varcond-proposition`** — variant×condition (standard): `VariantPathogenicity`, `VariantClinicalSignificance`, `VariantDiagnostic`, `VariantPrognostic`; `subjectVariant` → `objectCondition`.
+- **`vartumor-proposition`** — variant×tumorType (standard): `VariantOncogenicity`; `subjectVariant` → `objectTumorType`.
+- **`vartherapy-proposition`** — variant×therapy (standard): `VariantTherapeuticResponse`; `subjectVariant` → `objectTherapy` (+ `conditionQualifier`).
+- **`varcustom-proposition`** — custom variant×condition: the 10 `Clinvar*` `CustomProposition` types (specific type in `customPropositionType`); `subject` → `object` with a generic `qualifiers[]` array.
+
+Each contains SCV, VCV, and RCV propositions of that signature. Keyed by proposition ID (e.g., `SCV001234567-PATH` for SCVs, `VCV000012582.63-G-PATH-CP` for VCVs). A `#/{section}-proposition/{id}` pointer names the exact section a proposition lives in.
 
 ### Statement Sections
 
@@ -92,7 +102,10 @@ Objects reference each other using `#/{section}/{key}` strings instead of embedd
 | `#/condition/{key}` | `#/condition/clinvar.trait:9580` | Condition object |
 | `#/conditionSet/{key}` | `#/conditionSet/clinvar.traitset:1234` | Condition set object |
 | `#/submitter/{key}` | `#/submitter/clinvar.submitter:500139` | Submitter object |
-| `#/proposition/{key}` | `#/proposition/SCV001234567-PATH` | Proposition object |
+| `#/varcond-proposition/{key}` | `#/varcond-proposition/SCV001234567-PATH` | Proposition object (variant×condition) |
+| `#/vartumor-proposition/{key}` | `#/vartumor-proposition/SCV002345678-ONCO` | Proposition object (variant×tumorType) |
+| `#/vartherapy-proposition/{key}` | `#/vartherapy-proposition/SCV003456789-TR` | Proposition object (variant×therapy) |
+| `#/varcustom-proposition/{key}` | `#/varcustom-proposition/SCV004567890-RF` | Proposition object (custom) |
 | `#/scv/{key}` | `#/scv/clinvar.submission:SCV001234567.1` | SCV statement object |
 | `#/vcv/{key}` | `#/vcv/VCV000012582.63-G-PATH-CP` | VCV statement object |
 | `#/rcv/{key}` | `#/rcv/RCV000012345.8-G-PATH-CP` | RCV statement object |

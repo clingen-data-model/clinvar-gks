@@ -20,7 +20,7 @@ Each record is a VA-Spec `Statement` with the following top-level fields:
 | --- | --- | --- |
 | `id` | string | SCV accession with version — `clinvar.submission:SCV000123456.1` |
 | `type` | string | Always `Statement` |
-| `proposition` | string | `#/proposition/{id}` reference to the classification proposition |
+| `proposition` | string | `#/{group}-proposition/{id}` reference to the classification proposition (group = `varcond`/`vartumor`/`vartherapy`/`varcustom` by datatype) |
 | `classification` | object | MappableConcept — the submitter's classification. See [Classification](#classification) |
 | `strength` | object | MappableConcept — the evidence strength. See [Strength](#strength) |
 | `direction` | string | Whether the evidence `supports`, `disputes`, or is `neutral` toward the proposition |
@@ -129,7 +129,7 @@ The `contributions` array records the submitter and key dates. Each contribution
 
 ## Proposition
 
-SCV propositions are stored in the `proposition` bundle section, referenced by `#/proposition/{id}`. The proposition ID combines the SCV accession with an uppercase proposition type code:
+SCV propositions are delivered across the four `*-proposition` bundle sections (`varcond-proposition`, `vartumor-proposition`, `vartherapy-proposition`, `varcustom-proposition`) by their (subject, object) datatype signature, referenced by `#/{group}-proposition/{id}`. The proposition ID combines the SCV accession with an uppercase proposition type code:
 
 ```text
 SCV001234567-PATH
@@ -178,7 +178,7 @@ Evidence lines appear on somatic clinical impact (SCI) statements. Each evidence
 ```json
 {
   "type": "EvidenceLine",
-  "proposition": "#/proposition/SCV004565358-TR",
+  "proposition": "#/vartherapy-proposition/SCV004565358-TR",
   "directionOfEvidenceProvided": "supports",
   "evidenceOutcome": {
     "conceptType": "Outcome",
