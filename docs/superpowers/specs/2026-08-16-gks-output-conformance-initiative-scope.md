@@ -57,9 +57,13 @@ through the gks procs. This means:
 record a full baseline of failing signatures per section. Deliverable: a documented conformance baseline +
 the validator wired as a release check.
 
-**Phase B — bounded predicate alignment (gap 3).** Coordinate with `clinvar-ingest` to move
-`clinvar_clinsig_types.final_predicate` for ClinicalSignificance to `hasClinicalSignificanceFor`, and update
-the 6 RCV/VCV hardcodes in the same release so SCV/RCV/VCV stay consistent. Verify with the validator.
+**Phase B — bounded predicate alignment (gap 3).** ✅ **DONE** (per domain direction: the
+`VariantClinicalSignificance` predicate is always `hasClinicalSignificanceFor`). The 6 RCV/VCV hardcodes
+were changed, and the SCV path — which sources the predicate from the upstream
+`clinvar_ingest.clinvar_clinsig_types.final_predicate` — now **overrides** it in-proc for that type, so all
+three levels emit `hasClinicalSignificanceFor` without waiting on the upstream repo. (Upstream
+`final_predicate` should still be aligned eventually, at which point the override becomes a no-op.)
+`VariantPathogenicity` was already correct (`isCausalFor`).
 
 **Phase C — MappableConcept `type` (gap 1).** The biggest item. Decide upstream-vs-in-repo, then set the
 required `type` on every MappableConcept (determine the correct const per usage — `MappableConcept` vs a

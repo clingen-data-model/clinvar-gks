@@ -384,7 +384,7 @@ BEGIN
           CASE cpt.gks_type
             WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
             WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'hasClinicalSignificanceFor'
             WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
             WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
             WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
@@ -418,7 +418,7 @@ BEGIN
           CASE cpt.gks_type
             WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
             WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'hasClinicalSignificanceFor'
             WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
             WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
             WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
@@ -452,7 +452,7 @@ BEGIN
           CASE cpt.gks_type
             WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
             WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'hasClinicalSignificanceFor'
             WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
             WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
             WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
