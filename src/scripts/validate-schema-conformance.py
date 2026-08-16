@@ -149,7 +149,9 @@ def main():
             rec = json.loads(line)
         except json.JSONDecodeError as e:
             failed += 1
-            signatures[("<parse>", "", str(e)[:80])] += 1
+            sig = ("<parse>", "", str(e)[:80])
+            signatures[sig] += 1
+            sig_example.setdefault(sig, line[:60])
             continue
         name = args.force_schema or schema_name_for(rec)
         if name is None:
