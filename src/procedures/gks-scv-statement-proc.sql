@@ -457,12 +457,12 @@ BEGIN
             ),
             null
           ) as objectCondition,
+          -- Single va-spec objectTherapy: a Therapy when one drug, a TherapyGroup when several.
           IF(
             ARRAY_LENGTH(sd.therapies) > 1,
-            STRUCT(sd.therapies, 'AND' as membershipOperator),
-            null
-          ) as objectTherapy_compound,
-          sd.therapy as objectTherapy_single,
+            TO_JSON(STRUCT('TherapyGroup' AS type, sd.therapies AS therapies, 'AND' AS membershipOperator)),
+            TO_JSON(sd.therapy)
+          ) as objectTherapy,
           IF(
             scv.clinical_impact_assertion_type IS NOT DISTINCT FROM 'therapeutic',
             COALESCE(
