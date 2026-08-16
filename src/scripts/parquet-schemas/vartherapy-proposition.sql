@@ -1,13 +1,13 @@
 -- G3 variant×therapy standard propositions: VariantTherapeuticResponse (SCV somatic target props only).
 -- Unions the SCV/RCV/VCV proposition dicts, filtered to the vartherapy delivery group. subjectVariant →
--- objectTherapy (emitted as objectTherapy_single or objectTherapy_compound), with a conditionQualifier.
+-- objectTherapy (a Therapy or TherapyGroup), with a conditionQualifier.
 SELECT
   key AS id,
   JSON_VALUE(value, '$.type') AS type,
   JSON_VALUE(value, '$.predicate') AS predicate,
   REGEXP_REPLACE(JSON_VALUE(value, '$.subjectVariant'), r'^#/[^/]+/', '') AS subject_variant_id,
   REGEXP_REPLACE(JSON_VALUE(value, '$.conditionQualifier'), r'^#/[^/]+/', '') AS condition_qualifier_id,
-  TO_JSON_STRING(COALESCE(JSON_QUERY(value, '$.objectTherapy_single'), JSON_QUERY(value, '$.objectTherapy_compound'))) AS object_therapy,
+  TO_JSON_STRING(JSON_QUERY(value, '$.objectTherapy')) AS object_therapy,
   JSON_VALUE(value, '$.geneContextQualifier.name') AS gene_context_name,
   TO_JSON_STRING(value) AS data
 FROM (

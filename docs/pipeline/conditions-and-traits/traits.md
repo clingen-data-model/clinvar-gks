@@ -46,6 +46,24 @@ The final query joins traits with their cross-references and aggregates into one
 
 ---
 
+## conceptType Mapping (ClinVar → GKS)
+
+Each trait's ClinVar `type` is mapped to a standardized GKS `conceptType` — the value carried on the emitted condition's [MappableConcept](../../output-reference/overview.md) and used to distinguish diseases, phenotypes, and other traits. The mapping is applied in Step 1 (`gks_scv_condition_proc`) and yields one of four `conceptType` values: **`Disease`**, **`Phenotype`**, **`Trait`**, or **`Condition`**.
+
+| ClinVar trait `type` | GKS `conceptType` | Notes |
+| --- | --- | --- |
+| `Disease` | `Disease` | A named disease. |
+| `Finding` | `Phenotype` | Clinical findings are surfaced as phenotypes. |
+| `DrugResponse` | `Condition` | Drug-response traits are generic conditions. |
+| `BloodGroup` | `Trait` | Non-disease heritable trait. |
+| `NamedProteinVariant` | `Trait` | Non-disease heritable trait. |
+| `PhenotypeInstruction` | `Trait` | Non-disease heritable trait. |
+| *(any other type)* | `Condition` | Fallback when the ClinVar type is unrecognized. |
+
+`conceptType` is descriptive, not a schema discriminator: every condition is a GKS `MappableConcept` regardless of its `conceptType`. Downstream, the four values let consumers filter diseases (`Disease`) from phenotypes (`Phenotype`) and other heritable traits (`Trait`) without parsing the underlying ontology namespace.
+
+---
+
 ## IRI Mapping Reference
 
 Each supported database maps to a pair of IRIs — a canonical identifiers.org IRI and a secondary browsable URL:
