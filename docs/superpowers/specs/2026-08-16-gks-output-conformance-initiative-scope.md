@@ -65,12 +65,29 @@ three levels emit `hasClinicalSignificanceFor` without waiting on the upstream r
 `final_predicate` should still be aligned eventually, at which point the override becomes a no-op.)
 `VariantPathogenicity` was already correct (`isCausalFor`).
 
-**Phase C — MappableConcept `type` (gap 1).** The biggest item. Decide upstream-vs-in-repo, then set the
-required `type` on every MappableConcept (determine the correct const per usage — `MappableConcept` vs a
-subtype like `Therapy`/`Condition`). Verify pipeline-wide with the validator.
+**Phase C — MappableConcept `type` (gap 1).** ✅ **DONE** (per domain direction: `type` is always
+`"MappableConcept"`; Condition/Therapy inherit it via `allOf`, `conceptType` stays the specific type).
+Hardcoded on every MappableConcept construction (~40 sites: classification, confidence, strength,
+evidenceOutcome, gene context, modeOfInheritance, penetrance, drug Therapy, condition, gene dict) across
+`gks-catvar`, `gks-scv-condition`, and the 3 statement procs. Additive → `gks_json_proc` unaffected.
+Verified: gks_dict_gene 92952/92952, gks_dict_condition 22366/22366, statement classifications 6.4M,
+proposition qualifiers all carry `type`; 0 required-property errors remain.
 
-**Phase D — extension `value` (gap 2).** Collapse the typed extension fields to the va-spec `value` at emit
-(a single JSON `value`), preserving the information. Likely upstream.
+**Phase D — extension `value` (gap 2). ARCHITECTURE DECISION NEEDED.** The `value_xxx → value` collapse
+**already exists** in the upstream UDF `clinvar_ingest.normalizeAndKeyById`, which `gks_json_proc` applies to
+the `gks_dict_*` tables to produce its normalized JSON output. The **bundle** path
+(`export-gks-dicts.sh` → `assemble-gks-dicts.py`) exports the `gks_dict_*` tables **raw**, without that
+normalization — which is exactly why the bundle carries `value_string`/`value_xxx`. The typed `value_xxx`
+fields must stay in `gks_dict_*` (per the caution: `gks_json_proc`/`normalizeAndKeyById` nullify-by-type
+then drop the `_xxx`). So the fix is to make the **bundle path** apply the same collapse. Options:
+- **D1** — apply `normalizeAndKeyById` (or an equivalent value-collapse) in the bundle **export**
+  (`EXPORT DATA` SELECTs already exist for Parquet; NDJSON would move off raw `bq extract`).
+- **D2** — a dedicated value-collapse transform at export/assemble that renames the single populated
+  `value_xxx` → `value` per extension (no reliance on the upstream UDF).
+- **D3** — source the bundle from the already-normalized `gks_json`/`gks_catvar` output instead of raw
+  `gks_dict_*` (couples to the `gks_json_proc` retirement / Plan 4 direction).
+
+Decision depends on `normalizeAndKeyById`'s internals (upstream) and the `gks_json_proc`/Plan-4 direction.
 
 **Gap 4** is tracked separately pending the AHW domain decision.
 
