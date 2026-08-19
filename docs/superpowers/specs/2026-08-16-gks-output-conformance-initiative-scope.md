@@ -89,6 +89,20 @@ then drop the `_xxx`). So the fix is to make the **bundle path** apply the same 
 
 Decision depends on `normalizeAndKeyById`'s internals (upstream) and the `gks_json_proc`/Plan-4 direction.
 
+✅ **DONE via D2** (fresh collapse at export). A recursive JS UDF (`collapse_ext_values`) renames the one
+populated `value_*` key → `value` in every extension object (any object with a `name` sibling), at any
+depth. Applied in `export-gks-dicts.sh` to the 4 proposition group exports (collapse the `value`) and to
+`gks_dict_scv` / `gks_dict_evidence_line` (strip-nulls then collapse the `extensions` column). The
+`gks_dict_*` tables keep `value_*` intact, so `gks_json_proc`/`normalizeAndKeyById` are unaffected.
+Verified: proposition validator 320→7 failures (residual 7 out of scope — see below); scv extensions →
+`{name, value}` with no null-field pollution. **Residual / follow-ups (out of gaps 1–2):**
+(a) compound `objectTherapy` `TherapyGroup` shape (~4 somatic records — a ConceptSet detail from the
+Phase-1 objectTherapy fix); (b) `predictsReducedSensitivtyTo` (3 records — AHW/va-spec); (c) statement
+`contributions[].contributor` and other bundle `#/…` references validate as strings where the schema wants
+inline objects (the bundle reference-vs-inline tension — needs schema `iriReference` or ref-resolution
+before validating); (d) Parquet `data` blob column not yet collapsed (typed columns are the primary
+interface; low priority).
+
 **Gap 4** is tracked separately pending the AHW domain decision.
 
 ## Open questions to resolve during planning
