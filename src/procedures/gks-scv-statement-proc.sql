@@ -171,7 +171,7 @@ BEGIN
         WITH normalized_single_gene_variation AS (
           SELECT DISTINCT
             sgv.gene_id,
-            'gene' as conceptType,
+            'MappableConcept' AS type, 'gene' as conceptType,
             g.symbol as name,
             STRUCT(
               g.id as code,
@@ -215,6 +215,7 @@ BEGIN
         )
         SELECT
           scv.id as scv_id,
+          nsgv.type,
           nsgv.conceptType,
           nsgv.name,
           nsgv.primaryCoding,
@@ -243,7 +244,7 @@ BEGIN
         UNION ALL
         SELECT
           scv.id as scv_id,
-          'gene' as conceptType,
+          'MappableConcept' AS type, 'gene' as conceptType,
           'submitted genes were not normalized' as name,
           null as primaryCoding,
           null as mappings,
@@ -279,7 +280,7 @@ BEGIN
       AS
         SELECT
           scv.id as scv_id,
-          'modeOfInheritance' as conceptType,
+          'MappableConcept' AS type, 'modeOfInheritance' as conceptType,
           a.attribute.value as name,
           IF(
             hpo.id is null,
@@ -321,7 +322,7 @@ BEGIN
       AS
         SELECT
           scv.id as scv_id,
-          'penetrance' as conceptType,
+          'MappableConcept' AS type, 'penetrance' as conceptType,
           IF(scv.classif_type IN ('p-lp','lp-lp'), 'low', 'risk') as name,
           [
             STRUCT(
@@ -421,8 +422,8 @@ BEGIN
         WITH scv_drugs AS (
           SELECT
             scv_id,
-            ARRAY_AGG(STRUCT(drug.name, 'Drug' as conceptType)) as therapies,
-            STRUCT(CAST(null as string) as name, CAST(null as string) as conceptType) as therapy
+            ARRAY_AGG(STRUCT(drug.name, 'MappableConcept' AS type, 'Drug' as conceptType)) as therapies,
+            STRUCT(CAST(null as string) as name, CAST(null as string) as type, CAST(null as string) as conceptType) as therapy
           FROM (
             SELECT
               scv.id as scv_id,
@@ -436,10 +437,10 @@ BEGIN
           UNION ALL
           SELECT
             scv.id as scv_id,
-            [STRUCT(CAST(null as string) as name, CAST(null as string) as conceptType)] as therapies,
+            [STRUCT(CAST(null as string) as name, CAST(null as string) as type, CAST(null as string) as conceptType)] as therapies,
             STRUCT(
               ARRAY_AGG(drug)[SAFE_OFFSET(0)] as name,
-              'Drug' as conceptType
+              'MappableConcept' AS type, 'Drug' as conceptType
             ) as therapy
           FROM {P}.temp_gks_scv scv
           CROSS JOIN UNNEST(scv.drugTherapy) as drug
@@ -728,11 +729,11 @@ BEGIN
         'supports' as directionOfEvidenceProvided,
         CASE scv.classification_code
           WHEN 'tier 1' THEN
-            STRUCT('Outcome' as conceptType, 'Level A/B' as name)
+            STRUCT('MappableConcept' AS type, 'Outcome' as conceptType, 'Level A/B' as name)
           WHEN 'tier 2' THEN
-            STRUCT('Outcome' as conceptType, 'Level C/D' as name)
+            STRUCT('MappableConcept' AS type, 'Outcome' as conceptType, 'Level C/D' as name)
           ELSE
-            STRUCT('Outcome' as conceptType, scv.classification_code as name)
+            STRUCT('MappableConcept' AS type, 'Outcome' as conceptType, scv.classification_code as name)
         END as evidenceOutcome,
         IF(
           spc.extensions.value_submitted_condition_set IS NOT NULL,
@@ -809,7 +810,7 @@ BEGIN
           END,
           sp.id) as proposition,
         STRUCT(
-          'Classification' AS conceptType,
+          'MappableConcept' AS type, 'Classification' AS conceptType,
           scv.submitted_classification as name,
           IF(
             scv.classification_code IS NOT NULL,
@@ -826,7 +827,7 @@ BEGIN
           )] AS extensions
         ) as classification,
          STRUCT(
-          'Strength' AS conceptType,
+          'MappableConcept' AS type, 'Strength' AS conceptType,
           scv.strength_name as name,
           IF(
             scv.strength_code IS NOT NULL,
@@ -835,7 +836,7 @@ BEGIN
           ) as primaryCoding
         ) as strength,
         scv.direction,
-        STRUCT('Confidence' AS conceptType, scv.submission_level_label AS name) as confidence,
+        STRUCT('MappableConcept' AS type, 'Confidence' AS conceptType, scv.submission_level_label AS name) as confidence,
         scv.classification_comment as description,
         [
           STRUCT(

@@ -82,7 +82,7 @@ BEGIN
         ) AS direction,
 
         STRUCT(
-          'Strength' AS conceptType,
+          'MappableConcept' AS type, 'Strength' AS conceptType,
           IF(ARRAY_LENGTH(agg.full_scv_ids) = 1,
             agg.scv_strength_name,
             CASE
@@ -96,11 +96,11 @@ BEGIN
           ) AS name
         ) AS strength,
 
-        STRUCT('Confidence' AS conceptType, sl.label AS name) AS confidence,
+        STRUCT('MappableConcept' AS type, 'Confidence' AS conceptType, sl.label AS name) AS confidence,
 
         -- classification: single MappableConcept for all submission levels
         STRUCT(
-          'Classification' AS conceptType,
+          'MappableConcept' AS type, 'Classification' AS conceptType,
           agg.actual_agg_classif_label AS name,
           IF(
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
@@ -156,7 +156,7 @@ BEGIN
         END AS direction,
 
         STRUCT(
-          'Strength' AS conceptType,
+          'MappableConcept' AS type, 'Strength' AS conceptType,
           CASE
             WHEN agg.agg_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'Definitive'
             WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'Likely'
@@ -167,10 +167,10 @@ BEGIN
           END AS name
         ) AS strength,
 
-        STRUCT('Confidence' AS conceptType, sl.label AS name) AS confidence,
+        STRUCT('MappableConcept' AS type, 'Confidence' AS conceptType, sl.label AS name) AS confidence,
 
         STRUCT(
-          'Classification' AS conceptType,
+          'MappableConcept' AS type, 'Classification' AS conceptType,
           agg.agg_label AS name,
           IF(
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
@@ -231,7 +231,7 @@ BEGIN
         END AS direction,
 
         STRUCT(
-          'Strength' AS conceptType,
+          'MappableConcept' AS type, 'Strength' AS conceptType,
           CASE
             WHEN agg.agg_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'Definitive'
             WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'Likely'
@@ -242,10 +242,10 @@ BEGIN
           END AS name
         ) AS strength,
 
-        STRUCT('Confidence' AS conceptType, agg.contributing_submission_level_label AS name) AS confidence,
+        STRUCT('MappableConcept' AS type, 'Confidence' AS conceptType, agg.contributing_submission_level_label AS name) AS confidence,
 
         STRUCT(
-          'Classification' AS conceptType,
+          'MappableConcept' AS type, 'Classification' AS conceptType,
           agg.agg_label AS name,
           IF(
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
@@ -300,7 +300,7 @@ BEGIN
         FORMAT('%s.contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'supports' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
         ARRAY(
           SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
           FROM UNNEST(agg.full_scv_ids) AS scv_id
@@ -314,7 +314,7 @@ BEGIN
         FORMAT('%s.contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'supports' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
         ARRAY(
           SELECT FORMAT('#/rcv/%s', stmt_id)
           FROM UNNEST(agg.contributing_statement_ids) AS stmt_id
@@ -328,7 +328,7 @@ BEGIN
         FORMAT('%s.non-contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'neutral' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
         ARRAY(
           SELECT FORMAT('#/rcv/%s', stmt_id)
           FROM UNNEST(agg.non_contributing_statement_ids) AS stmt_id
@@ -343,7 +343,7 @@ BEGIN
         FORMAT('%s.contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'supports' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
         [FORMAT('#/rcv/%s', agg.contributing_layer_id)] AS evidenceItems
       FROM `{S}.gks_rcv_aggregate_contribution` agg
 
@@ -354,7 +354,7 @@ BEGIN
         FORMAT('%s.non-contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'neutral' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
         ARRAY(
           SELECT FORMAT('#/rcv/%s', nc.layer_id)
           FROM UNNEST(agg.non_contributing_details) AS nc

@@ -89,6 +89,7 @@ BEGIN
       SELECT
         FORMAT('clinvar.trait:%s', t.id) AS id,
         t.id as trait_id,
+        'MappableConcept' as type,
         CASE t.type
           WHEN 'Disease' THEN 'Disease'
           WHEN 'Finding' THEN 'Phenotype'
