@@ -71,6 +71,10 @@ SCHEMA_FILE_PATH="${SCRIPT_DIR}/../../schemas/vrs_output_2_0_1.schema.json"
 # (gks_rcv, gks_rcv_statement, gks_vcv, gks_vcv_statement) are all called via their
 # incremental wrappers (with gks_scv_changed / gks_rcvvcv_changed) directly in
 # execute_bq_procedures. There is no longer a full-rebuild loop.
+# NOTE: gks_json_proc is RETIRED (Plan 4) — its 4 JSON-render tables (gks_catvar,
+# gks_scv_statement, gks_rcv_statement, gks_vcv_statement) were never published and had no
+# live consumer, so it is no longer called here. The gks_dict_* tables are the published
+# product; gks_change_log / gks_delta_build run directly after the rcv/vcv loop.
 
 # --- END OF CONFIGURATION ---
 
@@ -242,12 +246,6 @@ execute_bq_procedures() {
     fi
     echo "    ✅ Success."
   done
-
-  echo "  - Calling procedure: clinvar_ingest.gks_json_proc..."
-  if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false "CALL \`clinvar_ingest.gks_json_proc\`('$release_date', 'all')" > /dev/null; then
-    echo "❌ Procedure call FAILED for: clinvar_ingest.gks_json_proc"; return 1;
-  fi
-  echo "    ✅ Success."
 
   echo "  - Calling procedure: clinvar_ingest.gks_change_log..."
   bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \

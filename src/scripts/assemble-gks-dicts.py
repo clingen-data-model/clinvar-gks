@@ -5,7 +5,8 @@ Assemble GKS dictionary NDJSON files into a single keyed JSON file.
 For GCS sources, shards are downloaded one section at a time and deleted
 after each section is processed, keeping disk usage minimal.
 
-Output is written locally to /tmp/clinvar-gks-{date}.json.gz.
+Output is written locally to /tmp/clinvar-gks-{date}.json.gz by default, or to
+the path given by --output.
 Source files are removed after successful assembly unless --keep-source is used.
 
 Usage:
@@ -18,6 +19,9 @@ Usage:
   # Keep source files for debugging
   python3 assemble-gks-dicts.py gs://bucket/gks-dicts/ 2026-05-03 --keep-source
 
+  # Override the output path (e.g. for a delta bundle)
+  python3 assemble-gks-dicts.py gs://bucket/gks-deltas/ 2026-05-03 --output /tmp/clinvar-gks-delta-2026-05-03.json.gz
+
   # From local files
   python3 assemble-gks-dicts.py ./gks-dicts/ 2026-05-03
 
@@ -27,6 +31,7 @@ Dependencies:
 import argparse
 import gzip
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -52,6 +57,10 @@ except ImportError:
 
     def json_dumps_key(key):
         return json.dumps(key)
+
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gks_json_cleanup import strip_empty
 
 
 # Dictionary sections in output order.
@@ -133,23 +142,22 @@ def open_local_file(path):
 
 
 def stream_passthrough(filepath, key_field):
-    """
-    Yield (key_json, raw_line) pairs. Parses only the key field;
-    passes the raw JSON line through as the value to avoid re-serialization.
-    """
+    """Yield (key_json, value_json) pairs; the value is the record with null/empty
+    values stripped (remove_empty parity)."""
     with open_local_file(filepath) as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             rec = json_loads(line)
-            yield json_dumps_key(rec[key_field]), line
+            cleaned = strip_empty(rec)
+            yield json_dumps_key(rec[key_field]), json_dumps_key(cleaned)
 
 
 def stream_kv(filepath, key_field, value_field):
     """
     Yield (key_json, value_json) pairs from key/value NDJSON records.
-    String values are passed through directly without re-serialization.
+    The value (a JSON string or object) is stripped for remove_empty parity.
     """
     with open_local_file(filepath) as f:
         for line in f:
@@ -159,7 +167,8 @@ def stream_kv(filepath, key_field, value_field):
             rec = json_loads(line)
             key_json = json_dumps_key(rec[key_field])
             raw = rec[value_field]
-            value_json = raw if isinstance(raw, str) else json_dumps_key(raw)
+            obj = json_loads(raw) if isinstance(raw, str) else raw
+            value_json = json_dumps_key(strip_empty(obj))
             yield key_json, value_json
 
 
@@ -219,28 +228,20 @@ def assemble(source, output_path, is_gcs):
                 entry_count = 0
                 first_entry = True
 
-                if value_field is None:
-                    for filepath in local_files:
-                        for key_json, raw_json in stream_passthrough(filepath, key_field):
-                            if not first_entry:
-                                buf.extend(b",\n")
-                            first_entry = False
-                            buf.extend(f"    {key_json}: {raw_json}".encode())
-                            entry_count += 1
-                            if len(buf) >= WRITE_BUFFER_SIZE:
-                                out.write(bytes(buf))
-                                buf.clear()
-                else:
-                    for filepath in local_files:
-                        for key_json, value_json in stream_kv(filepath, key_field, value_field):
-                            if not first_entry:
-                                buf.extend(b",\n")
-                            first_entry = False
-                            buf.extend(f"    {key_json}: {value_json}".encode())
-                            entry_count += 1
-                            if len(buf) >= WRITE_BUFFER_SIZE:
-                                out.write(bytes(buf))
-                                buf.clear()
+                for filepath in local_files:
+                    if value_field is None:
+                        pairs = stream_passthrough(filepath, key_field)
+                    else:
+                        pairs = stream_kv(filepath, key_field, value_field)
+                    for key_json, value_json in pairs:
+                        if not first_entry:
+                            buf.extend(b",\n")
+                        first_entry = False
+                        buf.extend(f"    {key_json}: {value_json}".encode())
+                        entry_count += 1
+                        if len(buf) >= WRITE_BUFFER_SIZE:
+                            out.write(bytes(buf))
+                            buf.clear()
 
                 buf.extend(b"\n  }")
                 section_count += 1
@@ -302,6 +303,10 @@ def main():
         "--copy-to-gcs", action="store_true",
         help="Copy the assembled bundle to GCS after local assembly",
     )
+    parser.add_argument(
+        "--output", default=None,
+        help="Override the local output path (default: /tmp/clinvar-gks-{date}.json.gz)",
+    )
     args = parser.parse_args()
 
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", args.date):
@@ -313,7 +318,7 @@ def main():
     if not is_gcs and not Path(source).is_dir():
         parser.error(f"{source} is not a directory or GCS path")
 
-    output_path = derive_output_path(args.date)
+    output_path = args.output if args.output else derive_output_path(args.date)
 
     print(f"Assembling GKS dictionaries from {source}")
     print(f"  Output: {output_path}")

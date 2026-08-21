@@ -158,11 +158,17 @@ CALL `clinvar_ingest.gks_catvar_proc`(CURRENT_DATE(), FALSE);
 -- create the conditions, traits, condition mappings, and condition sets
 CALL `clinvar_ingest.gks_scv_condition_proc`(CURRENT_DATE(), FALSE);
 
--- create the scv records, propositions, and pre-JSON statement records
+-- create the scv records, propositions, and final statement records (gks_dict_scv)
 CALL `clinvar_ingest.gks_scv_statement_proc`(CURRENT_DATE(), FALSE);
 
--- generate final JSON output for all artifact types
-CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all');
+-- aggregate into VCV and RCV statements (gks_dict_vcv, gks_dict_rcv)
+CALL `clinvar_ingest.gks_vcv_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_vcv_statement_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_rcv_proc`(CURRENT_DATE(), FALSE);
+CALL `clinvar_ingest.gks_rcv_statement_proc`(CURRENT_DATE(), FALSE);
+
+-- NOTE: gks_json_proc is retired. Its inlined-render tables were never published;
+-- the gks_dict_* tables are the product and are assembled directly at export time.
 
 ```
 

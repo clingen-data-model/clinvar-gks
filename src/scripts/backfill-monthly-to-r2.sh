@@ -4,7 +4,7 @@
 #
 # Use this script to upload past monthly releases that were not captured
 # by the normal pipeline. It uploads directly to the monthly destination
-# without touching datasets/weekly/ or the 00-latest pointer.
+# without updating the 00-latest pointer.
 #
 # Destination is derived from the export year vs. the current calendar year:
 #   Current year:  datasets/clinvar-gks_{YYYY}-{MM}.json.gz
@@ -68,8 +68,6 @@ CURRENT_YEAR="$(date +%Y)"
 
 # --- Filenames ---
 MONTHLY_FILE="clinvar-gks_${YEAR}-${MM}.json.gz"
-LATEST_MONTHLY="clinvar-gks_00-latest.json.gz"
-LATEST_WEEKLY="clinvar-gks_00-latest_weekly.json.gz"
 
 # --- Destination ---
 if [[ "$YEAR" == "$CURRENT_YEAR" ]]; then
@@ -139,76 +137,15 @@ echo "  ${DEST}"
 r2_upload "${BUNDLE_FILE}" "${DEST}"
 echo ""
 
-# --- Generate and upload index.json ---
-echo "--- Generating index.json ---"
-generate_index() {
-  local index_tmp="/tmp/clinvar-gks-index.json"
-
-  build_file_array() {
-    local prefix="$1" latest_name="$2"
-    local first=true
-    local arr="["
-
-    while IFS=' ' read -r size filename; do
-      [[ -z "$filename" ]] && continue
-      if ! $first; then arr+=","; fi
-      first=false
-
-      local is_latest="false"
-      if [[ -n "$latest_name" && "$filename" == "$latest_name" ]]; then
-        is_latest="true"
-      fi
-
-      arr+=$(printf '{"name":"%s","path":"%s%s","size":%s,"latest":%s}' \
-        "$filename" "$prefix" "$filename" "$size" "$is_latest")
-    done < <(r2_ls_with_size "$prefix")
-
-    arr+="]"
-    echo "$arr"
-  }
-
-  local ds_monthly
-  ds_monthly=$(build_file_array "datasets/" "${LATEST_MONTHLY}")
-  local ds_weekly
-  ds_weekly=$(build_file_array "datasets/weekly/" "${LATEST_WEEKLY}")
-
-  local archives_json="{"
-  local first_year=true
-  while IFS= read -r year_dir; do
-    year_dir="${year_dir%/}"
-    [[ -z "$year_dir" ]] && continue
-
-    if ! $first_year; then archives_json+=","; fi
-    first_year=false
-
-    local arch_monthly
-    arch_monthly=$(build_file_array "archives/${year_dir}/")
-
-    archives_json+=$(printf '"%s":{"monthly":%s}' "$year_dir" "$arch_monthly")
-  done < <(r2_ls "archives/" 2>/dev/null)
-  archives_json+="}"
-
-  cat > "$index_tmp" <<INDEXEOF
-{
-  "description": "ClinVar-GKS release index",
-  "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "base_url": "${R2_PUBLIC_URL}",
-  "datasets": {
-    "monthly": ${ds_monthly},
-    "weekly": ${ds_weekly}
-  },
-  "archives": ${archives_json}
-}
-INDEXEOF
-
-  r2_upload "$index_tmp" "index.json" "application/json"
-  if ! $DRY_RUN; then
-    rm -f "$index_tmp"
-  fi
-  echo "  index.json uploaded."
-}
-
-generate_index
+# --- Regenerate index.json via the shared delta-aware generator ---
+# (Do NOT inline an index builder here — it would write the retired weekly-schema index and
+#  clobber the deltas-aware index.json. generate-r2-index.sh reflects current R2 state:
+#  monthly fulls + archives + deltas.)
+echo "--- Regenerating index.json ---"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INDEX_ARGS=()
+$DRY_RUN && INDEX_ARGS+=("--dry-run")
+"${SCRIPT_DIR}/generate-r2-index.sh" "${INDEX_ARGS[@]}"
 
 # --- Summary ---
 echo ""

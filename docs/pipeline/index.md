@@ -53,9 +53,9 @@ The pipeline executes in the following order. Each step is a BigQuery stored pro
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
-│ 8. JSON Output               │  gks_json_proc
-│    Build dictionary tables   │  → gks_dict_* tables
-│    for bundle assembly       │
+│ 8. Change log + deltas       │  gks_change_log +
+│    A/U/D per dict + delta     │  gks_delta_build
+│    payloads for publishing    │  → gks_change_log, delta_<dict>
 └──────────────┬───────────────┘
                │
 ┌──────────────▼───────────────┐
@@ -110,14 +110,20 @@ CALL `clinvar_ingest.gks_vcv_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_vcv_statement_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_rcv_proc`(CURRENT_DATE(), FALSE);
 CALL `clinvar_ingest.gks_rcv_statement_proc`(CURRENT_DATE(), FALSE);
-CALL `clinvar_ingest.gks_json_proc`(CURRENT_DATE(), 'all');
+-- NOTE: gks_json_proc is retired (Plan 4) — its JSON-render tables were unpublished;
+-- the gks_dict_* tables are the published product and are built by the procs above.
 ```
 
 ### Step 4: Export & Distribute
 
+The `gks_dict_*` tables are the published product. The monthly full bundle and the weekly delta are published by separate scripts:
+
 ```bash
-# Run the full release pipeline (export, assemble, download Parquet, upload to R2)
+# Monthly full bundle (export, assemble, download Parquet, upload to R2)
 ./src/scripts/release-gks.sh 2026-06-14 v2_5_0
+
+# Weekly delta (added + updated records + change manifest)
+./src/scripts/release-gks-delta.sh 2026-06-14 v2_5_0
 ```
 
 Steps 1 and 2 can also be run individually. Steps 3–4 (Parquet download, shard merging, and upload) are handled internally by `release-gks.sh` — use `--start-step` to resume from a specific step.

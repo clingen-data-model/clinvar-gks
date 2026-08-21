@@ -1,6 +1,6 @@
 # Output File
 
-Each ClinVar-GKS release is published as a **gzip-compressed JSON file** containing all data for the corresponding ClinVar XML release in the bundle format. Typed **Parquet files** (one per bundle section) are also produced during assembly for analytical workloads.
+ClinVar-GKS is published as **gzip-compressed JSON files** in the bundle format — a **monthly full bundle** containing all data for a release, plus a **weekly delta** carrying only the records changed since the prior release. Typed **Parquet files** (one per bundle section) accompany both for analytical workloads.
 
 ---
 
@@ -26,34 +26,35 @@ See [Output Format](../output-reference/overview.md) for the full bundle structu
 
 ### Latest Release
 
-Stable filenames that always point to the most recent release:
+Stable filenames that always point to the most recent full and delta:
 
 ```text
-clinvar-gks_00-latest.json.gz           (latest monthly)
-clinvar-gks_00-latest_weekly.json.gz    (latest weekly)
+clinvar-gks_00-latest.json.gz               (latest monthly full)
+clinvar-gks-delta_00-latest.json.gz         (latest weekly delta)
 ```
 
 The `00-` prefix ensures these sort before dated files in directory listings.
 
-### Weekly Releases
+### Monthly Full Bundles
 
-Weekly releases include the ClinVar release year, month, and day:
-
-```text
-clinvar-gks_yyyy-mmdd.json.gz
-```
-
-For example, `clinvar-gks_2026-0614.json.gz` for the June 14, 2026 release.
-
-### Monthly Releases
-
-Monthly releases include the year and month:
+Monthly full bundles include the year and month:
 
 ```text
-clinvar-gks_yyyy-mm.json.gz
+datasets/clinvar-gks_yyyy-mm.json.gz
 ```
 
 For example, `clinvar-gks_2026-06.json.gz` for the June 2026 release.
+
+### Weekly Deltas
+
+Each weekly delta lives in a release directory named with the ClinVar release year, month, and day:
+
+```text
+deltas/yyyy-mmdd/clinvar-gks-delta_yyyy-mmdd.json.gz
+deltas/yyyy-mmdd/manifest.json
+```
+
+For example, `deltas/2026-0614/clinvar-gks-delta_2026-0614.json.gz` for the June 14, 2026 release. The delta bundle carries only added and updated records; deletes and per-section change counts are recorded in the accompanying `manifest.json`. See [Downloads](download.md#weekly-deltas) for the delta model and consumer replay example.
 
 ---
 

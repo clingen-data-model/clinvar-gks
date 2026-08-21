@@ -152,9 +152,36 @@ if (( START_STEP <= 5 )); then
   DATASET_VERSION="${DATASET_ID#clinvar_"${DATE_US}"_}"
   echo "    dataset=${DATASET_ID} version=${DATASET_VERSION}"
 
-  RELEASE_ARGS=("${DATE}" "${DATASET_VERSION}")
-  $DRY_RUN && RELEASE_ARGS+=("--dry-run")
-  "${REPO_ROOT}/src/scripts/release-gks.sh" "${RELEASE_ARGS[@]}"
+  # Resolve previous release + month-boundary (retroactive monthly full).
+  PREV_DATE="$(bq --project_id="${PROJECT_ID}" query --use_legacy_sql=false --format=csv --quiet \
+    "SELECT CAST(prev_release_date AS STRING) FROM \`clinvar_ingest.schema_on\`(DATE '${DATE}')" \
+    | tail -n1 | tr -d '[:space:]')"
+
+  DELTA_ARGS=("${DATE}" "${DATASET_VERSION}"); $DRY_RUN && DELTA_ARGS+=("--dry-run")
+
+  if [[ -n "${PREV_DATE}" && "${PREV_DATE:0:7}" != "${DATE:0:7}" ]]; then
+    echo ">>> [5/5] month boundary: publishing retroactive monthly FULL for ${PREV_DATE}"
+    PREV_US="${PREV_DATE//-/_}"
+    PREV_DS="$(bq ls --project_id="${PROJECT_ID}" --max_results=10000 | awk '{$1=$1;print}' | grep "^clinvar_${PREV_US}_" | head -n1)"
+    if [[ -z "${PREV_DS}" ]]; then
+      # Prior month's dataset was pruned — can't rebuild its full. Warn and skip the
+      # retroactive full, but DO NOT abort: the weekly delta below must still publish
+      # (it is decoupled from the full's success).
+      echo "WARNING: no dataset for prior release ${PREV_DATE}; skipping retroactive monthly FULL" >&2
+    else
+      PREV_VER="${PREV_DS#clinvar_"${PREV_US}"_}"
+      FULL_ARGS=("${PREV_DATE}" "${PREV_VER}"); $DRY_RUN && FULL_ARGS+=("--dry-run")
+      # Non-fatal: a transient failure of the retroactive monthly full must NOT suppress the
+      # weekly delta below. The delta chain's integrity does not depend on the full existing
+      # (the full is a checkpoint convenience; contiguous deltas bridge it), and the full is
+      # recoverable by re-running this release.
+      "${REPO_ROOT}/src/scripts/release-gks.sh" "${FULL_ARGS[@]}" \
+        || echo "WARNING: retroactive monthly FULL failed for ${PREV_DATE}; continuing to weekly delta" >&2
+    fi
+  fi
+
+  echo ">>> [5/5] publishing weekly DELTA for ${DATE}"
+  "${REPO_ROOT}/src/scripts/release-gks-delta.sh" "${DELTA_ARGS[@]}"
 fi
 
 echo "=== run-release ${DATE} complete ==="

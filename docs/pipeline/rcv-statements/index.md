@@ -4,11 +4,12 @@
 
 RCV statement generation aggregates individual SCV (submission-level) classifications into condition-specific aggregate statements. Unlike VCV statements, which aggregate all submissions for a given variation regardless of condition, RCV statements aggregate submissions per (variation, condition) pair, using `trait_set_id` as the condition grouping key. Each RCV accession represents a unique combination of a variation and a condition set.
 
-The pipeline is implemented across two stored procedures plus a JSON serialization step:
+The pipeline is implemented across two stored procedures:
 
 1. **`gks_rcv_proc`** -- builds the aggregation tables through a two-layer aggregation hierarchy
-2. **`gks_rcv_statement_proc`** -- transforms the aggregation tables into GKS-formatted RCV statements with nested evidence lines and condition data
-3. **`gks_json_proc`** -- serializes the final statements to JSON with null/empty field stripping
+2. **`gks_rcv_statement_proc`** -- transforms the aggregation tables into GKS-formatted RCV statements with nested evidence lines and condition data, written to `gks_dict_rcv`
+
+`gks_dict_rcv` is the published product for RCV statements. Null/empty field stripping is applied during bundle assembly at export time (`assemble-gks-dicts.py`).
 
 ---
 

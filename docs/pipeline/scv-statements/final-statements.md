@@ -91,7 +91,7 @@ For somatic clinical impact assertions, the `hasEvidenceLines` field contains ev
 
 **`gks_dict_scv`** -- one row per SCV with the complete VA-Spec Statement record. <span class="role-badge badge-pipeline">Pipeline table</span>
 
-Consumed by `gks_vcv_proc`, `gks_vcv_statement_proc`, and `gks_json_proc` for VCV aggregation and JSON export.
+Consumed by `gks_vcv_proc` and `gks_vcv_statement_proc` for VCV aggregation, and assembled directly into the published bundle by the export pipeline.
 
 ---
 
@@ -99,4 +99,4 @@ Consumed by `gks_vcv_proc`, `gks_vcv_statement_proc`, and `gks_json_proc` for VC
 
 - **Upstream Steps**: Step 1 (`temp_gks_scv`), Step 5 (`temp_gks_scv_proposition`), Step 6 (`temp_gks_scv_target_proposition`)
 - **Upstream Procedures**: `gks_scv_condition_proc` (provides `gks_scv_condition_sets`)
-- **Downstream Consumers**: `gks_vcv_proc`, `gks_vcv_statement_proc`, `gks_json_proc`
+- **Downstream Consumers**: `gks_vcv_proc`, `gks_vcv_statement_proc`, change-log / delta build (`gks_change_log`), export pipeline

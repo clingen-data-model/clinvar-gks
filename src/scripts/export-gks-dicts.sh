@@ -2,22 +2,28 @@
 # export-gks-dicts.sh
 # Export all GKS dictionary tables to GCS as NDJSON and/or Parquet
 #
-# Usage: ./export-gks-dicts.sh <dataset> <gcs_bucket> [prefix] [--parquet-only]
+# Usage: ./export-gks-dicts.sh <dataset> <gcs_bucket> [prefix] [--parquet-only] [--delta]
 # Example: ./export-gks-dicts.sh clinvar_2025_06_08 clinvar-gks gks-dicts
 # Example: ./export-gks-dicts.sh clinvar_2025_06_08 clinvar-gks gks-dicts --parquet-only
 
 set -euo pipefail
 
 # Parse positional args and flags
-DATASET="${1:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only]}"
-BUCKET="${2:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only]}"
+DATASET="${1:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only] [--delta]}"
+BUCKET="${2:?Usage: $0 <dataset> <gcs_bucket> [prefix] [--parquet-only] [--delta]}"
 PREFIX="${3:-gks-dicts}"
 PARQUET_ONLY=false
+DELTA=false
 for arg in "$@"; do
   case "$arg" in
     --parquet-only) PARQUET_ONLY=true ;;
+    --delta) DELTA=true ;;
   esac
 done
+
+src_table() {           # $1 = base dict table, e.g. gks_dict_scv
+  if $DELTA; then echo "delta_$1"; else echo "$1"; fi
+}
 
 GCS_PATH="gs://${BUCKET}/${PREFIX}"
 PARQUET_PREFIX="${PREFIX}-parquet"
@@ -64,6 +70,13 @@ extract_parquet_typed() {
   local sql
   sql=$(<"${schema_path}")
   sql="${sql//\{DATASET\}/${DATASET}}"
+  if $DELTA; then
+    # Typed-Parquet can't use src_table() (the table name is embedded inside the schema SQL,
+    # not passed as a CLI arg). Every parquet-schemas/*.sql references exactly ONE
+    # {DATASET}.gks_dict_* table and never uses "gks_dict_" in any alias/column/literal, so
+    # this qualified-reference rewrite is safe. Invariant future schema authors must preserve.
+    sql="${sql//.gks_dict_/.delta_gks_dict_}"
+  fi
   echo "  Exporting ${sql_file%.sql} -> ${sharded} (Parquet via EXPORT DATA)"
   # ${COLLAPSE_UDF} makes collapse_ext_values(...) available to schema files whose `data` column
   # needs the extension value_xxx -> value collapse (proposition groups, scv, evidenceLine).
@@ -131,9 +144,9 @@ export_proposition_group_ndjson() {
     ) AS
     SELECT key, SAFE.PARSE_JSON(collapse_ext_values(TO_JSON_STRING(value))) AS value FROM (
       SELECT key, value, ${PROP_GROUP_CASE} AS _grp FROM (
-        SELECT key, value FROM \`${DATASET}.gks_dict_proposition\`
-        UNION ALL SELECT key, value FROM \`${DATASET}.gks_dict_rcv_proposition\`
-        UNION ALL SELECT key, value FROM \`${DATASET}.gks_dict_vcv_proposition\`
+        SELECT key, value FROM \`${DATASET}.$(src_table gks_dict_proposition)\`
+        UNION ALL SELECT key, value FROM \`${DATASET}.$(src_table gks_dict_rcv_proposition)\`
+        UNION ALL SELECT key, value FROM \`${DATASET}.$(src_table gks_dict_vcv_proposition)\`
       )
     ) WHERE _grp = '${group}'"
 }
@@ -162,37 +175,39 @@ if ! $PARQUET_ONLY; then
   echo "Exporting NDJSON files to ${GCS_PATH}"
 
   # Cat-VRS dictionaries (from gks_catvar_proc)
-  extract gks_dict_sequence_reference sequenceReference.ndjson.gz
-  extract gks_dict_location location.ndjson.gz
-  extract gks_dict_allele allele.ndjson.gz
-  extract gks_dict_copy_number_count copyNumberCount.ndjson.gz
-  extract gks_dict_copy_number_change copyNumberChange.ndjson.gz
-  extract gks_dict_gene gene.ndjson.gz
-  extract gks_dict_variation variation.ndjson.gz
+  extract "$(src_table gks_dict_sequence_reference)" sequenceReference.ndjson.gz
+  extract "$(src_table gks_dict_location)" location.ndjson.gz
+  extract "$(src_table gks_dict_allele)" allele.ndjson.gz
+  extract "$(src_table gks_dict_copy_number_count)" copyNumberCount.ndjson.gz
+  extract "$(src_table gks_dict_copy_number_change)" copyNumberChange.ndjson.gz
+  extract "$(src_table gks_dict_gene)" gene.ndjson.gz
+  extract "$(src_table gks_dict_variation)" variation.ndjson.gz
 
   # Condition dictionaries (from gks_scv_condition_proc)
-  extract gks_dict_condition condition.ndjson.gz
-  extract gks_dict_condition_set conditionSet.ndjson.gz
+  extract "$(src_table gks_dict_condition)" condition.ndjson.gz
+  extract "$(src_table gks_dict_condition_set)" conditionSet.ndjson.gz
 
   # SCV dictionaries (from gks_scv_statement_proc)
-  extract gks_dict_submitter submitter.ndjson.gz
-  export_ndjson_ext_collapse gks_dict_evidence_line evidenceLine.ndjson.gz
+  extract "$(src_table gks_dict_submitter)" submitter.ndjson.gz
+  export_ndjson_ext_collapse "$(src_table gks_dict_evidence_line)" evidenceLine.ndjson.gz
 
   # Proposition delivery groups (Phase 2): the 3 per-level proposition dicts are split into 4
-  # datatype-homogeneous sections by the canonical group mapping.
+  # datatype-homogeneous sections by the canonical group mapping. Delta-aware — the helper reads
+  # $(src_table gks_dict_*proposition), so --delta mode emits proposition deltas split into the 4
+  # group sections (build-delta-manifest.py resolves each changed key to its group section to match).
   export_proposition_group_ndjson varcond
   export_proposition_group_ndjson vartumor
   export_proposition_group_ndjson vartherapy
   export_proposition_group_ndjson varcustom
 
   # VCV/RCV evidence line dictionaries (propositions handled by the group split above)
-  extract gks_dict_vcv_evidence_line vcv_evidenceLine.ndjson.gz
-  extract gks_dict_rcv_evidence_line rcv_evidenceLine.ndjson.gz
+  extract "$(src_table gks_dict_vcv_evidence_line)" vcv_evidenceLine.ndjson.gz
+  extract "$(src_table gks_dict_rcv_evidence_line)" rcv_evidenceLine.ndjson.gz
 
   # Statement outputs
-  export_ndjson_ext_collapse gks_dict_scv scv.ndjson.gz
-  extract gks_dict_vcv vcv.ndjson.gz
-  extract gks_dict_rcv rcv.ndjson.gz
+  export_ndjson_ext_collapse "$(src_table gks_dict_scv)" scv.ndjson.gz
+  extract "$(src_table gks_dict_vcv)" vcv.ndjson.gz
+  extract "$(src_table gks_dict_rcv)" rcv.ndjson.gz
 fi
 
 echo ""
@@ -208,7 +223,7 @@ extract_parquet_typed gene.parquet gene.sql
 extract_parquet_typed variation.parquet variation.sql
 
 # Conditions
-extract_parquet gks_dict_condition condition.parquet
+extract_parquet "$(src_table gks_dict_condition)" condition.parquet
 extract_parquet_typed conditionSet.parquet conditionSet.sql
 
 # SCV

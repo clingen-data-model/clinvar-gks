@@ -81,7 +81,7 @@ Final assembly of VA-Spec Statement records. Joins SCV records with propositions
 - **Source Tables**: `scv_summary`, `clinical_assertion`, `clinical_assertion_variation`, `single_gene_variation`, `gene`, `variation_archive`
 - **Lookup Tables**: `clinvar_clinsig_types`, `submission_level`, `hpo_terms`
 - **Upstream Procedures**: `gks_scv_condition_proc` (provides `gks_scv_condition_sets`), `gks_catvar_proc`
-- **Downstream Consumers**: `gks_vcv_proc`, `gks_vcv_statement_proc`, `gks_json_proc`
+- **Downstream Consumers**: `gks_vcv_proc`, `gks_vcv_statement_proc`, change-log / delta build (`gks_change_log`), export pipeline
 
 ---
 

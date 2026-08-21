@@ -172,7 +172,7 @@ Inlines evidence items from either Tier Grouping PRE or Base Grouping PRE (using
 
 Selects all Aggregate Contribution PRE statements into the final output table.
 
-**Output:** `gks_dict_rcv` -- the complete set of RCV statements ready for JSON serialization by `gks_json_proc`. <span class="role-badge badge-pipeline">Pipeline table</span>
+**Output:** `gks_dict_rcv` -- the complete set of RCV statements. This is the published product for RCV statements; the export pipeline assembles it directly into the bundle. <span class="role-badge badge-pipeline">Pipeline table</span>
 
 ---
 
@@ -213,4 +213,4 @@ Selects all Aggregate Contribution PRE statements into the final output table.
 - **Lookup Tables**: `clinvar_statement_categories`, `clinvar_proposition_types`, `submission_level`, `clinvar_clinsig_types`
 - **UDFs**: `clinvar_ingest.schema_on`, `clinvar_ingest.cleanup_temp_tables`
 - **Upstream Procedures**: `gks_rcv_proc`, `gks_scv_statement_proc`
-- **Downstream Consumers**: `gks_json_proc`
+- **Downstream Consumers**: change-log / delta build (`gks_change_log`), export pipeline (`gks_dict_rcv` assembled directly into the bundle)

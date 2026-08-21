@@ -126,47 +126,50 @@ The SCV statements for this variant reference it via `#/variation/clinvar:10` in
 
 ## Data Access
 
-ClinVar-GKS releases are published weekly, synchronized with each ClinVar XML release. Each release includes a gzip-compressed JSON bundle and typed Parquet files (one per bundle section). The files are freely available for download from Cloudflare R2 object storage with no authentication required and no egress fees.
+ClinVar-GKS is distributed as a **monthly full bundle** plus **weekly deltas**. Each is a gzip-compressed JSON file with typed Parquet (one file per section). The files are freely available for download from Cloudflare R2 object storage with no authentication required and no egress fees.
 
 ### Release Schedule
 
-- **Weekly releases** are published to `datasets/weekly/`, one per ClinVar XML release
-- **Monthly releases** are created from the first weekly release of each month and published to `datasets/`
-- At the start of each month, the previous month's weekly files move to `archives/`
-- At the start of each year, the previous year's monthly files move to `archives/`
+- **Weekly deltas** are published for every ClinVar release under `deltas/<yyyy-mmdd>/` — each carries only the records added or updated since the prior release, plus a `manifest.json` listing per-section adds, updates, and deletes
+- **Monthly full bundles** are published once a month under `datasets/` — the full corresponds to the last release of a month and is published retroactively when the next month's first release runs
+- At the start of each year, the previous year's monthly full bundles move to `archives/`
 
-The stable filenames `clinvar-gks_00-latest.json.gz` and `clinvar-gks_00-latest_weekly.json.gz` always point to the most recent monthly and weekly releases respectively.
+The stable filenames `clinvar-gks_00-latest.json.gz` (monthly full) and `clinvar-gks-delta_00-latest.json.gz` (weekly delta) always point to the most recent full and delta respectively. To reconstruct the current state, take the latest monthly full and replay the weekly deltas published since it.
 
 ### Downloads
 
-Download the most recent monthly release:
+Download the most recent monthly full bundle:
 
 ```bash
 curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/clinvar-gks_00-latest.json.gz
 ```
 
-Download the most recent weekly release:
+Download the most recent weekly delta and its manifest:
 
 ```bash
-curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/datasets/weekly/clinvar-gks_00-latest_weekly.json.gz
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/deltas/00-latest/clinvar-gks-delta_00-latest.json.gz
+curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/deltas/00-latest/manifest.json
 ```
+
+See [Downloads](data-access/download.md) for the full directory layout, the manifest shape, and the consumer replay model.
 
 ### Directory Structure
 
 ```text
 datasets/
-  clinvar-gks_00-latest.json.gz         latest monthly release
-  clinvar-gks_yyyy-mm.json.gz           monthly releases (current year)
+  clinvar-gks_00-latest.json.gz              latest monthly full bundle
+  clinvar-gks_yyyy-mm.json.gz                monthly full bundles (current year)
 
-datasets/weekly/
-  clinvar-gks_00-latest_weekly.json.gz  latest weekly release
-  clinvar-gks_yyyy-mmdd.json.gz         weekly releases (current month)
+deltas/00-latest/
+  clinvar-gks-delta_00-latest.json.gz        latest weekly delta bundle
+  manifest.json                              latest delta manifest
+
+deltas/yyyy-mmdd/
+  clinvar-gks-delta_yyyy-mmdd.json.gz        weekly delta bundle (added + updated records)
+  manifest.json                              per-release change manifest
 
 archives/{yyyy}/
-  clinvar-gks_yyyy-mm.json.gz           monthly releases from prior years
-
-archives/{yyyy}/weekly/
-  clinvar-gks_yyyy-mmdd.json.gz         weekly releases from prior months
+  clinvar-gks_yyyy-mm.json.gz                monthly full bundles from prior years
 ```
 
 ### Release Notes
@@ -177,7 +180,7 @@ Pipeline changes that affect the structure or content of the output are document
 
 ## How It Works
 
-The pipeline runs on **Google BigQuery** using SQL stored procedures, with an external VRS Python processing step. Each release is fully reprocessed from the source ClinVar XML — there is no incremental state between releases.
+The pipeline runs on **Google BigQuery** using SQL stored procedures, with an external VRS Python processing step. The two most expensive stages — variation identity and VRS processing — run **incrementally**, recomputing only the variations that changed since the prior release and carrying the rest forward. A per-release change log drives the weekly delta published to R2.
 
 See the [Pipeline Overview](pipeline/index.md) for the full workflow.
 
