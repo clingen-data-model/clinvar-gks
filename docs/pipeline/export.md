@@ -138,10 +138,10 @@ See [Parquet Files](../data-access/download.md#parquet-files) for download URLs 
 The script manages the monthly full slots:
 
 - **`datasets/`** — monthly full bundles for the current year (`clinvar-gks_yyyy-mm.json.gz`) plus a stable `clinvar-gks_00-latest.json.gz`
-- **`datasets/parquet/`** — Parquet files (one per dictionary table), always overwritten with the latest monthly full
-- **`archives/{yyyy}/`** — monthly full bundles from prior years
+- **`datasets/parquet/{yyyy-mm}/`** — dated per-section Parquet for each monthly full, plus a stable `datasets/parquet/00-latest/` pointing at the newest monthly full
+- **`archives/{yyyy}/`** — monthly full bundles and dated Parquet month sets (`parquet/{yyyy-mm}/`) from prior years
 
-There is **no weekly full bundle** — weekly changes are published as deltas (see [Step 5](#step-5-publish-the-weekly-delta)). The monthly upload is unconditional; boundary detection now governs only year rollover — when a new year begins, the prior year's monthly full bundles are moved to `archives/{yyyy}/`. After upload, `generate-r2-index.sh` regenerates `index.json`, which lists the monthly `datasets`, the `archives`, and the `deltas`.
+There is **no weekly full bundle** — weekly changes are published as deltas (see [Step 5](#step-5-publish-the-weekly-delta)). The monthly upload is unconditional; boundary detection now governs only year rollover — when a new year begins, the prior year's monthly full bundles and dated Parquet month sets are moved to `archives/{yyyy}/`. After upload, `generate-r2-index.sh` regenerates `index.json`, which lists the monthly `datasets` (bundles + Parquet month sets), the `archives`, and the `deltas`.
 
 ### Step 5: Publish the Weekly Delta
 

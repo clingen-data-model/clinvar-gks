@@ -19,7 +19,7 @@ curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/deltas/00-latest/cli
 curl -O https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/deltas/00-latest/manifest.json
 ```
 
-The full bundle is a single JSON object containing all bundle sections — variations, statements, propositions, conditions, and supporting reference data. A delta uses the same section structure but carries only the records added or updated since its baseline release. Typed Parquet files (one per section) accompany both at `datasets/parquet/` and `deltas/<yyyy-mmdd>/parquet/`. See [Output Format](../output-reference/overview.md) for the complete structure and [Downloads](download.md) for the consumer replay model and the full Parquet list.
+The full bundle is a single JSON object containing all bundle sections — variations, statements, propositions, conditions, and supporting reference data. A delta uses the same section structure but carries only the records added or updated since its baseline release. Typed Parquet files (one per section) accompany both — dated monthly full sets at `datasets/parquet/<yyyy-mm>/` (with a stable `datasets/parquet/00-latest/`) and weekly delta sets at `deltas/<yyyy-mmdd>/parquet/`. See [Output Format](../output-reference/overview.md) for the complete structure and [Downloads](download.md) for the consumer replay model and the full Parquet list.
 
 ---
 
@@ -27,7 +27,7 @@ The full bundle is a single JSON object containing all bundle sections — varia
 
 - **Weekly deltas** are published for every ClinVar release under `deltas/<yyyy-mmdd>/`, mirrored at `deltas/00-latest/`
 - **Monthly full bundles** are published once a month under `datasets/` — the full corresponds to the last release of a month, published retroactively when the next month's first release runs
-- At the start of each year, the previous year's monthly full bundles move to `archives/`
+- At the start of each year, the previous year's monthly full bundles and dated Parquet month sets move to `archives/`
 
 The stable filenames `clinvar-gks_00-latest.json.gz` (monthly full) and `clinvar-gks-delta_00-latest.json.gz` (weekly delta) always point to the most recent full and delta respectively.
 
@@ -40,8 +40,11 @@ datasets/
   clinvar-gks_00-latest.json.gz              latest monthly full bundle
   clinvar-gks_yyyy-mm.json.gz                monthly full bundles (current year)
 
-datasets/parquet/
-  {section}.parquet                          typed Parquet for the latest monthly full
+datasets/parquet/00-latest/
+  {section}.parquet                          typed Parquet for the latest monthly full (stable URL)
+
+datasets/parquet/yyyy-mm/
+  {section}.parquet                          typed Parquet for a specific monthly full (current year)
 
 deltas/00-latest/
   clinvar-gks-delta_00-latest.json.gz        latest weekly delta bundle
@@ -55,6 +58,7 @@ deltas/yyyy-mmdd/
 
 archives/{yyyy}/
   clinvar-gks_yyyy-mm.json.gz                monthly full bundles from prior years
+  parquet/yyyy-mm/{section}.parquet          typed Parquet month sets from prior years
 ```
 
 ---
