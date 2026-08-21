@@ -30,6 +30,21 @@ TABLE_SECTION = {
     "gks_dict_vcv": "vcv",
     "gks_dict_rcv": "rcv",
 }
+
+# The 3 proposition dicts are delivered as 4 datatype-homogeneous bundle sections (Phase 2), so a
+# proposition change-log row maps to a section by its ROW CONTENT, not just its table. Each key encodes
+# its type code ({scv}-CODE / accession-...-PROPTYPE-...), so a type change is a new key (A) + old key
+# gone (D) — never a group-migrating U — so A/U resolve the group from the CURRENT table and D from the
+# BASELINE table. This CASE mirrors export-gks-dicts.sh PROP_GROUP_CASE + assemble SECTIONS.
+PROP_TABLES = ("gks_dict_proposition", "gks_dict_vcv_proposition", "gks_dict_rcv_proposition")
+GROUP_SECTION_CASE = """CASE
+    WHEN COALESCE(JSON_VALUE(p.value,'$.customPropositionType'), JSON_VALUE(p.value,'$.type')) LIKE 'Clinvar%' THEN 'varcustom-proposition'
+    WHEN COALESCE(JSON_VALUE(p.value,'$.customPropositionType'), JSON_VALUE(p.value,'$.type')) = 'VariantOncogenicityProposition' THEN 'vartumor-proposition'
+    WHEN COALESCE(JSON_VALUE(p.value,'$.customPropositionType'), JSON_VALUE(p.value,'$.type')) = 'VariantTherapeuticResponseProposition' THEN 'vartherapy-proposition'
+    WHEN COALESCE(JSON_VALUE(p.value,'$.customPropositionType'), JSON_VALUE(p.value,'$.type')) IN
+      ('VariantPathogenicityProposition','VariantClinicalSignificanceProposition','VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond-proposition'
+    ELSE ERROR(FORMAT('unmapped proposition type for delivery grouping: %t', COALESCE(JSON_VALUE(p.value,'$.customPropositionType'), JSON_VALUE(p.value,'$.type'))))
+  END"""
 PROJECT = os.environ.get("CLOUDSDK_CORE_PROJECT", "clingen-dev")
 
 
@@ -59,18 +74,41 @@ def main():
     compare = rel[0]["compare"] if rel else release
     baseline = rel[0]["baseline"] if rel else None   # null only on the true first release
 
+    # Non-proposition tables: section is fixed by TABLE_SECTION.
+    nonprop = [t for t in TABLE_SECTION if t not in PROP_TABLES]
     rows = bq_json(
         f"SELECT table_name, change_type, pk "
         f"FROM `{ds}.gks_change_log` "
-        f"WHERE table_name IN ({','.join(repr(t) for t in TABLE_SECTION)})"
+        f"WHERE table_name IN ({','.join(repr(t) for t in nonprop)})"
     )
+
+    # Proposition tables: resolve each changed key to its group section by row content.
+    # A/U keys exist in the CURRENT tables; D keys exist only in the BASELINE tables.
+    prop_in = ",".join(repr(t) for t in PROP_TABLES)
+    cur_union = " UNION ALL ".join(
+        f"SELECT key, value FROM `{ds}.{t}`" for t in PROP_TABLES)
+    prop_sql = (
+        f"SELECT cl.change_type, cl.pk, {GROUP_SECTION_CASE} AS section "
+        f"FROM `{ds}.gks_change_log` cl JOIN ({cur_union}) p ON p.key = cl.pk "
+        f"WHERE cl.table_name IN ({prop_in}) AND cl.change_type IN ('A','U')"
+    )
+    if baseline:
+        base_ds = f"clinvar_{baseline.replace('-', '_')}_{version}"
+        base_union = " UNION ALL ".join(
+            f"SELECT key, value FROM `{base_ds}.{t}`" for t in PROP_TABLES)
+        prop_sql += (
+            f" UNION ALL SELECT cl.change_type, cl.pk, {GROUP_SECTION_CASE} AS section "
+            f"FROM `{ds}.gks_change_log` cl JOIN ({base_union}) p ON p.key = cl.pk "
+            f"WHERE cl.table_name IN ({prop_in}) AND cl.change_type = 'D'"
+        )
+    prop_rows = bq_json(prop_sql)
 
     pv = bq_json(f"SELECT ANY_VALUE(audit_stamp) AS a FROM `{ds}.gks_pipeline_version`")
     pipeline_version = pv[0]["a"] if pv and pv[0].get("a") else None
 
     sections = {}
-    for r in rows:
-        sec = TABLE_SECTION[r["table_name"]]
+    for r in ([{"table_name": None, **pr} for pr in prop_rows] + rows):
+        sec = r["section"] if r.get("section") else TABLE_SECTION[r["table_name"]]
         s = sections.setdefault(sec, {"added": 0, "updated": 0, "deleted": []})
         ct = r["change_type"]
         if ct == "A":

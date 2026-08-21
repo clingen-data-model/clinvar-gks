@@ -144,9 +144,9 @@ export_proposition_group_ndjson() {
     ) AS
     SELECT key, SAFE.PARSE_JSON(collapse_ext_values(TO_JSON_STRING(value))) AS value FROM (
       SELECT key, value, ${PROP_GROUP_CASE} AS _grp FROM (
-        SELECT key, value FROM \`${DATASET}.gks_dict_proposition\`
-        UNION ALL SELECT key, value FROM \`${DATASET}.gks_dict_rcv_proposition\`
-        UNION ALL SELECT key, value FROM \`${DATASET}.gks_dict_vcv_proposition\`
+        SELECT key, value FROM \`${DATASET}.$(src_table gks_dict_proposition)\`
+        UNION ALL SELECT key, value FROM \`${DATASET}.$(src_table gks_dict_rcv_proposition)\`
+        UNION ALL SELECT key, value FROM \`${DATASET}.$(src_table gks_dict_vcv_proposition)\`
       )
     ) WHERE _grp = '${group}'"
 }
@@ -192,10 +192,9 @@ if ! $PARQUET_ONLY; then
   export_ndjson_ext_collapse "$(src_table gks_dict_evidence_line)" evidenceLine.ndjson.gz
 
   # Proposition delivery groups (Phase 2): the 3 per-level proposition dicts are split into 4
-  # datatype-homogeneous sections by the canonical group mapping.
-  # TODO(delta): these helpers read the FULL gks_dict_*proposition tables, not $(src_table ...),
-  # so --delta mode does not yet emit proposition deltas grouped by section. Delta-aware proposition
-  # group export + the 4-section delta manifest are follow-ups for the gated R2 rollout.
+  # datatype-homogeneous sections by the canonical group mapping. Delta-aware — the helper reads
+  # $(src_table gks_dict_*proposition), so --delta mode emits proposition deltas split into the 4
+  # group sections (build-delta-manifest.py resolves each changed key to its group section to match).
   export_proposition_group_ndjson varcond
   export_proposition_group_ndjson vartumor
   export_proposition_group_ndjson vartherapy
