@@ -44,7 +44,10 @@ Objects reference each other using `#/{section}/{key}` strings. To resolve a ref
 | `#/condition/{key}` | `#/condition/clinvar.trait:9580` | `condition` |
 | `#/conditionSet/{key}` | `#/conditionSet/clinvar.traitset:1234` | `conditionSet` |
 | `#/submitter/{key}` | `#/submitter/clinvar.submitter:500139` | `submitter` |
-| `#/proposition/{key}` | `#/proposition/SCV001234567-PATH` | `proposition` |
+| `#/varcond-proposition/{key}` | `#/varcond-proposition/SCV001234567-PATH` | `varcond-proposition` |
+| `#/vartumor-proposition/{key}` | `#/vartumor-proposition/SCV002345678-ONCO` | `vartumor-proposition` |
+| `#/vartherapy-proposition/{key}` | `#/vartherapy-proposition/SCV003456789-TR` | `vartherapy-proposition` |
+| `#/varcustom-proposition/{key}` | `#/varcustom-proposition/SCV004567890-RF` | `varcustom-proposition` |
 | `#/scv/{key}` | `#/scv/clinvar.submission:SCV001234567.1` | `scv` |
 | `#/vcv/{key}` | `#/vcv/VCV000012582.63-G-PATH-CP` | `vcv` |
 | `#/evidenceLine/{key}` | `#/evidenceLine/VCV000012582.63-G-PATH-CP.contributing` | `evidenceLine` |
@@ -60,14 +63,16 @@ Objects reference each other using `#/{section}/{key}` strings. To resolve a ref
 | Variation | `constraints[].allele` | `#/allele/` |
 | Variation | `constraints[].location` | `#/location/` |
 | Variation | `extensions[].clinvarGeneList[].gene` | `#/gene/` |
-| Proposition | `subjectVariant` | `#/variation/` |
-| Proposition | `objectCondition` | `#/condition/` or `#/conditionSet/` |
-| SCV Statement | `proposition` | `#/proposition/` |
+| Proposition (standard) | `subjectVariant` | `#/variation/` |
+| Proposition (standard) | `objectCondition` / `objectTumorType` | `#/condition/` or `#/conditionSet/` |
+| Proposition (custom) | `subject` | `#/variation/` |
+| Proposition (custom) | `object` | `#/condition/` or `#/conditionSet/` |
+| SCV Statement | `proposition` | `#/{varcond,vartumor,vartherapy,varcustom}-proposition/` |
 | SCV Statement | `contributions[].contributor` | `#/submitter/` |
-| VCV Statement | `proposition` | `#/proposition/` |
+| VCV Statement | `proposition` | `#/{varcond,vartumor,vartherapy,varcustom}-proposition/` |
 | SCV Statement | `hasEvidenceLines[]` | `#/evidenceLine/` |
 | VCV Statement | `hasEvidenceLines[]` | `#/evidenceLine/` |
-| RCV Statement | `proposition` | `#/proposition/` |
+| RCV Statement | `proposition` | `#/{varcond,vartumor,vartherapy,varcustom}-proposition/` |
 | RCV Statement | `hasEvidenceLines[]` | `#/evidenceLine/` |
 | EvidenceLine | `evidenceItems[]` | `#/scv/`, `#/vcv/`, or `#/rcv/` |
 

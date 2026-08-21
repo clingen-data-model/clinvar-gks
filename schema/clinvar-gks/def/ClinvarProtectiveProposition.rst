@@ -4,7 +4,7 @@
 
 **Computational Definition**
 
-A proposition describing the protective role of a variant against a condition. Used for ClinVar submissions classified as "protective". ClinVar has stopped accepting new submissions with this classification, but historical submissions remain.
+A custom proposition describing the protective role of a variant against a condition. Used for ClinVar submissions classified as "protective". ClinVar has stopped accepting new submissions with this classification, but historical submissions remain.
 
 **Information Model**
 
@@ -20,7 +20,7 @@ A proposition describing the protective role of a variant against a condition. U
       - Type
       - Limits
       - Description
-   *  - type
+   *  - customPropositionType
       -
       - string
       - 0..1
@@ -28,10 +28,5 @@ A proposition describing the protective role of a variant against a condition. U
    *  - predicate
       -
       - string
-      - 1..1
+      - 0..1
       - The relationship the Proposition describes between the subject variant and object condition. MUST be "isProtectiveFor".
-   *  - objectCondition
-      -
-      - :ref:`Condition` | :ref:`iriReference`
-      - 1..1
-      - The condition against which the variant is protective.

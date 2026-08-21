@@ -12,22 +12,22 @@
          "properties": {
             "evidenceOutcome": {
                "description": "The evidence level outcome for the somatic clinical impact assertion, based on the AMP/ASCO/CAP tiered evidence framework. Values reflect the tier mapping (e.g., \"Level A/B\" for Tier I, \"Level C/D\" for Tier II). Present only on somatic clinical impact evidence lines.",
-               "$ref": "/ga4gh/schema/gks-core/1.1.0/json/MappableConcept"
+               "$ref": "/ga4gh/schema/gks-core/1.2.0-ballot.2026-07.1/json/MappableConcept"
             },
             "proposition": {
                "description": "The target proposition for this evidence line. For somatic clinical impact statements, this is one of the specific assertion type propositions: VariantTherapeuticResponseProposition (TR), VariantDiagnosticProposition (DIAG), or VariantPrognosticProposition (PROG).",
                "oneOf": [
                   {
-                     "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantTherapeuticResponseProposition"
+                     "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantTherapeuticResponseProposition"
                   },
                   {
-                     "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantDiagnosticProposition"
+                     "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantDiagnosticProposition"
                   },
                   {
-                     "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/VariantPrognosticProposition"
+                     "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/VariantPrognosticProposition"
                   },
                   {
-                     "$ref": "/ga4gh/schema/gks-core/1.1.0/json/iriReference"
+                     "$ref": "/ga4gh/schema/gks-core/1.2.0-ballot.2026-07.1/json/iriReference"
                   }
                ]
             }
@@ -40,7 +40,7 @@
    "maturity": "draft",
    "allOf": [
       {
-         "$ref": "/ga4gh/schema/va-spec/1.0.1/base/json/EvidenceLine"
+         "$ref": "/ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/EvidenceLine"
       },
       {
          "$ref": "#/$defs/ClinvarSomaticEvidenceLineProperties"
