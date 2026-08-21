@@ -10,7 +10,7 @@ SELECT
   (SELECT JSON_VALUE(q, '$.value.name') FROM UNNEST(JSON_QUERY_ARRAY(value, '$.qualifiers')) q
     WHERE JSON_VALUE(q, '$.name') = 'geneContext') AS gene_context_name,
   TO_JSON_STRING(JSON_QUERY(value, '$.qualifiers')) AS qualifiers,
-  TO_JSON_STRING(value) AS data
+  collapse_ext_values(TO_JSON_STRING(value)) AS data
 FROM (
   SELECT key, value FROM `{DATASET}.gks_dict_proposition`
   UNION ALL SELECT key, value FROM `{DATASET}.gks_dict_rcv_proposition`

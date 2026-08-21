@@ -65,8 +65,11 @@ extract_parquet_typed() {
   sql=$(<"${schema_path}")
   sql="${sql//\{DATASET\}/${DATASET}}"
   echo "  Exporting ${sql_file%.sql} -> ${sharded} (Parquet via EXPORT DATA)"
+  # ${COLLAPSE_UDF} makes collapse_ext_values(...) available to schema files whose `data` column
+  # needs the extension value_xxx -> value collapse (proposition groups, scv, evidenceLine).
   bq query --use_legacy_sql=false --nouse_cache \
-    "EXPORT DATA OPTIONS(
+    "${COLLAPSE_UDF}
+    EXPORT DATA OPTIONS(
       uri='${GCS_PARQUET_PATH}/${sharded}',
       format='PARQUET',
       compression='SNAPPY',
