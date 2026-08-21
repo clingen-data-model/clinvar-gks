@@ -6,7 +6,8 @@
 # upload-gks-delta-to-r2.sh) so the published index is consistent regardless of
 # which one ran last. Lists:
 #   datasets.monthly — monthly full bundles in datasets/ (00-latest marked)
-#   archives         — prior-year monthly files under archives/{yyyy}/
+#   datasets.parquet — dated Parquet month sets under datasets/parquet/ (00-latest marked)
+#   archives         — prior-year monthly files + parquet month sets under archives/{yyyy}/
 #   deltas           — per-release delta dirs under deltas/ (00-latest marked)
 #
 # Usage:
@@ -96,6 +97,42 @@ build_file_array() {
   echo "$arr"
 }
 
+# Build a JSON array of Parquet month-set objects under a prefix.
+# Each entry: {release, path, latest}. A dir named 00-latest is marked latest;
+# a dir named YYYY-MM becomes release=YYYY-MM. Consumers compose per-section URLs
+# as <path><section>.parquet.
+# Args: prefix (e.g. "datasets/parquet/" or "archives/2025/parquet/")
+build_parquet_array() {
+  local prefix="$1"
+  local first=true
+  local arr="["
+
+  while IFS= read -r dir; do
+    dir="${dir%/}"
+    [[ -z "$dir" ]] && continue
+
+    local release is_latest
+    if [[ "$dir" == "00-latest" ]]; then
+      release="latest"
+      is_latest="true"
+    elif [[ "$dir" =~ ^[0-9]{4}-[0-9]{2}$ ]]; then
+      release="$dir"
+      is_latest="false"
+    else
+      continue
+    fi
+
+    if ! $first; then arr+=","; fi
+    first=false
+
+    arr+=$(printf '{"release":"%s","path":"%s%s/","latest":%s}' \
+      "$release" "$prefix" "$dir" "$is_latest")
+  done < <(r2_ls "$prefix")
+
+  arr+="]"
+  echo "$arr"
+}
+
 # Build the deltas JSON array — one object per release dir under deltas/.
 # Each entry: {release, path, manifest, latest}. deltas/00-latest is marked latest.
 build_deltas_array() {
@@ -139,7 +176,10 @@ INDEX_TMP="/tmp/clinvar-gks-index.json"
 # datasets.monthly (weekly section dropped — full is month-end only now)
 DS_MONTHLY=$(build_file_array "datasets/" "${LATEST_MONTHLY}")
 
-# archives — per-year discovery
+# datasets.parquet — dated month sets + 00-latest under datasets/parquet/
+DS_PARQUET=$(build_parquet_array "datasets/parquet/")
+
+# archives — per-year discovery (monthly bundles + dated parquet month sets)
 ARCHIVES_JSON="{"
 FIRST_YEAR=true
 while IFS= read -r year_dir; do
@@ -150,7 +190,9 @@ while IFS= read -r year_dir; do
   FIRST_YEAR=false
 
   ARCH_MONTHLY=$(build_file_array "archives/${year_dir}/")
-  ARCHIVES_JSON+=$(printf '"%s":{"monthly":%s}' "$year_dir" "$ARCH_MONTHLY")
+  ARCH_PARQUET=$(build_parquet_array "archives/${year_dir}/parquet/")
+  ARCHIVES_JSON+=$(printf '"%s":{"monthly":%s,"parquet":%s}' \
+    "$year_dir" "$ARCH_MONTHLY" "$ARCH_PARQUET")
 done < <(r2_ls "archives/" 2>/dev/null)
 ARCHIVES_JSON+="}"
 
@@ -163,7 +205,8 @@ cat > "$INDEX_TMP" <<INDEXEOF
   "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "base_url": "${R2_PUBLIC_URL}",
   "datasets": {
-    "monthly": ${DS_MONTHLY}
+    "monthly": ${DS_MONTHLY},
+    "parquet": ${DS_PARQUET}
   },
   "archives": ${ARCHIVES_JSON},
   "deltas": ${DELTAS_JSON}

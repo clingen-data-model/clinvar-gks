@@ -27,8 +27,11 @@ datasets/
   clinvar-gks_yyyy-mm.json.gz    — monthly full for a specific month.
 
 datasets/parquet/
-  Typed Parquet for the latest monthly full, one file per section
-  (<section>.parquet).
+  Typed Parquet for the monthly fulls, one file per section, organized by month.
+  datasets/parquet/yyyy-mm/<section>.parquet — Parquet for a specific monthly full.
+  datasets/parquet/00-latest/<section>.parquet — always the newest monthly full.
+  (Dated month sets are checkpoint-addressable, so a delta chain's checkpoint_full
+   monthly Parquet stays available for reconstruction after later months publish.)
 
 deltas/
   Per-release weekly deltas.
@@ -42,10 +45,12 @@ deltas/
   deltas/00-latest/                     — mirror of the most recent delta.
 
 archives/
-  Prior years' monthly full bundles, organized by year (archives/yyyy/).
+  Prior years' monthly full bundles and their dated Parquet month sets,
+  organized by year (archives/yyyy/ and archives/yyyy/parquet/yyyy-mm/).
 
 index.json
-  Machine-readable listing of the monthly fulls, archives, and delta releases.
+  Machine-readable listing of the monthly fulls, Parquet month sets, archives,
+  and delta releases.
 
 Quick Start
 -----------
