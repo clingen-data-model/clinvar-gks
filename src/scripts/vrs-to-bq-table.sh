@@ -51,11 +51,12 @@ BUCKET_NAME='clinvar-gks'
 # variation_identity transform version change, which invalidates carry-forward).
 INCREMENTAL="${INCREMENTAL:-true}"
 
-# Set CATVAR_FULL=true to force gks_catvar_proc (full) instead of the incremental
-# wrapper this run only (e.g. propagated from run-release.sh's --full flag). Defaults
+# Set GKS_FULL=true to force the FULL wrappers for the incremental gks procs
+# (gks_catvar / gks_scv_condition / gks_scv_statement) instead of the incremental
+# wrappers, this run only (e.g. propagated from run-release.sh's --full flag). Defaults
 # to false so standalone runs of this script are unaffected and stay incremental
-# (gks_catvar_proc_incremental self-guards + falls back to full when needed anyway).
-CATVAR_FULL="${CATVAR_FULL:-false}"
+# (each incremental wrapper self-guards + falls back to full when needed anyway).
+GKS_FULL="${GKS_FULL:-false}"
 
 # Cloud Run Job Configuration
 GCLOUD_JOB_NAME='vrs-to-vi-location-transformer'
@@ -67,11 +68,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCHEMA_FILE_PATH="${SCRIPT_DIR}/../../schemas/vrs_output_2_0_1.schema.json"
 
 # BigQuery Stored Procedures to run in order.
-# NOTE: gks_catvar is NOT listed here — it is called via its incremental wrapper
-# (gks_catvar_proc_incremental) ahead of this loop in execute_bq_procedures.
+# NOTE: gks_catvar, gks_scv_condition, gks_scv_statement are NOT listed here — they are
+# called via their incremental wrappers (with gks_scv_changed) ahead of this loop in
+# execute_bq_procedures. rcv/vcv remain full rebuilds until Plan 3.
 BIGQUERY_PROCEDURES=(
-  'clinvar_ingest.gks_scv_condition_proc'
-  'clinvar_ingest.gks_scv_statement_proc'
   'clinvar_ingest.gks_rcv_proc'
   'clinvar_ingest.gks_rcv_statement_proc'
   'clinvar_ingest.gks_vcv_proc'
@@ -181,9 +181,9 @@ execute_bq_procedures() {
   local release_date=$1
   echo "Executing BigQuery stored procedures for date: $release_date"
 
-  # catvar is incremental (Plan 1); its build proc self-guards + falls back to full.
-  # CATVAR_FULL forces the full proc for this run only (e.g. run-release.sh --full).
-  if [[ "$CATVAR_FULL" == "true" ]]; then
+  # catvar + scv are incremental (Plans 1-2); their build procs self-guard + fall back to
+  # full. GKS_FULL forces the full wrappers for this run only (e.g. run-release.sh --full).
+  if [[ "$GKS_FULL" == "true" ]]; then
     echo "  - Calling procedure: clinvar_ingest.gks_catvar_proc (FULL, --full requested)..."
     if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
         "CALL \`clinvar_ingest.gks_catvar_proc\`('$release_date', FALSE)" > /dev/null; then
@@ -197,6 +197,31 @@ execute_bq_procedures() {
     fi
   fi
   echo "    ✅ Success."
+
+  # scv (Plan 2): compute the shared changed-set/audit FIRST, then the two incremental
+  # scv procs (condition before statement — statement joins {S}.gks_scv_condition_sets).
+  echo "  - Calling procedure: clinvar_ingest.gks_scv_changed..."
+  if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+      "CALL \`clinvar_ingest.gks_scv_changed\`('$release_date')" > /dev/null; then
+    echo "❌ gks_scv_changed FAILED"; return 1;
+  fi
+  echo "    ✅ Success."
+  for scv_proc in gks_scv_condition gks_scv_statement; do
+    if [[ "$GKS_FULL" == "true" ]]; then
+      echo "  - Calling procedure: clinvar_ingest.${scv_proc}_proc (FULL, --full requested)..."
+      if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+          "CALL \`clinvar_ingest.${scv_proc}_proc\`('$release_date', FALSE)" > /dev/null; then
+        echo "❌ ${scv_proc}_proc (full) FAILED"; return 1;
+      fi
+    else
+      echo "  - Calling procedure: clinvar_ingest.${scv_proc}_proc_incremental..."
+      if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+          "CALL \`clinvar_ingest.${scv_proc}_proc_incremental\`('$release_date', FALSE)" > /dev/null; then
+        echo "❌ ${scv_proc}_proc_incremental FAILED"; return 1;
+      fi
+    fi
+    echo "    ✅ Success."
+  done
 
   for proc in "${BIGQUERY_PROCEDURES[@]}"; do
     echo "  - Calling procedure: $proc..."

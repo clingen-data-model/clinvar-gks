@@ -46,7 +46,15 @@ BEGIN
     STRUCT('gks_dict_allele',                 'key'),
     STRUCT('gks_dict_copy_number_count',      'key'),
     STRUCT('gks_dict_copy_number_change',     'key'),
-    STRUCT('gks_dict_gene',                   'key')
+    STRUCT('gks_dict_gene',                   'key'),
+    -- scv condition/statement outputs (Plan 2)
+    STRUCT('gks_dict_condition',              'id'),
+    STRUCT('gks_dict_condition_set',          'id'),
+    STRUCT('gks_scv_condition_sets',          'scv_id'),
+    STRUCT('gks_dict_submitter',              'key'),
+    STRUCT('gks_dict_proposition',            'key'),
+    STRUCT('gks_dict_evidence_line',          'id'),
+    STRUCT('gks_dict_scv',                    'id')
   ];
   DECLARE i INT64 DEFAULT 0;
   DECLARE t STRUCT<name STRING, pk STRING>;

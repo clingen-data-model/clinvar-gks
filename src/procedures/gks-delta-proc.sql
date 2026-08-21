@@ -6,7 +6,7 @@
 -- upserts it by pk directly). D tombstones are NOT payload rows; they live in the
 -- manifest (gks_change_log) only. Requires gks_change_log to have been built first.
 --
--- `tables` mirrors the catvar-output subset of gks_change_log's `tracked` array
+-- `tables` mirrors the catvar+scv-output subset of gks_change_log's `tracked` array
 -- (name + pk expression). Keep in sync.
 -- ============================================================================
 CREATE OR REPLACE PROCEDURE `clinvar_ingest.gks_delta_build`(on_date DATE)
@@ -18,7 +18,15 @@ BEGIN
     STRUCT('gks_dict_allele',                 'key'),
     STRUCT('gks_dict_copy_number_count',      'key'),
     STRUCT('gks_dict_copy_number_change',     'key'),
-    STRUCT('gks_dict_gene',                   'key')
+    STRUCT('gks_dict_gene',                   'key'),
+    -- scv condition/statement outputs (Plan 2)
+    STRUCT('gks_dict_condition',              'id'),
+    STRUCT('gks_dict_condition_set',          'id'),
+    STRUCT('gks_scv_condition_sets',          'scv_id'),
+    STRUCT('gks_dict_submitter',              'key'),
+    STRUCT('gks_dict_proposition',            'key'),
+    STRUCT('gks_dict_evidence_line',          'id'),
+    STRUCT('gks_dict_scv',                    'id')
   ];
   DECLARE i INT64 DEFAULT 0;
   DECLARE t STRUCT<name STRING, pk STRING>;
