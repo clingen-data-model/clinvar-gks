@@ -50,7 +50,7 @@ See [Output Format Overview](overview.md) for a detailed guide to the bundle str
 Objects reference each other using `#/` JSON pointer strings rather than embedding full objects. This keeps the file compact and avoids duplication. For example:
 
 - A **variation** references its allele as `#/allele/ga4gh:VA.abc123`
-- An **SCV statement** references its proposition as `#/proposition/SCV001234567-PATH`
+- An **SCV statement** references its proposition as `#/varcond-proposition/SCV001234567-PATH` (propositions are delivered in four `*-proposition` sections by datatype — `varcond`, `vartumor`, `vartherapy`, `varcustom`)
 - A **VCV evidence line** references its contributing SCVs as `#/scv/clinvar.submission:SCV001234567.1`
 
 See [ID References](id-references.md) for the complete reference format guide, identifier patterns, and resolution rules.

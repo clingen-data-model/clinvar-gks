@@ -11,35 +11,93 @@ description: >-
 strict: true
 
 imports:
-  va-core: ../va-spec/base/va-core-source.yaml
+  va-spec: ../va-spec/base/va-core-source.yaml
   domain-entities: ../va-spec/base/domain-entities-source.yaml
   cat-vrs: ../cat-vrs/cat-vrs-source.yaml
   vrs: ../vrs/vrs-source.yaml
   gks-core: ../gks-core/gks-core-source.yaml
 
 namespaces:
-  gks.core: /ga4gh/schema/gks-core/1.1.0/json/
-  vrs: /ga4gh/schema/vrs/2.0.1/json/
-  cat-vrs: /ga4gh/schema/cat-vrs/1.0.0/json/
-  va-spec: /ga4gh/schema/va-spec/1.0.1/base/json/
+  gks.core: /ga4gh/schema/gks-core/1.2.0-ballot.2026-07.1/json/
+  vrs: /ga4gh/schema/vrs/2.1.0-ballot.2026-07.1/json/
+  cat-vrs: /ga4gh/schema/cat-vrs/1.1.0-ballot.2026-07.1/json/
+  va-spec: /ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/json/
+  domain-entities: /ga4gh/schema/va-spec/1.1.0-ballot.2026-07.2/base/domain-entities/json/
 
 $defs:
+  ClinvarGermlineCustomPropositionProperties:
+    type: object
+    maturity: draft
+    description: >-
+      ClinVar-specific properties for germline custom propositions.
+    protectedClassOf: ClinvarGermlineCustomProposition
+    properties:
+      subject:
+        oneOf:
+          - $refCurie: vrs:MolecularVariation
+          - $refCurie: cat-vrs:CategoricalVariant
+          - $refCurie: gks.core:iriReference
+        description: A variant that is the subject of the Proposition.
+      object:
+        oneOf:
+          - $refCurie: domain-entities:Condition
+          - $refCurie: domain-entities:ConditionSet
+          - $refCurie: gks.core:iriReference
+        description: The condition for which the variant is associated.
+      qualifiers:
+        type: array
+        ordered: false
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              description: >-
+                A name for the qualifier. Should be indicative of its meaning and/or the type of
+                information its value represents.
+            value:
+              oneOf:
+                - $refCurie: gks.core:iriReference
+                - $refCurie: gks.core:MappableConcept
+              description: >-
+                The value of the qualifier - either a MappableConcept or an IRI reference.
+          required:
+            - name
+            - value
+          additionalProperties: false
+        description: >-
+          An array of custom qualifier objects that provide additional information about the
+          Proposition. Each qualifier is an object with a required 'name' (string) identifying the
+          qualifier, a required 'value' (a MappableConcept or an IRI reference), and an optional
+          'description' (string) explaining its meaning.
+
+  ClinvarGermlineCustomProposition:
+    maturity: draft
+    description: >-
+      A custom proposition type for ClinVar germline submissions that do not have
+      a corresponding GA4GH VA-Spec proposition type. Includes ClinVar submission
+      categories such as "risk factor", "protective", "drug response", "affects", "association", "confers sensitivity", "other", "not provided", and
+      "conflicting data from submitters". These custom proposition types are used to represent variant-condition associations in Clin
+    allOf:
+      - $refCurie: va-spec:CustomProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomPropositionProperties"
+
   ClinvarRiskFactorProposition:
     type: object
     maturity: draft
     description: >-
-      A proposition describing the role of a variant as a risk factor for a condition.
+      A custom proposition describing the role of a variant as a risk factor for a condition.
       Used for ClinVar submissions classified as "risk factor". ClinVar has stopped
       accepting new submissions with this classification in favor of standard
       pathogenicity terms, but historical submissions remain.
     allOf:
-      - $refCurie: va-spec:ClinicalVariantProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
     properties:
-      type:
+      customPropositionType:
         type: string
         const: ClinvarRiskFactorProposition
         default: ClinvarRiskFactorProposition
-        description: MUST be "ClinvarRiskFactorProposition".
+        description: MUST be "ClinvarRiskFactorProposition"
       predicate:
         type: string
         const: isRiskFactorFor
@@ -47,27 +105,19 @@ $defs:
         description: >-
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "isRiskFactorFor".
-      objectCondition:
-        oneOf:
-          - $ref: Condition
-          - $refCurie: gks.core:iriReference
-        description: The condition for which the variant is a risk factor.
-    required:
-      - predicate
-      - objectCondition
 
   ClinvarProtectiveProposition:
     type: object
     maturity: draft
     description: >-
-      A proposition describing the protective role of a variant against a condition.
+      A custom proposition describing the protective role of a variant against a condition.
       Used for ClinVar submissions classified as "protective". ClinVar has stopped
       accepting new submissions with this classification, but historical submissions
       remain.
     allOf:
-      - $refCurie: va-spec:ClinicalVariantProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
     properties:
-      type:
+      customPropositionType:
         type: string
         const: ClinvarProtectiveProposition
         default: ClinvarProtectiveProposition
@@ -79,14 +129,6 @@ $defs:
         description: >-
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "isProtectiveFor".
-      objectCondition:
-        oneOf:
-          - $ref: Condition
-          - $refCurie: gks.core:iriReference
-        description: The condition against which the variant is protective.
-    required:
-      - predicate
-      - objectCondition
 
   ClinvarDrugResponseProposition:
     type: object
@@ -97,9 +139,9 @@ $defs:
       the GA4GH VariantTherapeuticResponseProposition which is used for somatic
       clinical impact therapeutic response assertions.
     allOf:
-      - $refCurie: va-spec:ClinicalVariantProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
     properties:
-      type:
+      customPropositionType:
         type: string
         const: ClinvarDrugResponseProposition
         default: ClinvarDrugResponseProposition
@@ -111,15 +153,7 @@ $defs:
         description: >-
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "hasDrugResponseFor".
-      objectCondition:
-        oneOf:
-          - $ref: Condition
-          - $refCurie: gks.core:iriReference
-        description: The condition context in which the drug response is observed.
-    required:
-      - predicate
-      - objectCondition
-
+    
   ClinvarAffectsProposition:
     type: object
     maturity: draft
@@ -129,9 +163,9 @@ $defs:
       stopped accepting new submissions with this classification, but historical
       submissions remain.
     allOf:
-      - $refCurie: va-spec:ClinicalVariantProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
     properties:
-      type:
+      customPropositionType:
         type: string
         const: ClinvarAffectsProposition
         default: ClinvarAffectsProposition
@@ -143,14 +177,6 @@ $defs:
         description: >-
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "hasAffectFor".
-      objectCondition:
-        oneOf:
-          - $ref: Condition
-          - $refCurie: gks.core:iriReference
-        description: The condition that is affected by the variant.
-    required:
-      - predicate
-      - objectCondition
 
   ClinvarAssociationProposition:
     type: object
@@ -160,9 +186,9 @@ $defs:
       a variant and a condition. Used for ClinVar submissions classified as
       "association". Does not imply a causal relationship.
     allOf:
-      - $refCurie: va-spec:ClinicalVariantProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
     properties:
-      type:
+      customPropositionType:
         type: string
         const: ClinvarAssociationProposition
         default: ClinvarAssociationProposition
@@ -174,14 +200,6 @@ $defs:
         description: >-
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "isAssociatedWith".
-      objectCondition:
-        oneOf:
-          - $ref: Condition
-          - $refCurie: gks.core:iriReference
-        description: The condition with which the variant is associated.
-    required:
-      - predicate
-      - objectCondition
 
   ClinvarConfersSensitivityProposition:
     type: object
@@ -192,9 +210,9 @@ $defs:
       "confers sensitivity". ClinVar has stopped accepting new submissions with
       this classification, but historical submissions remain.
     allOf:
-      - $refCurie: va-spec:ClinicalVariantProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
     properties:
-      type:
+      customPropositionType:
         type: string
         const: ClinvarConfersSensitivityProposition
         default: ClinvarConfersSensitivityProposition
@@ -206,14 +224,6 @@ $defs:
         description: >-
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "confersSensitivityFor".
-      objectCondition:
-        oneOf:
-          - $ref: Condition
-          - $refCurie: gks.core:iriReference
-        description: The condition or factor to which the variant confers sensitivity.
-    required:
-      - predicate
-      - objectCondition
 
   ClinvarOtherProposition:
     type: object
@@ -223,9 +233,9 @@ $defs:
       any standard or named classification category. ClinVar has stopped accepting
       new submissions with this classification, but historical submissions remain.
     allOf:
-      - $refCurie: va-spec:ClinicalVariantProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
     properties:
-      type:
+      customPropositionType:
         type: string
         const: ClinvarOtherProposition
         default: ClinvarOtherProposition
@@ -237,14 +247,6 @@ $defs:
         description: >-
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "isClinvarOtherAssociationFor".
-      objectCondition:
-        oneOf:
-          - $ref: Condition
-          - $refCurie: gks.core:iriReference
-        description: The condition associated with the variant.
-    required:
-      - predicate
-      - objectCondition
 
   ClinvarNotProvidedProposition:
     type: object
@@ -255,9 +257,9 @@ $defs:
       associations but lack a formal pathogenicity or clinical significance
       assessment.
     allOf:
-      - $refCurie: va-spec:ClinicalVariantProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
     properties:
-      type:
+      customPropositionType:
         type: string
         const: ClinvarNotProvidedProposition
         default: ClinvarNotProvidedProposition
@@ -269,14 +271,6 @@ $defs:
         description: >-
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "hasNoProvidedClassificationFor".
-      objectCondition:
-        oneOf:
-          - $ref: Condition
-          - $refCurie: gks.core:iriReference
-        description: The condition for which no classification was provided.
-    required:
-      - predicate
-      - objectCondition
 
   ClinvarConflictingDataFromSubmitterProposition:
     type: object
@@ -286,9 +280,9 @@ $defs:
       with other submitters' data for the same variant-condition pair. Used for
       submissions classified as "conflicting data from submitters".
     allOf:
-      - $refCurie: va-spec:ClinicalVariantProposition
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
     properties:
-      type:
+      customPropositionType:
         type: string
         const: ClinvarConflictingDataFromSubmitterProposition
         default: ClinvarConflictingDataFromSubmitterProposition
@@ -300,14 +294,29 @@ $defs:
         description: >-
           The relationship the Proposition describes between the subject variant
           and object condition. MUST be "isConflictingDataFromSubmittersFor".
-      objectCondition:
-        oneOf:
-          - $ref: Condition
-          - $refCurie: gks.core:iriReference
-        description: The condition for which conflicting data exists.
-    required:
-      - predicate
-      - objectCondition
+
+  ClinvarUndefinedProposition:
+    type: object
+    maturity: draft
+    description: >-
+      A fallback custom proposition for a ClinVar submission whose classification does not
+      map to any defined ClinVar-GKS or GA4GH proposition type. Emitted only when the upstream
+      classification-to-type mapping yields no gks_type.
+    allOf:
+      - $ref: "#/$defs/ClinvarGermlineCustomProposition"
+    properties:
+      customPropositionType:
+        type: string
+        const: ClinvarUndefinedProposition
+        default: ClinvarUndefinedProposition
+        description: MUST be "ClinvarUndefinedProposition"
+      predicate:
+        type: string
+        const: isClinvarUndefinedAssociationFor
+        default: isClinvarUndefinedAssociationFor
+        description: >-
+          The relationship the Proposition describes between the subject variant and object
+          condition. MUST be "isClinvarUndefinedAssociationFor".
 
   ClinvarProposition:
     maturity: draft
@@ -329,3 +338,4 @@ $defs:
       - $ref: "#/$defs/ClinvarOtherProposition"
       - $ref: "#/$defs/ClinvarNotProvidedProposition"
       - $ref: "#/$defs/ClinvarConflictingDataFromSubmitterProposition"
+      - $ref: "#/$defs/ClinvarUndefinedProposition"
