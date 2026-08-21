@@ -885,7 +885,7 @@ BEGIN
         FORMAT('ncbigene:%s', g.id) as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
           FORMAT('ncbigene:%s', g.id) as id,
-          'gene' as conceptType,
+          'MappableConcept' AS type, 'gene' as conceptType,
           g.symbol as name,
           STRUCT(
             g.id as code,

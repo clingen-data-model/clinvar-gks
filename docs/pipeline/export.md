@@ -76,7 +76,7 @@ python3 ./src/scripts/assemble-gks-dicts.py \
   2026-06-14
 ```
 
-The script assembles 15 bundle sections in a fixed order: `sequenceReference`, `location`, `allele`, `copyNumberCount`, `copyNumberChange`, `gene`, `variation`, `condition`, `conditionSet`, `submitter`, `proposition`, `evidenceLine`, `scv`, `vcv`, `rcv`. Each section is a keyed object where the key is the record's unique identifier. Proposition and evidence line shards from SCV, VCV, and RCV are merged into single `proposition` and `evidenceLine` sections.
+The script assembles 18 bundle sections in a fixed order: `sequenceReference`, `location`, `allele`, `copyNumberCount`, `copyNumberChange`, `gene`, `variation`, `condition`, `conditionSet`, `submitter`, `varcond-proposition`, `vartumor-proposition`, `vartherapy-proposition`, `varcustom-proposition`, `evidenceLine`, `scv`, `vcv`, `rcv`. Each section is a keyed object where the key is the record's unique identifier. Propositions from SCV, VCV, and RCV are delivered in **four datatype-homogeneous sections** keyed by their (subject, object) signature — `varcond-proposition` (variant×condition), `vartumor-proposition` (variant×tumorType), `vartherapy-proposition` (variant×therapy), `varcustom-proposition` (custom variant×condition); evidence line shards are merged into a single `evidenceLine` section.
 
 Install `orjson` for best performance:
 

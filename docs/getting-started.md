@@ -35,15 +35,18 @@ The release file is a single JSON object with **bundle sections** at the root le
   "variation":         { "clinvar:10": { ... } },
   "condition":         { "clinvar.trait:9580": { ... } },
   "conditionSet":      { "clinvar.traitset:1234": { ... } },
-  "submitter":         { "clinvar.submitter:500139": { ... } },
-  "proposition":       { "SCV001234567-PATH": { ... } },
-  "scv":               { "clinvar.submission:SCV001234567.1": { ... } },
+  "submitter":            { "clinvar.submitter:500139": { ... } },
+  "varcond-proposition":  { "SCV001234567-PATH": { ... } },
+  "vartumor-proposition": { "SCV002345678-ONCO": { ... } },
+  "vartherapy-proposition": { "SCV003456789-TR": { ... } },
+  "varcustom-proposition": { "SCV004567890-RF": { ... } },
+  "scv":                  { "clinvar.submission:SCV001234567.1": { ... } },
   "vcv":               { "VCV000012582.63-G-PATH-CP": { ... } },
   "rcv":               { "RCV000012345.8-G-PATH-CP": { ... } }
 }
 ```
 
-Objects reference each other using `#/` JSON pointer strings. For example, an allele references its location as `"#/location/ga4gh:SL.xyz789"`, and an SCV statement references its proposition as `"#/proposition/SCV001234567-PATH"`.
+Objects reference each other using `#/` JSON pointer strings. For example, an allele references its location as `"#/location/ga4gh:SL.xyz789"`, and an SCV statement references its proposition as `"#/varcond-proposition/SCV001234567-PATH"`. Propositions are delivered in four datatype-specific sections (`varcond-proposition`, `vartumor-proposition`, `vartherapy-proposition`, `varcustom-proposition`) — the pointer names the section the proposition lives in.
 
 See [Output Format](output-reference/overview.md) for the full structure and reference patterns.
 
@@ -69,7 +72,7 @@ To find the classification statements for a specific variant, start with the var
 }
 ```
 
-The SCV statements for this variant reference it via `#/variation/clinvar:10` in their propositions. To find them, look for entries in the `proposition` section where `subjectVariant` matches, then find the corresponding `scv` entries that reference those propositions.
+The SCV statements for this variant reference it via `#/variation/clinvar:10` in their propositions. To find them, look for entries in the proposition sections (`varcond-proposition`, `vartumor-proposition`, `vartherapy-proposition`, `varcustom-proposition`) where `subjectVariant` (or `subject`, for custom) matches, then find the corresponding `scv` entries that reference those propositions.
 
 ---
 

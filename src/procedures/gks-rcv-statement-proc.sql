@@ -238,7 +238,7 @@ BEGIN
         ) AS direction,
 
         STRUCT(
-          'Strength' AS conceptType,
+          'MappableConcept' AS type, 'Strength' AS conceptType,
           IF(ARRAY_LENGTH(agg.full_scv_ids) = 1,
             agg.scv_strength_name,
             CASE
@@ -252,11 +252,11 @@ BEGIN
           ) AS name
         ) AS strength,
 
-        STRUCT('Confidence' AS conceptType, sl.label AS name) AS confidence,
+        STRUCT('MappableConcept' AS type, 'Confidence' AS conceptType, sl.label AS name) AS confidence,
 
         -- classification: single MappableConcept for all submission levels
         STRUCT(
-          'Classification' AS conceptType,
+          'MappableConcept' AS type, 'Classification' AS conceptType,
           agg.actual_agg_classif_label AS name,
           IF(
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
@@ -265,7 +265,16 @@ BEGIN
           ) AS extensions
         ) AS classification,
 
-        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
+        FORMAT('#/%s-proposition/%s',
+          CASE
+            WHEN cpt.gks_type LIKE 'Clinvar%' THEN 'varcustom'
+            WHEN cpt.gks_type = 'VariantOncogenicityProposition' THEN 'vartumor'
+            WHEN cpt.gks_type = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+            WHEN cpt.gks_type IN ('VariantPathogenicityProposition','VariantClinicalSignificanceProposition',
+                                  'VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+            ELSE ERROR(FORMAT('unmapped proposition type for delivery grouping: %t', cpt.gks_type))
+          END,
+          agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -276,6 +285,7 @@ BEGIN
         [FORMAT('#/evidenceLine/%s.contributing', agg.id)] AS hasEvidenceLines
 
       FROM `{S}.gks_rcv_classification_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
       WHERE TRUE
         {PFILTER}
@@ -305,7 +315,7 @@ BEGIN
         END AS direction,
 
         STRUCT(
-          'Strength' AS conceptType,
+          'MappableConcept' AS type, 'Strength' AS conceptType,
           CASE
             WHEN agg.agg_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'Definitive'
             WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'Likely'
@@ -316,10 +326,10 @@ BEGIN
           END AS name
         ) AS strength,
 
-        STRUCT('Confidence' AS conceptType, sl.label AS name) AS confidence,
+        STRUCT('MappableConcept' AS type, 'Confidence' AS conceptType, sl.label AS name) AS confidence,
 
         STRUCT(
-          'Classification' AS conceptType,
+          'MappableConcept' AS type, 'Classification' AS conceptType,
           agg.agg_label AS name,
           IF(
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
@@ -328,7 +338,16 @@ BEGIN
           ) AS extensions
         ) AS classification,
 
-        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
+        FORMAT('#/%s-proposition/%s',
+          CASE
+            WHEN cpt.gks_type LIKE 'Clinvar%' THEN 'varcustom'
+            WHEN cpt.gks_type = 'VariantOncogenicityProposition' THEN 'vartumor'
+            WHEN cpt.gks_type = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+            WHEN cpt.gks_type IN ('VariantPathogenicityProposition','VariantClinicalSignificanceProposition',
+                                  'VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+            ELSE ERROR(FORMAT('unmapped proposition type for delivery grouping: %t', cpt.gks_type))
+          END,
+          agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -345,6 +364,7 @@ BEGIN
         ) AS hasEvidenceLines
 
       FROM `{S}.gks_rcv_priority_agg` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
       LEFT JOIN `clinvar_ingest.submission_level` sl ON agg.submission_level = sl.code
       WHERE TRUE
         {PFILTER}
@@ -373,7 +393,7 @@ BEGIN
         END AS direction,
 
         STRUCT(
-          'Strength' AS conceptType,
+          'MappableConcept' AS type, 'Strength' AS conceptType,
           CASE
             WHEN agg.agg_label IN ('Pathogenic', 'Benign', 'Oncogenic') THEN 'Definitive'
             WHEN agg.agg_label IN ('Likely pathogenic', 'Likely benign', 'Likely Oncogenic') THEN 'Likely'
@@ -384,10 +404,10 @@ BEGIN
           END AS name
         ) AS strength,
 
-        STRUCT('Confidence' AS conceptType, agg.contributing_submission_level_label AS name) AS confidence,
+        STRUCT('MappableConcept' AS type, 'Confidence' AS conceptType, agg.contributing_submission_level_label AS name) AS confidence,
 
         STRUCT(
-          'Classification' AS conceptType,
+          'MappableConcept' AS type, 'Classification' AS conceptType,
           agg.agg_label AS name,
           IF(
             agg.agg_label_conflicting_explanation IS NOT NULL AND agg.agg_label_conflicting_explanation != '',
@@ -396,7 +416,16 @@ BEGIN
           ) AS extensions
         ) AS classification,
 
-        FORMAT('#/proposition/%s', agg.prop_id) AS proposition,
+        FORMAT('#/%s-proposition/%s',
+          CASE
+            WHEN cpt.gks_type LIKE 'Clinvar%' THEN 'varcustom'
+            WHEN cpt.gks_type = 'VariantOncogenicityProposition' THEN 'vartumor'
+            WHEN cpt.gks_type = 'VariantTherapeuticResponseProposition' THEN 'vartherapy'
+            WHEN cpt.gks_type IN ('VariantPathogenicityProposition','VariantClinicalSignificanceProposition',
+                                  'VariantDiagnosticProposition','VariantPrognosticProposition') THEN 'varcond'
+            ELSE ERROR(FORMAT('unmapped proposition type for delivery grouping: %t', cpt.gks_type))
+          END,
+          agg.prop_id) AS proposition,
 
         IF(
           agg.aggregate_review_status IS NOT NULL,
@@ -413,6 +442,7 @@ BEGIN
         ) AS hasEvidenceLines
 
       FROM `{S}.gks_rcv_aggregate_contribution` agg
+      LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
       WHERE TRUE
         {PFILTER}
     """, '{PFILTER}', pf_agg);
@@ -437,7 +467,7 @@ BEGIN
         FORMAT('%s.contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'supports' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
         ARRAY(
           SELECT FORMAT('#/scv/clinvar.submission:%s', scv_id)
           FROM UNNEST(agg.full_scv_ids) AS scv_id
@@ -453,7 +483,7 @@ BEGIN
         FORMAT('%s.contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'supports' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
         ARRAY(
           SELECT FORMAT('#/rcv/%s', stmt_id)
           FROM UNNEST(agg.contributing_statement_ids) AS stmt_id
@@ -469,7 +499,7 @@ BEGIN
         FORMAT('%s.non-contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'neutral' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
         ARRAY(
           SELECT FORMAT('#/rcv/%s', stmt_id)
           FROM UNNEST(agg.non_contributing_statement_ids) AS stmt_id
@@ -485,7 +515,7 @@ BEGIN
         FORMAT('%s.contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'supports' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Contributing' AS name) AS strengthOfEvidenceProvided,
         [FORMAT('#/rcv/%s', agg.contributing_layer_id)] AS evidenceItems
       FROM `{S}.gks_rcv_aggregate_contribution` agg
       WHERE TRUE
@@ -498,7 +528,7 @@ BEGIN
         FORMAT('%s.non-contributing', agg.id) AS id,
         'EvidenceLine' AS type,
         'neutral' AS directionOfEvidenceProvided,
-        STRUCT('Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
+        STRUCT('MappableConcept' AS type, 'Strength' AS conceptType, 'Non-contributing' AS name) AS strengthOfEvidenceProvided,
         ARRAY(
           SELECT FORMAT('#/rcv/%s', nc.layer_id)
           FROM UNNEST(agg.non_contributing_details) AS nc
@@ -526,13 +556,17 @@ BEGIN
       SELECT
         agg.prop_id as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          cpt.gks_type AS type,
+          -- custom types collapse to CustomProposition + customPropositionType; standard keep their specific type
+          IF(cpt.gks_type LIKE 'Clinvar%', 'CustomProposition', cpt.gks_type) AS type,
+          IF(cpt.gks_type LIKE 'Clinvar%', cpt.gks_type, CAST(NULL AS STRING)) AS customPropositionType,
           agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          -- standard uses subjectVariant; custom uses subject (same variation pointer)
+          IF(cpt.gks_type LIKE 'Clinvar%', CAST(NULL AS STRING), FORMAT('#/variation/clinvar:%s', agg.variation_id)) AS subjectVariant,
+          IF(cpt.gks_type LIKE 'Clinvar%', FORMAT('#/variation/clinvar:%s', agg.variation_id), CAST(NULL AS STRING)) AS subject,
           CASE cpt.gks_type
             WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
             WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'hasClinicalSignificanceFor'
             WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
             WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
             WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
@@ -544,7 +578,10 @@ BEGIN
             WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
             ELSE 'isClinvarUndefinedAssociationFor'
           END AS predicate,
-          rcd.condition_concept AS objectCondition
+          -- object field is 3-way: custom->object, standard Oncogenicity->objectTumorType, other standard->objectCondition (same value)
+          IF(cpt.gks_type LIKE 'Clinvar%' OR cpt.gks_type = 'VariantOncogenicityProposition', CAST(NULL AS STRING), rcd.condition_concept) AS objectCondition,
+          IF((NOT (cpt.gks_type LIKE 'Clinvar%')) AND cpt.gks_type = 'VariantOncogenicityProposition', rcd.condition_concept, CAST(NULL AS STRING)) AS objectTumorType,
+          IF(cpt.gks_type LIKE 'Clinvar%', rcd.condition_concept, CAST(NULL AS STRING)) AS object
         )), remove_empty => TRUE) as value
       FROM `{S}.gks_rcv_classification_agg` agg
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
@@ -555,13 +592,17 @@ BEGIN
       SELECT
         agg.prop_id as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          cpt.gks_type AS type,
+          -- custom types collapse to CustomProposition + customPropositionType; standard keep their specific type
+          IF(cpt.gks_type LIKE 'Clinvar%', 'CustomProposition', cpt.gks_type) AS type,
+          IF(cpt.gks_type LIKE 'Clinvar%', cpt.gks_type, CAST(NULL AS STRING)) AS customPropositionType,
           agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          -- standard uses subjectVariant; custom uses subject (same variation pointer)
+          IF(cpt.gks_type LIKE 'Clinvar%', CAST(NULL AS STRING), FORMAT('#/variation/clinvar:%s', agg.variation_id)) AS subjectVariant,
+          IF(cpt.gks_type LIKE 'Clinvar%', FORMAT('#/variation/clinvar:%s', agg.variation_id), CAST(NULL AS STRING)) AS subject,
           CASE cpt.gks_type
             WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
             WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'hasClinicalSignificanceFor'
             WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
             WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
             WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
@@ -573,7 +614,10 @@ BEGIN
             WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
             ELSE 'isClinvarUndefinedAssociationFor'
           END AS predicate,
-          rcd.condition_concept AS objectCondition
+          -- object field is 3-way: custom->object, standard Oncogenicity->objectTumorType, other standard->objectCondition (same value)
+          IF(cpt.gks_type LIKE 'Clinvar%' OR cpt.gks_type = 'VariantOncogenicityProposition', CAST(NULL AS STRING), rcd.condition_concept) AS objectCondition,
+          IF((NOT (cpt.gks_type LIKE 'Clinvar%')) AND cpt.gks_type = 'VariantOncogenicityProposition', rcd.condition_concept, CAST(NULL AS STRING)) AS objectTumorType,
+          IF(cpt.gks_type LIKE 'Clinvar%', rcd.condition_concept, CAST(NULL AS STRING)) AS object
         )), remove_empty => TRUE) as value
       FROM `{S}.gks_rcv_priority_agg` agg
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code
@@ -584,13 +628,17 @@ BEGIN
       SELECT
         agg.prop_id as key,
         JSON_STRIP_NULLS(TO_JSON(STRUCT(
-          cpt.gks_type AS type,
+          -- custom types collapse to CustomProposition + customPropositionType; standard keep their specific type
+          IF(cpt.gks_type LIKE 'Clinvar%', 'CustomProposition', cpt.gks_type) AS type,
+          IF(cpt.gks_type LIKE 'Clinvar%', cpt.gks_type, CAST(NULL AS STRING)) AS customPropositionType,
           agg.prop_id AS id,
-          FORMAT('#/variation/clinvar:%s', agg.variation_id) AS subjectVariant,
+          -- standard uses subjectVariant; custom uses subject (same variation pointer)
+          IF(cpt.gks_type LIKE 'Clinvar%', CAST(NULL AS STRING), FORMAT('#/variation/clinvar:%s', agg.variation_id)) AS subjectVariant,
+          IF(cpt.gks_type LIKE 'Clinvar%', FORMAT('#/variation/clinvar:%s', agg.variation_id), CAST(NULL AS STRING)) AS subject,
           CASE cpt.gks_type
             WHEN 'VariantPathogenicityProposition' THEN 'isCausalFor'
             WHEN 'VariantOncogenicityProposition' THEN 'isOncogenicFor'
-            WHEN 'VariantClinicalSignificanceProposition' THEN 'isClinicallySignificantFor'
+            WHEN 'VariantClinicalSignificanceProposition' THEN 'hasClinicalSignificanceFor'
             WHEN 'ClinvarAffectsProposition' THEN 'hasAffectFor'
             WHEN 'ClinvarAssociationProposition' THEN 'isAssociatedWith'
             WHEN 'ClinvarConfersSensitivityProposition' THEN 'confersSensitivityFor'
@@ -602,7 +650,10 @@ BEGIN
             WHEN 'ClinvarRiskFactorProposition' THEN 'isRiskFactorFor'
             ELSE 'isClinvarUndefinedAssociationFor'
           END AS predicate,
-          rcd.condition_concept AS objectCondition
+          -- object field is 3-way: custom->object, standard Oncogenicity->objectTumorType, other standard->objectCondition (same value)
+          IF(cpt.gks_type LIKE 'Clinvar%' OR cpt.gks_type = 'VariantOncogenicityProposition', CAST(NULL AS STRING), rcd.condition_concept) AS objectCondition,
+          IF((NOT (cpt.gks_type LIKE 'Clinvar%')) AND cpt.gks_type = 'VariantOncogenicityProposition', rcd.condition_concept, CAST(NULL AS STRING)) AS objectTumorType,
+          IF(cpt.gks_type LIKE 'Clinvar%', rcd.condition_concept, CAST(NULL AS STRING)) AS object
         )), remove_empty => TRUE) as value
       FROM `{S}.gks_rcv_aggregate_contribution` agg
       LEFT JOIN `clinvar_ingest.clinvar_proposition_types` cpt ON agg.prop_type = cpt.code

@@ -9,6 +9,9 @@ Distribution follows a **full + delta** model:
 
 A consumer that wants the current state takes the latest monthly full and replays the weekly deltas published since it. See [Weekly Deltas](#weekly-deltas) for the replay model.
 
+!!! warning "Breaking change — proposition sections"
+    The single `proposition` bundle section (and its `proposition-*.parquet`) has been **replaced by four datatype-homogeneous sections**: `varcond-proposition` (variant×condition), `vartumor-proposition` (variant×tumorType), `vartherapy-proposition` (variant×therapy), and `varcustom-proposition` (custom variant×condition), each with a matching Parquet file. Proposition references are now group-qualified — `#/{group}-proposition/{id}` instead of `#/proposition/{id}`. Consumers reading the `proposition` section must switch to the four new keys, and the Parquet `proposition.parquet`/`vcv_proposition.parquet`/`rcv_proposition.parquet` files are replaced by `varcond-proposition.parquet`, `vartumor-proposition.parquet`, `vartherapy-proposition.parquet`, and `varcustom-proposition.parquet`.
+
 ---
 
 ## Latest Release
@@ -381,11 +384,11 @@ curl -s https://pub-9c5470edadb8496fb0abbf396291660b.r2.dev/index.json | python3
       container.appendChild(dSection);
     }
 
-    // Parquet files (static list — always the same 19 sections at fixed paths)
+    // Parquet files (static list — always the same sections at fixed paths)
     var parquetSections = [
       "sequenceReference", "location", "allele", "copyNumberCount", "copyNumberChange",
       "gene", "variation", "condition", "conditionSet", "submitter",
-      "proposition", "vcv_proposition", "rcv_proposition",
+      "varcond-proposition", "vartumor-proposition", "vartherapy-proposition", "varcustom-proposition",
       "evidenceLine", "vcv_evidenceLine", "rcv_evidenceLine",
       "scv", "vcv", "rcv"
     ];
@@ -623,7 +626,7 @@ Statement sections (`scv`, `vcv`, `rcv`) share a common set of typed columns:
 | --- | --- | --- |
 | `id` | string | Statement identifier |
 | `type` | string | Statement type |
-| `proposition_id` | string | FK to proposition Parquet (`proposition` for SCV, `vcv_proposition` for VCV, `rcv_proposition` for RCV) |
+| `proposition_id` | string | FK to the matching proposition Parquet — one of `varcond-proposition`, `vartumor-proposition`, `vartherapy-proposition`, `varcustom-proposition`, per the proposition's datatype |
 | `classification` | string | Classification label (e.g., "Pathogenic") |
 | `strength` | string | Evidence strength (e.g., "definitive", "likely") |
 | `direction` | string | Evidence direction ("supports", "disputes", "neutral") |
@@ -634,7 +637,7 @@ Statement sections (`scv`, `vcv`, `rcv`) share a common set of typed columns:
 
 SCV statements include additional columns: `description`, `contributions`, `reported_in`, `specified_by`.
 
-The `proposition` section includes `subject_variant`, `predicate`, `object_condition`, `object_condition_set`, `type`, and qualifier columns — enabling JOINs across statements, variants, and conditions without parsing JSON.
+The four proposition sections are typed per datatype: `varcond-proposition` (`subject_variant_id`, `predicate`, `object_condition_id`, `type`, `gene_context_name`, `mode_of_inheritance`, `penetrance`), `vartumor-proposition` (`object_tumor_type_id`, …), `vartherapy-proposition` (`object_therapy`, `condition_qualifier_id`, …), and `varcustom-proposition` (`custom_proposition_type`, `subject_id`, `object_id`, `qualifiers`) — enabling JOINs across statements, variants, and conditions without parsing JSON.
 
 Every section includes `id` and `data` at minimum. Run `DESCRIBE` in DuckDB to see the full schema for any section.
 

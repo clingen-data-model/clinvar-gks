@@ -5,5 +5,5 @@ SELECT * EXCEPT(proposition, hasEvidenceLines, contributions),
     FROM UNNEST(contributions) AS c
   ) AS contributions,
   ARRAY(SELECT REGEXP_REPLACE(el, r'^#/[^/]+/', '') FROM UNNEST(hasEvidenceLines) AS el) AS has_evidence_lines,
-  TO_JSON_STRING((SELECT AS STRUCT t.*)) AS data
+  collapse_ext_values(TO_JSON_STRING(JSON_STRIP_NULLS(TO_JSON((SELECT AS STRUCT t.*)), remove_empty => TRUE))) AS data
 FROM {DATASET}.gks_dict_scv t

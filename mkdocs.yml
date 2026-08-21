@@ -87,6 +87,7 @@ nav:
       - ClinvarOtherProposition: output-reference/classes/ClinvarOtherProposition.md
       - ClinvarNotProvidedProposition: output-reference/classes/ClinvarNotProvidedProposition.md
       - ClinvarConflictingDataFromSubmitterProposition: output-reference/classes/ClinvarConflictingDataFromSubmitterProposition.md
+      - ClinvarUndefinedProposition: output-reference/classes/ClinvarUndefinedProposition.md
     - Statements:
       - output-reference/classes/statements.md
       - ClinvarStatement: output-reference/classes/ClinvarStatement.md
@@ -143,9 +144,3 @@ nav:
     - GA4GH Standards: reference/gks-standards.md
     - Known Issues: reference/known-issues.md
     - Glossary: reference/glossary.md
-  - Drafts:
-    - drafts/index.md
-    - ACMGv4 Variant Pathogenicity:
-      - drafts/acmgv4-variant-pathogenicity/index.md
-      - Case Data Model (Notes): drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM.md
-      - Case Schema & Matrix: drafts/acmgv4-variant-pathogenicity/ACMGv4-Case-DM-Schema.md
