@@ -9,7 +9,7 @@ SELECT
   REGEXP_REPLACE(JSON_VALUE(value, '$.conditionQualifier'), r'^#/[^/]+/', '') AS condition_qualifier_id,
   TO_JSON_STRING(JSON_QUERY(value, '$.objectTherapy')) AS object_therapy,
   JSON_VALUE(value, '$.geneContextQualifier.name') AS gene_context_name,
-  TO_JSON_STRING(value) AS data
+  collapse_ext_values(TO_JSON_STRING(value)) AS data
 FROM (
   SELECT key, value FROM `{DATASET}.gks_dict_proposition`
   UNION ALL SELECT key, value FROM `{DATASET}.gks_dict_rcv_proposition`

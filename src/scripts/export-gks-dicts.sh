@@ -65,8 +65,11 @@ extract_parquet_typed() {
   sql=$(<"${schema_path}")
   sql="${sql//\{DATASET\}/${DATASET}}"
   echo "  Exporting ${sql_file%.sql} -> ${sharded} (Parquet via EXPORT DATA)"
+  # ${COLLAPSE_UDF} makes collapse_ext_values(...) available to schema files whose `data` column
+  # needs the extension value_xxx -> value collapse (proposition groups, scv, evidenceLine).
   bq query --use_legacy_sql=false --nouse_cache \
-    "EXPORT DATA OPTIONS(
+    "${COLLAPSE_UDF}
+    EXPORT DATA OPTIONS(
       uri='${GCS_PARQUET_PATH}/${sharded}',
       format='PARQUET',
       compression='SNAPPY',
@@ -91,24 +94,68 @@ END
 SQL
 )
 
+# Extension value collapse (conformance): the pipeline stores typed extension values as `value_<type>`
+# (value_string, value_boolean, value_submitted_condition, ...) so gks_json_proc can nullify-by-type and
+# drop them; the va-spec bundle wants a single polymorphic `value`. This recursive JS UDF renames the one
+# populated `value_*` key (JSON_STRIP_NULLS already dropped the rest) to `value` in every extension object
+# (any object with a `name` sibling), at any nesting depth. The gks_dict_* tables keep `value_*`; only the
+# bundle export is collapsed. Prepend ${COLLAPSE_UDF} to any query that uses collapse_ext_values(...).
+COLLAPSE_UDF=$(cat <<'SQL'
+CREATE TEMP FUNCTION collapse_ext_values(j STRING)
+RETURNS STRING
+LANGUAGE js AS r"""
+  if (j == null) return null;
+  function walk(o){
+    if (Array.isArray(o)){ for (const x of o) walk(x); return; }
+    if (o && typeof o === "object"){
+      if ("name" in o){ for (const k of Object.keys(o)){ if (k.indexOf("value_")===0){ o["value"]=o[k]; delete o[k]; } } }
+      for (const k of Object.keys(o)) walk(o[k]);
+    }
+  }
+  const p = JSON.parse(j); walk(p); return JSON.stringify(p);
+""";
+SQL
+)
+
 export_proposition_group_ndjson() {
   local group="$1"
   local sharded="${group}-proposition-*.ndjson.gz"
   echo "  Exporting proposition group ${group} -> ${sharded} (NDJSON via EXPORT DATA)"
   bq query --use_legacy_sql=false --nouse_cache \
-    "EXPORT DATA OPTIONS(
+    "${COLLAPSE_UDF}
+    EXPORT DATA OPTIONS(
       uri='${GCS_PATH}/${sharded}',
       format='JSON',
       compression='GZIP',
       overwrite=true
     ) AS
-    SELECT key, value FROM (
+    SELECT key, SAFE.PARSE_JSON(collapse_ext_values(TO_JSON_STRING(value))) AS value FROM (
       SELECT key, value, ${PROP_GROUP_CASE} AS _grp FROM (
         SELECT key, value FROM \`${DATASET}.gks_dict_proposition\`
         UNION ALL SELECT key, value FROM \`${DATASET}.gks_dict_rcv_proposition\`
         UNION ALL SELECT key, value FROM \`${DATASET}.gks_dict_vcv_proposition\`
       )
     ) WHERE _grp = '${group}'"
+}
+
+# NDJSON export of a passthrough dict table with its `extensions` column value-collapsed for the bundle.
+export_ndjson_ext_collapse() {
+  local table="$1"
+  local basename="$2"
+  local sharded="${basename%.ndjson.gz}-*.ndjson.gz"
+  echo "  Exporting ${table} -> ${sharded} (NDJSON via EXPORT DATA, extensions collapsed)"
+  bq query --use_legacy_sql=false --nouse_cache \
+    "${COLLAPSE_UDF}
+    EXPORT DATA OPTIONS(
+      uri='${GCS_PATH}/${sharded}',
+      format='JSON',
+      compression='GZIP',
+      overwrite=true
+    ) AS
+    SELECT * REPLACE(
+      SAFE.PARSE_JSON(collapse_ext_values(
+        TO_JSON_STRING(JSON_STRIP_NULLS(TO_JSON(extensions), remove_empty => TRUE)))) AS extensions)
+    FROM \`${DATASET}.${table}\`"
 }
 
 if ! $PARQUET_ONLY; then
@@ -129,7 +176,7 @@ if ! $PARQUET_ONLY; then
 
   # SCV dictionaries (from gks_scv_statement_proc)
   extract gks_dict_submitter submitter.ndjson.gz
-  extract gks_dict_evidence_line evidenceLine.ndjson.gz
+  export_ndjson_ext_collapse gks_dict_evidence_line evidenceLine.ndjson.gz
 
   # Proposition delivery groups (Phase 2): the 3 per-level proposition dicts are split into 4
   # datatype-homogeneous sections by the canonical group mapping.
@@ -143,7 +190,7 @@ if ! $PARQUET_ONLY; then
   extract gks_dict_rcv_evidence_line rcv_evidenceLine.ndjson.gz
 
   # Statement outputs
-  extract gks_dict_scv scv.ndjson.gz
+  export_ndjson_ext_collapse gks_dict_scv scv.ndjson.gz
   extract gks_dict_vcv vcv.ndjson.gz
   extract gks_dict_rcv rcv.ndjson.gz
 fi

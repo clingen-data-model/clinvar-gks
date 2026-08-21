@@ -11,7 +11,7 @@ SELECT
   JSON_VALUE(value, '$.geneContextQualifier.name') AS gene_context_name,
   JSON_VALUE(value, '$.modeOfInheritanceQualifier.name') AS mode_of_inheritance,
   JSON_VALUE(value, '$.penetranceQualifier.name') AS penetrance,
-  TO_JSON_STRING(value) AS data
+  collapse_ext_values(TO_JSON_STRING(value)) AS data
 FROM (
   SELECT key, value FROM `{DATASET}.gks_dict_proposition`
   UNION ALL SELECT key, value FROM `{DATASET}.gks_dict_rcv_proposition`
