@@ -3,6 +3,8 @@
 # run-release.sh — end-to-end ClinVar-GKS release pipeline for a single release date.
 #
 # Chains the five stages that turn an ingested ClinVar release into published GKS output:
+# Stage 0 (dataset_diff_on) runs ahead of stage 1 to build the {S}.diff_* drivers, and a
+# version stamp (gks_pipeline_version) is written between stages 3 and 4.
 #
 #   1. variation_identity   BigQuery CALL   (incremental by default; full with --full)
 #   2. export-vi-to-gcs      src/scripts/export-vi-table-to-gcs.sh   -> gs://.../vi.jsonl.gz
@@ -14,16 +16,23 @@
 #
 # Stages 1 and 2 are incremental by default (recompute only changed variations, carry the
 # rest forward). Stage 4 self-corrects between incremental and full loads. --full forces a
-# full rebuild across stages 1-2 and is REQUIRED after any version-invalidating change (the
-# variation_identity transform, or the vrsify pin in src/vrsify/requirements.txt).
+# full rebuild across stages 1-2 AND forces catvar full in Stage 4 (propagated as
+# CATVAR_FULL to vrs-to-bq-table.sh) — REQUIRED after any version-invalidating change (the
+# variation_identity transform, or the vrsify pin in src/vrsify/requirements.txt). The
+# version-stamp gate written between stages 3 and 4 is always the honest plain build-path
+# hash, even on --full, so a --full release still leaves a valid baseline for next week's
+# normal run to resume incremental from.
 #
 # Stage 5 publishes to the public R2 bucket. Use --dry-run to run everything but have the
 # release stage only print what it would upload (no R2 writes) — use it for test runs.
+# NOTE: --dry-run still writes the pipeline_version stamp to BigQuery; --dry-run only gates
+# Stage 5 / R2 upload.
 #
 # USAGE:
 #   ./src/scripts/run-release.sh YYYY-MM-DD [--full] [--dry-run] [--start-step N]
 #
-#   --full          full rebuild of stages 1-2 (reseed the baseline)
+#   --full          full rebuild of stages 1-2 and catvar in stage 4 (reseed the baseline);
+#                   the version-stamp gate is unaffected, so next week resumes incremental
 #   --dry-run       stage 5 (release-gks.sh) runs in dry-run: no R2 upload / no GCS writes
 #   --start-step N  begin at stage N (1-5); default 1. Stage 3 (vrsify) needs the local
 #                   SeqRepo/UTA/gene-norm services — see src/vrsify/README.md.
@@ -67,6 +76,15 @@ fi
 
 echo "=== run-release ${DATE} (full=${FULL}, dry-run=${DRY_RUN}, start-step=${START_STEP}, project=${PROJECT_ID}) ==="
 
+# --- Stage 0: dataset diff (produces {S}.diff_* — drivers for all incremental procs) ----
+# Idempotent (CREATE OR REPLACE). On the first release it emits a warning and writes no
+# diff tables, which correctly makes the incremental guards fall back to a full rebuild.
+if (( START_STEP <= 1 )); then
+  echo ">>> [0/5] dataset_diff_on (build {S}.diff_* drivers)"
+  bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
+    "CALL \`clinvar_ingest.dataset_diff_on\`(DATE '${DATE}')"
+fi
+
 # --- Stage 1: variation_identity -------------------------------------------------------
 if (( START_STEP <= 1 )); then
   if $FULL; then
@@ -96,10 +114,28 @@ if (( START_STEP <= 3 )); then
   "${REPO_ROOT}/src/vrsify/vrsify.sh" "${DATE}"
 fi
 
+# --- Version stamp: record provenance + the carry-forward gate key -----------------------
+# audit_stamp = full git describe (provenance, always). gate_key = last commit touching the
+# build-relevant paths (only advances when build logic changes; docs-only commits don't).
+# gate_key is ALWAYS the honest plain build-path hash, even on --full: a forced full rebuild
+# this week must still leave a valid baseline so next week's normal run can resume
+# incremental via a matching gate. --full forces catvar full THIS week via an explicit flag
+# propagated into Stage 4 below, not by poisoning the gate.
+if (( START_STEP <= 4 )); then
+  AUDIT_STAMP="$(git -C "${REPO_ROOT}" describe --tags --always --dirty)"
+  GATE_KEY="$(git -C "${REPO_ROOT}" log -1 --format=%H -- src/procedures src/scripts src/vrsify)"
+  # These values are spliced into a single-quoted SQL literal below; a stray single quote
+  # would break out of it. Abort rather than emit malformed SQL.
+  case "${AUDIT_STAMP}${GATE_KEY}" in *\'*) echo "ERROR: version stamp contains a single quote" >&2; exit 1;; esac
+  echo ">>> stamping pipeline_version audit=${AUDIT_STAMP} gate=${GATE_KEY}"
+  bq query --project_id="${PROJECT_ID}" --use_legacy_sql=false \
+    "CALL \`clinvar_ingest.gks_pipeline_version\`(DATE '${DATE}', '${AUDIT_STAMP}', '${GATE_KEY}')"
+fi
+
 # --- Stage 4: transform -> load gks_vrs -> gks_* procs ---------------------------------
 if (( START_STEP <= 4 )); then
   echo ">>> [4/5] vrs-to-bq-table.sh (transform, load gks_vrs, run gks_* procs)"
-  "${REPO_ROOT}/src/scripts/vrs-to-bq-table.sh" "${DATE}"
+  CATVAR_FULL="${FULL}" "${REPO_ROOT}/src/scripts/vrs-to-bq-table.sh" "${DATE}"
 fi
 
 # --- Stage 5: export bundle + Parquet, upload to R2 ------------------------------------

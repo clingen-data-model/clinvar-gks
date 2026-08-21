@@ -51,6 +51,12 @@ BUCKET_NAME='clinvar-gks'
 # variation_identity transform version change, which invalidates carry-forward).
 INCREMENTAL="${INCREMENTAL:-true}"
 
+# Set CATVAR_FULL=true to force gks_catvar_proc (full) instead of the incremental
+# wrapper this run only (e.g. propagated from run-release.sh's --full flag). Defaults
+# to false so standalone runs of this script are unaffected and stay incremental
+# (gks_catvar_proc_incremental self-guards + falls back to full when needed anyway).
+CATVAR_FULL="${CATVAR_FULL:-false}"
+
 # Cloud Run Job Configuration
 GCLOUD_JOB_NAME='vrs-to-vi-location-transformer'
 GCLOUD_JOB_REGION='us-east1'
@@ -61,8 +67,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCHEMA_FILE_PATH="${SCRIPT_DIR}/../../schemas/vrs_output_2_0_1.schema.json"
 
 # BigQuery Stored Procedures to run in order.
+# NOTE: gks_catvar is NOT listed here — it is called via its incremental wrapper
+# (gks_catvar_proc_incremental) ahead of this loop in execute_bq_procedures.
 BIGQUERY_PROCEDURES=(
-  'clinvar_ingest.gks_catvar_proc'
   'clinvar_ingest.gks_scv_condition_proc'
   'clinvar_ingest.gks_scv_statement_proc'
   'clinvar_ingest.gks_rcv_proc'
@@ -174,6 +181,23 @@ execute_bq_procedures() {
   local release_date=$1
   echo "Executing BigQuery stored procedures for date: $release_date"
 
+  # catvar is incremental (Plan 1); its build proc self-guards + falls back to full.
+  # CATVAR_FULL forces the full proc for this run only (e.g. run-release.sh --full).
+  if [[ "$CATVAR_FULL" == "true" ]]; then
+    echo "  - Calling procedure: clinvar_ingest.gks_catvar_proc (FULL, --full requested)..."
+    if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+        "CALL \`clinvar_ingest.gks_catvar_proc\`('$release_date', FALSE)" > /dev/null; then
+      echo "❌ gks_catvar_proc (full) FAILED"; return 1;
+    fi
+  else
+    echo "  - Calling procedure: clinvar_ingest.gks_catvar_proc_incremental..."
+    if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+        "CALL \`clinvar_ingest.gks_catvar_proc_incremental\`('$release_date', FALSE)" > /dev/null; then
+      echo "❌ gks_catvar_proc_incremental FAILED"; return 1;
+    fi
+  fi
+  echo "    ✅ Success."
+
   for proc in "${BIGQUERY_PROCEDURES[@]}"; do
     echo "  - Calling procedure: $proc..."
     if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false "CALL \`${proc}\`('$release_date', FALSE)" > /dev/null; then
@@ -187,6 +211,15 @@ execute_bq_procedures() {
     echo "❌ Procedure call FAILED for: clinvar_ingest.gks_json_proc"; return 1;
   fi
   echo "    ✅ Success."
+
+  echo "  - Calling procedure: clinvar_ingest.gks_change_log..."
+  bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+    "CALL \`clinvar_ingest.gks_change_log\`('$release_date')" > /dev/null \
+    || { echo "❌ gks_change_log FAILED"; return 1; }
+  echo "  - Calling procedure: clinvar_ingest.gks_delta_build..."
+  bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+    "CALL \`clinvar_ingest.gks_delta_build\`('$release_date')" > /dev/null \
+    || { echo "❌ gks_delta_build FAILED"; return 1; }
 
   echo "✅ All BigQuery procedures completed successfully."; return 0;
 }
