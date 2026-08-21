@@ -67,16 +67,10 @@ TABLE_ID='gks_vrs'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCHEMA_FILE_PATH="${SCRIPT_DIR}/../../schemas/vrs_output_2_0_1.schema.json"
 
-# BigQuery Stored Procedures to run in order.
-# NOTE: gks_catvar, gks_scv_condition, gks_scv_statement are NOT listed here — they are
-# called via their incremental wrappers (with gks_scv_changed) ahead of this loop in
-# execute_bq_procedures. rcv/vcv remain full rebuilds until Plan 3.
-BIGQUERY_PROCEDURES=(
-  'clinvar_ingest.gks_rcv_proc'
-  'clinvar_ingest.gks_rcv_statement_proc'
-  'clinvar_ingest.gks_vcv_proc'
-  'clinvar_ingest.gks_vcv_statement_proc'
-)
+# NOTE: gks_catvar, gks_scv_condition, gks_scv_statement, and the four rcv/vcv procs
+# (gks_rcv, gks_rcv_statement, gks_vcv, gks_vcv_statement) are all called via their
+# incremental wrappers (with gks_scv_changed / gks_rcvvcv_changed) directly in
+# execute_bq_procedures. There is no longer a full-rebuild loop.
 
 # --- END OF CONFIGURATION ---
 
@@ -223,10 +217,28 @@ execute_bq_procedures() {
     echo "    ✅ Success."
   done
 
-  for proc in "${BIGQUERY_PROCEDURES[@]}"; do
-    echo "  - Calling procedure: $proc..."
-    if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false "CALL \`${proc}\`('$release_date', FALSE)" > /dev/null; then
-      echo "❌ Procedure call FAILED for: $proc"; return 1;
+  # rcv/vcv (Plan 3): compute the shared impacted-parent sets FIRST, then the four
+  # incremental rcv/vcv procs (rcv before rcv_statement, vcv before vcv_statement —
+  # the statements read the agg tables). RCV and VCV are independent aggregates.
+  echo "  - Calling procedure: clinvar_ingest.gks_rcvvcv_changed..."
+  if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+      "CALL \`clinvar_ingest.gks_rcvvcv_changed\`('$release_date')" > /dev/null; then
+    echo "❌ gks_rcvvcv_changed FAILED"; return 1;
+  fi
+  echo "    ✅ Success."
+  for rv_proc in gks_rcv gks_rcv_statement gks_vcv gks_vcv_statement; do
+    if [[ "$GKS_FULL" == "true" ]]; then
+      echo "  - Calling procedure: clinvar_ingest.${rv_proc}_proc (FULL, --full requested)..."
+      if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+          "CALL \`clinvar_ingest.${rv_proc}_proc\`('$release_date', FALSE)" > /dev/null; then
+        echo "❌ ${rv_proc}_proc (full) FAILED"; return 1;
+      fi
+    else
+      echo "  - Calling procedure: clinvar_ingest.${rv_proc}_proc_incremental..."
+      if ! bq --project_id="$PROJECT_ID" query --quiet --use_legacy_sql=false \
+          "CALL \`clinvar_ingest.${rv_proc}_proc_incremental\`('$release_date', FALSE)" > /dev/null; then
+        echo "❌ ${rv_proc}_proc_incremental FAILED"; return 1;
+      fi
     fi
     echo "    ✅ Success."
   done
