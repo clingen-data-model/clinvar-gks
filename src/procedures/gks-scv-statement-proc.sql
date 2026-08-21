@@ -84,8 +84,8 @@ BEGIN
                 WHEN 'resistance' THEN
                   STRUCT('VariantTherapeuticResponseProposition' as type, 'predictsResistanceTo' as pred)
                 WHEN 'reduced sensitivity' THEN
-                  -- AHW is looking into whether this should be allowed
-                  STRUCT('VariantTherapeuticResponseProposition' as type, 'predictsReducedSensitivtyTo' as pred)
+                  -- va-spec has no 'reduced sensitivity' predicate; bundle these into the sensitivity propositions
+                  STRUCT('VariantTherapeuticResponseProposition' as type, 'predictsSensitivityTo' as pred)
                 ELSE
                   -- should never occur
                   STRUCT('VariantTherapeuticResponseProposition' as type, 'predictsUndefinedResponseTo' as pred)
@@ -464,10 +464,11 @@ BEGIN
             ),
             null
           ) as objectCondition,
-          -- Single va-spec objectTherapy: a Therapy when one drug, a TherapyGroup when several.
+          -- Single va-spec objectTherapy: a Therapy (MappableConcept) when one drug, else a TherapyGroup.
+          -- TherapyGroup is a ConceptSet: type='ConceptSet', membershipOperator, and concepts[] (>=2 Therapy).
           IF(
             ARRAY_LENGTH(sd.therapies) > 1,
-            TO_JSON(STRUCT('TherapyGroup' AS type, sd.therapies AS therapies, 'AND' AS membershipOperator)),
+            TO_JSON(STRUCT('ConceptSet' AS type, sd.therapies AS concepts, 'AND' AS membershipOperator)),
             TO_JSON(sd.therapy)
           ) as objectTherapy,
           IF(
