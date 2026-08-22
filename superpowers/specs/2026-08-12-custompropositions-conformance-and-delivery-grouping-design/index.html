@@ -1,0 +1,3939 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="ClinVar data transformation pipeline to GA4GH GKS format">
+      
+      
+      
+        <link rel="canonical" href="https://clingen-data-model.github.io/clinvar-gks/superpowers/specs/2026-08-12-custompropositions-conformance-and-delivery-grouping-design/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>ClinVar CustomProposition conformance + proposition delivery grouping — Design - ClinVar-GKS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#clinvar-customproposition-conformance-proposition-delivery-grouping-design" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="ClinVar-GKS" class="md-header__button md-logo" aria-label="ClinVar-GKS" data-md-component="logo">
+      <img src="../../../assets/images/clingen-logo-white.svg" alt="ClinVar-GKS" height="40">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <a href="../../.." class="md-header__topic" style="text-decoration: none; color: inherit;">
+          <span class="md-ellipsis">
+            ClinVar-GKS
+          </span>
+        </a>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ClinVar CustomProposition conformance + proposition delivery grouping — Design
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    <a href="https://www.ga4gh.org" title="GA4GH" target="_blank" rel="noopener" class="md-header__ga4gh">
+      <img src="../../../assets/images/ga4gh-logo.svg" alt="GA4GH" height="40">
+    </a>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../data-access/download/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Downloads
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../output-reference/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Data Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../output-reference/classes/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Data Model
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../pipeline/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Pipeline
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../reference/gks-standards/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="ClinVar-GKS" class="md-nav__button md-logo" aria-label="ClinVar-GKS" data-md-component="logo">
+      
+  <img src="../../../assets/images/clingen-logo-white.svg" alt="logo">
+
+    </a>
+    ClinVar-GKS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downloads
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/cat-vrs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/scv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/vcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/rcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/id-references/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ID References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../output-reference/classes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Model
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/variations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalVariant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalVariant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCanonicalAllele/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCanonicalAllele
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalCnvChange/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalCnvChange
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalCnvCount/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalCnvCount
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarNonConstrainedVariant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarNonConstrainedVariant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/HgvsListItem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HgvsListItem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/GeneListItem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GeneListItem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Propositions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarRiskFactorProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarRiskFactorProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarProtectiveProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarProtectiveProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarDrugResponseProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarDrugResponseProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarAffectsProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarAffectsProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarAssociationProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarAssociationProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarConfersSensitivityProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarConfersSensitivityProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarOtherProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarOtherProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarNotProvidedProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarNotProvidedProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarConflictingDataFromSubmitterProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarConflictingDataFromSubmitterProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarUndefinedProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarUndefinedProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statements
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarScvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarScvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarVcvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarVcvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarRcvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarRcvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/SubmittedConditionMapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SubmittedConditionMapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Evidence
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Lines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarSomaticEvidenceLine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarSomaticEvidenceLine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../profiles/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiles
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/statement-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statement Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/classifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/review-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/variation-identity/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variation Identity
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-loc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequence Locations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-hgvs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HGVS Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-xref/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cross-References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-identity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity Table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vrs-processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VRS Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/cat-vrs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cat-VRS
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cat-VRS
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/cat-vrs/catvar-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Categorical Variant Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/conditions-and-traits/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditions & Traits
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Conditions & Traits
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/traits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Traits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-sets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/scv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    SCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Records
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/final-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Final Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/vcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    VCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-aggregation-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aggregation Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/rcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export & Distribute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/gks-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GA4GH Standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/known-issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#goal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-background-current-proposition-data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Background — current proposition data model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-proposition-datatype-signatures-the-grouping-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Proposition datatype signatures (the grouping key)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-phase-1-conformance-schema-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Phase 1 — Conformance (schema + pipeline)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Phase 1 — Conformance (schema + pipeline)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-schema-changes-schemaclinvar-gksclinvar-proposition-sourceyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Schema changes (schema/clinvar-gks/clinvar-proposition-source.yaml)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-target-emitted-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Target emitted shapes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-pipeline-emission-the-3-procs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Pipeline emission (the 3 procs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-phase-1-downstream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Phase-1 downstream
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-standard-type-conformance-fixes-also-phase-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Standard-type conformance fixes (also Phase 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-phase-2-proposition-delivery-grouping-by-datatype-signature-forward-looking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Phase 2 — Proposition delivery grouping by datatype signature (forward-looking)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Phase 2 — Proposition delivery grouping by datatype signature (forward-looking)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-open-design-questions-resolve-during-planning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Open design questions (resolve during planning)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-full-change-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Full change surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-open-questions-to-verify-during-planning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Open questions / to verify during planning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-correctness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Correctness
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-phasing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Phasing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="clinvar-customproposition-conformance-proposition-delivery-grouping-design">ClinVar CustomProposition conformance + proposition delivery grouping — Design<a class="headerlink" href="#clinvar-customproposition-conformance-proposition-delivery-grouping-design" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Status:</strong> design (drafting 2026-08-12). Follows the va-spec <code>1.1.0-ballot.2026-07.2</code> alignment
+(PR #78, branch <code>chore/update-va-spec-1.1.0-ballot-2026-07-2</code>), which reshaped the ClinVar custom
+proposition schema types. This spec covers (1) making the <strong>pipeline</strong> emit proposition data that
+conforms to the new schema, and (2) a forward-looking reorganization of <strong>proposition delivery</strong>
+(Parquet + bundle) grouped by subject/object datatype signature. All BigQuery work on <code>clingen-dev</code>.</p>
+</blockquote>
+<h2 id="goal">Goal<a class="headerlink" href="#goal" title="Permanent link">&para;</a></h2>
+<p>Two coupled deliverables:</p>
+<ol>
+<li><strong>Conformance (required):</strong> the BigQuery statement procs currently emit every proposition in one
+   uniform shape (<code>{type:&lt;specific&gt;, subjectVariant, objectCondition, predicate, …typed qualifiers}</code>).
+   The va-spec 1.1.0 ballot split propositions into <strong>standard</strong> types (unchanged shape) and
+   <strong>CustomProposition</strong>-derived types (new shape: <code>type:"CustomProposition"</code> +
+   <code>customPropositionType</code> + generic <code>subject</code>/<code>object</code> + generic <code>qualifiers[]</code>). The pipeline must
+   emit the correct shape per type.</li>
+<li><strong>Delivery grouping (forward-looking):</strong> propositions are a fundamental, definitive aspect of
+   statements and evidence lines. For clean typed delivery (Parquet + bundle), organize proposition
+   records into groups that share the <strong>same (subject-datatype, object-datatype) signature</strong>, carrying
+   <code>type</code>/<code>customPropositionType</code> + <code>predicate</code> + qualifier attributes as columns within each group.</li>
+</ol>
+<hr />
+<h2 id="1-background-current-proposition-data-model">1. Background — current proposition data model<a class="headerlink" href="#1-background-current-proposition-data-model" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Subject propositions</strong> are stored in the per-level dict tables <code>gks_dict_proposition</code> (SCV),
+  <code>gks_dict_vcv_proposition</code> (VCV), <code>gks_dict_rcv_proposition</code> (RCV), keyed by <code>key</code>=<code>prop_id</code>, value =
+  a JSON object. The bundle merges all three into one <code>proposition</code> section
+  (<code>assemble-gks-dicts.py:70</code>); typed Parquet is emitted per level
+  (<code>parquet-schemas/{proposition,vcv_proposition,rcv_proposition}.sql</code>).</li>
+<li><strong>Target propositions</strong> (the somatic Diagnostic/Prognostic/TherapeuticResponse types) are <strong>embedded
+  inside evidence lines</strong> in <code>gks_dict_evidence_line</code> (SCV <code>evidence_line_target_proposition</code>,
+  <code>gks-scv-statement-proc.sql:377-465</code>), not in the proposition dicts.</li>
+<li>Current emitted shape (all types, uniform) — <code>gks-{scv,rcv,vcv}-statement-proc.sql</code>:
+  <code>{ id, type:&lt;specific gks_type&gt;, subjectVariant:'#/variation/clinvar:{id}', predicate,
+     objectCondition:&lt;…&gt; }</code> plus, for <strong>SCV</strong> subject propositions, typed
+  <code>geneContextQualifier</code>/<code>modeOfInheritanceQualifier</code>/<code>penetranceQualifier</code> (MappableConcept structs).
+  RCV/VCV proposition structs carry <strong>no</strong> proposition-level qualifiers.</li>
+<li><strong><code>objectCondition</code> cardinality differs by level (important):</strong> SCV emits a <strong>single</strong> pointer
+  (<code>gks-scv-statement-proc.sql</code>), RCV a <strong>single</strong> COALESCE'd value (<code>rcd.condition_concept</code>), but <strong>VCV
+  emits an ARRAY</strong> — <code>agg.unique_conditions AS objectCondition</code> (<code>gks-vcv-statement-proc.sql:331/357/383</code>,
+  <code>unique_conditions = ARRAY_AGG(DISTINCT …)</code> in <code>gks-vcv-proc.sql</code>). va-spec <code>objectCondition</code> and the
+  clinvar custom <code>object</code> are <strong>singular</strong> (<code>Condition|ConditionSet|iriReference</code>; multiplicity is
+  expressed by a single <code>ConditionSet</code> whose <code>concepts[]</code> holds the members). So <strong>VCV standard AND
+  custom propositions are already non-conformant</strong> (array where the schema wants a single value) — see
+  §3.5.</li>
+<li>The custom/standard split is by <strong><code>gks_type</code> name prefix</strong>: <code>Clinvar*</code> = custom, <code>Variant*</code> =
+  standard. There is <strong>no</strong> <code>is_custom</code> flag in the upstream <code>clinvar_ingest.clinvar_proposition_types</code>
+  table (columns are upstream-sourced — <code>code, label, gks_type, statement_type_code, display_order,
+  conflict_detectable</code> — and not verifiable in this repo); the classification→<code>gks_type</code> mapping is owned
+  upstream (<code>clinvar-ingest-bq-tools</code>). This repo only reads it.</li>
+</ul>
+<h2 id="2-proposition-datatype-signatures-the-grouping-key">2. Proposition datatype signatures (the grouping key)<a class="headerlink" href="#2-proposition-datatype-signatures-the-grouping-key" title="Permanent link">&para;</a></h2>
+<p>Verified against <code>submodules/va-spec/schema/va-spec/base/va-core-source.yaml</code> and the clinvar sources:</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>subject</th>
+<th>object</th>
+<th>Types</th>
+<th>Qualifiers (typed, standard)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>G1 variant×condition (std)</strong></td>
+<td><code>subjectVariant</code> (Variation)</td>
+<td><code>objectCondition</code> (Condition|ConditionSet|iri)</td>
+<td>VariantPathogenicity, VariantClinicalSignificance, VariantDiagnostic*, VariantPrognostic*</td>
+<td>geneContext, alleleOrigin, penetrance, modeOfInheritance</td>
+</tr>
+<tr>
+<td><strong>G2 variant×tumorType (std)</strong></td>
+<td><code>subjectVariant</code></td>
+<td><code>objectTumorType</code></td>
+<td>VariantOncogenicity</td>
+<td>(per va-spec)</td>
+</tr>
+<tr>
+<td><strong>G3 variant×therapy (std)</strong></td>
+<td><code>subjectVariant</code></td>
+<td><code>objectTherapy</code></td>
+<td>VariantTherapeuticResponse*</td>
+<td>conditionQualifier (+ gene/allele/…)</td>
+</tr>
+<tr>
+<td><strong>G4 variant×condition (custom)</strong></td>
+<td><code>subject</code> (MolecularVariation|CategoricalVariant|iri)</td>
+<td><code>object</code> (Condition|ConditionSet|iri)</td>
+<td>the 10 <code>Clinvar*</code> (RiskFactor, Protective, DrugResponse, Affects, Association, ConfersSensitivity, Other, NotProvided, ConflictingDataFromSubmitter, <strong>Undefined</strong>)</td>
+<td>generic <code>qualifiers[]</code> name/value: geneContext, modeOfInheritance, penetrance</td>
+</tr>
+</tbody>
+</table>
+<p>* Diagnostic/Prognostic/TherapeuticResponse are emitted only as <strong>target</strong> propositions inside
+evidence lines (somatic). Pathogenicity/ClinicalSignificance/Oncogenicity + all custom types are
+<strong>subject</strong> propositions in the proposition dicts.</p>
+<p><strong>Note on standard object shapes:</strong> the standard types are NOT all <code>variant×condition</code> — Oncogenicity
+uses <code>objectTumorType</code> and TherapeuticResponse uses <code>objectTherapy</code>. So grouping by signature yields
+multiple standard groups, not one. (The current proc emits <code>objectCondition</code> for the <strong>subject</strong>
+Oncogenicity proposition where va-spec wants <code>objectTumorType</code> — flagged in §3.5/§6; the somatic
+<strong>target</strong> props already emit <code>objectTherapy</code>/<code>conditionQualifier</code>.)</p>
+<hr />
+<h2 id="3-phase-1-conformance-schema-pipeline">3. Phase 1 — Conformance (schema + pipeline)<a class="headerlink" href="#3-phase-1-conformance-schema-pipeline" title="Permanent link">&para;</a></h2>
+<h3 id="31-schema-changes-schemaclinvar-gksclinvar-proposition-sourceyaml">3.1 Schema changes (<code>schema/clinvar-gks/clinvar-proposition-source.yaml</code>)<a class="headerlink" href="#31-schema-changes-schemaclinvar-gksclinvar-proposition-sourceyaml" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>object</code> includes <code>ConditionSet</code></strong> — DONE (single <code>Condition|ConditionSet|iriReference</code>, matching
+  the standard <code>objectCondition</code>).</li>
+<li><strong>Add <code>ClinvarUndefinedProposition</code></strong> as the 10th custom type: <code>allOf: [ClinvarGermlineCustomProposition]</code>,
+  <code>customPropositionType</code> const <code>ClinvarUndefinedProposition</code>, <code>predicate</code> const
+  <code>isClinvarUndefinedAssociationFor</code>. Add it to the <code>ClinvarProposition</code> <code>oneOf</code> union. (This is the
+  fallback the SCV proc already emits and the <code>undef</code> row in the upstream table; it must be a defined
+  type.)</li>
+<li><strong>Qualifiers:</strong> the germline custom types carry the generic <code>qualifiers</code> name/value array inherited
+  from <code>va-spec:CustomProposition</code> (<code>{name:string, value: MappableConcept|iriReference}</code>). <strong>Verify</strong>
+  the <code>additionalProperties: false</code> on <code>ClinvarGermlineCustomPropositionProperties</code> + the <code>allOf</code>
+  composition actually permits <code>qualifiers</code> (it comes from the va-spec base, not the clinvar Properties
+  <code>$def</code>); if the metaschema composition rejects it, re-declare <code>qualifiers</code> on the germline base.</li>
+<li><strong>Regenerate</strong> (<code>cd schema/clinvar-gks &amp;&amp; make</code>) and refresh the generated <code>json/</code> + docs class pages.
+  Note the metaschema non-deterministic ordering (issue ga4gh/gks-metaschema#63) — commit only the
+  semantic changes (canonical-diff to filter reorder churn), per the PR-#78 practice.</li>
+</ul>
+<h3 id="32-target-emitted-shapes">3.2 Target emitted shapes<a class="headerlink" href="#32-target-emitted-shapes" title="Permanent link">&para;</a></h3>
+<p><strong>Standard</strong> (not converted to CustomProposition — keeps its per-type shape):
+<code>{ id, type:&lt;specific&gt;, subjectVariant, predicate, &lt;object field&gt;, &lt;typed qualifiers&gt; }</code>. But
+"unchanged" is <strong>not</strong> "already conformant" — two standard-type conformance gaps must also be resolved
+(§3.5): VariantOncogenicity's object is <code>objectTumorType</code> (the procs emit <code>objectCondition</code>), and the
+VCV object is an <strong>array</strong> (schema wants a single value). The <code>variant×condition</code> standard types
+(Pathogenicity, ClinicalSignificance) at SCV/RCV are already conformant.</p>
+<p><strong>Custom</strong> (new): <code>{ id, type:"CustomProposition", customPropositionType:&lt;gks_type&gt;, subject,
+predicate, object, qualifiers?:[{name,value},…] }</code> where:
+- <code>type</code> = const <code>"CustomProposition"</code> (all 10 custom types),
+- <code>customPropositionType</code> = the <code>gks_type</code> (<code>Clinvar*Proposition</code>),
+- <code>subject</code> = the value currently emitted as <code>subjectVariant</code> (<code>#/variation/clinvar:{id}</code>),
+- <code>object</code> = the value currently emitted as <code>objectCondition</code> (single <code>#/condition/…</code> or
+  <code>#/conditionSet/…</code> pointer),
+- <code>qualifiers</code> (SCV only) = an array built from the typed qualifier sources, one entry <strong>only when its
+  value is present</strong>:
+  <code>{name:"geneContext", value:&lt;sgq MappableConcept&gt;}</code>, <code>{name:"modeOfInheritance", value:&lt;smq&gt;}</code>,
+  <code>{name:"penetrance", value:&lt;spq&gt;}</code>. (RCV/VCV custom propositions have no qualifiers.)</p>
+<h3 id="33-pipeline-emission-the-3-procs">3.3 Pipeline emission (the 3 procs)<a class="headerlink" href="#33-pipeline-emission-the-3-procs" title="Permanent link">&para;</a></h3>
+<p>Branch on <code>gks_type LIKE 'Clinvar%'</code> (custom) vs standard. Implementation approach (BigQuery-friendly):
+build <strong>one wide struct</strong> with all possible fields and <code>IF(is_custom, …, NULL)</code>-null the fields that
+don't apply, then <code>JSON_STRIP_NULLS(…, remove_empty =&gt; TRUE)</code> drops the nulls <strong>and empties</strong> → the
+correct per-type JSON shape (<code>remove_empty =&gt; TRUE</code> is required to drop an empty custom <code>qualifiers[]</code>).
+Fields: <code>type</code> = <code>IF(is_custom,'CustomProposition', gks_type)</code>; <code>customPropositionType</code> =
+<code>IF(is_custom, gks_type, NULL)</code>; <code>subjectVariant</code>/<code>subject</code> mutually exclusive; <code>objectCondition</code>/<code>object</code>
+mutually exclusive; <code>predicate</code> unchanged; typed qualifiers only on standard SCV; <code>qualifiers[]</code> only on
+custom SCV (built conditionally). Applies to:
+- <code>gks-scv-statement-proc.sql</code> — subject proposition (Step 5, ~L343-355). The <strong>target</strong> proposition
+  (Step 6, ~L409-443) is somatic-standard <code>Variant*</code> (Diagnostic/Prognostic/TherapeuticResponse) — the
+  custom reshape does NOT apply to it, and it <strong>already</strong> emits <code>objectTherapy</code> + <code>conditionQualifier</code>
+  for therapeutic vs <code>objectCondition</code> otherwise, so target props are verify-only for object
+  conformance.
+- <code>gks-rcv-statement-proc.sql</code> — the proposition struct across all 3 aggregation layers (~L344-419).
+- <code>gks-vcv-statement-proc.sql</code> — same, 3 layers (~L310-383).</p>
+<h3 id="34-phase-1-downstream">3.4 Phase-1 downstream<a class="headerlink" href="#34-phase-1-downstream" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Parquet</strong> <code>parquet-schemas/{proposition,rcv_proposition,vcv_proposition}.sql</code> must read
+  <code>customPropositionType</code>/<code>subject</code>/<code>object</code> for custom rows in addition to <code>type</code>/<code>subjectVariant</code>/
+  <code>objectCondition</code> for standard rows (see Phase 2 for the grouped redesign — Phase 1 can COALESCE both
+  into columns as an interim).</li>
+<li><strong>Delta/change-log:</strong> every custom proposition's <code>value</code> JSON changes → one-time full churn of all
+  custom-proposition records in the next release's delta. Expected; no code change.</li>
+<li><strong>Docs:</strong> regen the proposition class pages + the pipeline proposition pages.</li>
+</ul>
+<h3 id="35-standard-type-conformance-fixes-also-phase-1">3.5 Standard-type conformance fixes (also Phase 1)<a class="headerlink" href="#35-standard-type-conformance-fixes-also-phase-1" title="Permanent link">&para;</a></h3>
+<p>The custom reshape is not the only conformance gap the ballot exposes; two <strong>standard</strong>-type gaps must
+be decided in Phase 1 (fix now, or explicitly defer — but the §7 validation gate will fail on them
+otherwise):</p>
+<ol>
+<li><strong>VCV object is an array.</strong> <code>gks-vcv-statement-proc.sql</code> emits <code>agg.unique_conditions</code> (an
+   <code>ARRAY_AGG</code> of <code>#/condition/…</code> pointers) as <code>objectCondition</code> across all 3 layers, but the schema
+   <code>objectCondition</code>/custom <code>object</code> is a <strong>single</strong> <code>Condition|ConditionSet|iriReference</code>. Fix: emit a
+   single <strong><code>ConditionSet</code></strong> pointer (grouping the members via its <code>concepts[]</code>) instead of a bare
+   array — the natural aggregate model — for VCV standard <strong>and</strong> custom propositions. This also makes
+   the VCV custom <code>object</code> conform. <strong>Single-member rule:</strong> when a VCV aggregates exactly one condition,
+   emit a bare <strong><code>Condition</code></strong> pointer (mirroring RCV/SCV), and a <strong><code>ConditionSet</code></strong> only when there is<blockquote>
+<p>1 member — keeps the single-condition shape consistent across levels and stable in the delta.
+   (RCV already emits a single value; SCV single. Note the <code>rcv_proposition.sql</code> extractor uses
+   <code>JSON_VALUE_ARRAY</code> — reconcile it to single.)</p>
+</blockquote>
+</li>
+<li><strong>VariantOncogenicity object field.</strong> Oncogenicity is a <strong>subject</strong> proposition (all three subject
+   builders emit uniform <code>objectCondition</code>), but va-spec requires <strong><code>objectTumorType</code></strong>. Fix: emit
+   <code>objectTumorType</code> for <code>gks_type = 'VariantOncogenicityProposition'</code>. (The somatic <strong>target</strong> props'
+   <code>objectTherapy</code> is already handled — §3.3.)</li>
+</ol>
+<p>Decision needed: are #1 and #2 in-scope for this initiative's Phase 1 (recommended — they are true
+schema non-conformances the ballot surfaces), or split into their own standard-conformance change?</p>
+<hr />
+<h2 id="4-phase-2-proposition-delivery-grouping-by-datatype-signature-forward-looking">4. Phase 2 — Proposition delivery grouping by datatype signature (forward-looking)<a class="headerlink" href="#4-phase-2-proposition-delivery-grouping-by-datatype-signature-forward-looking" title="Permanent link">&para;</a></h2>
+<p><strong>Motivation:</strong> typed Parquet and clean bundle sections require homogeneous datatypes per table. Today
+one <code>proposition</code> bundle section / three per-level Parquet files mix all types and both custom/standard
+shapes, so the typed extractors can only surface a few common columns and stuff the rest into a <code>data</code>
+JSON blob. Grouping by (subject, object) signature lets each group be a fully-typed table.</p>
+<p><strong>Design:</strong> deliver propositions in groups keyed by their <strong>(subjectType, objectType) signature</strong>, each
+carrying the shared subject/object columns + the discriminator (<code>type</code> for standard,
+<code>customPropositionType</code> for custom) + <code>predicate</code> + the group's qualifier columns (flattened typed
+columns for standard groups; the generic <code>qualifiers[]</code> array for the custom group). Concretely the
+groups from §2:
+- <strong>G1</strong> variant×condition (std): columns <code>id, type, predicate, subjectVariant, objectCondition,
+  geneContext*, alleleOrigin*, penetrance*, modeOfInheritance*</code>.
+- <strong>G2</strong> variant×tumorType (std): <code>id, type, predicate, subjectVariant, objectTumorType, …</code>.
+- <strong>G3</strong> variant×therapy (std): <code>id, type, predicate, subjectVariant, objectTherapy, conditionQualifier, …</code>.
+- <strong>G4</strong> variant×condition (custom): <code>id, customPropositionType, predicate, subject, object, qualifiers[]</code>.</p>
+<p>Each group → its own typed Parquet file and its own bundle sub-section (or a <code>proposition</code> section
+sub-keyed by group). A statement/evidence-line still references a proposition by its <code>#/proposition/{id}</code>
+pointer; only the <em>organization</em> of the proposition store changes, not the reference mechanism.</p>
+<h3 id="41-open-design-questions-resolve-during-planning">4.1 Open design questions (resolve during planning)<a class="headerlink" href="#41-open-design-questions-resolve-during-planning" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Cross-level vs within-level grouping.</strong> Today propositions are separated by source level
+   (scv/vcv/rcv) — load-bearing for the incremental/delta cascade and the aggregation model. Does the
+   datatype-signature grouping apply <strong>within</strong> each level (e.g. <code>scv_variantConditionProposition</code>,
+   <code>vcv_variantConditionProposition</code>, …), or <strong>across</strong> levels (one <code>variantConditionProposition</code> store
+   for the whole dataset)? Cross-level is cleaner for consumers but changes the delta/aggregation keying;
+   within-level preserves the current cascade. <strong>Recommend: keep within-level for the dict/delta layer
+   (preserve the cascade), group by signature only at the delivery layer (Parquet + bundle section
+   naming).</strong></li>
+<li><strong>Bundle consumer contract.</strong> Splitting the single <code>proposition</code> section into signature-named
+   sub-sections (or adding a group discriminator) changes the published bundle shape — a
+   consumer-facing change. Decide the naming + whether it's additive or a breaking reorg, and coordinate
+   with the delta-publishing model (Plan 4).</li>
+<li><strong>Target propositions.</strong> The somatic target props (G1/G3) live inside evidence lines, not the
+   proposition dicts. Does grouping apply to them too (extract into grouped proposition tables), or do
+   they stay embedded? If extracted, evidence lines would reference them by pointer like statements do.</li>
+<li><strong>Qualifier column set per standard group.</strong> Enumerate the exact typed qualifier columns per group
+   from va-spec (gene/allele/penetrance/modeOfInheritance for G1; conditionQualifier + … for G3) so the
+   Parquet schema is complete. <strong>Note:</strong> <code>alleleOriginQualifier</code> exists in va-spec (and is listed in the
+   §2/§4 G1 column set for completeness) but the pipeline does <strong>not</strong> currently populate it — SCV Step 5
+   builds only gene/moi/penetrance — so that column would be perpetually null until upstream provides it.</li>
+<li><strong>Where the grouping is computed.</strong> In the statement procs (emit into grouped dict tables) vs a new
+   post-processing/regroup proc vs only at export time (<code>export-gks-dicts.sh</code> + <code>parquet-schemas</code>).
+   The lightest is export-time grouping (the dict tables stay per-level; the Parquet/bundle export
+   splits by signature via <code>JSON_VALUE($.type)</code>/prefix), avoiding proc/delta churn beyond Phase 1.</li>
+</ol>
+<hr />
+<h2 id="5-full-change-surface">5. Full change surface<a class="headerlink" href="#5-full-change-surface" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Schema:</strong> <code>clinvar-proposition-source.yaml</code> (+ regenerate <code>json/</code>, docs).</li>
+<li><strong>Procs:</strong> <code>gks-{scv,rcv,vcv}-statement-proc.sql</code> (Phase 1 emission; possibly grouped dicts in Phase 2
+  if not export-time).</li>
+<li><strong>Export/Parquet:</strong> <code>export-gks-dicts.sh</code>, <code>parquet-schemas/*proposition*.sql</code> (Phase 1 columns;
+  Phase 2 per-group files).</li>
+<li><strong>Bundle:</strong> <code>assemble-gks-dicts.py</code> <code>SECTIONS</code> (Phase 2 section reorg).</li>
+<li><strong>Delta/change-log + Plan 4 delta publishing:</strong> proposition churn (Phase 1); section-map changes
+  (Phase 2) must stay consistent across <code>export</code>/<code>assemble</code>/<code>build-delta-manifest</code>/<code>oracle</code>.</li>
+<li><strong>Docs:</strong> proposition class pages + pipeline proposition pages + downloads (Phase 2 section changes).</li>
+</ul>
+<h2 id="6-open-questions-to-verify-during-planning">6. Open questions / to verify during planning<a class="headerlink" href="#6-open-questions-to-verify-during-planning" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>qualifiers</code> schema composition</strong> — confirm the custom base actually permits the inherited
+  <code>qualifiers</code> array under <code>additionalProperties:false</code> allOf composition (§3.1).</li>
+<li><strong>Standard object-field conformance</strong> — resolved into §3.5 as concrete Phase-1 fixes: VCV array→single
+  <code>ConditionSet</code>, and VariantOncogenicity <strong>subject</strong> props <code>objectCondition</code>→<code>objectTumorType</code>. The
+  somatic <strong>target</strong> props already emit <code>objectTherapy</code>/<code>conditionQualifier</code> (verify-only). Spot-check
+  the generated JSON for <code>VariantOncogenicityProposition</code>/<code>VariantTherapeuticResponseProposition</code> to
+  confirm exact object field names before implementing.</li>
+<li><strong><code>ClinvarUndefinedProposition</code> frequency</strong> — it never fired on the test datasets (upstream mapping
+  fully resolved). Confirm whether to keep the proc fallback + schema type, or eliminate the fallback by
+  guaranteeing the upstream mapping is total.</li>
+<li><strong>Branch signal</strong> — prefix-sniff <code>gks_type LIKE 'Clinvar%'</code> (self-contained) vs an upstream
+  <code>is_custom</code>/signature column added to <code>clinvar_proposition_types</code>. Prefix works today; the <code>undef</code>
+  sentinel classifies as custom under it (correct).</li>
+</ul>
+<h2 id="7-correctness">7. Correctness<a class="headerlink" href="#7-correctness" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Schema-conformance validation</strong> (new): validate a sample of emitted propositions (custom + each
+  standard group) against the generated <code>schema/clinvar-gks/json/*</code> — this is the gate that the reshape
+  is correct and would catch stray fields (<code>additionalProperties:false</code>).</li>
+<li><strong>Full-vs-full determinism</strong> for the reshaped procs (the existing gks proc oracles / the Plan-4
+  reconstruction oracle if on that line) — the proposition <code>value</code> changes are intended; verify only
+  the intended fields changed and the id sets are stable.</li>
+</ul>
+<h2 id="8-phasing">8. Phasing<a class="headerlink" href="#8-phasing" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Phase 1 (conformance)</strong> — schema (undefined type + qualifiers verify), pipeline emission reshape,
+   interim Parquet columns, docs, conformance validation. Required to match the new va-spec ballot.</li>
+<li><strong>Phase 2 (delivery grouping)</strong> — resolve §4.1 questions, then group proposition delivery by
+   signature (Parquet per group + bundle section reorg), coordinated with Plan 4 delta publishing.
+   Forward-looking; can follow Phase 1.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

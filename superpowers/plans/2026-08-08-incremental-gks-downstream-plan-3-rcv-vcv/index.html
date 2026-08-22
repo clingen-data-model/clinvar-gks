@@ -1,0 +1,3774 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="ClinVar data transformation pipeline to GA4GH GKS format">
+      
+      
+      
+        <link rel="canonical" href="https://clingen-data-model.github.io/clinvar-gks/superpowers/plans/2026-08-08-incremental-gks-downstream-plan-3-rcv-vcv/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Incremental GKS Downstream — Plan 3: gks_rcv + gks_vcv (aggregation cascade) - ClinVar-GKS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#incremental-gks-downstream-plan-3-gks_rcv-gks_vcv-aggregation-cascade" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="ClinVar-GKS" class="md-header__button md-logo" aria-label="ClinVar-GKS" data-md-component="logo">
+      <img src="../../../assets/images/clingen-logo-white.svg" alt="ClinVar-GKS" height="40">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <a href="../../.." class="md-header__topic" style="text-decoration: none; color: inherit;">
+          <span class="md-ellipsis">
+            ClinVar-GKS
+          </span>
+        </a>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Incremental GKS Downstream — Plan 3: gks_rcv + gks_vcv (aggregation cascade)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    <a href="https://www.ga4gh.org" title="GA4GH" target="_blank" rel="noopener" class="md-header__ga4gh">
+      <img src="../../../assets/images/ga4gh-logo.svg" alt="GA4GH" height="40">
+    </a>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../data-access/download/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Downloads
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../output-reference/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Data Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../output-reference/classes/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Data Model
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../pipeline/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Pipeline
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../reference/gks-standards/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="ClinVar-GKS" class="md-nav__button md-logo" aria-label="ClinVar-GKS" data-md-component="logo">
+      
+  <img src="../../../assets/images/clingen-logo-white.svg" alt="logo">
+
+    </a>
+    ClinVar-GKS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downloads
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/cat-vrs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/scv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/vcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/rcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/id-references/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ID References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../output-reference/classes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Model
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/variations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalVariant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalVariant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCanonicalAllele/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCanonicalAllele
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalCnvChange/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalCnvChange
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalCnvCount/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalCnvCount
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarNonConstrainedVariant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarNonConstrainedVariant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/HgvsListItem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HgvsListItem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/GeneListItem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GeneListItem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Propositions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarRiskFactorProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarRiskFactorProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarProtectiveProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarProtectiveProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarDrugResponseProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarDrugResponseProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarAffectsProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarAffectsProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarAssociationProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarAssociationProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarConfersSensitivityProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarConfersSensitivityProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarOtherProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarOtherProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarNotProvidedProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarNotProvidedProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarConflictingDataFromSubmitterProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarConflictingDataFromSubmitterProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarUndefinedProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarUndefinedProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statements
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarScvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarScvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarVcvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarVcvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarRcvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarRcvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/SubmittedConditionMapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SubmittedConditionMapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Evidence
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Lines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarSomaticEvidenceLine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarSomaticEvidenceLine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../profiles/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiles
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/statement-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statement Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/classifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/review-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/variation-identity/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variation Identity
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-loc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequence Locations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-hgvs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HGVS Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-xref/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cross-References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-identity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity Table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vrs-processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VRS Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/cat-vrs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cat-VRS
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cat-VRS
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/cat-vrs/catvar-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Categorical Variant Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/conditions-and-traits/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditions & Traits
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Conditions & Traits
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/traits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Traits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-sets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/scv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    SCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Records
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/final-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Final Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/vcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    VCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-aggregation-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aggregation Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/rcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export & Distribute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/gks-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GA4GH Standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/known-issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#output-classification-the-12-plan-3-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output classification (the 12 Plan-3 outputs)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#impact-model-shared-gks_rcvvcv_changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact model — shared gks_rcvvcv_changed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-1-shared-gks_rcvvcv_changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 1: shared gks_rcvvcv_changed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-2-incremental-gks_rcv_proc-3-agg-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 2: incremental gks_rcv_proc (3 agg outputs)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-3-incremental-gks_rcv_statement_proc-3-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 3: incremental gks_rcv_statement_proc (3 outputs)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-4-incremental-gks_vcv_proc-3-agg-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 4: incremental gks_vcv_proc (3 agg outputs)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-5-incremental-gks_vcv_statement_proc-3-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 5: incremental gks_vcv_statement_proc (3 outputs)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-6-deltas-pipeline-wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 6: deltas + pipeline wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#done-criteria-plan-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Done criteria (Plan 3)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deferred-follow-ups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deferred / follow-ups
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="incremental-gks-downstream-plan-3-gks_rcv-gks_vcv-aggregation-cascade">Incremental GKS Downstream — Plan 3: gks_rcv + gks_vcv (aggregation cascade)<a class="headerlink" href="#incremental-gks-downstream-plan-3-gks_rcv-gks_vcv-aggregation-cascade" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Make the four RCV/VCV procs (<code>gks_rcv_proc</code>, <code>gks_rcv_statement_proc</code>, <code>gks_vcv_proc</code>, <code>gks_vcv_statement_proc</code> — 12 outputs total) build incrementally by recomputing only the RCV/VCV <strong>parents</strong> impacted by this release's changes and carrying the rest forward, and publish their per-release delta datasets. This is the <strong>aggregation cascade</strong> — the spec's single hardest correctness case: a changed SCV forces recompute of its parent RCV/VCV <em>even though the parent's own row is byte-identical</em>, because the statement re-aggregates across members.</p>
+<p><strong>Architecture:</strong> Reuse the shipped patterns (Plans 1–2): <code>*_build(on_date, debug, incremental)</code> + non-breaking <code>*_proc</code>(full)/<code>*_proc_incremental</code> wrappers; resolve-baseline + structural + <code>gks_pipeline_version</code> gate guard; <code>{PFILTER}</code>-filtered recompute into <code>{P}.stg_*</code>; <code>UNION-CTAS</code> carry-forward merge with explicit column lists + NULL-safe anti-joins. A shared <code>gks_rcvvcv_changed</code> computes the impacted-RCV and impacted-VCV parent sets ONCE (membership-first from Plan 2's <code>gks_scv_changed</code> outputs), consumed by all 4 procs. Correctness gated per output by the <code>gks_oracle_compare</code> multiset oracle (0 diffs).</p>
+<p><strong>Tech Stack:</strong> BigQuery stored procedures (dynamic SQL); <code>bash</code> orchestration. Deploy: <code>bq query --project_id=clingen-dev --use_legacy_sql=false &lt; file.sql</code>.</p>
+<p><strong>Spec:</strong> <code>docs/superpowers/specs/2026-08-06-incremental-gks-downstream-and-deltas-design.md</code> (§3.2 RCV/VCV independent parallel aggregates + membership-first impact set; §5 gate; §6 oracle; §4 delta).</p>
+<p><strong>Depends on Plans 1–2 (shipped on the ancestor branches, deployed to clingen-dev):</strong>
+- <code>gks_pipeline_version</code>, <code>gks_oracle_compare</code> (3-arg multiset), <code>gks_change_log</code>, <code>gks_delta_build</code>, <code>dataset_diff_on</code>.
+- <strong><code>gks_scv_changed</code></strong> → <code>{S}.scv_changed_ids</code>, <code>{S}.scv_removed_ids</code>, <code>{S}.gks_scv_change_audit</code> (the SCV change classifier). This is the driver Plan 3 consumes.
+- <code>GKS_FULL</code> force-full flag in <code>run-release.sh</code>/<code>vrs-to-bq-table.sh</code>.
+- <strong>Reference implementations to mirror</strong> (this branch lineage): <code>src/procedures/gks-scv-changed-proc.sql</code> (shared-changed-set pattern, all-or-nothing driver gate, cascade arms), <code>src/procedures/gks-scv-condition-proc.sql</code> / <code>gks-catvar-proc.sql</code> (build/wrapper/guard/{VFILTER}/UNION-CTAS-merge), <code>src/procedures/gks-delta-proc.sql</code>.</p>
+<p><strong>Test release pair:</strong> baseline <code>2026-07-15</code>, compare <code>2026-07-20</code>, project <code>clingen-dev</code>. <strong>No unit tests</strong> — the oracle (<code>gks_oracle_compare</code> full-vs-incremental = 0) is the gate.</p>
+<hr />
+<h2 id="output-classification-the-12-plan-3-outputs">Output classification (the 12 Plan-3 outputs)<a class="headerlink" href="#output-classification-the-12-plan-3-outputs" title="Permanent link">&para;</a></h2>
+<p>All 12 are <strong>parent-keyed</strong> (per RCV or per VCV) — there are NO global-dedup dicts in this plan. Every output carries <code>rcv_accession</code> (RCV side) or <code>vcv_accession</code>/<code>variation_id</code> (VCV side) either as a column or embedded in its <code>id</code>, so all 12 are carry-forward candidates keyed on the parent.</p>
+<table>
+<thead>
+<tr>
+<th>Proc</th>
+<th>Outputs</th>
+<th>Parent key column</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gks_rcv_proc</code></td>
+<td><code>gks_rcv_classification_agg</code>, <code>gks_rcv_priority_agg</code>, <code>gks_rcv_aggregate_contribution</code></td>
+<td><code>rcv_accession</code> (column present)</td>
+</tr>
+<tr>
+<td><code>gks_rcv_statement_proc</code></td>
+<td><code>gks_dict_rcv_evidence_line</code>, <code>gks_dict_rcv_proposition</code>, <code>gks_dict_rcv</code></td>
+<td><code>rcv_accession</code> (column if present, else parse from <code>id</code>)</td>
+</tr>
+<tr>
+<td><code>gks_vcv_proc</code></td>
+<td><code>gks_vcv_classification_agg</code>, <code>gks_vcv_priority_agg</code>, <code>gks_vcv_aggregate_contribution</code></td>
+<td><code>vcv_accession</code> (column present)</td>
+</tr>
+<tr>
+<td><code>gks_vcv_statement_proc</code></td>
+<td><code>gks_dict_vcv_evidence_line</code>, <code>gks_dict_vcv_proposition</code>, <code>gks_dict_vcv</code></td>
+<td><code>vcv_accession</code> (column if present, else parse from <code>id</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>_agg</code> tables are intermediate (feed the statements); they are carried forward for compute savings and correctness, but the <strong>published delta product</strong> is the statement/dict outputs (evidence_line, proposition, dict_rcv/dict_vcv) plus the existing <code>gks_rcv_statement</code>/<code>gks_vcv_statement</code> JSON renders from <code>gks_json_proc</code> (already tracked in <code>gks_change_log</code>). Chunk 6 decides exactly which get <code>delta_*</code> payloads.</p>
+<hr />
+<h2 id="impact-model-shared-gks_rcvvcv_changed">Impact model — shared <code>gks_rcvvcv_changed</code><a class="headerlink" href="#impact-model-shared-gks_rcvvcv_changed" title="Permanent link">&para;</a></h2>
+<p><strong>RCV and VCV are INDEPENDENT parallel aggregates over SCVs</strong> (spec §3.2 — VCV does NOT read RCV). Two impacted-parent sets, computed once and shared by all 4 procs.</p>
+<p><strong>Member-SCV driver = <code>scv_changed_ids ∪ scv_removed_ids</code></strong> (from <code>gks_scv_changed</code>). Both are needed: a <em>removed</em> SCV's old parent must recompute (it lost a member), and <code>scv_changed_ids</code> already folds in every content/trait/version driver Plan 2 hardened. Using the full <code>scv_changed_ids</code> (not just the <code>version/review_status</code> aggregate-significant subset from the audit) is deliberate <strong>safe over-inclusion</strong>: an SCV that's in <code>scv_changed_ids</code> for a reason that doesn't change the aggregate (e.g. submitter rename — the agg counts <code>submitter_id</code>, not name) recomputes its parent to a byte-identical row → oracle stays 0. Do NOT try to shrink to the audit subset — that reintroduces the under-inclusion trap Plan 2 hit five times.</p>
+<p><strong><code>{S}.rcv_impacted_ids(rcv_accession)</code></strong> =
+- RCVs with ≥1 member SCV in <code>(scv_changed_ids ∪ scv_removed_ids)</code>, membership via the <strong>UNION of current <code>{S}.rcv_mapping</code> and baseline <code>{base}.rcv_mapping</code></strong> <code>scv_accessions</code> (so an SCV re-assigned to a different RCV recomputes BOTH the old and new parent) <strong>∪</strong>
+- RCVs whose membership changed: <code>diff_rcv_mapping</code> (non-exact) → <code>rcv_accession</code> <strong>∪</strong>
+- RCVs whose own accession record changed: <code>diff_rcv_accession</code> (non-exact, new|modified) → <code>id</code>
+— <strong>minus</strong> removed RCVs = RCVs <strong>absent from current <code>{S}.rcv_accession</code></strong> (anti-join). ⚠️ Do NOT use <code>diff_rcv_accession.change_type='removed'</code> to detect removal: <code>diff_rcv_accession</code> is keyed <code>[id,version]</code>, so every version bump emits a spurious <code>removed</code> row for the old version while the RCV is still live and MUST recompute (its version is embedded in <code>full_rcv_id</code> → the output <code>id</code>). Removal = absence from current only. (Same <code>[id,version]</code> trap <code>gks_scv_changed</code> handles.)
+- (NO own-agg-row-diff arm: <code>gks_rcvvcv_changed</code> runs BEFORE <code>gks_rcv_proc</code>, so no current agg table exists to diff; the membership + <code>diff_rcv_mapping</code> + <code>diff_rcv_accession</code> arms already subsume spec §3.2's "own record diffs".)</p>
+<p><strong><code>{S}.vcv_impacted_ids(vcv_accession)</code></strong> =
+- VCVs whose variation has ≥1 member SCV in <code>(scv_changed_ids ∪ scv_removed_ids)</code>. VCV membership = SCVs sharing the VCV's <code>variation_id</code> (VCV ⋈ SCV on <code>variation_id</code> via <code>variation_archive</code>). Resolve the changed SCVs' <code>variation_id</code> over the <strong>UNION of current + baseline <code>scv_summary</code></strong> (a removed SCV's variation only exists in baseline), then map <code>variation_id → variation_archive.id</code> over current+baseline <code>variation_archive</code> <strong>∪</strong>
+- VCVs whose <code>variation_archive</code> record changed: <code>diff_variation_archive</code> (non-exact, new|modified) → <code>id</code>
+— <strong>minus</strong> removed VCVs = VCVs <strong>absent from current <code>{S}.variation_archive</code></strong> (anti-join). ⚠️ Same <code>[id,version]</code> trap: do NOT use <code>diff_variation_archive.change_type='removed'</code> (a version bump spuriously flags the old version as removed while the VCV is live and must recompute — its version is in <code>full_vcv_id</code> → output <code>id</code>). Removal = absence from current only.
+- (NO own-agg-row-diff arm — same reason as RCV: <code>gks_rcvvcv_changed</code> runs before <code>gks_vcv_proc</code>.)</p>
+<p><strong>All-or-nothing driver gate</strong> (mirror <code>gks_scv_changed</code>): required diff drivers = <code>diff_rcv_mapping</code>, <code>diff_rcv_accession</code>, <code>diff_variation_archive</code> (+ the changed-set tables from <code>gks_scv_changed</code>). If any is missing (or baseline missing), fall back to <strong>everything-impacted</strong> (<code>rcv_impacted_ids</code> = all <code>{S}.rcv_accession.id</code>; <code>vcv_impacted_ids</code> = all <code>{S}.variation_archive.id</code>) — safe (incremental degrades to full).</p>
+<blockquote>
+<p><strong>Config-table limitation (documented, same class as Plan 2's <code>gks_xref_iri_templates</code>):</strong> the aggregation reads shared <code>clinvar_ingest.clinvar_clinsig_types</code> / <code>clinvar_proposition_types</code> / <code>clinvar_statement_types</code> / <code>submission_level</code> lookup tables. A change to that config <em>data</em> (without a <code>src/</code> change) is not caught per-parent and not caught by the build-path <code>gate_key</code>. These are loaded by <code>setup-translation-tables.sql</code> (in <code>src/procedures</code>), so a <em>code</em> change to them trips the gate → full rebuild. Config-data-only edits are a known residual; note it, don't solve it here.</p>
+</blockquote>
+<hr />
+<h2 id="chunk-1-shared-gks_rcvvcv_changed">Chunk 1: shared <code>gks_rcvvcv_changed</code><a class="headerlink" href="#chunk-1-shared-gks_rcvvcv_changed" title="Permanent link">&para;</a></h2>
+<p><strong>Files:</strong> Create <code>src/procedures/gks-rcvvcv-changed-proc.sql</code>.</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 1: Verify the drivers + membership tables exist and their keys.</strong> Confirm <code>diff_rcv_mapping</code>, <code>diff_rcv_accession</code>, <code>diff_variation_archive</code> are produced by <code>dataset_diff_all</code> (check <code>src/procedures/dataset-diff-all-proc.sql</code> for their <code>keys</code>) and present in <code>{S}</code>. Confirm <code>rcv_mapping</code> has <code>rcv_accession</code> + <code>scv_accessions</code> (array); <code>rcv_accession</code> has <code>id</code>; <code>variation_archive</code> has <code>id</code> + <code>variation_id</code>; <code>scv_summary</code> has <code>id</code> + <code>variation_id</code>.</p>
+</li>
+<li>
+<p>[ ] <strong>Step 2: Write the proc</strong> <code>clinvar_ingest.gks_rcvvcv_changed(on_date DATE)</code> (single-arg, persistent <code>{S}</code> tables, mirror <code>gks_scv_changed</code>'s structure). Resolve baseline via <code>schema_on(prev_release_date)</code>. All-or-nothing gate: if baseline missing OR any required driver/changed-set table missing → <code>rcv_impacted_ids</code> = all <code>{S}.rcv_accession.id</code>, <code>vcv_impacted_ids</code> = all <code>{S}.variation_archive.id</code>; RETURN. Otherwise build <code>{S}.rcv_impacted_ids(rcv_accession)</code> and <code>{S}.vcv_impacted_ids(vcv_accession)</code> exactly per the Impact model above (uncorrelated UNION-DISTINCT arms; anti-join out removed; NULL-safe). Document each arm in a comment.</p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Deploy + sanity-check.</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>&lt;<span class="w"> </span>src/procedures/gks-rcvvcv-changed-proc.sql
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="s2">"CALL \`clinvar_ingest.dataset_diff_on\`(DATE '2026-07-20');</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s2">   CALL \`clinvar_ingest.gks_scv_changed\`(DATE '2026-07-20');</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="s2">   CALL \`clinvar_ingest.gks_rcvvcv_changed\`(DATE '2026-07-20')"</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nv">S</span><span class="o">=</span>clinvar_2026_07_20_v2_5_0
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--format<span class="o">=</span>csv<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="s2">"SELECT</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="s2">     (SELECT COUNT(*) FROM \`</span><span class="si">${</span><span class="nv">S</span><span class="si">}</span><span class="s2">.rcv_impacted_ids\`) rcv_impacted,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="s2">     (SELECT COUNT(*) FROM \`</span><span class="si">${</span><span class="nv">S</span><span class="si">}</span><span class="s2">.rcv_accession\`) rcv_total,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="s2">     (SELECT COUNT(*) FROM \`</span><span class="si">${</span><span class="nv">S</span><span class="si">}</span><span class="s2">.vcv_impacted_ids\`) vcv_impacted,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="s2">     (SELECT COUNT(*) FROM \`</span><span class="si">${</span><span class="nv">S</span><span class="si">}</span><span class="s2">.variation_archive\`) vcv_total,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="s2">     (SELECT COUNT(*) FROM \`</span><span class="si">${</span><span class="nv">S</span><span class="si">}</span><span class="s2">.rcv_impacted_ids\` a JOIN \`</span><span class="si">${</span><span class="nv">S</span><span class="si">}</span><span class="s2">.rcv_impacted_ids\` b USING(rcv_accession) GROUP BY 1 HAVING COUNT(*)&gt;1 LIMIT 1) dup_check"</span>
+</code></pre></div>
+Assert: impacted &lt; total (a weekly release impacts a fraction), no dupes, no nulls. Report the impacted/total ratios for both.</p>
+</li>
+<li>
+<p>[ ] <strong>Step 4: Commit</strong> — <code>git add src/procedures/gks-rcvvcv-changed-proc.sql &amp;&amp; git commit -m "feat(rcvvcv): shared impacted-RCV/VCV parent sets (membership-first cascade)"</code></p>
+</li>
+</ul>
+<hr />
+<h2 id="chunk-2-incremental-gks_rcv_proc-3-agg-outputs">Chunk 2: incremental <code>gks_rcv_proc</code> (3 agg outputs)<a class="headerlink" href="#chunk-2-incremental-gks_rcv_proc-3-agg-outputs" title="Permanent link">&para;</a></h2>
+<p><strong>Files:</strong> Modify <code>src/procedures/gks-rcv-proc.sql</code>; Create <code>src/scripts/oracle-rcv.sh</code>.</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 1: Oracle runbook</strong> <code>src/scripts/oracle-rcv.sh</code> (copy <code>src/scripts/oracle-scv-condition.sh</code>; TABLES = <code>gks_rcv_classification_agg gks_rcv_priority_agg gks_rcv_aggregate_contribution</code>; full <code>gks_rcv_proc</code> then <code>gks_rcv_proc_incremental</code>; 3-arg <code>gks_oracle_compare</code>; <code>chmod +x</code>).</p>
+</li>
+<li>
+<p>[ ] <strong>Step 2: Build/wrapper split + guard.</strong> <code>gks_rcv_build(on_date,debug,incremental)</code> + wrappers. FOR loop selects <code>prev_release_date</code>. Guard <code>eff_incremental = base_ok AND diff_ok AND gate_ok</code>: base_ok = baseline has the 3 rcv agg outputs; diff_ok = <code>{S}.rcv_impacted_ids</code> present (+ <code>rcv_mapping</code>, <code>scv_summary</code>, <code>rcv_accession</code>); gate_ok = two-statement <code>gks_pipeline_version</code> compare.</p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Filter the base temp to impacted parents.</strong> In <code>temp_rcv_base_data</code> (the <code>rcv_mapping ⋈ scv_summary ⋈ rcv_accession</code> expansion), add <code>{PFILTER}</code> = <code S="S">AND rm.rcv_accession IN (SELECT rcv_accession FROM \</code>.rcv_impacted_ids`)<code>(incremental) /</code>''<code>(full). This restricts ALL 3 agg queries (they read only</code>temp_rcv_base_data<code S="S">+</code>.gks_scv_condition_sets<code>) to impacted RCVs. **The</code>somatic_conditions<code S="S">CTE joins</code>.gks_scv_condition_sets`** — that's fine (it's keyed by scv_id of impacted RCVs' members). No global dict here, so all 3 agg outputs are per-parent.</p>
+</li>
+<li>
+<p>[ ] <strong>Step 4: UNION-CTAS carry-forward merge</strong> for each of the 3 agg outputs (incremental only). Each has a <code>rcv_accession</code> column → carry forward <code>{base}</code> rows <code>WHERE rcv_accession NOT IN (SELECT rcv_accession FROM {S}.rcv_impacted_ids)</code> (NULL-safe anti-join). <strong>Removed-RCV exclusion (required):</strong> the carry-forward arm reads <code>{base}</code>, so also require <code S="S">AND rcv_accession IN (SELECT id FROM \</code>.rcv_accession`)` on the carry-forward arm so a removed RCV isn't resurrected. UNION ALL the freshly-recomputed impacted rows.</p>
+</li>
+</ul>
+<p><strong>Chained-layer read source (the incremental trap — get this right):</strong> <code>gks_rcv_priority_agg</code> reads <code>{S}.gks_rcv_classification_agg</code> (proc :208) and <code>gks_rcv_aggregate_contribution</code> reads BOTH (proc :256-264). In incremental mode these inter-layer reads MUST see an impacted-consistent source, not a stale mix. Choose ONE consistent approach and apply it to all 3 layers: EITHER (a) recompute each layer's impacted rows into <code>{P}.stg_gks_rcv_*</code> reading the PRIOR layer's <code>{P}.stg_*</code> (so the whole chain is impacted-only), then UNION-CTAS-merge each into <code>{S}</code> at the end; OR (b) merge classification into <code>{S}</code> FIRST (carry-forward + impacted), then compute priority/aggregate from the merged <code>{S}.gks_rcv_classification_agg</code> filtered by <code>{PFILTER}</code> on <code>rcv_accession</code>. Approach (a) is cleaner (no dependence on merge ordering within the proc). Use explicit column lists (<code>bq show --schema</code>). Verify against the oracle.</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 5: Deploy + oracle.</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>&lt;<span class="w"> </span>src/procedures/gks-rcv-proc.sql
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="s2">"CALL \`clinvar_ingest.dataset_diff_on\`(DATE '2026-07-20');</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s2">   CALL \`clinvar_ingest.gks_pipeline_version\`(DATE '2026-07-15','seed','GATE1');</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="s2">   CALL \`clinvar_ingest.gks_pipeline_version\`(DATE '2026-07-20','seed','GATE1');</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s2">   CALL \`clinvar_ingest.gks_scv_changed\`(DATE '2026-07-20');</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="s2">   CALL \`clinvar_ingest.gks_rcvvcv_changed\`(DATE '2026-07-20')"</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>./src/scripts/oracle-rcv.sh<span class="w"> </span><span class="m">2026</span>-07-20
+</code></pre></div>
+MUST print 0,0,0 on all 3 agg tables. If nonzero on any: the RCV impact set (Chunk 1) is missing a parent, or the merge/removed handling is wrong — diagnose whether it's Chunk 1 (impacted set) vs the merge; do NOT relax. Report per-table diffs if BLOCKED.</p>
+</li>
+<li>
+<p>[ ] <strong>Step 6: Commit</strong> — <code>git add src/procedures/gks-rcv-proc.sql src/scripts/oracle-rcv.sh &amp;&amp; git commit -m "feat(rcv): incremental gks_rcv agg layers (carry-forward unimpacted RCVs)"</code></p>
+</li>
+</ul>
+<hr />
+<h2 id="chunk-3-incremental-gks_rcv_statement_proc-3-outputs">Chunk 3: incremental <code>gks_rcv_statement_proc</code> (3 outputs)<a class="headerlink" href="#chunk-3-incremental-gks_rcv_statement_proc-3-outputs" title="Permanent link">&para;</a></h2>
+<p><strong>Files:</strong> Modify <code>src/procedures/gks-rcv-statement-proc.sql</code>; Create <code>src/scripts/oracle-rcv-statement.sh</code>.</p>
+<p>The 3 statement outputs are built FROM the 3 agg tables (+ a condition resolution via <code>rcv_mapping ⋈ gks_scv_condition_sets</code>). Same impacted-RCV set drives them.</p>
+<ul>
+<li>[ ] <strong>Step 1: Oracle runbook</strong> <code>src/scripts/oracle-rcv-statement.sh</code> (TABLES = <code>gks_dict_rcv_evidence_line gks_dict_rcv_proposition gks_dict_rcv</code>).</li>
+<li>[ ] <strong>Step 2: Build/wrapper split + guard</strong> (base_ok = 3 statement outputs; diff_ok = <code>rcv_impacted_ids</code> present; gate). </li>
+<li>[ ] <strong>Step 3: Filter to impacted RCVs.</strong> Each output reads <code>FROM {S}.gks_rcv_*_agg agg</code> — add <code>{PFILTER}</code> = <code>WHERE agg.rcv_accession IN (SELECT rcv_accession FROM {S}.rcv_impacted_ids)</code> (or <code>AND</code> if the query has a WHERE). The condition-resolution CTE (reads <code>rcv_mapping ⋈ gks_scv_condition_sets</code>) — filter it to impacted RCVs too. Confirm the statement outputs reference variation/condition by <strong>pointer</strong> (<code>#/proposition</code>, <code>#/evidenceLine</code>, <code>#/condition</code>) not inline content (so no extra cascade beyond the impacted-RCV set is needed) — VERIFY by reading the assembly; if any inline non-pointer content from a per-SCV/trait source appears, flag it (that would need the impacted set to already cover it, which it does via scv_changed_ids membership).</li>
+<li>[ ] <strong>Step 4: UNION-CTAS merge</strong> the 3 outputs. Carry-forward key = <code>rcv_accession</code>. The statement dict/proposition/evidence_line outputs have NO parent column (verified: they UNION statement temps carrying only <code>id,type,…</code>) → <strong>parse the accession from the pk</strong>: <code>gks_dict_rcv</code>/<code>gks_dict_rcv_evidence_line</code> id = <code>{RCV}.{ver}-…</code> → <code>SPLIT(id,'.')[OFFSET(0)]</code>; <code>gks_dict_rcv_proposition</code> key = <code>{RCV_accession}-…</code> → <code>SPLIT(key,'-')[OFFSET(0)]</code> (accessions contain no <code>.</code> or <code>-</code>). Carry-forward predicate: <code S="S">WHERE &lt;parsed accession&gt; NOT IN (SELECT rcv_accession FROM {S}.rcv_impacted_ids) AND &lt;parsed accession&gt; IN (SELECT id FROM \</code>.rcv_accession`)` (NULL-safe anti-join for the first; the second excludes removed RCVs). Explicit column lists.</li>
+<li>[ ] <strong>Step 5: Deploy + oracle</strong> (<code>./src/scripts/oracle-rcv-statement.sh 2026-07-20</code> → 0,0,0 on all 3). Prereqs: run <code>gks_rcv_proc_incremental</code> first (statements read its agg tables).</li>
+<li>[ ] <strong>Step 6: Commit</strong> — <code>feat(rcv): incremental gks_rcv_statement (carry-forward unimpacted RCVs)</code></li>
+</ul>
+<hr />
+<h2 id="chunk-4-incremental-gks_vcv_proc-3-agg-outputs">Chunk 4: incremental <code>gks_vcv_proc</code> (3 agg outputs)<a class="headerlink" href="#chunk-4-incremental-gks_vcv_proc-3-agg-outputs" title="Permanent link">&para;</a></h2>
+<p><strong>Files:</strong> Modify <code>src/procedures/gks-vcv-proc.sql</code>; Create <code>src/scripts/oracle-vcv.sh</code>.</p>
+<p>Mirror Chunk 2 exactly, VCV side. <code>temp_vcv_base_data</code> = <code>scv_summary ⋈ variation_archive ON variation_id</code>. <code>{PFILTER}</code> = <code>AND va.id IN (SELECT vcv_accession FROM {S}.vcv_impacted_ids)</code>. The 3 agg outputs carry <code>vcv_accession</code> → carry-forward by it (exclude removed VCVs via <code>AND vcv_accession IN (SELECT id FROM {S}.variation_archive)</code>). Oracle <code>src/scripts/oracle-vcv.sh</code> (TABLES = the 3 vcv agg tables) → 0,0,0.</p>
+<ul>
+<li>[ ] Steps 1-6 as Chunk 2, VCV side. Commit <code>feat(vcv): incremental gks_vcv agg layers (carry-forward unimpacted VCVs)</code>.</li>
+</ul>
+<hr />
+<h2 id="chunk-5-incremental-gks_vcv_statement_proc-3-outputs">Chunk 5: incremental <code>gks_vcv_statement_proc</code> (3 outputs)<a class="headerlink" href="#chunk-5-incremental-gks_vcv_statement_proc-3-outputs" title="Permanent link">&para;</a></h2>
+<p><strong>Files:</strong> Modify <code>src/procedures/gks-vcv-statement-proc.sql</code>; Create <code>src/scripts/oracle-vcv-statement.sh</code>.</p>
+<p>Mirror Chunk 3, VCV side. Outputs <code>gks_dict_vcv_evidence_line</code>, <code>gks_dict_vcv_proposition</code>, <code>gks_dict_vcv</code> built from the vcv agg tables; filter to <code>vcv_impacted_ids</code>; carry-forward by <code>vcv_accession</code>. Oracle → 0,0,0 (prereq: <code>gks_vcv_proc_incremental</code> first). Commit <code>feat(vcv): incremental gks_vcv_statement (carry-forward unimpacted VCVs)</code>.</p>
+<hr />
+<h2 id="chunk-6-deltas-pipeline-wiring">Chunk 6: deltas + pipeline wiring<a class="headerlink" href="#chunk-6-deltas-pipeline-wiring" title="Permanent link">&para;</a></h2>
+<p><strong>Files:</strong> Modify <code>src/procedures/gks-change-log-proc.sql</code>, <code>src/procedures/gks-delta-proc.sql</code>, <code>src/scripts/vrs-to-bq-table.sh</code>.</p>
+<ul>
+<li>[ ] <strong>Step 1: Extend <code>gks_change_log</code> <code>tracked</code></strong> with the SIX published RCV/VCV outputs — <code>gks_dict_rcv</code>, <code>gks_dict_rcv_proposition</code>, <code>gks_dict_rcv_evidence_line</code>, <code>gks_dict_vcv</code>, <code>gks_dict_vcv_proposition</code>, <code>gks_dict_vcv_evidence_line</code> — each with its ACTUAL pk column (verify via <code>bq show --schema</code>: dict/evidence use <code>id</code>; proposition uses <code>key</code> or <code>id</code> — check). (<code>gks_rcv_statement</code>/<code>gks_vcv_statement</code> JSON renders are already tracked.) Do NOT track the 3 <code>_agg</code> layers per side (internal intermediates — documented, endorsed).</li>
+</ul>
+<p>⚠️ <strong>Verify pk uniqueness-of-content before adding</strong> — <code>gks_change_log</code> de-dups <code>GROUP BY pk + ANY_VALUE</code>, which silently drops a row if a pk repeats with DIFFERENT content. The dict/proposition/evidence_line outputs are UNIONs of the classification/priority/aggregate layers; confirm no pk (id/key) collides across layers with differing content. For proposition (keyed on <code>prop_id</code>, repeated across layers): confirm the <code>value</code> is identical per key (depends only on prop_type/variation_id/condition). For <code>gks_dict_rcv</code>/<code>gks_dict_vcv</code> (pk <code>id</code>) and evidence_line (pk <code>id</code>): confirm cross-layer ids don't collide with differing content (run <code>SELECT pk, COUNT(DISTINCT TO_JSON_STRING(t)) FROM ... GROUP BY pk HAVING &gt;1</code>). If a real collision exists, it's a pre-existing data-quality issue — report it, don't mask it.
+- [ ] <strong>Step 2: Extend <code>gks_delta_build</code> <code>tables</code></strong> with the same published RCV/VCV outputs (same pks). Header note.
+- [ ] <strong>Step 3: Reconstruction test</strong> — <code>full == (baseline − U,D) UNION (A/U delta)</code> via 3-arg <code>gks_oracle_compare</code> → 0,0,0 — for FOUR outputs spanning the shapes: <code>gks_dict_rcv</code> (id), <code>gks_dict_vcv</code> (id), a proposition (<code>gks_dict_rcv_proposition</code>, its pk), and an evidence_line (<code>gks_dict_rcv_evidence_line</code>, id). Scratch <code>${S}_recon</code>. All four must be 0,0,0.
+- [ ] <strong>Step 4: Wire the pipeline.</strong> In <code>vrs-to-bq-table.sh</code> <code>execute_bq_procedures</code>, after the scv procs and BEFORE <code>gks_json_proc</code>: call <code>gks_rcvvcv_changed</code> once, then the 4 rcv/vcv procs via their <code>_incremental</code> wrappers honoring <code>GKS_FULL</code> (remove the 4 from the <code>BIGQUERY_PROCEDURES</code> full loop). Required order: catvar(incr) → gks_scv_changed → scv_condition(incr) → scv_statement(incr) → <strong>gks_rcvvcv_changed → gks_rcv(incr) → gks_rcv_statement(incr) → gks_vcv(incr) → gks_vcv_statement(incr)</strong> → gks_json_proc → gks_change_log → gks_delta_build. (rcv before rcv_statement; vcv before vcv_statement; rcvvcv_changed before all four.) <code>bash -n</code>.
+- [ ] <strong>Step 5: Commit</strong> — <code>feat(delta): rcv/vcv change-log + delta payloads; wire rcv/vcv incremental into pipeline</code></p>
+<hr />
+<h2 id="done-criteria-plan-3">Done criteria (Plan 3)<a class="headerlink" href="#done-criteria-plan-3" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] All 4 rcv/vcv <code>_proc_incremental</code> wrappers build their outputs; every oracle reports <strong>0 diffs</strong> vs full (12 outputs across 4 oracle scripts).</li>
+<li>[ ] <code>gks_rcvvcv_changed</code> produces <code>rcv_impacted_ids</code> / <code>vcv_impacted_ids</code> membership-first (over current+baseline membership, from <code>scv_changed_ids ∪ scv_removed_ids</code>), behind an all-or-nothing driver gate.</li>
+<li>[ ] RCV and VCV remain <strong>independent</strong> (VCV never reads RCV).</li>
+<li>[ ] change-log + delta cover the six published rcv/vcv outputs; reconstruction verified (0,0,0) for <code>gks_dict_rcv</code>, <code>gks_dict_vcv</code>, a proposition, and an evidence_line output.</li>
+<li>[ ] Pipeline wires <code>gks_rcvvcv_changed</code> before the 4 procs; incremental wrappers called; <code>GKS_FULL</code> forces full.</li>
+</ul>
+<h2 id="deferred-follow-ups">Deferred / follow-ups<a class="headerlink" href="#deferred-follow-ups" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Plan 4: <code>gks_json</code> incremental (assemble only changed keys) + <strong>R2 delta publishing</strong> (export <code>delta_*</code> → Parquet/NDJSON, weekly deltas / monthly full, <code>manifest.json</code>).</li>
+<li>Config-data-only changes to <code>clinvar_*_types</code>/<code>submission_level</code> lookups (not a <code>src/</code> change) aren't caught per-parent — known residual (same class as Plan 2's <code>gks_xref_iri_templates</code>).</li>
+<li>Variation/gene cascade in <code>gks_scv_changed</code> (deferred from Plan 2) — if a future need arises for <code>gks_dict_proposition</code> per-SCV carry-forward; not required by Plan 3 (rcv/vcv aggregate over SCV membership, and variation/gene changes on a member surface via <code>scv_changed_ids</code>).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

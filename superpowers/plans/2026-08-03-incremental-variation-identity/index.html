@@ -1,0 +1,4094 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="ClinVar data transformation pipeline to GA4GH GKS format">
+      
+      
+      
+        <link rel="canonical" href="https://clingen-data-model.github.io/clinvar-gks/superpowers/plans/2026-08-03-incremental-variation-identity/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Incremental variation_identity Implementation Plan - ClinVar-GKS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#incremental-variation_identity-implementation-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="ClinVar-GKS" class="md-header__button md-logo" aria-label="ClinVar-GKS" data-md-component="logo">
+      <img src="../../../assets/images/clingen-logo-white.svg" alt="ClinVar-GKS" height="40">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <a href="../../.." class="md-header__topic" style="text-decoration: none; color: inherit;">
+          <span class="md-ellipsis">
+            ClinVar-GKS
+          </span>
+        </a>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Incremental variation_identity Implementation Plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    <a href="https://www.ga4gh.org" title="GA4GH" target="_blank" rel="noopener" class="md-header__ga4gh">
+      <img src="../../../assets/images/ga4gh-logo.svg" alt="GA4GH" height="40">
+    </a>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../data-access/download/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Downloads
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../output-reference/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Data Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../output-reference/classes/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Data Model
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../pipeline/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Pipeline
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../reference/gks-standards/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="ClinVar-GKS" class="md-nav__button md-logo" aria-label="ClinVar-GKS" data-md-component="logo">
+      
+  <img src="../../../assets/images/clingen-logo-white.svg" alt="logo">
+
+    </a>
+    ClinVar-GKS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/clingen-data-model/clinvar-gks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    clingen-data-model/clinvar-gks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downloads
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/cat-vrs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/scv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/vcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/rcv-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/id-references/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ID References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data-access/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../output-reference/classes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Model
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/variations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalVariant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalVariant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCanonicalAllele/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCanonicalAllele
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalCnvChange/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalCnvChange
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarCategoricalCnvCount/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarCategoricalCnvCount
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarNonConstrainedVariant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarNonConstrainedVariant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/HgvsListItem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HgvsListItem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/GeneListItem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GeneListItem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Propositions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarRiskFactorProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarRiskFactorProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarProtectiveProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarProtectiveProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarDrugResponseProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarDrugResponseProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarAffectsProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarAffectsProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarAssociationProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarAssociationProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarConfersSensitivityProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarConfersSensitivityProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarOtherProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarOtherProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarNotProvidedProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarNotProvidedProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarConflictingDataFromSubmitterProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarConflictingDataFromSubmitterProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarUndefinedProposition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarUndefinedProposition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statements
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarScvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarScvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarVcvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarVcvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarRcvStatement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarRcvStatement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/SubmittedConditionMapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SubmittedConditionMapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Evidence
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Lines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../output-reference/classes/ClinvarSomaticEvidenceLine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ClinvarSomaticEvidenceLine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../profiles/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiles
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/statement-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statement Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/classifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../profiles/review-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/variation-identity/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variation Identity
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-loc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequence Locations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-hgvs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HGVS Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-xref/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cross-References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/variation-identity/variation-identity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation Identity Table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vrs-processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VRS Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/cat-vrs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cat-VRS
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cat-VRS
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/cat-vrs/catvar-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Categorical Variant Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/conditions-and-traits/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditions & Traits
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Conditions & Traits
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/traits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Traits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-sets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/conditions-and-traits/condition-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Condition Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/scv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    SCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Records
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/propositions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Propositions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/final-statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Final Statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/scv-statements/scv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/vcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    VCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-aggregation-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aggregation Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/vcv-statements/vcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../pipeline/rcv-statements/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Statements
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RCV Statements
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/rcv-statements/rcv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RCV Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export & Distribute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/gks-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GA4GH Standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/known-issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#superseded-2026-08-03-implemented-oracle-tested-then-reverted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚠️ SUPERSEDED (2026-08-03) — implemented, oracle-tested, then reverted
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background-what-exists-today" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background: what exists today
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#confirmed-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confirmed decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-how-the-8-steps-change-in-incremental-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design: how the 8 steps change in incremental mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-1-incremental-plumbing-change-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 1: incremental plumbing + change-set
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 1: incremental plumbing + change-set">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-1-baseline-resolution-full-rebuild-fallback-guard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1: Baseline resolution + full-rebuild fallback guard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-2-changed-variation-set-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2: Changed-variation-set builder
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-2-seed-recompute-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 2: seed, recompute, merge
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 2: seed, recompute, merge">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-3-seed-the-four-outputs-via-clone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 3: Seed the four outputs via CLONE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-4-redirect-steps-2358-to-v-staging-step-1-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4: Redirect steps 2/3/5/8 to {V} staging + Step 1 filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-5-apply-merge-staging-into-seeded-outputs-delete-removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 5: Apply-merge staging into seeded outputs + delete removed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-3-correctness-oracle-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chunk 3: correctness oracle + docs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 3: correctness oracle + docs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-6-full-rebuild-equals-incremental-oracle-the-acceptance-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 6: Full-rebuild-equals-incremental oracle (the acceptance test)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-7-runbook-handoff-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 7: Runbook + handoff docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risks-correctness-gates-must-hold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks &amp; correctness gates (must hold)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="incremental-variation_identity-implementation-plan">Incremental variation_identity Implementation Plan<a class="headerlink" href="#incremental-variation_identity-implementation-plan" title="Permanent link">&para;</a></h1>
+<blockquote>
+<h2 id="superseded-2026-08-03-implemented-oracle-tested-then-reverted">⚠️ SUPERSEDED (2026-08-03) — implemented, oracle-tested, then reverted<a class="headerlink" href="#superseded-2026-08-03-implemented-oracle-tested-then-reverted" title="Permanent link">&para;</a></h2>
+<p>This plan was fully implemented and validated with the full-rebuild-vs-incremental
+oracle (Task 6). The oracle caught two things that static review (two passes) missed:</p>
+<ol>
+<li><strong>Correctness bug:</strong> the <code>mappings</code> field has a <strong>cross-variation dependency</strong> —
+   Step 8 keys mappings on the <em>external xref id</em> (<code>x.id as variation_id</code>), so a
+   variation's mappings are sourced from <em>other</em> variations' <code>variation_xref</code> rows.
+   Per-variation staging drops the ones belonging to unchanged variations → 124/17350
+   changed variations got wrong (empty) mappings. (4 more diffs were inherent
+   <code>ROW_NUMBER</code> tie-break non-determinism, not incremental bugs.)</li>
+<li><strong>Performance:</strong> incremental was <strong>slower</strong> on BigQuery (~2m51s) than a full rebuild
+   (~2m21s) — the DELETE+INSERT merge over four 4.5M-row seeded tables costs as much as
+   the UDF work it skips. <strong>The BQ transform was never the bottleneck.</strong></li>
+</ol>
+<p><strong>Decision:</strong> <code>variation_identity</code> stays a full rebuild (always correct). The incremental
+effort moves to the actual bottleneck — vrs-python — by re-vrsifying only variations
+whose VRS-relevant fields changed and carrying <code>gks_vrs</code> forward. The <code>dataset-diff</code>
+engine + <code>dataset_diff_on</code> driver are retained. See the successor plan:
+<code>2026-08-03-incremental-vrsify.md</code> (to be written). The body below is kept as the record
+of the seed-then-merge design and the oracle that caught the bug.</p>
+<p><strong>For agentic workers:</strong> REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Add an <code>incremental BOOL</code> mode to <code>clinvar_ingest.variation_identity</code> that reprocesses only the variations that changed since the prior release (from the <code>dataset-diff</code> outputs) instead of the whole ~4.5M-row snapshot, so the expensive external vrs-python step receives only the ~0.4%-of-variations delta.</p>
+<p><strong>Architecture:</strong> Seed-then-merge. The four persistent outputs (<code>variation_identity</code>, <code>variation_loc</code>, <code>variation_hgvs</code>, <code>variation_xref</code>) are seeded (CLONE) from the nearest existing prior release, the changed-variation set is computed from <code>diff_variation</code> + a CopyNumber/statement_type SCV cascade, only those variations are recomputed into session staging tables, and the results are DELETE+INSERT-merged into the seeded tables (removed variations are deleted). The existing full-rebuild path is preserved verbatim and is the automatic fallback whenever a usable baseline is absent.</p>
+<p><strong>Tech Stack:</strong> BigQuery stored procedures (dynamic SQL: <code>DECLARE</code>/<code>SET</code>/<code>REPLACE</code>/<code>EXECUTE IMMEDIATE</code>), the <code>clinvar_ingest.dataset_diff*</code> procs, <code>schema_on</code>/<code>all_schemas</code> registry TVFs. Deployed manually to <code>clingen-dev</code> (no proc-deploy CI). "Tests" are <code>bq</code> verification queries with expected output.</p>
+<hr />
+<h2 id="background-what-exists-today">Background: what exists today<a class="headerlink" href="#background-what-exists-today" title="Permanent link">&para;</a></h2>
+<p><code>variation_identity(on_date, debug)</code> loops <code>schema_on(on_date)</code> and, per release schema <code>{S}</code>, runs 8 steps that always <strong>fully rebuild</strong> four persistent tables (plus internal <code>_SESSION</code> temps):</p>
+<table>
+<thead>
+<tr>
+<th>Output table</th>
+<th>Key</th>
+<th>Built in</th>
+<th>Currently</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{S}.variation_loc</code></td>
+<td>(variation_id, accession, assembly)</td>
+<td>Step 2</td>
+<td><code>CREATE OR REPLACE TABLE</code></td>
+</tr>
+<tr>
+<td><code>{S}.variation_hgvs</code></td>
+<td>(variation_id, accession)</td>
+<td>Step 3</td>
+<td><code>CREATE OR REPLACE TABLE</code></td>
+</tr>
+<tr>
+<td><code>{S}.variation_xref</code></td>
+<td>(variation_id, xref)</td>
+<td>Step 5</td>
+<td><code>CREATE OR REPLACE TABLE</code></td>
+</tr>
+<tr>
+<td><code>{S}.variation_identity</code></td>
+<td>variation_id (one row/variation)</td>
+<td>Step 8</td>
+<td><code>CREATE OR REPLACE TABLE</code></td>
+</tr>
+</tbody>
+</table>
+<p>Sole downstream consumer: <code>gks_catvar_proc</code>, which joins all four from <code>{S}</code> by <code>variation_id</code> (+ accession). So as long as the four tables are complete and correct in <code>{S}</code>, catvar is unaffected by how they were produced.</p>
+<p><strong>Inputs the transform reads</strong> (all in <code>{S}</code>): <code>variation</code> (core; <code>content</code> blob) and, only for the CopyNumber <code>cn</code> CTE in Step 1, <code>clinical_assertion_variation</code> ⋈ <code>clinical_assertion</code> (filtered <code>content LIKE '%CopyNumber%'</code> and <code>ca.statement_type IS NOT NULL</code>).</p>
+<p><strong>Empirically validated (2026-07-15 → 2026-07-20):</strong> 17,350 new/modified variations out of 4,545,909 (0.38%); 7 removed; CopyNumber-SCV cascade contributed 0 that release (mechanism still required in general).</p>
+<h2 id="confirmed-decisions">Confirmed decisions<a class="headerlink" href="#confirmed-decisions" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Non-breaking wrapper structure</strong> (BigQuery supports neither routine overloading nor default params, so a 3-arg replace of the 2-arg proc would break existing <code>CALL variation_identity(date, debug)</code> callers). Instead:</li>
+<li><code>variation_identity_build(on_date DATE, debug BOOL, incremental BOOL)</code> — internal, holds ALL logic (full + incremental).</li>
+<li><code>variation_identity(on_date DATE, debug BOOL)</code> — unchanged public signature, delegates <code>CALL variation_identity_build(on_date, debug, FALSE)</code>. Non-breaking.</li>
+<li><code>variation_identity_incremental(on_date DATE, debug BOOL)</code> — new public entry, delegates <code>CALL variation_identity_build(on_date, debug, TRUE)</code>.</li>
+</ol>
+<p>All three live in <code>src/procedures/variation-identity-proc.sql</code> and deploy together. (TEMP/<code>_SESSION</code> tables created inside the build proc are session-scoped and visible across the <code>CALL</code>, so the wrappers add no temp-table complications.)
+2. <strong>Seed via table CLONE</strong> (zero-copy) from the baseline release, then copy-on-write DELETE+INSERT for the changed set.
+3. <strong>Full rebuild is the fallback</strong>, chosen automatically (not an error) whenever: <code>incremental = FALSE</code>, OR no baseline schema resolves, OR the baseline lacks any of the four tables. The full path is byte-for-byte the current logic.
+4. <strong>Version-invalidation is operational, not automated (YAGNI):</strong> the caller must not pass <code>incremental = TRUE</code> across a change to the transform SQL or the vrs-python version. Documented in the runbook; a later phase may automate a version stamp. Passing <code>incremental = FALSE</code> always produces a correct full rebuild.</p>
+<h2 id="design-how-the-8-steps-change-in-incremental-mode">Design: how the 8 steps change in incremental mode<a class="headerlink" href="#design-how-the-8-steps-change-in-incremental-mode" title="Permanent link">&para;</a></h2>
+<p>Introduce one new placeholder, <code>{V}</code> — the <strong>variation work-table prefix</strong> — resolved per-mode:</p>
+<ul>
+<li><strong>Full mode:</strong> <code>{V}</code> = <code>{S}</code> (behavior identical to today; steps 2/3/5/8 <code>CREATE OR REPLACE {S}.*</code>).</li>
+<li><strong>Incremental mode:</strong> <code>{V}</code> = a session staging prefix (<code>_SESSION.stg_</code>), so steps 2/3/5/8 build <strong>only the changed variations' rows</strong> into staging, and a final apply-step merges staging into the seeded <code>{S}.*</code>.</li>
+</ul>
+<p>Flow in incremental mode (per schema, inside the existing <code>FOR rec</code> loop):</p>
+<ol>
+<li><strong>Preconditions + baseline</strong> — resolve <code>base_schema</code> = <code>schema_on(prev_release_date)</code> (same pattern as <code>dataset_diff_on</code>). <strong>Fall back to full rebuild</strong> (not an error) unless ALL hold:</li>
+<li><code>base_schema</code> is non-NULL AND its four <code>{base}.variation_*</code> tables all exist;</li>
+<li>the three driving diff tables (<code>diff_variation</code>, <code>diff_clinical_assertion</code>, <code>diff_clinical_assertion_variation</code>) exist in <code>{S}</code>;</li>
+<li><strong>baseline consistency:</strong> <code>base_schema</code>'s <code>release_date</code> == <code>(SELECT MAX(baseline_release) FROM {S}.diff_variation)</code> — i.e. the release we CLONE is the exact release the diff was computed against. (Guards the archived-intermediate case where <code>schema_on</code> would resolve a <em>different</em> surviving baseline than the diff used.)</li>
+<li><strong>Seed</strong> <code>{S}.variation_identity|variation_loc|variation_hgvs|variation_xref</code> via <code>CREATE OR REPLACE TABLE {S}.X CLONE {base}.X</code>.</li>
+<li><strong>Build <code>{P}.changed_variation_ids</code></strong> (temp) = <code>UNION DISTINCT</code> of:</li>
+<li><strong>variation-level:</strong> <code>diff_variation</code> where <code>change_type IN ('new','modified')</code> → <code>id</code>.</li>
+<li><strong>copy-number cascade — TWO terms, each resolved via BOTH snapshots.</strong> The Step-1 <code>cn</code> aggregate for a variation V is a function of the membership set <code>{(cav, ca) : cav has CopyNumber, ca.id = cav.clinical_assertion_id, ca.statement_type IS NOT NULL, ca.variation_id = V}</code>. That membership can change <strong>only</strong> if a participating <code>cav</code> row changed OR a participating <code>ca</code> row changed — so recomputing every V touched by a changed <code>cav</code> or a changed <code>ca</code> is provably complete. Both terms:<ul>
+<li><strong>CAV term:</strong> <code>diff_clinical_assertion_variation</code> (<code>change_type IN ('new','modified','removed')</code>) → join to <code>clinical_assertion_variation</code>+<code>clinical_assertion</code> (<code>statement_type IS NOT NULL</code>, CopyNumber content) → <code>ca.variation_id</code>.</li>
+<li><strong>CA term:</strong> <code>diff_clinical_assertion</code> (<code>change_type IN ('new','modified','removed')</code>, keyed <code>id</code>+<code>version</code>) → join to its CopyNumber <code>clinical_assertion_variation</code> rows and <code>clinical_assertion</code> (<code>statement_type IS NOT NULL</code>) → <code>ca.variation_id</code>. This is the term that catches <code>statement_type</code> flips (NULL↔non-NULL, the functional-data segregation at proc lines 55-57) and <code>clinical_assertion.variation_id</code> reassignment where the <code>cav</code> itself is unchanged.</li>
+<li>Resolve <strong>each</strong> term via <strong>both</strong> <code>{S}</code> (new/modified rows still exist) <strong>and</strong> <code>{base}</code> (removed rows are gone from <code>{S}</code>; reassignment must recompute the OLD variation via <code>{base}</code> and the NEW via <code>{S}</code>). Keep only ids present in <code>{S}.variation</code>. Do <strong>not</strong> filter on <code>change_note</code> — it is NULL for <code>new</code>/<code>removed</code> (dataset-diff-proc.sql:133-135), so a change_note filter silently drops them. Over-inclusion here is bounded by the count of changed CopyNumber-bearing SCVs (tiny) — it never threatens the ~0.4% win and never corrupts.</li>
+</ul>
+</li>
+<li><code>{P}.removed_variation_ids</code> = <code>diff_variation</code> where <code>change_type = 'removed'</code> → <code>id</code> (built separately; these are deleted, not recomputed).</li>
+<li><strong>Recompute changed only:</strong> run Steps 1–8 with Step 1's <code>var</code>/<code>cn</code> CTEs constrained to <code>variation_id IN (SELECT variation_id FROM {P}.changed_variation_ids)</code>, writing/reading the variation work tables via <code>{V}</code> (= staging) — see the redirect scope below.</li>
+<li><strong>Apply-merge</strong> (new Step 9, incremental-only), for each of the four tables, with <strong>explicit column lists</strong> (never <code>SELECT *</code> — positional match would corrupt on any column reorder between the baseline build and the current build; a type change would error):
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>DELETE FROM {S}.X WHERE variation_id IN (changed ∪ removed);
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>INSERT INTO {S}.X (col1, col2, ...) SELECT col1, col2, ... FROM {V-staging}.X;  -- removed ids have no staging rows → net delete
+</code></pre></div></li>
+<li>Drop staging temps.</li>
+</ol>
+<p><strong><code>{V}</code> redirect scope (critical — this is broader than steps 2/3/5).</strong> In incremental mode, <code>{V}</code> replaces <code>{S}</code> for EVERY read and write of the three intermediate tables <code>variation_loc</code> / <code>variation_hgvs</code> / <code>variation_xref</code>, because they are built in staging and their <em>final</em> values don't land in <code>{S}</code> until Step 9. That means:
+- <strong>Writes:</strong> Step 2 (<code>variation_loc</code>), Step 3 (<code>variation_hgvs</code>), Step 5 (<code>variation_xref</code>), Step 8 staging of <code>variation_identity</code>.
+- <strong>Reads:</strong> Step 4's <code>UPDATE</code> (reads <code>variation_loc</code>/<code>variation_hgvs</code>), <strong>Step 7 <code>temp_variation_members</code></strong> (reads <code>variation_loc</code>/<code>variation_hgvs</code> in all 9 <code>var_source</code> branches + final joins, proc lines 499–661), and <strong>Step 8</strong> (reads <code>variation_xref</code>, proc line 700). At the time Steps 7–8 run, <code>{S}.variation_loc/hgvs/xref</code> are still the <em>baseline clone</em> — reading them there yields stale expressions for the very variations being recomputed.
+- <strong>MUST stay <code>{S}</code> (do NOT redirect):</strong> the source reads <code>{S}.variation</code> (proc lines 58, 97, 253), <code>{S}.clinical_assertion</code>, <code>{S}.clinical_assertion_variation</code> (lines 50–51). The <code>{V}</code> substitution must be applied per-table-name, not as a blanket <code>{S}</code>→<code>{V}</code> replace.</p>
+<p>Because staging holds only changed variations, and every intermediate read/write is redirected to staging, Steps 1–8 produce exactly the changed variations' rows for all four tables; Step 9 merges them into the seeded <code>{S}</code> copies.</p>
+<h2 id="file-structure">File structure<a class="headerlink" href="#file-structure" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Modify:</strong> <code>src/procedures/variation-identity-proc.sql</code> — add <code>incremental</code> param, <code>{V}</code> templating, baseline-resolution + fallback guard, changed-set builder, staging redirection, apply-merge step. Keep the full path unchanged when <code>incremental = FALSE</code>.</li>
+<li><strong>Modify:</strong> <code>src/procedures/readme.md</code> — document the incremental call, the version-invalidation caution, and the shrunk vrsify handoff.</li>
+<li><strong>Out of scope for this plan (fast-follow):</strong> the external vrsify handoff scripts (extract only the changed set to <code>vi.jsonl.gz</code>; carry forward <code>gks_vrs</code>) and threading the changed set into <code>gks_catvar_proc</code>. Noted in the final task.</li>
+</ul>
+<hr />
+<h2 id="chunk-1-incremental-plumbing-change-set">Chunk 1: incremental plumbing + change-set<a class="headerlink" href="#chunk-1-incremental-plumbing-change-set" title="Permanent link">&para;</a></h2>
+<h3 id="task-1-baseline-resolution-full-rebuild-fallback-guard">Task 1: Baseline resolution + full-rebuild fallback guard<a class="headerlink" href="#task-1-baseline-resolution-full-rebuild-fallback-guard" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/variation-identity-proc.sql</code> (signature + top-of-loop guard)</p>
+<ul>
+<li>[ ] <strong>Step 1: Verification query (the "test") — the guard's decision for three inputs</strong></li>
+</ul>
+<p>Run against clingen-dev; captures the branch the proc must take.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--format<span class="o">=</span>csv<span class="w"> </span><span class="s2">"</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="s2">SELECT '2026-07-20' d,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s2">  (SELECT schema_name FROM \`clinvar_ingest.schema_on\`(DATE '2026-07-20')) cur,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s2">  (SELECT schema_name FROM \`clinvar_ingest.schema_on\`((SELECT prev_release_date FROM \`clinvar_ingest.schema_on\`(DATE '2026-07-20')))) base"</span>
+</code></pre></div>
+Expected: <code>cur=clinvar_2026_07_20_v2_5_0</code>, <code>base=clinvar_2026_07_15_v2_5_0</code>. (Earliest release → <code>base</code> empty → full-rebuild fallback.)</p>
+<ul>
+<li>[ ] <strong>Step 2: Refactor to the wrapper structure + add the resolution/guard</strong></li>
+</ul>
+<p>Rename the existing body to internal <code>variation_identity_build(on_date DATE, debug BOOL, incremental BOOL)</code>; add public <code>variation_identity(on_date, debug)</code> → <code>CALL …_build(…, FALSE)</code> and <code>variation_identity_incremental(on_date, debug)</code> → <code>CALL …_build(…, TRUE)</code> below it. Inside the build proc's <code>FOR rec</code> loop, before Step 1, declare <code>base_schema STRING</code>, <code>base_rel DATE</code>, <code>cur_rel DATE</code>, <code>do_incremental BOOL DEFAULT FALSE</code>, and resolve the baseline:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">IF</span><span class="w"> </span><span class="n">incremental</span><span class="w"> </span><span class="k">THEN</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="k">SET</span><span class="w"> </span><span class="n">base_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="k">schema_name</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="n">clinvar_ingest</span><span class="p">.</span><span class="n">schema_on</span><span class="o">`</span><span class="p">(</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">prev_release_date</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="n">clinvar_ingest</span><span class="p">.</span><span class="n">schema_on</span><span class="o">`</span><span class="p">(</span><span class="n">on_date</span><span class="p">)))</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="p">);</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div></p>
+<ul>
+<li>[ ] <strong>Step 3: Implement the full precondition check (all must pass or fall back)</strong></li>
+</ul>
+<p><code>do_incremental</code> is TRUE only if the baseline resolves, its four outputs exist, the three diff tables exist in <code>{S}</code>, AND the diff's baseline/compare releases match <code>{base}</code>/<code>{S}</code>. Guard the NULL-<code>base_schema</code> case at the <strong>scripting</strong> level (a NULL <code>base_schema</code> would make <code>REPLACE(sql,'{BASE}',NULL)</code> yield NULL and <code>EXECUTE IMMEDIATE NULL</code> error; SQL-level <code>AND</code> short-circuit does NOT protect table-reference resolution). Only when <code>base_schema</code> is non-NULL do we assemble and run the check:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">-- Resolve baseline + compare release dates into scalar variables FIRST.</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">SET</span><span class="w"> </span><span class="n">base_rel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">release_date</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="n">clinvar_ingest</span><span class="p">.</span><span class="n">schema_on</span><span class="o">`</span><span class="p">(</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">                  </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">prev_release_date</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="n">clinvar_ingest</span><span class="p">.</span><span class="n">schema_on</span><span class="o">`</span><span class="p">(</span><span class="n">on_date</span><span class="p">))));</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">SET</span><span class="w"> </span><span class="n">cur_rel</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">release_date</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="n">clinvar_ingest</span><span class="p">.</span><span class="n">schema_on</span><span class="o">`</span><span class="p">(</span><span class="n">on_date</span><span class="p">));</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">incremental</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">base_schema</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="k">SET</span><span class="w"> </span><span class="n">do_incremental</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">FALSE</span><span class="p">;</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="k">ELSE</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="c1">-- assemble by substituting ALL FOUR placeholders, then EXECUTE IMMEDIATE ... INTO do_incremental</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">IMMEDIATE</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="ss">"""</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="ss">      SELECT IFNULL((</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="ss">        ( SELECT COUNT(*) = 4 FROM `{BASE}.INFORMATION_SCHEMA.TABLES`</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="ss">          WHERE table_name IN ('variation_identity','variation_loc','variation_hgvs','variation_xref') )</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="ss">        AND</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="ss">        ( SELECT COUNT(*) = 3 FROM `{S}.INFORMATION_SCHEMA.TABLES`</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="ss">          WHERE table_name IN ('diff_variation','diff_clinical_assertion','diff_clinical_assertion_variation') )</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="ss">        AND</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="ss">        -- baseline+compare consistency: the diff we consume was built for exactly {BASE} -&gt; {S}</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="ss">        -- (release_date comparability verified: schema_on.release_date, diff baseline/compare_release,</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="ss">        --  and MAX(release_date) of the tables are all DATE and aligned)</span>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="ss">        ( SELECT MAX(baseline_release) = DATE '{BASE_REL}' AND MAX(compare_release) = DATE '{CUR_REL}'</span>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="ss">          FROM `{S}.diff_variation` )</span>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="ss">      ), FALSE)</span>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="ss">    """</span><span class="p">,</span><span class="w"> </span><span class="s1">'{BASE}'</span><span class="p">,</span><span class="w"> </span><span class="n">base_schema</span><span class="p">),</span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">         </span><span class="s1">'{S}'</span><span class="p">,</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="k">schema_name</span><span class="p">),</span>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="w">         </span><span class="s1">'{BASE_REL}'</span><span class="p">,</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="n">base_rel</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">STRING</span><span class="p">)),</span>
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="w">         </span><span class="s1">'{CUR_REL}'</span><span class="p">,</span><span class="w">  </span><span class="k">CAST</span><span class="p">(</span><span class="n">cur_rel</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">STRING</span><span class="p">)))</span>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">do_incremental</span><span class="p">;</span>
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="k">IF</span><span class="w"> </span><span class="n">incremental</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">do_incremental</span><span class="w"> </span><span class="k">THEN</span>
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">FORMAT</span><span class="p">(</span><span class="s1">'variation_identity: incremental requested but preconditions unmet for %s — full rebuild'</span><span class="p">,</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="k">schema_name</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">warning</span><span class="p">;</span>
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div>
+<code>{BASE_REL}</code>/<code>{CUR_REL}</code> are the baseline/compare <code>release_date</code>s from <code>schema_on(prev_release_date)</code>/<code>schema_on(on_date)</code>, resolved into scalars first. (Comparing the diff's stored <code>baseline_release</code>/<code>compare_release</code> to the resolved release dates closes both the archived-intermediate case and stale-diff-rebuilt-against-a-different-compare case.)</p>
+<ul>
+<li>[ ] <strong>Step 4: Deploy and smoke-test the guard (no behavior change yet)</strong></li>
+</ul>
+<p>Deploy; call <code>variation_identity(DATE '2026-07-20', TRUE)</code> (full path, unchanged) to confirm no behavior change, OR just confirm the DDL compiles:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>&lt;<span class="w"> </span>src/procedures/variation-identity-proc.sql
+</code></pre></div>
+Expected: <code>Created/Replaced clingen-dev.clinvar_ingest.variation_identity</code> with no error. <code>incremental=FALSE</code> path must be unchanged.</p>
+<ul>
+<li>[ ] <strong>Step 5: Commit</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/variation-identity-proc.sql
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"feat(variation-identity): add incremental param with full-rebuild fallback guard"</span>
+</code></pre></div></li>
+</ul>
+<h3 id="task-2-changed-variation-set-builder">Task 2: Changed-variation-set builder<a class="headerlink" href="#task-2-changed-variation-set-builder" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/variation-identity-proc.sql</code> (new temp tables <code>changed_variation_ids</code>, <code>removed_variation_ids</code>)</p>
+<ul>
+<li>[ ] <strong>Step 1: Verification query — the FULL change set (all union terms) for the known release pair</strong></li>
+</ul>
+<p>This must be the exact union the builder implements, including the removed/reassignment cascades resolved via the baseline dataset — not just the new/modified CopyNumber term. (For the 2026-07-15→07-20 pair the cascade terms contribute 0, so the total is still 17350, but the query must exercise every term so a regression in a cascade term is visible.)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--format<span class="o">=</span>csv<span class="w"> </span><span class="s2">"</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="s2">WITH cnv_changed AS (  -- ids of clinical_assertion_variation rows that changed either side</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s2">  SELECT id FROM \`clinvar_2026_07_20_v2_5_0.diff_clinical_assertion_variation\` WHERE change_type IN ('new','modified','removed')</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s2">),</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="s2">ca_changed AS (       -- ids/versions of clinical_assertion rows that changed either side</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s2">  SELECT id, version FROM \`clinvar_2026_07_20_v2_5_0.diff_clinical_assertion\` WHERE change_type IN ('new','modified','removed')</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="s2">),</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="s2">changed AS (</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="s2">  SELECT id AS variation_id FROM \`clinvar_2026_07_20_v2_5_0.diff_variation\` WHERE change_type IN ('new','modified')</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s2">  -- CAV term, COMPARE snapshot</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="s2">  UNION DISTINCT</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="s2">  SELECT ca.variation_id FROM cnv_changed d</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="s2">  JOIN \`clinvar_2026_07_20_v2_5_0.clinical_assertion_variation\` cav ON cav.id = d.id</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="s2">  JOIN \`clinvar_2026_07_20_v2_5_0.clinical_assertion\` ca ON ca.id = cav.clinical_assertion_id AND ca.statement_type IS NOT NULL</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="s2">  WHERE cav.content LIKE '%CopyNumber%'</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="s2">  -- CAV term, BASELINE snapshot (removed cav / reassignment)</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="s2">  UNION DISTINCT</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="s2">  SELECT ca.variation_id FROM cnv_changed d</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="s2">  JOIN \`clinvar_2026_07_15_v2_5_0.clinical_assertion_variation\` cav ON cav.id = d.id</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="s2">  JOIN \`clinvar_2026_07_15_v2_5_0.clinical_assertion\` ca ON ca.id = cav.clinical_assertion_id AND ca.statement_type IS NOT NULL</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="s2">  WHERE cav.content LIKE '%CopyNumber%'</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="s2">  -- CA term, COMPARE snapshot (statement_type flip / variation_id reassignment; cav unchanged)</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="s2">  UNION DISTINCT</span>
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="s2">  SELECT ca.variation_id FROM ca_changed d</span>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="s2">  JOIN \`clinvar_2026_07_20_v2_5_0.clinical_assertion\` ca ON ca.id = d.id AND ca.version = d.version AND ca.statement_type IS NOT NULL</span>
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="s2">  JOIN \`clinvar_2026_07_20_v2_5_0.clinical_assertion_variation\` cav ON cav.clinical_assertion_id = ca.id</span>
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="s2">  WHERE cav.content LIKE '%CopyNumber%'</span>
+<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="s2">  -- CA term, BASELINE snapshot (removed ca / old variation before reassignment)</span>
+<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a><span class="s2">  UNION DISTINCT</span>
+<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="s2">  SELECT ca.variation_id FROM ca_changed d</span>
+<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a><span class="s2">  JOIN \`clinvar_2026_07_15_v2_5_0.clinical_assertion\` ca ON ca.id = d.id AND ca.version = d.version AND ca.statement_type IS NOT NULL</span>
+<a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a><span class="s2">  JOIN \`clinvar_2026_07_15_v2_5_0.clinical_assertion_variation\` cav ON cav.clinical_assertion_id = ca.id</span>
+<a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a><span class="s2">  WHERE cav.content LIKE '%CopyNumber%'</span>
+<a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a><span class="s2">)</span>
+<a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a><span class="s2">SELECT COUNT(*) AS changed_variations</span>
+<a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a><span class="s2">FROM changed WHERE variation_id IN (SELECT id FROM \`clinvar_2026_07_20_v2_5_0.variation\`)"</span>
+</code></pre></div>
+Expected for this pair: <code>changed_variations = 17350</code>; <code>removed = 7</code> (all four cascade terms contribute 0 here). <strong>The cascade terms are NOT exercised by this pair — before trusting them, re-run the Task 6 equivalence oracle on a release pair where copy-number submissions actually changed, or a synthetic fixture.</strong> All four cascade terms (CAV/CA × compare/baseline) must be present in the builder even though they are 0 here.</p>
+<ul>
+<li>[ ] <strong>Step 2: Add the changed-set temp-table builder</strong> (incremental branch only)</li>
+</ul>
+<p>Build <code>{P}.changed_variation_ids</code> as the <code>UNION DISTINCT</code> in the design (variation new/modified + CopyNumber cascade new/modified from <code>{S}</code>, + CopyNumber/statement_type removed cascade from <code>{BASE}</code>, filtered to ids present in <code>{S}.variation</code>). Build <code>{P}.removed_variation_ids</code> from <code>diff_variation</code> removed. Use the <code>{CT}</code>/<code>{P}</code> temp conventions.</p>
+<ul>
+<li>[ ] <strong>Step 3: Deploy; assert count matches the oracle query</strong></li>
+</ul>
+<p>Call with <code>debug=TRUE</code> so the temp tables persist as <code>{S}.changed_variation_ids</code>, then:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--format<span class="o">=</span>csv<span class="w"> </span><span class="s2">"SELECT COUNT(*) FROM \`clinvar_2026_07_20_v2_5_0.changed_variation_ids\`"</span>
+</code></pre></div>
+Expected: matches Step 1 (17350). Removed table = 7.</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>git<span class="w"> </span>add<span class="w"> </span>src/procedures/variation-identity-proc.sql
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"feat(variation-identity): build changed/removed variation-id sets from diff tables"</span>
+</code></pre></div></li>
+</ul>
+<hr />
+<h2 id="chunk-2-seed-recompute-merge">Chunk 2: seed, recompute, merge<a class="headerlink" href="#chunk-2-seed-recompute-merge" title="Permanent link">&para;</a></h2>
+<h3 id="task-3-seed-the-four-outputs-via-clone">Task 3: Seed the four outputs via CLONE<a class="headerlink" href="#task-3-seed-the-four-outputs-via-clone" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/variation-identity-proc.sql</code> (new seed step, incremental branch, before Step 1)</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 1: Verification query — CLONE produces an identical row count</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--format<span class="o">=</span>csv<span class="w"> </span><span class="s2">"</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="s2">SELECT (SELECT COUNT(*) FROM \`clinvar_2026_07_15_v2_5_0.variation_identity\`) AS base_rows"</span>
+</code></pre></div>
+Record <code>base_rows</code>; the seeded <code>{S}.variation_identity</code> must match before any merge.</p>
+</li>
+<li>
+<p>[ ] <strong>Step 2: Add the seed step</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1">-- incremental branch, per table X in (variation_identity, variation_loc, variation_hgvs, variation_xref):</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">X</span><span class="o">`</span><span class="w"> </span><span class="n">CLONE</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">BASE</span><span class="err">}</span><span class="p">.</span><span class="n">X</span><span class="o">`</span><span class="p">;</span>
+</code></pre></div>
+Assemble with <code>REPLACE</code> for <code>{S}</code>/<code>{BASE}</code> and loop the four names (or four explicit statements).</p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Deploy; assert seeded row count == baseline</strong></p>
+</li>
+</ul>
+<p>After a <code>debug=TRUE</code> incremental run (seed only, merge not yet wired), compare <code>{S}.variation_identity</code> count to <code>base_rows</code>. Expected: equal.</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">"feat(variation-identity): seed outputs from baseline via CLONE in incremental mode"</span>
+</code></pre></div></li>
+</ul>
+<h3 id="task-4-redirect-steps-2358-to-v-staging-step-1-filter">Task 4: Redirect steps 2/3/5/8 to <code>{V}</code> staging + Step 1 filter<a class="headerlink" href="#task-4-redirect-steps-2358-to-v-staging-step-1-filter" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/variation-identity-proc.sql</code> (Steps 1–8 templating)</p>
+<ul>
+<li>[ ] <strong>Step 1: Introduce <code>{V}</code> and set it per mode (honoring debug so staging is inspectable)</strong></li>
+</ul>
+<p><code>{V}</code> is the prefix for the three intermediate tables in incremental mode. It must honor <code>debug</code> so the <code>debug=TRUE</code> verification queries below can read the staging tables from the dataset (<code>_SESSION</code> temps are invisible to a separate <code>bq</code> invocation):
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>{V} = IF(do_incremental,
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>         IF(debug, rec.schema_name || '.stg_', '_SESSION.stg_'),
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>         '{S}.'  /* full mode: unchanged */)
+</code></pre></div>
+So full mode keeps <code>CREATE OR REPLACE TABLE {S}.variation_loc</code>; incremental debug writes <code>{S}.stg_variation_loc</code> (inspectable); incremental non-debug writes <code>_SESSION.stg_variation_loc</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Apply the <code>{V}</code> redirect to ALL intermediate-table reads and writes</strong></li>
+</ul>
+<p>Per the "redirect scope" in the Design section, replace <code>{S}.</code> with <code>{V}</code> for <code>variation_loc</code> / <code>variation_hgvs</code> / <code>variation_xref</code> in: Step 2 write, Step 3 write, Step 5 write, Step 8 staging write, <strong>Step 4 <code>UPDATE</code> reads</strong>, <strong>Step 7 <code>temp_variation_members</code> reads (all 9 <code>var_source</code> branches + final joins)</strong>, <strong>Step 8 <code>variation_xref</code> read</strong>. Leave <code>{S}.variation</code> and <code>{S}.clinical_assertion*</code> as <code>{S}</code> (apply <code>{V}</code> per table-name, not as a blanket replace).</p>
+<p><strong>Substitution ordering:</strong> because <code>{V}</code>'s full-mode value is <code>{S}.</code> (which itself contains <code>{S}</code>), the <code>{V}</code> <code>REPLACE</code> must run <strong>before</strong> the existing <code>REPLACE(..., '{S}', rec.schema_name)</code> in each affected step, or the <code>{S}</code> inside <code>{V}</code> gets consumed early. Also <code>DECLARE</code> the new scalars used above: <code>base_rel DATE</code>, <code>cur_rel DATE</code> (Task 1), and the <code>{V}</code> prefix string.</p>
+<ul>
+<li>[ ] <strong>Step 3: Constrain Step 1 to the changed set (incremental only)</strong></li>
+</ul>
+<p>Add to Step 1's <code>var</code> CTE (and the <code>cn</code> CTE's variation join): <code>AND v.id IN (SELECT variation_id FROM {P}.changed_variation_ids)</code> — injected only when <code>do_incremental</code> (guard the REPLACE so full mode is untouched).</p>
+<ul>
+<li>[ ] <strong>Step 4: Verification — staging holds only the changed set, for all four tables</strong></li>
+</ul>
+<p><code>debug=TRUE</code> incremental run, then confirm each staging table has the changed-set cardinality, NOT 4.5M:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--format<span class="o">=</span>csv<span class="w"> </span><span class="s2">"</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="s2">SELECT</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="s2">  (SELECT COUNT(*)             FROM \`clinvar_2026_07_20_v2_5_0.stg_variation_identity\`) AS stg_identity_rows,</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="s2">  (SELECT COUNT(DISTINCT variation_id) FROM \`clinvar_2026_07_20_v2_5_0.stg_variation_loc\`) AS stg_loc_vids,</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="s2">  (SELECT COUNT(DISTINCT variation_id) FROM \`clinvar_2026_07_20_v2_5_0.stg_variation_hgvs\`) AS stg_hgvs_vids,</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="s2">  (SELECT COUNT(DISTINCT variation_id) FROM \`clinvar_2026_07_20_v2_5_0.stg_variation_xref\`) AS stg_xref_vids"</span>
+</code></pre></div>
+Expected: <code>stg_identity_rows == 17350</code>; the loc/hgvs/xref distinct-variation counts are ≤ 17350 (only changed variations, and only those with rows of that type).</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">"feat(variation-identity): compute changed variations into staging in incremental mode"</span>
+</code></pre></div></li>
+</ul>
+<h3 id="task-5-apply-merge-staging-into-seeded-outputs-delete-removed">Task 5: Apply-merge staging into seeded outputs + delete removed<a class="headerlink" href="#task-5-apply-merge-staging-into-seeded-outputs-delete-removed" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/variation-identity-proc.sql</code> (new Step 9, incremental only)</p>
+<ul>
+<li>
+<p>[ ] <strong>Step 1: Add the DELETE+INSERT apply for each of the four tables (explicit column lists)</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1">-- for each X (variation_identity, variation_loc, variation_hgvs, variation_xref):</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">X</span><span class="o">`</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="k">WHERE</span><span class="w"> </span><span class="n">variation_id</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">variation_id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="err">{</span><span class="n">P</span><span class="err">}</span><span class="p">.</span><span class="n">changed_variation_ids</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">  </span><span class="k">UNION</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">variation_id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="err">{</span><span class="n">P</span><span class="err">}</span><span class="p">.</span><span class="n">removed_variation_ids</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="p">);</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="o">`</span><span class="err">{</span><span class="n">S</span><span class="err">}</span><span class="p">.</span><span class="n">X</span><span class="o">`</span><span class="w"> </span><span class="p">(</span><span class="n">col1</span><span class="p">,</span><span class="w"> </span><span class="n">col2</span><span class="p">,</span><span class="w"> </span><span class="p">...,</span><span class="w"> </span><span class="n">colN</span><span class="p">)</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">col1</span><span class="p">,</span><span class="w"> </span><span class="n">col2</span><span class="p">,</span><span class="w"> </span><span class="p">...,</span><span class="w"> </span><span class="n">colN</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="err">{</span><span class="n">V</span><span class="o">-</span><span class="n">staging</span><span class="err">}</span><span class="p">.</span><span class="n">X</span><span class="p">;</span>
+</code></pre></div>
+Removed ids have no staging rows → net delete. <strong>Use explicit, matching column lists</strong> (enumerate each table's columns) rather than <code>SELECT *</code>: positional <code>SELECT *</code> silently corrupts if the current build's column order differs from the baseline clone's, and errors on a type change. Enumerating columns makes any schema drift an explicit, visible failure — which is the desired behavior (drift means the version-invalidation assumption is broken; the caller should full-rebuild).</p>
+</li>
+<li>
+<p>[ ] <strong>Step 2: Drop staging temps</strong> (mirror the existing end-of-loop temp cleanup).</p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Verification — merged table is internally consistent</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--format<span class="o">=</span>csv<span class="w"> </span><span class="s2">"</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="s2">SELECT COUNT(*) total, COUNT(DISTINCT variation_id) distinct_vid</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="s2">FROM \`clinvar_2026_07_20_v2_5_0.variation_identity\`"</span>
+</code></pre></div>
+Expected: <code>total == distinct_vid</code> (one row per variation, no dup/leak from the merge).</p>
+</li>
+<li>
+<p>[ ] <strong>Step 4: Commit</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">"feat(variation-identity): merge changed staging rows and delete removed in incremental mode"</span>
+</code></pre></div></p>
+</li>
+</ul>
+<hr />
+<h2 id="chunk-3-correctness-oracle-docs">Chunk 3: correctness oracle + docs<a class="headerlink" href="#chunk-3-correctness-oracle-docs" title="Permanent link">&para;</a></h2>
+<h3 id="task-6-full-rebuild-equals-incremental-oracle-the-acceptance-test">Task 6: Full-rebuild-equals-incremental oracle (the acceptance test)<a class="headerlink" href="#task-6-full-rebuild-equals-incremental-oracle-the-acceptance-test" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong> none (validation only)</p>
+<p>Because the seed CLONE overwrites <code>{S}</code>, the two runs cannot share <code>{S}</code> — snapshot each result to a scratch dataset <strong>before</strong> the next run.</p>
+<ul>
+<li>[ ] <strong>Step 0: Rebuild the BASELINE with the current transform (removes version drift)</strong></li>
+</ul>
+<p>The incremental run carries forward unchanged rows from the baseline CLONE. If <code>{base}</code> (<code>clinvar_2026_07_15</code>) was built by an <em>older</em> transform/vrs-python version, those carried rows differ from a fresh full 07-20 rebuild for reasons unrelated to incremental logic, producing false oracle failures. So first <code>CALL variation_identity(DATE '2026-07-15', FALSE)</code> (full rebuild of the baseline with the current code) before Steps 1–3.</p>
+<ul>
+<li>[ ] <strong>Step 1: Produce the full-rebuild ground truth</strong></li>
+</ul>
+<p>Full-rebuild the compare release: <code>CALL variation_identity(DATE '2026-07-20', FALSE)</code>. Immediately snapshot all four outputs to scratch (CLONE): <code>scratch.vi_full</code>, <code>scratch.vloc_full</code>, <code>scratch.vhgvs_full</code>, <code>scratch.vxref_full</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Produce the incremental result</strong></li>
+</ul>
+<p>Ensure the diff tables exist (<code>CALL dataset_diff_on(DATE '2026-07-20')</code>), then <code>CALL variation_identity_incremental(DATE '2026-07-20', FALSE)</code> (baseline <code>clinvar_2026_07_15</code>). Snapshot the four outputs to <code>scratch.*_incr</code>.</p>
+<ul>
+<li>[ ] <strong>Step 3: Assert row-for-row equality via key + serialized-payload (ARRAY-safe)</strong></li>
+</ul>
+<p><code>EXCEPT DISTINCT SELECT *</code> is invalid here — <code>variation_identity.range_copies</code>/<code>mappings</code> and <code>variation_hgvs.expr</code> are non-groupable ARRAY/STRUCT columns. Compare a key + <code>TO_JSON_STRING</code> of the row instead:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>bq<span class="w"> </span>query<span class="w"> </span>--project_id<span class="o">=</span>clingen-dev<span class="w"> </span>--use_legacy_sql<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--format<span class="o">=</span>csv<span class="w"> </span><span class="s2">"</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="s2">WITH f AS (SELECT variation_id AS k, TO_JSON_STRING(t) AS h FROM \`scratch.vi_full\` t),</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="s2">     i AS (SELECT variation_id AS k, TO_JSON_STRING(t) AS h FROM \`scratch.vi_incr\` t)</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="s2">SELECT</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="s2">  (SELECT COUNT(*) FROM (SELECT k,h FROM f EXCEPT DISTINCT SELECT k,h FROM i)) AS full_not_incr,</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="s2">  (SELECT COUNT(*) FROM (SELECT k,h FROM i EXCEPT DISTINCT SELECT k,h FROM f)) AS incr_not_full,</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="s2">  (SELECT COUNT(*) FROM f) AS full_rows, (SELECT COUNT(*) FROM i) AS incr_rows"</span>
+</code></pre></div>
+Expected: <strong><code>full_not_incr = 0</code> AND <code>incr_not_full = 0</code> AND <code>full_rows = incr_rows</code>.</strong> Any nonzero → a change-set or merge bug; join <code>f</code>/<code>i</code> on <code>k</code> where <code>f.h != i.h</code> (or <code>k</code> present on one side only) to get the offending <code>variation_id</code>s — a one-sided key usually means a missed cascade; a differing <code>h</code> on a shared key means stale intermediate reads (redirect scope) or a merge error.</p>
+<p>Repeat for <code>variation_loc</code>/<code>variation_hgvs</code>/<code>variation_xref</code>. Those are multi-row-per-variation, so compare on the full natural key + <code>TO_JSON_STRING(t)</code>. <strong>Also assert non-distinct <code>COUNT(*)</code> equality</strong> (<code>full_rows = incr_rows</code>) for each — <code>EXCEPT DISTINCT</code> collapses duplicates, so a merge bug that leaves 2 identical rows on one side and 1 on the other would report 0 differences; the raw row-count check catches that.</p>
+<ul>
+<li>[ ] <strong>Step 4: Record the result</strong> in the plan/PR (counts + timing: full vs incremental wall-clock and the vrsify payload reduction).</li>
+</ul>
+<h3 id="task-7-runbook-handoff-docs">Task 7: Runbook + handoff docs<a class="headerlink" href="#task-7-runbook-handoff-docs" title="Permanent link">&para;</a></h3>
+<p><strong>Files:</strong>
+- Modify: <code>src/procedures/readme.md</code></p>
+<ul>
+<li>
+<p>[ ] <strong>Step 1: Document</strong> the incremental call (<code>variation_identity_incremental(CURRENT_DATE(), FALSE)</code>; the unchanged full path stays <code>variation_identity(CURRENT_DATE(), FALSE)</code>), the automatic full-rebuild fallback, and the <strong>version-invalidation caution</strong> (do not run <code>variation_identity_incremental</code> across transform/vrs-python version changes — run the full <code>variation_identity</code> instead).</p>
+</li>
+<li>
+<p>[ ] <strong>Step 2: Note the vrsify handoff change</strong> (fast-follow, not in this plan): the <code>bq extract</code> for <code>vi.jsonl.gz</code> should filter to the changed set, and <code>gks_vrs</code> should be carried forward + merged rather than fully rebuilt — this is where the ~0.4% delta becomes the actual compute win.</p>
+</li>
+<li>
+<p>[ ] <strong>Step 3: Commit</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">"docs(variation-identity): document incremental mode and vrsify handoff"</span>
+</code></pre></div></p>
+</li>
+</ul>
+<hr />
+<h2 id="risks-correctness-gates-must-hold">Risks &amp; correctness gates (must hold)<a class="headerlink" href="#risks-correctness-gates-must-hold" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Cascade completeness</strong> — a variation byte-identical in <code>variation</code> can still change output via a changed CopyNumber SCV or a <code>statement_type</code> flip. The change-set MUST union <code>diff_clinical_assertion_variation</code> and <code>diff_clinical_assertion</code>, resolving <em>removed</em> rows through the <strong>baseline</strong> dataset. Task 6's oracle is what proves this is complete.</li>
+<li><strong>Removed records</strong> — must be deleted from all four tables, else stale identities leak forward.</li>
+<li><strong>No usable baseline</strong> (first run, archived prior, missing table) — MUST fall back to full rebuild, never emit a partial result. Never infer "nothing changed" from absent diffs.</li>
+<li><strong>Version invalidation</strong> — carried-forward rows assume identical transform + vrs-python version. Operationally gated (Task 7); <code>incremental=FALSE</code> is always safe.</li>
+<li><strong>Diff freshness</strong> — incremental assumes <code>dataset_diff_on(on_date)</code> (or <code>dataset_diff_all</code>) has already produced the <code>diff_*</code> tables in <code>{S}</code> for this baseline→compare pair. Add a precondition check (diff tables exist) or call <code>dataset_diff_on</code> first.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
